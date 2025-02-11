@@ -14,3 +14,4 @@ G:\.shortcut-targets-by-id\1ATiji3-Y0CiUPhlpF3ZC_qB4sBP8p79p\Kursagentens HOVEDM
 G:\.shortcut-targets-by-id\1ATiji3-Y0CiUPhlpF3ZC_qB4sBP8p79p\Kursagentens HOVEDMAPPE\Prosjekter, produkter og websider\WP plugin og API\WP KA plugin\kursagenten\assets\images
 G:\.shortcut-targets-by-id\1ATiji3-Y0CiUPhlpF3ZC_qB4sBP8p79p\Kursagentens HOVEDMAPPE\Prosjekter, produkter og websider\WP plugin og API\WP KA plugin\kursagenten\assets\js
 G:\.shortcut-targets-by-id\1ATiji3-Y0CiUPhlpF3ZC_qB4sBP8p79p\Kursagentens HOVEDMAPPE\Prosjekter, produkter og websider\WP plugin og API\WP KA plugin\kursagenten\assets\css
+Test 2
