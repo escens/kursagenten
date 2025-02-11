@@ -1,0 +1,95 @@
+/* /assets/css/kursagenten-admin.css */
+.wrap {
+    font-family: "Open sans", "Poppins", Helvetica, Arial, sans-serif;
+}
+
+h2 {
+    margin-top: 30px;
+    color: #333;
+}
+
+input[type=date], 
+input[type=datetime-local], 
+input[type=datetime], 
+input[type=email], 
+input[type=month], 
+input[type=number], 
+input[type=password], 
+input[type=search], 
+input[type=tel], input[type=text], 
+input[type=time], input[type=url], 
+input[type=week],
+input[type=textarea] {
+    padding: 5px 8px;
+    border-color: #ddd;
+}
+
+.options-form{
+    max-width: 900px;
+    margin-left: 2vw;
+}
+.options-form h2,
+.options-form h3 {
+    padding-top: 1em!important;
+}
+.wrap h2 {
+    font-weight: 600!important;
+    font-size: 2.1em!important;
+}
+.wrap h2:before {
+    content: '';
+    display: block;
+    background: url(https://login.kursagenten.no/kursagenten-nettstedsikon.png);
+    width: 30px;
+    height: 30px;
+    background-size: contain;
+    float: left;
+    padding-right: 10px;
+    background-repeat: no-repeat;
+}
+.options-form table.form-table,
+.options-card {
+    background: white;
+    border-radius: 10px;
+}
+.options-form tbody,
+.options-card {
+    padding: 2em;
+    display: block;
+}
+.options-form .form-table th {
+    width: auto;
+    line-height: 2;
+    padding: 10px 10px 10px 0;
+}
+.form-table td {
+    padding: 5px 10px;
+}
+.options-form input.large-text, textarea.large-text {
+    min-width: 30vw;
+    border-color: #ddd;
+    padding: 1em;
+}
+
+.form-table.with-columns tr {
+    border-bottom: 1px solid #f8f8f8;
+}
+
+.form-table.with-columns th {
+    line-height: normal;
+}
+.form-table.with-columns td {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 5vw;
+    visibility: hidden;
+    margin-bottom: 0;
+}
+.form-table.with-columns tr:has(input[type=checkbox]:checked) td.filter-options,
+.form-table.with-columns tr td.header-row {
+    visibility: visible;
+}
+.form-table.with-columns th,
+.form-table.with-columns td {
+    padding:16px 10px;
+}

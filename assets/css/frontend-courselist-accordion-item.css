@@ -1,0 +1,21 @@
+.courselist-items {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+}
+.courselist-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.041);
+  }
+  .courselist-item:last-child {
+    border-bottom: none;
+  }
+
+  .courselist-item:first-child .courselist-main{
+    border-radius: 5px 5px 0 0;
+  }
+  .courselist-item:last-child:not(.active) .courselist-main{
+    border-radius: 0 0 5px 5px;
+  }
+  .courselist-item.single-item:not(.active) .courselist-main{
+    border-radius: 5px;
+  }

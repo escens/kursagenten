@@ -1,0 +1,164 @@
+// Forsøk på å oppdatere kurs og underkurs i funksjon for å oppdatere tax instructorer
+// Oppdater taxonomi for kurset
+    $existing_kurs_instruktorer = wp_get_post_terms($kurs_post_id, 'instruktorer', ['fields' => 'ids']);
+    $merged_instruktorer = array_unique(array_merge($existing_kurs_instruktorer, $instruktorer)); // Sørg for unike verdier
+    wp_set_object_terms($kurs_post_id, $merged_instruktorer, 'instruktorer', false);
+    //error_log("DEBUG: Oppdatert taxonomi 'instruktorer' på kurs ID: $kurs_post_id med term IDs: " . implode(', ', $merged_instruktorer));
+
+    //error_log("DEBUG: Oppdater kurs - existing_kurs_instruktorer for $kurs_post_id: " . implode(', ', $existing_kurs_instruktorer));
+    //error_log("DEBUG: Instruktørdata - merged_instruktorer array for $kurs_post_id:: " . implode(', ', $merged_instruktorer));
+    //error_log("DEBUG: Instruktørdata - instruktorer for $kurs_post_id:: " . implode(', ', $instruktorer));
+
+    // Opprett CPT for instruktører
+    create_or_update_instruktor_cpt($instruktornavn_array, $kurs_post_id, $kursdato_post_id);
+
+    // Synkroniser instruktører med hovedkurs
+    
+        // Hent alle kursdatoer som tilhører dette kurset (hvis ikke $kursdatoer sendes inn)
+        if (!isset($data['kursdatoer']) || empty($data['kursdatoer'])) {
+            $kursdatoer = get_posts([
+                'post_type' => 'kursdato',
+                'meta_query' => [
+                    [
+                        'key' => 'hovedkurs_id',
+                        'value' => $hovedkurs_id,
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'lokasjon_id',
+                        'value' => $lokasjon_id,
+                        'compare' => '='
+                    ]
+                ],
+                'fields' => 'ids', // Hent kun ID-er for å spare ressurser
+                'posts_per_page' => -1
+            ]);
+        } else {
+            $kursdatoer = $data['kursdatoer'];
+        }
+    
+        if (empty($kursdatoer)) {
+            error_log("DEBUG: Ingen kursdatoer funnet for hovedkurs_id $hovedkurs_id og lokasjon_id $lokasjon_id.");
+            return;
+        }
+    
+        // Fortsett med logikken som før
+        $instruktorer_lokasjon = [];
+        $instruktorer_hovedkurs = [];
+    
+        foreach ($kursdatoer as $kursdato) {
+            $current_lokasjon_id = get_post_meta($kursdato, 'lokasjon_id', true);
+            $current_hovedkurs_id = get_post_meta($kursdato, 'hovedkurs_id', true);
+    
+            $kursdato_instruktorer = wp_get_post_terms($kursdato, 'instruktorer', ['fields' => 'ids']);
+    
+            if ($current_lokasjon_id == $lokasjon_id) {
+                $instruktorer_lokasjon = array_merge($instruktorer_lokasjon, $kursdato_instruktorer);
+            }
+    
+            if ($current_hovedkurs_id == $hovedkurs_id) {
+                $instruktorer_hovedkurs = array_merge($instruktorer_hovedkurs, $kursdato_instruktorer);
+            }
+        }
+    
+        // Fjern duplikater
+        $instruktorer_lokasjon = array_unique($instruktorer_lokasjon);
+        $instruktorer_hovedkurs = array_unique($instruktorer_hovedkurs);
+    
+
+-------------------------------------------------------------------------------------
+
+// Hook into admin head to add custom CSS and JavaScript
+add_action('admin_head', 'restrict_cpt_editor_interface');
+
+function restrict_cpt_editor_interface() {
+    global $post;
+    
+    // Only apply on the custom post type editor screen
+    if (get_post_type($post) == 'enkeltkurs') {
+        ?>
+        <style>
+            /* Hide all meta boxes */
+            .editor-post-panel__row, .editor-post-trash {
+                display: none;
+            }
+
+            /* Hide permalink section */
+            #edit-slug-box {
+                display: none;
+            }
+
+            /* Hide the publish and status options, except the save button */
+            #submitdiv #minor-publishing,
+            #submitdiv #misc-publishing-actions {
+                display: none;
+            }
+        </style>
+
+        <script>
+            // Disable the title field
+            document.addEventListener('DOMContentLoaded', function() {
+            // Target the Gutenberg title wrapper and disable the input
+            const titleWrapper = document.querySelector('.editor-post-title__input');
+            if (titleWrapper) {
+                //const titleField = titleWrapper.querySelector('input');
+                //if (titleField) {
+                    titleField.setAttribute('readonly', 'readonly');
+                //}
+            }
+        });
+        </script>
+        <?php
+    }
+}
+
+//////////////////////////
+
+
+                    <tr valign="top">
+                        <th scope="row">Hovedbilde/topprad bakgrunn</th>
+                        <td>
+                            <input class="regular-text" type="text" name="kursinnstillinger_option_name[ka_epost]" value="<?php echo isset($this->kursinnstillinger_options['ka_epost']) ? esc_attr($this->kursinnstillinger_options['ka_epost']) : ''; ?>">
+                        </td>
+                    </tr>
+                    
+                    
+                     <tr valign="top">
+                        <th scope="row">Plassholderbilde for kurs</th>
+                        <td>
+                            <input style="width:32%;float:left;" class="regular-text" type="text" name="kursinnstillinger_option_name[ka_postnummer]" value="<?php echo isset($this->kursinnstillinger_options['ka_postnummer']) ? esc_attr($this->kursinnstillinger_options['ka_postnummer']) : ''; ?>">
+                            <input style="width:65%;float:left;" class="regular-text" type="text" name="kursinnstillinger_option_name[ka_sted]" value="<?php echo isset($this->kursinnstillinger_options['ka_sted']) ? esc_attr($this->kursinnstillinger_options['ka_sted']) : ''; ?>">
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Plassholderbilde for instruktør</th>
+                        <td>
+                            <input class="regular-text" type="text" name="kursinnstillinger_option_name[ka_hovedkontakt_navn]" value="<?php echo isset($this->kursinnstillinger_options['ka_hovedkontakt_navn']) ? esc_attr($this->kursinnstillinger_options['ka_hovedkontakt_navn']) : ''; ?>">
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Epost</th>
+                        <td>
+                            <input class="regular-text" type="text" name="kursinnstillinger_option_name[ka_epost]" value="<?php echo isset($this->kursinnstillinger_options['ka_epost']) ? esc_attr($this->kursinnstillinger_options['ka_epost']) : ''; ?>">
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">Telefon</th>
+                        <td>
+                            <input class="regular-text" type="text" name="kursinnstillinger_option_name[ka_tlf]" value="<?php echo isset($this->kursinnstillinger_options['ka_tlf']) ? esc_attr($this->kursinnstillinger_options['ka_tlf']) : ''; ?>">
+                        </td>
+                    </tr>
+
+
+////////////////////
+                    <!-- Stylet Select med avkrysningsbokser for coursecategory -->
+                    <div class="styled-select">
+                        <select id="multi-coursecategory" multiple>
+                            <?php
+                            foreach ($categories as $category) {
+                                echo '<option value="' . esc_attr($category->slug) . '">' . esc_html($category->name) . '</option>';
+                            }
+                            ?>
+                        </select>
+                        <button id="multi-category-submit">Filtrer</button>
+                    </div>
