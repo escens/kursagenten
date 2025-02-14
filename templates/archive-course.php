@@ -189,14 +189,14 @@ $taxonomy_data['language']['terms'] = $language_terms;
                             <div id="active-filters" class="active-filters-container"></div><a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
 
                             <div class="courselist-items" id="filter-results">
-
                                 <?php
+                                $args = [
+                                    'course_count' => $query->found_posts,
+                                    'query' => $query
+                                ];
 
                                 while ($query->have_posts()) : $query->the_post();
-
-                                    include 'components/coursedates_default.php';
-
-                                    $index++; // Øk teller for hver iterasjon
+                                    get_course_template_part($args);
                                 endwhile;
                                 ?>
                             </div>

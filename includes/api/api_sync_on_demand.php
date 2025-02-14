@@ -69,7 +69,13 @@ function kursagenten_enqueue_admin_scripts($hook) {
     if ('toplevel_page_kursinnstillinger' !== $hook) {
         //return;
     }
-    wp_enqueue_script('kursagenten-admin-sync', plugins_url('/../../assets/js/kursagenten-admin-sync.js' , __FILE__ ), array('jquery'), '1.0.1', true);
+    wp_enqueue_script(
+        'kursagenten-admin-sync', 
+        KURSAG_PLUGIN_URL . '/admin/js/kursagenten-admin-sync.js', 
+        array('jquery'), 
+        '1.0.1', 
+        true
+    );
    
     wp_localize_script('kursagenten-admin-sync', 'sync_kurs', [
         'ajax_url' => admin_url('admin-ajax.php'),

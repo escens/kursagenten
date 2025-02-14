@@ -25,7 +25,7 @@ class Kursinnstillinger {
 
     public function kag_kursinnst_create_admin_page() {
         $this->kag_kursinnst_options = get_option('kag_kursinnst_option_name'); 
-        require_once plugin_dir_path(__FILE__) . '/../kurs_sync/kurs_sync_all_courses_from_admin_settings.php';
+        require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
         
         ?>
 

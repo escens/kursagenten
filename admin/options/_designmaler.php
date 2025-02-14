@@ -26,7 +26,7 @@ class Designmaler {
         $this->design_options = get_option('design_option_name'); ?>
 
         <div class="wrap options-form">
-            <h2>design</h2>
+            <h2>Design</h2>
             <p>Her kan du skrive inn informasjon som vil bli brukt ulike steder på nettsiden. Dette inkluderer navn på hovedkontakt (personvernerklæring), samt firmanavn og adresse (kontaktside og bunnfelt).</p>
             <?php settings_errors(); ?>
 
@@ -35,6 +35,37 @@ class Designmaler {
                 settings_fields('design_option_group');
                 do_settings_sections('design-admin');
                 ?>
+
+                <!-- Kurslistedesign -->
+                <h3>Kurslistedesign</h3>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">Velg listedesign</th>
+                        <td>
+                            <select name="design_option_name[course_template_style]">
+                                <?php
+                                $current_style = isset($this->design_options['course_template_style']) 
+                                    ? $this->design_options['course_template_style'] 
+                                    : 'default';
+                                $template_styles = array(
+                                    'default' => 'Standard liste',
+                                    'grid' => 'Rutenett',
+                                    'compact' => 'Kompakt liste'
+                                );
+                                foreach ($template_styles as $value => $label) {
+                                    printf(
+                                        '<option value="%s" %s>%s</option>',
+                                        esc_attr($value),
+                                        selected($current_style, $value, false),
+                                        esc_html($label)
+                                    );
+                                }
+                                ?>
+                            </select>
+                            <p class="description">Velg hvordan kurslisten skal vises på nettsiden.</p>
+                        </td>
+                    </tr>
+                </table>
 
                 <!-- Fyll ut feltene under -->
                 <h3>Fyll ut feltene under</h3>

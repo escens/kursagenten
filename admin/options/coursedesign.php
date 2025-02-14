@@ -43,11 +43,34 @@ class Designmaler {
             <h2>Design på kurslister og kurssider</h2>
             <p>Velg oppsett, farger og filter på kurssider og kursdesign.</p>
             <?php settings_errors(); ?>
+            
             <form method="post" action="options.php">
                 <?php
                 settings_fields('design_option_group');
                 do_settings_sections('design-admin');
                 ?>
+                
+                <h3>Kurslistedesign</h3>
+                <p>Velg hvordan kurslisten skal vises på nettsiden.</p>
+                <select name="kursagenten_template_style" id="template-style">
+                    <?php
+                    $current_style = get_option('kursagenten_template_style', 'default');
+                    $template_styles = array(
+                        'default' => 'Standard liste',
+                        'grid' => 'Rutenett',
+                        'compact' => 'Kompakt liste'
+                    );
+                    foreach ($template_styles as $value => $label) {
+                        printf(
+                            '<option value="%s" %s>%s</option>',
+                            esc_attr($value),
+                            selected($current_style, $value, false),
+                            esc_html($label)
+                        );
+                    }
+                    ?>
+                </select>
+
                 <h3>Filterinnstillinger</h3>
                 <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste.
                     <br>Velg om filteret skal vises som tagger eller avkrysningsliste.</p>
@@ -181,6 +204,23 @@ class Designmaler {
     }
 
     public function design_page_init() {
+        register_setting(
+            'design_option_group',
+            'design_option_name',
+            array($this, 'design_sanitize')
+        );
+
+        // Legg til registrering av template style option
+        register_setting(
+            'design_option_group',
+            'kursagenten_template_style',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'default'
+            )
+        );
+
         register_setting('design_option_group', 'kursagenten_top_filters');
         register_setting('design_option_group', 'kursagenten_left_filters');
         register_setting('design_option_group', 'kursagenten_filter_types');

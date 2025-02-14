@@ -331,7 +331,7 @@ $search_class = $is_search_only ? 'wide-search' : '';
 
                                 while ($query->have_posts()) : $query->the_post();
 
-                                    include 'components/coursedates_default.php';
+                                    include 'partials/coursedates_default.php';
 
                                     $index++; // Øk teller for hver iterasjon
                                 endwhile;

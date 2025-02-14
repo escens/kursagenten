@@ -125,26 +125,23 @@ jQuery(document).ready(function ($) {
     }
 
     function fetchCourses(data) {
-        console.log("Data sendt til backend:", data); // Debugging
-        if (!data || Object.keys(data).length === 0) {
-            data = filterSettings || getCurrentFiltersFromURL();
-        }
-
-        data.action = 'filter_courses';
-        data.nonce = kurskalender_data.filter_nonce;
-
-        if (JSON.stringify(data) === JSON.stringify(previousData)) {
+        // Fjern denne sjekken eller gjør den mer presis
+        /*if (JSON.stringify(data) === JSON.stringify(previousData)) {
             console.log("Ingen endringer i filteret. Skipper AJAX-kall.");
             return;
-        }
-        previousData = data;
+        }*/
         
-
+        data.action = 'filter_courses';
+        data.nonce = kurskalender_data.filter_nonce;
+        
+        console.log("Sender filterdata:", data);
+        
         $.ajax({
             url: kurskalender_data.ajax_url,
             type: 'POST',
             data: data,
-            success: function (response) {
+            success: function(response) {
+                console.log("AJAX response:", response);
                 if (response.success) {
                     $('#filter-results').html(response.data.html);
                     initAccordion();
@@ -152,42 +149,46 @@ jQuery(document).ready(function ($) {
                     updatePagination(response.data.max_num_pages);
                     updateCourseCount();
                 } else {
-                    $('#filter-results').html('<p>' + response.data.message + '</p>');
-                    updateCourseCount();
+                    console.error('Filter Error:', response.data);
+                    $('#filter-results').html(response.data.message);
                 }
             },
-            error: function (xhr, status, error) {
-                console.error('AJAX Error:', error);
-                alert('Det oppstod en feil.');
-            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', {xhr, status, error});
+            }
         });
+        
+        previousData = {...data};
     }
 
     function updateURLParams(params) {
         const url = new URL(window.location.href);
-        Object.keys(params).forEach(key => {
-            if (key !== 'nonce' && key !== 'action') {
-                if (params[key] && params[key].length > 0) {
-                    url.searchParams.set(key, Array.isArray(params[key]) ? params[key].join(',') : params[key]);
-                } else {
-                    url.searchParams.delete(key);
-                }
+        
+        // Fjern eksisterende parametere
+        url.search = '';
+        
+        // Legg til oppdaterte parametere
+        Object.entries(params).forEach(([key, value]) => {
+            if (value && value.length) {
+                const paramValue = Array.isArray(value) ? value.join(',') : value;
+                url.searchParams.set(key, paramValue);
             }
         });
+        
         window.history.pushState({}, '', url);
     }
 
     function getCurrentFiltersFromURL() {
         const url = new URL(window.location.href);
-        const params = Object.fromEntries(url.searchParams.entries());
-        Object.keys(params).forEach(key => {
-            if (params[key].includes(',')) {
-                params[key] = params[key].split(',');
-            }
-            params[key] = Array.isArray(params[key])
-            ? params[key].map(value => value.toLowerCase()) // Konverter alle verdier til lowercase
-            : params[key].toLowerCase();
-        });
+        const params = {};
+        
+        // Gå gjennom alle URL-parametere
+        for (const [key, value] of url.searchParams.entries()) {
+            // Hvis verdien inneholder komma, splitt den til array
+            params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+        }
+        
+        console.log("Parsed URL params:", params); // Debugging
         return params;
     }
 
@@ -372,7 +373,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let maxPrice = 10000;
     let filterKey = filterWrapper.dataset.filterKey; // Henter filter-key for prisen
 
-    // Henter minimum og maksimum pris fra kurslisten
+    // Henters minimum og maksimum pris fra kurslisten
     async function fetchPriceRange() {
         try {
             const response = await fetch(kurskalender_data.ajax_url, {
@@ -462,30 +463,54 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 /* Filter list dropdown - functionality for dropdown*/
 document.addEventListener("DOMContentLoaded", function () {
-    const dropdown = document.querySelector(".filter-dropdown");
-    const dropdownToggle = document.querySelector(".filter-dropdown-toggle");
-    const dropdownContent = document.querySelector(".filter-dropdown-content");
-    const dropdownIcon = document.querySelector(".dropdown-icon");
+    const dropdowns = document.querySelectorAll(".filter-dropdown");
 
-    // Åpne/lukke dropdown ved klikk på toggle
-    dropdownToggle.addEventListener("click", function () {
-        console.log("Klikk på dropdown-toggle");
-        const isOpen = dropdownContent.style.display === "block";
-        dropdown.classList.toggle("open", !isOpen);
+    dropdowns.forEach(dropdown => {
+        const dropdownToggle = dropdown.querySelector(".filter-dropdown-toggle");
+        const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
+        const dropdownIcon = dropdown.querySelector(".dropdown-icon");
 
-        // Bytt visning av dropdown
-        dropdownContent.style.display = isOpen ? "none" : "block";
+        if (dropdownToggle && dropdownContent && dropdownIcon) {
+            // Åpne/lukke dropdown ved klikk på toggle
+            dropdownToggle.addEventListener("click", function (event) {
+                event.stopPropagation();
+                const isOpen = dropdownContent.style.display === "block";
+                
+                // Lukk alle andre dropdowns først
+                dropdowns.forEach(otherDropdown => {
+                    if (otherDropdown !== dropdown) {
+                        const otherContent = otherDropdown.querySelector(".filter-dropdown-content");
+                        const otherIcon = otherDropdown.querySelector(".dropdown-icon");
+                        if (otherContent && otherIcon) {
+                            otherContent.style.display = "none";
+                            otherIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
+                            otherDropdown.classList.remove("open");
+                        }
+                    }
+                });
 
-        // Bytt ikon basert på status
-        dropdownIcon.innerHTML = isOpen ? '<i class="ka-icon icon-chevron-down"></i>' : '<i class="ka-icon icon-close"></i>';
+                // Toggle nåværende dropdown
+                dropdown.classList.toggle("open", !isOpen);
+                dropdownContent.style.display = isOpen ? "none" : "block";
+                dropdownIcon.innerHTML = isOpen ? 
+                    '<i class="ka-icon icon-chevron-down"></i>' : 
+                    '<i class="ka-icon icon-close"></i>';
+            });
+        }
     });
 
-    // Lukk dropdown ved klikk utenfor
+    // Lukk alle dropdowns ved klikk utenfor
     document.addEventListener("click", function (event) {
-        if (!dropdownToggle.contains(event.target) && !dropdownContent.contains(event.target)) {
-            dropdownContent.style.display = "none";
-            dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>'; // Tilbakestill ikonet
-            dropdown.classList.remove("open");
+        if (!event.target.closest('.filter-dropdown')) {
+            dropdowns.forEach(dropdown => {
+                const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
+                const dropdownIcon = dropdown.querySelector(".dropdown-icon");
+                if (dropdownContent && dropdownIcon) {
+                    dropdownContent.style.display = "none";
+                    dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
+                    dropdown.classList.remove("open");
+                }
+            });
         }
     });
 });
