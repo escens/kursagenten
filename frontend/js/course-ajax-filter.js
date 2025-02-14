@@ -494,7 +494,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 dropdownContent.style.display = isOpen ? "none" : "block";
                 dropdownIcon.innerHTML = isOpen ? 
                     '<i class="ka-icon icon-chevron-down"></i>' : 
-                    '<i class="ka-icon icon-close"></i>';
+                    '<i class="ka-icon icon-minus"></i>';
             });
         }
     });
