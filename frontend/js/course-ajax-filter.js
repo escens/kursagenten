@@ -1,8 +1,8 @@
 (function($) {
-    // Lagre en referanse til $ i det ytre scope
+    // Store a reference to $ in the outer scope
     let previousData = {};
 
-    // Hent filterinnstillinger fra PHP (WordPress options)
+    // Get filter settings from PHP (WordPress options)
     const filterSettingsElement = $("#filter-settings");
     let filterSettings = {};
 
@@ -10,29 +10,29 @@
         try {
             filterSettings = JSON.parse(filterSettingsElement.text());
         } catch (error) {
-            console.error("Feil ved parsing av filterinnstillinger:", error);
+            console.error("Error parsing filter settings:", error);
         }
     } else {
-        console.warn("Ingen filterinnstillinger funnet eller ugyldig JSON.");
+        console.warn("No filter settings found or invalid JSON.");
     }
 
-    // Dynamisk håndtering av chips
+    // Dynamic handling of filter chips
     $(document).on('click', '.filter-chip', function () {
-        const filterKey = $(this).data('filter-key'); // Intern referanse til filteret
-        const urlKey = $(this).data('url-key') || filterKey; // Bruk data-url-key hvis tilgjengelig
+        const filterKey = $(this).data('filter-key'); // Internal filter reference
+        const urlKey = $(this).data('url-key') || filterKey; // Use data-url-key if available
         const filterValue = $(this).data('filter');
 
         if ($(this).hasClass('active')) {
             $(this).removeClass('active');
-            updateFiltersAndFetch({ [urlKey]: null }); // Fjern fra URL
+            updateFiltersAndFetch({ [urlKey]: null }); // Remove from URL
         } else {
             $('.chip[data-filter-key="' + filterKey + '"]').removeClass('active');
             $(this).addClass('active');
-            updateFiltersAndFetch({ [urlKey]: filterValue }); // Legg til i URL
+            updateFiltersAndFetch({ [urlKey]: filterValue }); // Add to URL
         }
     });
 
-    // Dynamisk håndtering av checkbox-baserte filter-lister
+    // Dynamic handling of checkbox-based filter lists
     $(document).on('change', '.filter-checkbox', function () {
         const filterKey = $(this).data('filter-key');
         const urlKey = $(this).data('url-key') || filterKey;
@@ -40,24 +40,15 @@
             return $(this).val();
         }).get();
 
-        console.log("Checkbox endret:");
-        console.log("- Filter key:", filterKey);
-        console.log("- URL key:", urlKey);
-        console.log("- Valgte verdier:", selectedValues);
-        console.log("- Checkbox status:", $(this).prop('checked'));
-
-        // Oppdater dropdown tekst umiddelbart
+        // Update dropdown text immediately
         updateDropdownText(filterKey, selectedValues);
         
-        // Oppdater filtre og utfør AJAX-kall med tomme arrays hvis ingen verdier er valgt
+        // Update filters and perform AJAX call with empty arrays if no values are selected
         const filterUpdate = selectedValues.length > 0 ? { [urlKey]: selectedValues } : { [urlKey]: null };
-        console.log("- Sender til updateFiltersAndFetch:", filterUpdate);
-        
         updateFiltersAndFetch(filterUpdate);
     });
-    
 
-    // Håndter søkefelt
+    // Handle search field
     $('#search').on('keyup', function () {
         const sok = $(this).val();
         updateFiltersAndFetch({ sok: sok });
@@ -101,39 +92,29 @@
         const currentFilters = getCurrentFiltersFromURL();
         const updatedFilters = { ...currentFilters, ...newFilters };
     
-        console.log("UpdateFiltersAndFetch:");
-        console.log("- New filters:", newFilters);
-        console.log("- Current filters:", currentFilters);
-        console.log("- Updated filters:", updatedFilters);
-    
-        // Sjekk og oppdater dropdown tekster for alle filter typer
+        // Map filter keys to their URL parameters
         const filterKeyMap = {
             'language': 'sprak',
             'locations': 'sted',
             'instructors': 'i'
         };
     
+        // Update dropdown texts for all filter types
         Object.entries(filterKeyMap).forEach(([filterKey, urlKey]) => {
-            // Sjekk både newFilters og updatedFilters for verdier
             if (newFilters.hasOwnProperty(urlKey)) {
                 const values = newFilters[urlKey] || [];
-                console.log(`- Oppdaterer ${filterKey} dropdown med verdier:`, values);
                 updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
             } else if (updatedFilters[urlKey]) {
-                // Sjekk også i updatedFilters for å fange opp eksisterende verdier
                 const values = updatedFilters[urlKey];
-                console.log(`- Oppdaterer ${filterKey} dropdown med eksisterende verdier:`, values);
                 updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
             }
         });
     
-        // Sjekk om datofilter er definert og formater riktig
+        // Ensure date filter is properly formatted
         if (updatedFilters.dato && typeof updatedFilters.dato === "object") {
             updatedFilters.dato.from = updatedFilters.dato.from || "";
             updatedFilters.dato.to = updatedFilters.dato.to || "";
         }
-    
-        console.log("Filtre som sendes til backend:", updatedFilters); // Debugging
     
         delete updatedFilters.nonce;
         delete updatedFilters.action;
@@ -144,23 +125,20 @@
     }
 
     function updateDropdownText(filterKey, activeFilters) {
-        console.log('UpdateDropdownText:', { filterKey, activeFilters });
-        
         const $dropdown = $(`.filter-dropdown-toggle[data-filter="${filterKey}"]`);
         if (!$dropdown.length) return;
 
         const placeholder = $dropdown.data('placeholder') || 'Velg';
-        const label = $dropdown.data('label') || '';
-
-        // Hvis ingen aktive filtre, vis kun placeholder
+        
+        // If no active filters, show only placeholder
         if (!activeFilters || activeFilters.length === 0) {
-            //console.log('No active filters, showing placeholder ${placeholder}', placeholder);
             const placeholderHtml = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
             $dropdown.html(placeholderHtml);
             $dropdown.removeClass('has-active-filters');
             return;
         }
 
+        // Process active filter names
         let activeNames = [];
         if (filterKey === 'language') {
             activeNames = activeFilters.map(filter => filter.charAt(0).toUpperCase() + filter.slice(1));
@@ -173,6 +151,7 @@
             });
         }
 
+        // Display text format: show all if 2 or fewer, otherwise show count
         let displayText = activeNames.length <= 2 ? activeNames.join(', ') : `${activeNames.length} valgt`;
         const finalHtml = `<span class="selected-text">${displayText}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
         
@@ -181,9 +160,7 @@
     }
 
     function resetAllFilters() {
-        console.log('Reset all filters called');
-        
-        // Nullstill alle dropdowns til deres placeholder
+        // Reset all dropdowns to their placeholder state
         $('.filter-dropdown-toggle').each(function() {
             const $dropdown = $(this);
             const placeholder = $dropdown.data('placeholder') || 'Velg';
@@ -192,35 +169,33 @@
             $dropdown.removeClass('has-active-filters');
         });
 
-        // Fjern alle aktive filtre
+        // Clear all active checkboxes
         $('.filter-checkbox:checked').prop('checked', false);
 
-        // Tøm URL-parametere og oppdater
+        // Clear URL parameters and update
         updateURLParams({});
         
-        // Hent kurs uten filtre
+        // Fetch courses without filters
         fetchCourses({
             action: 'filter_courses',
             nonce: kurskalender_data.filter_nonce
         });
         
-        // Oppdater aktive filtre og reset-knapp
+        // Update active filters list and reset button
         updateActiveFiltersList({});
         toggleResetFiltersButton({});
     }
 
     function fetchCourses(data) {
+        // Add required AJAX parameters
         data.action = 'filter_courses';
         data.nonce = kurskalender_data.filter_nonce;
-        
-        console.log("Sender filterdata:", data);
         
         $.ajax({
             url: kurskalender_data.ajax_url,
             type: 'POST',
             data: data,
             success: function(response) {
-                console.log("AJAX response:", response);
                 if (response.success) {
                     $('#filter-results').html(response.data.html);
                     initAccordion();
@@ -228,8 +203,10 @@
                     updatePagination(response.data.max_num_pages);
                     updateCourseCount();
                     
+                    // Update dropdown states based on current URL filters
                     const currentFilters = getCurrentFiltersFromURL();
                     
+                    // Handle language filter updates
                     if (currentFilters.sprak) {
                         const languages = Array.isArray(currentFilters.sprak) ? 
                             currentFilters.sprak : 
@@ -237,6 +214,7 @@
                         updateDropdownText('language', languages);
                     }
                     
+                    // Handle location filter updates
                     if (currentFilters.sted) {
                         const locations = Array.isArray(currentFilters.sted) ? 
                             currentFilters.sted : 
@@ -244,6 +222,7 @@
                         updateDropdownText('locations', locations);
                     }
                     
+                    // Handle instructor filter updates
                     if (currentFilters.i) {
                         const instructors = Array.isArray(currentFilters.i) ? 
                             currentFilters.i : 
@@ -266,10 +245,10 @@
     function updateURLParams(params) {
         const url = new URL(window.location.href);
         
-        // Fjern eksisterende parametere
+        // Clear existing parameters
         url.search = '';
         
-        // Legg til oppdaterte parametere
+        // Add updated parameters
         Object.entries(params).forEach(([key, value]) => {
             if (value && value.length) {
                 const paramValue = Array.isArray(value) ? value.join(',') : value;
@@ -284,36 +263,33 @@
         const url = new URL(window.location.href);
         const params = {};
         
-        // Gå gjennom alle URL-parametere
+        // Process all URL parameters
         for (const [key, value] of url.searchParams.entries()) {
-            // Hvis verdien inneholder komma, splitt den til array
+            // Split comma-separated values into arrays
             params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
         }
         
-        console.log("Parsed URL params:", params); // Debugging
         return params;
     }
 
     function initializeFiltersFromURL() {
         const filters = getCurrentFiltersFromURL();
-        console.log("Filtre hentet fra URL:", filters); // Debugging
     
-        Object.keys(filters).forEach(function (filterKey) { // Sikrer at filterKey er definert
+        // Initialize each filter based on URL parameters
+        Object.keys(filters).forEach(function (filterKey) {
             const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
     
-            console.log("Sjekker filter:", filterKey, "med verdi(er):", values); // Debugging
-    
+            // Handle chip-based filters
             if ($('.chip[data-url-key="' + filterKey + '"]').length) {
                 values.forEach(value => {
-                    console.log("Marker chip:", filterKey, "med verdi:", value); // Debugging
                     $('.chip[data-filter="' + value + '"][data-url-key="' + filterKey + '"]').addClass('active');
                 });
             }
     
+            // Handle checkbox-based filters
             if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
                 values.forEach(value => {
-                    const lowercaseValue = value.toLowerCase(); // Sørg for at verdien er lowercase
-                    console.log("Marker checkbox:", filterKey, "med verdi:", lowercaseValue); // Debugging
+                    const lowercaseValue = value.toLowerCase();
                     $('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
                         if ($(this).val().toLowerCase() === lowercaseValue) {
                             $(this).prop('checked', true);
@@ -326,14 +302,12 @@
         updateActiveFiltersList(filters);
         toggleResetFiltersButton(filters);
     }
-    
-
-    
 
     function updateActiveFiltersList(filters) {
         const $activeFiltersContainer = $('#active-filters');
         $activeFiltersContainer.empty();
 
+        // Create chips for each active filter
         Object.keys(filters).forEach(key => {
             if (key !== 'nonce' && key !== 'action' && filters[key] && filters[key].length > 0) {
                 const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
@@ -343,6 +317,7 @@
                             ${value} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
                         </span>`
                     );
+                    // Handle filter removal
                     filterChip.find('.remove-filter').on('click', function () {
                         const filterKey = $(this).parent().data('filter-key');
                         const filterValue = $(this).parent().data('filter-value');
@@ -366,11 +341,13 @@
 
     function toggleResetFiltersButton(filters) {
         const $resetButton = $('#reset-filters');
-        const hasActiveFilters = Object.keys(filters).some(key => key !== 'nonce' && key !== 'action' && filters[key] && filters[key].length > 0);
+        const hasActiveFilters = Object.keys(filters).some(key => 
+            key !== 'nonce' && key !== 'action' && filters[key] && filters[key].length > 0
+        );
         hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
     }
 
-    // Initialiser ved innlasting
+    // Initialize filters on page load
     initializeFiltersFromURL();
     const initialFilters = getCurrentFiltersFromURL();
     if (Object.keys(initialFilters).length > 0) {
@@ -378,25 +355,20 @@
     }
 
     function updatePagination(maxPages) {
-        // Oppdater eller bygg paginering her, hvis nødvendig
+        // Pagination update logic here if needed
     }
 
     function updateCourseCount() {
         const counter = document.querySelector("#course-count");
         const elements = document.querySelectorAll(".courselist-item");
-        //console.log("Course count:", elements.length);
         if (elements.length > 0) {
-            elements.forEach((element) => {
-                counter.textContent = document.querySelectorAll(".courselist-item").length + " kurs";
-            });
+            counter.textContent = elements.length + " kurs";
         } else {
             counter.textContent = "0 kurs med dette filteret";
         }
     }
 
-
-    // Datepicker for date filter
-    //Documentation: https://preview.codecanyon.net/item/caleranjs-vanilla-js-date-range-picker/full_screen_preview/25972528
+    // Date picker configuration
     const dateInput = document.getElementById("date-range");
 
     if (dateInput) {
@@ -415,39 +387,40 @@
             headerSeparator: '<i class="ka-icon icon-chevron-right calendar-header-separator"></i>',
             rangeLabel: "Velg periode",
             ranges: [
-            {
-                title: "1 uke",                    
-                startDate: moment(),
-                endDate: moment().add(6, "days")
-              },
-              {
-                title: "Neste 30 dager",                    
-                startDate: moment(),
-                endDate: moment().add(30, "days")
-              },{
-                title: "Neste 3 måneder",                    
-                startDate: moment(),
-                endDate: moment().add(90, "days")
-              },{
-                title: "Neste halvår",                    
-                startDate: moment(),
-                endDate: moment().add(180, "days")
-              },{
-                title: "Ett år",                    
-                startDate: moment(),
-                endDate: moment().add(365, "days")
-              }
+                {
+                    title: "1 uke",                    
+                    startDate: moment(),
+                    endDate: moment().add(6, "days")
+                },
+                {
+                    title: "Neste 30 dager",                    
+                    startDate: moment(),
+                    endDate: moment().add(30, "days")
+                },
+                {
+                    title: "Neste 3 måneder",                    
+                    startDate: moment(),
+                    endDate: moment().add(90, "days")
+                },
+                {
+                    title: "Neste halvår",                    
+                    startDate: moment(),
+                    endDate: moment().add(180, "days")
+                },
+                {
+                    title: "Ett år",                    
+                    startDate: moment(),
+                    endDate: moment().add(365, "days")
+                }
             ],
             onafterselect: function (caleran, startDate, endDate) {
                 const fromDate = startDate.format("YYYY-MM-DD");
                 const toDate = endDate.format("YYYY-MM-DD");
-
-                console.log("Valgt dato:", fromDate, "til", toDate);
                 updateFiltersAndFetch({ dato: { from: fromDate, to: toDate } });
             }
         });
 
-        // Hindre at kalenderen lukkes ved første klikk på input-feltet
+        // Prevent calendar from closing on first input field click
         dateInput.addEventListener("click", function (event) {
             event.stopPropagation();
             let caleranInstance = document.querySelector("#date-range").caleran; 
@@ -456,11 +429,10 @@
             }
         });
     }
-    
 
+    // Initialize reset filters functionality
     $(document).ready(function() {
         $(document).on('click', '.reset-filters', function(e) {
-            console.log('Reset filters clicked');
             e.preventDefault();
             resetAllFilters();
         });
@@ -582,12 +554,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const dropdownIcon = dropdown.querySelector(".dropdown-icon");
 
         if (dropdownToggle && dropdownContent && dropdownIcon) {
-            // Åpne/lukke dropdown ved klikk på toggle
+            // Open/close dropdown on toggle click
             dropdownToggle.addEventListener("click", function (event) {
                 event.stopPropagation();
                 const isOpen = dropdownContent.style.display === "block";
                 
-                // Lukk alle andre dropdowns først
+                // Close all other dropdowns first
                 dropdowns.forEach(otherDropdown => {
                     if (otherDropdown !== dropdown) {
                         const otherContent = otherDropdown.querySelector(".filter-dropdown-content");
@@ -600,7 +572,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 });
 
-                // Toggle nåværende dropdown
+                // Toggle current dropdown
                 dropdown.classList.toggle("open", !isOpen);
                 dropdownContent.style.display = isOpen ? "none" : "block";
                 dropdownIcon.innerHTML = isOpen ? 
@@ -610,7 +582,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // Lukk alle dropdowns ved klikk utenfor
+    // Close all dropdowns when clicking outside
     document.addEventListener("click", function (event) {
         if (!event.target.closest('.filter-dropdown')) {
             dropdowns.forEach(dropdown => {
