@@ -80,7 +80,6 @@ $taxonomy_data['language']['terms'] = $language_terms;
 ?>
 
 <main id="main" class="site-main kursagenten-wrapper" role="main">
-
     <div class="course-container">
         <div class="heder">
             <h1><?php post_type_archive_title(); ?></h1>
@@ -90,47 +89,39 @@ $taxonomy_data['language']['terms'] = $language_terms;
         </div>
 
         <div class="courselist">
-            <div class="inner-container">
-
-            <div class="filter-container filter-top">
-                <?php foreach ($top_filters as $filter) : ?>
-                    <div class="filter-item">
-                        <?php if ($filter === 'search') : ?>
-                            <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs">
-                        <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
-                            <?php if ($filter_types[$filter] === 'chips') : ?>
-                                <div class="filter-chip-wrapper">
-                                    <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
-                                        <button class="chip filter-chip"
-                                            data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                            data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                            data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
-                                            <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
-                                        </button>
-                                    <?php endforeach; ?>
-                                </div>
+            <!-- Topp-felt (full bredde) -->
+            <div class="inner-container filter-section">
+                <div class="filter-container filter-top">
+                    <?php foreach ($top_filters as $filter) : ?>
+                        <div class="filter-item">
+                            <?php if ($filter === 'search') : ?>
+                                <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs">
+                            <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
+                                <?php if ($filter_types[$filter] === 'chips') : ?>
+                                    <div class="filter-chip-wrapper">
+                                        <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                                            <button class="chip filter-chip"
+                                                data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
+                                                data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
+                                                data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
+                                                <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
+                                            </button>
+                                        <?php endforeach; ?>
+                                    </div><!-- End .filter-chip-wrapper -->
                                 <?php elseif ($filter_types[$filter] === 'list') : ?>
                                     <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
                                         <div class="filter-dropdown">
                                             <?php 
-                                            // Get filter info from available filters and set label and placeholder. Filters replace the default label and placeholder. @coursedesign.php
                                             $filter_info = $available_filters[$filter] ?? [];
                                             $filter_label = $filter_info['label'] ?? '';
                                             $filter_placeholder = $filter_info['placeholder'] ?? 'Velg';
-                                            error_log('****filter_label: ' . $filter_label);
-                                            error_log('****filter_placeholder: ' . $filter_placeholder);    
                                             
-                                            // Hent aktive filtre fra URL
                                             $url_key = $taxonomy_data[$filter]['url_key'];
-                                            $active_filters = isset($_GET[$url_key]) ? 
-                                                explode(',', $_GET[$url_key]) : 
-                                                [];
+                                            $active_filters = isset($_GET[$url_key]) ? explode(',', $_GET[$url_key]) : [];
                                             
-                                            // Finn display tekst basert på aktive filtre
                                             if (empty($active_filters)) {
                                                 $display_text = $filter_placeholder;
                                             } else {
-                                                // Konverter slugs til lesbare navn
                                                 $active_names = [];
                                                 foreach ($active_filters as $slug) {
                                                     if ($filter === 'language') {
@@ -160,49 +151,50 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                                 <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
                                             </div>
                                             <div class="filter-dropdown-content">
-                                            <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
-                                                <label class="filter-list-item checkbox">
-                                                    <input type="checkbox" class="filter-checkbox"
-                                                        value="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>"
-                                                        data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                                        data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
-                                                    <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
-                                                </label>
-                                            <?php endforeach; ?>
+                                                <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                                                    <label class="filter-list-item checkbox">
+                                                        <input type="checkbox" class="filter-checkbox"
+                                                            value="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>"
+                                                            data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
+                                                            data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
+                                                        <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
+                                                    </label>
+                                                <?php endforeach; ?>
+                                            </div><
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
             </div>
 
-
-
+            <!-- Hoved-container med kolonner -->
+            <div class="inner-container main-section">
                 <div class="course-grid col-1-4">
-
-
+                    <!-- Venstre kolonne -->
                     <div class="filter left-column">
                         <p>Venstre kolonne</p>
                         <?php if ($has_left_filters) : ?>
-                        <div class="filter-container filter-left">
-                            <p>Filter</p>
-                            <?php foreach ($left_filters as $filter) : ?>
-                                <div class="filter-item">
-                                    <?php if ($filter === 'search') : ?>
-                                        <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs">
-                                    <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
-                                        <?php if ($filter_types[$filter] === 'chips') : ?>
-                                            <div class="filter-chip-wrapper">
-                                                <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
-                                                    <button class="chip filter-chip"
-                                                        data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                                        data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                                        data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
-                                                        <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
-                                                    </button>
-                                                <?php endforeach; ?>
-                                            </div>
+                            <div class="filter-container filter-left">
+                                <p>Filter</p>
+                                <?php foreach ($left_filters as $filter) : ?>
+                                    <div class="filter-item">
+                                        <?php if ($filter === 'search') : ?>
+                                            <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs">
+                                        <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
+                                            <?php if ($filter_types[$filter] === 'chips') : ?>
+                                                <div class="filter-chip-wrapper">
+                                                    <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                                                        <button class="chip filter-chip"
+                                                            data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
+                                                            data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
+                                                            data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
+                                                            <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
+                                                        </button>
+                                                    <?php endforeach; ?>
+                                                </div>
                                             <?php elseif ($filter_types[$filter] === 'list') : ?>
                                                 <div id="filter-list-location" class="filter-list">
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
@@ -216,20 +208,15 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                                     <?php endforeach; ?>
                                                     </div>
                                             <?php endif; ?>
-                                    <?php endif; ?>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         <?php endif; ?>
-
                     </div>
 
-
-
-
-
+                    <!-- Høyre kolonne -->
                     <div class="courselist-items-wrapper right-column">
-
                         <?php if ($query instanceof WP_Query && $query->have_posts()) : ?>
                             <?php
                             $course_count = $query->post_count; // Hent totalt antall kurs
@@ -266,9 +253,7 @@ $taxonomy_data['language']['terms'] = $language_terms;
                             echo '<p>Ingen kurs tilgjengelige.</p>';
                         endif;
                         ?>
-
                     </div>
-
 
                     <div class="footer">
                         <h4>Footer</h4>
@@ -278,24 +263,12 @@ $taxonomy_data['language']['terms'] = $language_terms;
                     <div id="slidein-panel">
                         <button class="close-btn" aria-label="Close">&times;</button>
                         <iframe id="kursagenten-iframe" src=""></iframe>
-
                         <script type="text/javascript" src="https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js"></script>
                     </div>
-
-
-
-
                 </div>
             </div>
         </div>
     </div>
-
-
-
-
-
-
-
 </main>
 <?php get_footer();?>
 
