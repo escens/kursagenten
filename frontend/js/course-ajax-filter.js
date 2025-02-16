@@ -1,20 +1,20 @@
-jQuery(document).ready(function ($) {
+(function($) {
+    // Lagre en referanse til $ i det ytre scope
     let previousData = {};
 
-        // Hent filterinnstillinger fra PHP (WordPress options)
-        const filterSettingsElement = $("#filter-settings");
-        let filterSettings = {};
+    // Hent filterinnstillinger fra PHP (WordPress options)
+    const filterSettingsElement = $("#filter-settings");
+    let filterSettings = {};
 
-        if (filterSettingsElement.length && filterSettingsElement.text().trim().length > 0) {
-            try {
-                filterSettings = JSON.parse(filterSettingsElement.text());
-            } catch (error) {
-                console.error("Feil ved parsing av filterinnstillinger:", error);
-            }
-        } else {
-            console.warn("Ingen filterinnstillinger funnet eller ugyldig JSON.");
+    if (filterSettingsElement.length && filterSettingsElement.text().trim().length > 0) {
+        try {
+            filterSettings = JSON.parse(filterSettingsElement.text());
+        } catch (error) {
+            console.error("Feil ved parsing av filterinnstillinger:", error);
         }
-
+    } else {
+        console.warn("Ingen filterinnstillinger funnet eller ugyldig JSON.");
+    }
 
     // Dynamisk håndtering av chips
     $(document).on('click', '.filter-chip', function () {
@@ -34,15 +34,26 @@ jQuery(document).ready(function ($) {
 
     // Dynamisk håndtering av checkbox-baserte filter-lister
     $(document).on('change', '.filter-checkbox', function () {
-        const filterKey = $(this).data('filter-key'); // Hent riktig filter-key fra checkbox
-        const urlKey = $(this).data('url-key') || filterKey; // Bruk data-url-key hvis tilgjengelig
+        const filterKey = $(this).data('filter-key');
+        const urlKey = $(this).data('url-key') || filterKey;
         const selectedValues = $('.filter-checkbox[data-filter-key="' + filterKey + '"]:checked').map(function () {
             return $(this).val();
         }).get();
-    
-        console.log("Filter valgt:", filterKey, "URL Key:", urlKey, "Verdier:", selectedValues); // Debugging
-    
-        updateFiltersAndFetch({ [urlKey]: selectedValues });
+
+        console.log("Checkbox endret:");
+        console.log("- Filter key:", filterKey);
+        console.log("- URL key:", urlKey);
+        console.log("- Valgte verdier:", selectedValues);
+        console.log("- Checkbox status:", $(this).prop('checked'));
+
+        // Oppdater dropdown tekst umiddelbart
+        updateDropdownText(filterKey, selectedValues);
+        
+        // Oppdater filtre og utfør AJAX-kall med tomme arrays hvis ingen verdier er valgt
+        const filterUpdate = selectedValues.length > 0 ? { [urlKey]: selectedValues } : { [urlKey]: null };
+        console.log("- Sender til updateFiltersAndFetch:", filterUpdate);
+        
+        updateFiltersAndFetch(filterUpdate);
     });
     
 
@@ -90,6 +101,32 @@ jQuery(document).ready(function ($) {
         const currentFilters = getCurrentFiltersFromURL();
         const updatedFilters = { ...currentFilters, ...newFilters };
     
+        console.log("UpdateFiltersAndFetch:");
+        console.log("- New filters:", newFilters);
+        console.log("- Current filters:", currentFilters);
+        console.log("- Updated filters:", updatedFilters);
+    
+        // Sjekk og oppdater dropdown tekster for alle filter typer
+        const filterKeyMap = {
+            'language': 'sprak',
+            'locations': 'sted',
+            'instructors': 'i'
+        };
+    
+        Object.entries(filterKeyMap).forEach(([filterKey, urlKey]) => {
+            // Sjekk både newFilters og updatedFilters for verdier
+            if (newFilters.hasOwnProperty(urlKey)) {
+                const values = newFilters[urlKey] || [];
+                console.log(`- Oppdaterer ${filterKey} dropdown med verdier:`, values);
+                updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
+            } else if (updatedFilters[urlKey]) {
+                // Sjekk også i updatedFilters for å fange opp eksisterende verdier
+                const values = updatedFilters[urlKey];
+                console.log(`- Oppdaterer ${filterKey} dropdown med eksisterende verdier:`, values);
+                updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
+            }
+        });
+    
         // Sjekk om datofilter er definert og formater riktig
         if (updatedFilters.dato && typeof updatedFilters.dato === "object") {
             updatedFilters.dato.from = updatedFilters.dato.from || "";
@@ -106,31 +143,73 @@ jQuery(document).ready(function ($) {
         toggleResetFiltersButton(updatedFilters);
     }
 
-    $(document).on('click', '.reset-filters', function (e) {
-        e.preventDefault();
-        resetFiltersUI();
-        const url = new URL(window.location.href);
-        url.search = '';
-        window.history.pushState({}, '', url);
-        fetchCourses({});
+    function updateDropdownText(filterKey, activeFilters) {
+        console.log('UpdateDropdownText:', { filterKey, activeFilters });
+        
+        const $dropdown = $(`.filter-dropdown-toggle[data-filter="${filterKey}"]`);
+        if (!$dropdown.length) return;
+
+        const placeholder = $dropdown.data('placeholder') || 'Velg';
+        const label = $dropdown.data('label') || '';
+
+        // Hvis ingen aktive filtre, vis kun placeholder
+        if (!activeFilters || activeFilters.length === 0) {
+            //console.log('No active filters, showing placeholder ${placeholder}', placeholder);
+            const placeholderHtml = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
+            $dropdown.html(placeholderHtml);
+            $dropdown.removeClass('has-active-filters');
+            return;
+        }
+
+        let activeNames = [];
+        if (filterKey === 'language') {
+            activeNames = activeFilters.map(filter => filter.charAt(0).toUpperCase() + filter.slice(1));
+        } else {
+            activeFilters.forEach(slug => {
+                const $element = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${slug}"]`);
+                if ($element.length) {
+                    activeNames.push($element.siblings('.checkbox-label').text().trim());
+                }
+            });
+        }
+
+        let displayText = activeNames.length <= 2 ? activeNames.join(', ') : `${activeNames.length} valgt`;
+        const finalHtml = `<span class="selected-text">${displayText}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
+        
+        $dropdown.html(finalHtml);
+        $dropdown.addClass('has-active-filters');
+    }
+
+    function resetAllFilters() {
+        console.log('Reset all filters called');
+        
+        // Nullstill alle dropdowns til deres placeholder
+        $('.filter-dropdown-toggle').each(function() {
+            const $dropdown = $(this);
+            const placeholder = $dropdown.data('placeholder') || 'Velg';
+            const html = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
+            $dropdown.html(html);
+            $dropdown.removeClass('has-active-filters');
+        });
+
+        // Fjern alle aktive filtre
+        $('.filter-checkbox:checked').prop('checked', false);
+
+        // Tøm URL-parametere og oppdater
+        updateURLParams({});
+        
+        // Hent kurs uten filtre
+        fetchCourses({
+            action: 'filter_courses',
+            nonce: kurskalender_data.filter_nonce
+        });
+        
+        // Oppdater aktive filtre og reset-knapp
         updateActiveFiltersList({});
         toggleResetFiltersButton({});
-    });
-
-    function resetFiltersUI() {
-        $('.filter-checkbox').prop('checked', false);
-        $('#multi-coursecategory').val(null).trigger('change');
-        $('#search').val('');
-        $('.chip').removeClass('active');
     }
 
     function fetchCourses(data) {
-        // Fjern denne sjekken eller gjør den mer presis
-        /*if (JSON.stringify(data) === JSON.stringify(previousData)) {
-            console.log("Ingen endringer i filteret. Skipper AJAX-kall.");
-            return;
-        }*/
-        
         data.action = 'filter_courses';
         data.nonce = kurskalender_data.filter_nonce;
         
@@ -148,6 +227,29 @@ jQuery(document).ready(function ($) {
                     initSlideInPanel();
                     updatePagination(response.data.max_num_pages);
                     updateCourseCount();
+                    
+                    const currentFilters = getCurrentFiltersFromURL();
+                    
+                    if (currentFilters.sprak) {
+                        const languages = Array.isArray(currentFilters.sprak) ? 
+                            currentFilters.sprak : 
+                            [currentFilters.sprak];
+                        updateDropdownText('language', languages);
+                    }
+                    
+                    if (currentFilters.sted) {
+                        const locations = Array.isArray(currentFilters.sted) ? 
+                            currentFilters.sted : 
+                            [currentFilters.sted];
+                        updateDropdownText('locations', locations);
+                    }
+                    
+                    if (currentFilters.i) {
+                        const instructors = Array.isArray(currentFilters.i) ? 
+                            currentFilters.i : 
+                            [currentFilters.i];
+                        updateDropdownText('instructors', instructors);
+                    }
                 } else {
                     console.error('Filter Error:', response.data);
                     $('#filter-results').html(response.data.message);
@@ -355,7 +457,16 @@ jQuery(document).ready(function ($) {
         });
     }
     
-});
+
+    $(document).ready(function() {
+        $(document).on('click', '.reset-filters', function(e) {
+            console.log('Reset filters clicked');
+            e.preventDefault();
+            resetAllFilters();
+        });
+    });
+
+})(jQuery);
 
 /*
     * Filter for pris : https://www.codingnepalweb.com/price-range-slider-html-css-javascript/

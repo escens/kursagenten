@@ -218,3 +218,5 @@ define( 'KURSAG_PLUGIN_URL',	plugin_dir_url( KURSAG_PLUGIN_FILE ) );
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
     
+
+    

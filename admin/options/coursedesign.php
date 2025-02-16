@@ -21,14 +21,38 @@ class Designmaler {
     public function design_create_admin_page() {
         $this->design_options = get_option('design_option_name');
         $available_filters = [
-            'search' => 'Søk',
-            'categories' => 'Kategorier',
-            'locations' => 'Kurssteder',
-            'instructors' => 'Instruktører',
-            'language' => 'Språk',
-            'time_of_day' => 'Dag-/kveldskurs',
-            'price' => 'Pris',
-            'date' => 'Dato'
+            'search' => [
+                'label' => 'Søk',
+                'placeholder' => 'Søk etter kurs'
+            ],
+            'categories' => [
+                'label' => 'Kategorier',
+                'placeholder' => 'Velg kategori'
+            ],
+            'locations' => [
+                'label' => 'Kurssteder',
+                'placeholder' => 'Velg kurssted'
+            ],
+            'instructors' => [
+                'label' => 'Instruktører',
+                'placeholder' => 'Velg instruktør'
+            ],
+            'language' => [
+                'label' => 'Språk',
+                'placeholder' => 'Velg språk'
+            ],
+            'time_of_day' => [
+                'label' => 'Dag-/kveldskurs',
+                'placeholder' => 'Velg tidspunkt'
+            ],
+            'price' => [
+                'label' => 'Pris',
+                'placeholder' => 'Velg pris'
+            ],
+            'date' => [
+                'label' => 'Dato',
+                'placeholder' => 'Velg dato'
+            ]
         ];
         $inactive_filters = ['price', 'date','time_of_day']; // Filtre som ikke er i bruk
         $top_filters = get_option('kursagenten_top_filters', []);
@@ -38,6 +62,9 @@ class Designmaler {
         // Sørg for at verdiene er arrays
         $top_filters = is_array($top_filters) ? $top_filters : explode(',', $top_filters);
         $left_filters = is_array($left_filters) ? $left_filters : explode(',', $left_filters);
+
+        // Lagre available_filters som en option
+        update_option('kursagenten_available_filters', $available_filters);
         ?>
         <div class="wrap options-form">
             <h2>Design på kurslister og kurssider</h2>
@@ -81,11 +108,11 @@ class Designmaler {
                 <div class="filter-selection">
                     <h4>Tilgjengelige filtre:</h4>
                     <ul id="available-filters" class="sortable-list">
-                        <?php foreach ($available_filters as $key => $label) : 
+                        <?php foreach ($available_filters as $key => $filter) : 
                             $disabled_class = in_array($key, $inactive_filters) ? 'disabled-filter' : '';
                             if (!in_array($key, $top_filters) && !in_array($key, $left_filters)) : ?>
                                 <li data-filter="<?php echo esc_attr($key); ?>" class="ui-sortable-handle <?php echo $disabled_class; ?>"> 
-                                    <?php echo esc_html($label); ?>
+                                    <?php echo esc_html($filter['label']); ?>
                                     <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language'])) : ?>
                                         <span class="filter-type-options">
                                             <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Chips</label>
@@ -106,7 +133,7 @@ class Designmaler {
                             <?php foreach ($left_filters as $filter) : ?>
                                 <?php if (!empty($filter)) : ?>
                                 <li data-filter="<?php echo esc_attr($filter); ?>">
-                                    <?php echo esc_html($available_filters[$filter]); ?>
+                                    <?php echo esc_html($available_filters[$filter]['label']); ?>
                                     <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'time_of_day'])) : ?>
                                         <span class="filter-type-options">
                                             <label>
@@ -132,7 +159,7 @@ class Designmaler {
                             <?php foreach ($top_filters as $filter) : ?>
                                 <?php if (!empty($filter)) : ?>
                                 <li data-filter="<?php echo esc_attr($filter); ?>">
-                                    <?php echo esc_html($available_filters[$filter]); ?>
+                                    <?php echo esc_html($available_filters[$filter]['label']); ?>
                                     <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'time_of_day'])) : ?>
                                         <span class="filter-type-options">
                                             <label>
@@ -224,6 +251,7 @@ class Designmaler {
         register_setting('design_option_group', 'kursagenten_top_filters');
         register_setting('design_option_group', 'kursagenten_left_filters');
         register_setting('design_option_group', 'kursagenten_filter_types');
+        register_setting('design_option_group', 'kursagenten_available_filters');
     }
 }
 

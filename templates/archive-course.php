@@ -1,16 +1,22 @@
-<?php get_header(); ?>
+<?php 
+if (!function_exists('get_course_languages')) {
+    require_once dirname(dirname(__FILE__)) . '/templates/includes/queries.php';
+}
+get_header(); ?>
 <?php
 $query = get_course_dates_query();
 
 $top_filters = get_option('kursagenten_top_filters', []);
+$left_filters = get_option('kursagenten_left_filters', []);
+$filter_types = get_option('kursagenten_filter_types', []);
+$available_filters = get_option('kursagenten_available_filters', []);
+
 if (!is_array($top_filters)) {
     $top_filters = explode(',', $top_filters);
 }
-$left_filters = get_option('kursagenten_left_filters', []);
 if (!is_array($left_filters)) {
     $left_filters = explode(',', $left_filters);
 }
-$filter_types = get_option('kursagenten_filter_types', []);
 
 // Sjekk om venstre kolonne er tom
 $has_left_filters = !empty($left_filters);
@@ -42,7 +48,7 @@ $taxonomy_data = [
     ],
     'language' => [
         'taxonomy' => '',
-        'terms' => [], // Vil fylles dynamisk basert på metafelter
+        'terms' => get_course_languages(),
         'url_key' => 'sprak',
         'filter_key' => 'language',
     ]
@@ -66,7 +72,6 @@ foreach ($coursedates as $post_id) {
 }
 $language_terms = array_unique($language_terms);
 $taxonomy_data['language']['terms'] = $language_terms;
-
 
 ?>
 
@@ -102,10 +107,52 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                 </div>
                                 <?php elseif ($filter_types[$filter] === 'list') : ?>
                                     <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
-                                    <div class="filter-dropdown">
-                                        <div class="filter-dropdown-toggle">
-                                                <span>Velg kategori</span>
-                                                <span class="dropdown-arrow dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
+                                        <div class="filter-dropdown">
+                                            <?php 
+                                            $filter_info = $available_filters[$filter] ?? [];
+                                            $filter_label = $filter_info['label'] ?? '';
+                                            $filter_placeholder = $filter_info['placeholder'] ?? 'Velg';
+                                            error_log('****filter_label: ' . $filter_label);
+                                            error_log('****filter_placeholder: ' . $filter_placeholder);    
+                                            
+                                            // Hent aktive filtre fra URL
+                                            $url_key = $taxonomy_data[$filter]['url_key'];
+                                            $active_filters = isset($_GET[$url_key]) ? 
+                                                explode(',', $_GET[$url_key]) : 
+                                                [];
+                                            
+                                            // Finn display tekst basert på aktive filtre
+                                            if (empty($active_filters)) {
+                                                $display_text = $filter_placeholder;
+                                            } else {
+                                                // Konverter slugs til lesbare navn
+                                                $active_names = [];
+                                                foreach ($active_filters as $slug) {
+                                                    if ($filter === 'language') {
+                                                        $active_names[] = ucfirst($slug);
+                                                    } else {
+                                                        foreach ($taxonomy_data[$filter]['terms'] as $term) {
+                                                            if (is_object($term) && $term->slug === $slug) {
+                                                                $active_names[] = $term->name;
+                                                                break;
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                $display_text = count($active_names) <= 2 ? 
+                                                    implode(', ', $active_names) : 
+                                                    sprintf('%d %s valgt', count($active_names), strtolower($filter_label));
+                                            }
+                                            
+                                            $has_active_filters = !empty($active_filters) ? 'has-active-filters' : '';
+                                            ?>
+                                            <div class="filter-dropdown-toggle <?php echo esc_attr($has_active_filters); ?>" 
+                                                 data-filter="<?php echo esc_attr($filter); ?>"
+                                                 data-label="<?php echo esc_attr($filter_label); ?>"
+                                                 data-placeholder="<?php echo esc_attr($filter_placeholder); ?>">
+                                                <span class="selected-text"><?php echo esc_html($display_text); ?></span>
+                                                <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
                                             </div>
                                             <div class="filter-dropdown-content">
                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
@@ -118,7 +165,6 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                                 </label>
                                             <?php endforeach; ?>
                                         </div>
-                                    </div>
                                     </div>
                                 <?php endif; ?>
                         <?php endif; ?>
@@ -254,6 +300,7 @@ $taxonomy_data['language']['terms'] = $language_terms;
         'top_filters' => get_option('kursagenten_top_filters', []),
         'left_filters' => get_option('kursagenten_left_filters', []),
         'filter_types' => get_option('kursagenten_filter_types', []),
+        'available_filters' => get_option('kursagenten_available_filters', []),
     ];
     echo json_encode($filter_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
     ?>

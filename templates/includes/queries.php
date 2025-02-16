@@ -1,4 +1,6 @@
 <?php
+error_log('Queries.php er lastet');
+
 /**
  * Retrieve data for the first available coursedate.
  * For use in single-course.php.
@@ -210,3 +212,7 @@ function exclude_hidden_kurs_posts($query) {
     }
 }
 add_action('pre_get_posts', 'exclude_hidden_kurs_posts', 20);
+
+function get_course_languages() {
+    // ... eksisterende kode ...
+}
