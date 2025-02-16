@@ -1,9 +1,11 @@
 <?php 
+// Load required dependencies
 if (!function_exists('get_course_languages')) {
     require_once dirname(dirname(__FILE__)) . '/templates/includes/queries.php';
 }
 get_header(); ?>
 <?php
+// Initialize main course query and filter settings
 $query = get_course_dates_query();
 
 $top_filters = get_option('kursagenten_top_filters', []);
@@ -11,6 +13,7 @@ $left_filters = get_option('kursagenten_left_filters', []);
 $filter_types = get_option('kursagenten_filter_types', []);
 $available_filters = get_option('kursagenten_available_filters', []);
 
+// Convert filter settings to arrays if they're stored as comma-separated strings
 if (!is_array($top_filters)) {
     $top_filters = explode(',', $top_filters);
 }
@@ -18,11 +21,11 @@ if (!is_array($left_filters)) {
     $left_filters = explode(',', $left_filters);
 }
 
-// Sjekk om venstre kolonne er tom
+// Check if left column is empty
 $has_left_filters = !empty($left_filters);
 $left_column_class = $has_left_filters ? '' : 'hidden-left-column';
 
-// Sjekk om søk er det eneste filteret på toppen
+// Check if search is the only filter on top
 $is_search_only = is_array($top_filters) && count($top_filters) === 1 && in_array('search', $top_filters);
 $search_class = $is_search_only ? 'wide-search' : '';
 
@@ -54,7 +57,7 @@ $taxonomy_data = [
     ]
 ];
 
-// Hent språk fra metafeltene for kursdatoer
+// Get language from meta fields for course dates
 $args = [
     'post_type'      => 'coursedate',
     'posts_per_page' => -1,
@@ -64,6 +67,7 @@ $args = [
 $coursedates = get_posts($args);
 $language_terms = [];
 
+// Get language from meta fields for course dates
 foreach ($coursedates as $post_id) {
     $meta_language = get_post_meta($post_id, 'course_language', true);
     if (!empty($meta_language)) {
@@ -109,6 +113,7 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                     <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
                                         <div class="filter-dropdown">
                                             <?php 
+                                            // Get filter info from available filters and set label and placeholder. Filters replace the default label and placeholder. @coursedesign.php
                                             $filter_info = $available_filters[$filter] ?? [];
                                             $filter_label = $filter_info['label'] ?? '';
                                             $filter_placeholder = $filter_info['placeholder'] ?? 'Velg';
@@ -296,6 +301,7 @@ $taxonomy_data['language']['terms'] = $language_terms;
 
 <script id="filter-settings" type="application/json">
     <?php
+    // Export filter settings for JavaScript usage
     $filter_data = [
         'top_filters' => get_option('kursagenten_top_filters', []),
         'left_filters' => get_option('kursagenten_left_filters', []),
