@@ -167,13 +167,9 @@ function get_all_sorted_coursedates($related_coursedate) {
  * @return array Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
 function get_course_dates_query($args = []) {
-    //error_log("Starting get_course_dates_query");
-    
     $default_args = [
         'post_type'      => 'coursedate',
         'posts_per_page' => -1,
-        'orderby'        => 'meta_value',
-        'order'          => 'ASC',
         'meta_query'     => [
             'relation' => 'OR',
             [
@@ -218,12 +214,9 @@ function get_course_dates_query($args = []) {
         }
     }
     
-    //error_log("Query args: " . print_r($query_args, true));
-    
     $query = new WP_Query($query_args);
-    //error_log("Found posts: " . $query->found_posts);
     
-    // Sorter resultatene etter dato, med poster uten dato sist
+    // Sorter resultatene etter dato med korrekt datohåndtering
     if ($query->have_posts()) {
         $posts_with_date = [];
         $posts_without_date = [];
@@ -231,21 +224,27 @@ function get_course_dates_query($args = []) {
         while ($query->have_posts()) {
             $query->the_post();
             $post_id = get_the_ID();
-            $first_date = get_post_meta($post_id, 'course_first_date', true);
+            $date_str = get_post_meta($post_id, 'course_first_date', true);
             
-            if (!empty($first_date)) {
-                $posts_with_date[] = $post_id;
+            if (!empty($date_str)) {
+                // Konverter fra DD.MM.YYYY til timestamp
+                $date_parts = explode('.', $date_str);
+                if (count($date_parts) === 3) {
+                    $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
+                    $posts_with_date[$post_id] = $timestamp;
+                }
             } else {
                 $posts_without_date[] = $post_id;
             }
         }
         wp_reset_postdata();
         
-        //error_log("Posts with date: " . count($posts_with_date));
-        //error_log("Posts without date: " . count($posts_without_date));
+        // Sorter etter timestamp
+        asort($posts_with_date);
         
-        // Kombiner listene og oppdater spørringen
-        $sorted_posts = array_merge($posts_with_date, $posts_without_date);
+        // Kombiner listene
+        $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
+        
         if (!empty($sorted_posts)) {
             $query_args['post__in'] = $sorted_posts;
             $query_args['orderby'] = 'post__in';

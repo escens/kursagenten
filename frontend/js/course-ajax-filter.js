@@ -160,6 +160,11 @@
     }
 
     function resetAllFilters() {
+        // Lagre eksisterende sorteringsparametere
+        const currentFilters = getCurrentFiltersFromURL();
+        const sort = currentFilters.sort;
+        const order = currentFilters.order;
+
         // Reset all dropdowns to their placeholder state
         $('.filter-dropdown-toggle').each(function() {
             const $dropdown = $(this);
@@ -172,18 +177,22 @@
         // Clear all active checkboxes
         $('.filter-checkbox:checked').prop('checked', false);
 
-        // Clear URL parameters and update
-        updateURLParams({});
+        // Oppdater URL og fetch med bare sorteringsparametere
+        const updatedFilters = {};
+        if (sort && order) {
+            updatedFilters.sort = sort;
+            updatedFilters.order = order;
+        }
         
-        // Fetch courses without filters
+        updateURLParams(updatedFilters);
         fetchCourses({
+            ...updatedFilters,
             action: 'filter_courses',
             nonce: kurskalender_data.filter_nonce
         });
         
-        // Update active filters list and reset button
-        updateActiveFiltersList({});
-        toggleResetFiltersButton({});
+        updateActiveFiltersList(updatedFilters);
+        toggleResetFiltersButton(updatedFilters);
     }
 
     function fetchCourses(data) {
@@ -309,7 +318,9 @@
 
         // Create chips for each active filter
         Object.keys(filters).forEach(key => {
-            if (key !== 'nonce' && key !== 'action' && filters[key] && filters[key].length > 0) {
+            // Ekskluder sorteringsparametere og andre systemparametere
+            if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && 
+                filters[key] && filters[key].length > 0) {
                 const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
                 values.forEach(value => {
                     const filterChip = $(
@@ -330,7 +341,13 @@
                             }
                         }
 
-                        updateFiltersAndFetch(filters);
+                        // Behold sorteringsparameterne når et filter fjernes
+                        const updatedFilters = {
+                            ...filters,
+                            sort: filters.sort,
+                            order: filters.order
+                        };
+                        updateFiltersAndFetch(updatedFilters);
                         $('.filter-checkbox[value="' + filterValue + '"]').prop('checked', false);
                     });
                     $activeFiltersContainer.append(filterChip);
@@ -342,7 +359,8 @@
     function toggleResetFiltersButton(filters) {
         const $resetButton = $('#reset-filters');
         const hasActiveFilters = Object.keys(filters).some(key => 
-            key !== 'nonce' && key !== 'action' && filters[key] && filters[key].length > 0
+            key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && 
+            filters[key] && filters[key].length > 0
         );
         hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
     }
@@ -437,6 +455,58 @@
             resetAllFilters();
         });
     });
+
+    function initializeSorting() {
+        const $sortDropdown = $('.sort-dropdown');
+        if (!$sortDropdown.length) {
+            console.log('Sort dropdown not found');
+            return;
+        }
+
+        // Toggle dropdown
+        $('.sort-dropdown').on('click', function(e) {
+            e.stopPropagation();
+            $(this).toggleClass('active');
+        });
+
+        // Handle sort option clicks
+        $('.sort-option').on('click', function(e) {
+            e.stopPropagation();
+            const sortBy = $(this).data('sort');
+            const order = $(this).data('order');
+            
+            console.log('Sorting clicked:', { sortBy, order });
+            
+            // Oppdater selected text
+            $('.sort-dropdown .selected-text').text($(this).text());
+            
+            // Hent eksisterende filtre og legg til sortering
+            const currentFilters = getCurrentFiltersFromURL();
+            const updatedFilters = {
+                ...currentFilters,
+                sort: sortBy,
+                order: order
+            };
+            
+            console.log('Updated filters:', updatedFilters);
+            
+            // Utfør filtrering med sortering
+            updateFiltersAndFetch(updatedFilters);
+            
+            // Lukk dropdown
+            $('.sort-dropdown').removeClass('active');
+        });
+
+        // Lukk dropdown når man klikker utenfor
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.sort-dropdown').length) {
+                $('.sort-dropdown').removeClass('active');
+            }
+        });
+    }
+
+    // Initialiser sortering - nå innenfor IIFE
+    initializeSorting();
 
 })(jQuery);
 
@@ -597,3 +667,49 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 });
+
+// Fjern eller kommenter ut alle disse gamle funksjonene og variabler
+/*
+let currentSort = '';
+let currentOrder = '';
+
+document.querySelector('.sort-dropdown').addEventListener('click', function(e) {
+    this.classList.toggle('active');
+});
+
+document.querySelectorAll('.sort-option').forEach(option => {
+    option.addEventListener('click', function() {
+        const sortBy = this.dataset.sort;
+        const order = this.dataset.order;
+        
+        document.querySelector('.sort-dropdown .selected-text').textContent = this.textContent;
+        
+        currentSort = sortBy;
+        currentOrder = order;
+        
+        updateResults();
+    });
+});
+
+function updateResults() {
+    const filters = getActiveFilters();
+    const searchQuery = document.querySelector('.filter-search')?.value || '';
+    
+    const data = {
+        action: 'filter_courses',
+        filters: filters,
+        search: searchQuery,
+        sort: currentSort,
+        order: currentOrder,
+        security: kursagentenAjax.nonce
+    };
+}
+*/
+
+// Initialiser sortering når dokumentet er klart
+/*$(document).ready(function() {
+    initializeSorting();
+    // ... existing document.ready code ...
+});*/
+
+// ... rest of existing code ... 

@@ -247,9 +247,19 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 </div>
                                 <div id="courselist-header-right">
                                     
-                                    <div class="filter-dropdown">
-                                        <span class="selected-text">Sorter etter</span>
-                                        <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
+                                    <div class="sort-dropdown">
+                                        <div class="sort-dropdown-toggle">
+                                            <span class="selected-text">Sorter etter</span>
+                                            <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
+                                        </div>
+                                        <div class="sort-dropdown-content">
+                                            <button class="sort-option" data-sort="title" data-order="asc">Fra A til Å</button>
+                                            <button class="sort-option" data-sort="title" data-order="desc">Fra Å til A</button>
+                                            <button class="sort-option" data-sort="price" data-order="asc">Pris lav til høy</button>
+                                            <button class="sort-option" data-sort="price" data-order="desc">Pris høy til lav</button>
+                                            <button class="sort-option" data-sort="date" data-order="asc">Tidligst</button>
+                                            <button class="sort-option" data-sort="date" data-order="desc">Senest</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

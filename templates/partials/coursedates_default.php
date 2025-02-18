@@ -30,6 +30,7 @@ if ($related_course_info) {
 if (!$course_link) {
     $course_link = false;
 }
+$course_count = $course_count ?? 0;
 $item_class = $course_count === 1 ? ' single-item' : '';
 
 ?>

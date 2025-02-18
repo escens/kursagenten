@@ -58,7 +58,7 @@ function toggleAccordion(target) {
 
 function initAccordion() {
     const elements = document.querySelectorAll(".clickopen");
-    console.log("initAccordion kjører... Antall elementer funnet:", elements.length);
+    //console.log("initAccordion kjører... Antall elementer funnet:", elements.length);
 
     elements.forEach((element) => {
         element.removeEventListener("click", handleAccordionClick);
