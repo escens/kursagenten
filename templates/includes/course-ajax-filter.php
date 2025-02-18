@@ -215,6 +215,39 @@ function filter_courses_handler() {
     }
 
     if ($query->have_posts()) {
+        // Sorter postene
+        $posts_with_date = [];
+        $posts_without_date = [];
+        
+        while ($query->have_posts()) {
+            $query->the_post();
+            $post_id = get_the_ID();
+            $course_first_date = get_post_meta($post_id, 'course_first_date', true);
+            $title = get_the_title();
+            
+            if (!empty($course_first_date)) {
+                $posts_with_date[$post_id] = $course_first_date; // Bruker course_first_date direkte
+            } else {
+                $posts_without_date[$post_id] = $title;
+            }
+        }
+        wp_reset_postdata();
+        
+        // Sorter poster med dato etter course_first_date
+        asort($posts_with_date);
+        
+        // Sorter poster uten dato alfabetisk
+        asort($posts_without_date);
+        
+        // Kombiner listene
+        $sorted_posts = array_merge(array_keys($posts_with_date), array_keys($posts_without_date));
+        
+        // Ny spørring med sorterte poster
+        $args['post__in'] = $sorted_posts;
+        $args['orderby'] = 'post__in';
+        
+        $query = new WP_Query($args);
+        
         ob_start();
         while ($query->have_posts()) {
             $query->the_post();
@@ -224,16 +257,11 @@ function filter_courses_handler() {
 
         wp_send_json_success([
             'html' => ob_get_clean(),
-            'max_num_pages' => $query->max_num_pages,
-            'debug' => [
-                'found_posts' => $query->found_posts,
-                'query_vars' => $query->query_vars,
-                'sql' => $query->request
-            ]
+            'max_num_pages' => $query->max_num_pages
         ]);
     } else {
         wp_send_json_error([
-            'message' => '<strong>Ingen resultater</strong> <br>Prøv å fjerne ett eller flere filtre, eller <a style="display:inline-block; padding:0;font-size: inherit;" href="#" id="reset-filters-message" class="reset-filters reset-filters-btn">nullstill alle filtre</a>.',
+            'message' => '<div class="filter-no-results"><strong>Ingen resultater</strong> <br>Prøv å fjerne ett eller flere filtre, eller <a style="display:inline-block; padding:0;font-size: inherit;" href="#" id="reset-filters-message" class="reset-filters reset-filters-btn">nullstill alle filtre</a>.</div>',
             'debug' => [
                 'query_vars' => $query->query_vars,
                 'sql' => $query->request,

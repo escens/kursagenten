@@ -63,6 +63,8 @@ get_header();
         }, $excluded_terms)
     ]);
 
+    // Forbedret håndtering av coursecategories
+    $coursecategory_links = [];
     if (!empty($coursecategories) && !is_wp_error($coursecategories)) {
         $coursecategory_links = array_map(function ($term) {
             return '<a href="' . esc_url(get_term_link($term)) . '">' . esc_html($term->name) . '</a>';
@@ -103,10 +105,18 @@ get_header();
                 <h1 class="medium"><?php the_title(); ?></h1>
                 <div class="header-links iconlist horizontal uppercase small">
                     <div><a href="<?php echo get_post_type_archive_link('course'); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
-                    <div class="taxonomy-list horizontal"><i class="ka-icon icon-tag"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?></div>
+                    <div class="taxonomy-list horizontal">
+                        <?php if (!empty($coursecategory_links)) : ?>
+                            <i class="ka-icon icon-tag"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
+                        <?php endif; ?>
+                    </div>
                 </div>
                 <div class="course-buttons">
-                    <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>"><?php echo esc_html($selected_coursedate_data['button_text']) ;?></a>
+                    <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
+                        <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                            <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
+                        </a>
+                    <?php endif; ?>
                     <a href="#" class="button">Legg til i ønskeliste</a>
                 </div>
             </div>
@@ -262,3 +272,23 @@ get_header();
 
 </main>
 <?php get_footer(); ?>
+
+<?php
+// Debug-utskrift
+add_action('wp_head', function() {
+    if (is_single() && get_post_type() === 'course') {
+        error_log('Debug Course Data:');
+        error_log('Post ID: ' . get_the_ID());
+        error_log('Course ID: ' . get_post_meta(get_the_ID(), 'location_id', true));
+        error_log('Related Coursedate: ' . get_post_meta(get_the_ID(), 'course_related_coursedate', true));
+        
+        // Sjekk coursecategories
+        $coursecategories = wp_get_post_terms(get_the_ID(), 'coursecategory');
+        error_log('Coursecategories: ' . print_r($coursecategories, true));
+        
+        // Sjekk selected_coursedate_data
+        $related_coursedate = get_post_meta(get_the_ID(), 'course_related_coursedate', true);
+        $selected_coursedate_data = get_selected_coursedate_data($related_coursedate);
+        error_log('Selected Coursedate Data: ' . print_r($selected_coursedate_data, true));
+    }
+});

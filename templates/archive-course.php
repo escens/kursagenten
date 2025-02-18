@@ -77,6 +77,16 @@ foreach ($coursedates as $post_id) {
 $language_terms = array_unique($language_terms);
 $taxonomy_data['language']['terms'] = $language_terms;
 
+// Forbered filter-informasjon (plasser dette etter at $available_filters og $taxonomy_data er definert)
+$filter_display_info = [];
+foreach ($available_filters as $filter_key => $filter_info) {
+    $filter_display_info[$filter_key] = [
+        'label' => $filter_info['label'] ?? '',
+        'placeholder' => $filter_info['placeholder'] ?? 'Velg',
+        'filter_key' => $taxonomy_data[$filter_key]['filter_key'] ?? '',
+        'url_key' => $taxonomy_data[$filter_key]['url_key'] ?? ''
+    ];
+}
 ?>
 
 <main id="main" class="site-main kursagenten-wrapper" role="main">
@@ -89,13 +99,12 @@ $taxonomy_data['language']['terms'] = $language_terms;
         </div>
 
         <div class="courselist">
-            <!-- Topp-felt (full bredde) -->
             <div class="inner-container filter-section">
                 <div class="filter-container filter-top">
                     <?php foreach ($top_filters as $filter) : ?>
-                        <div class="filter-item">
+                        <div class="filter-item <?php echo esc_attr($search_class); ?>">
                             <?php if ($filter === 'search') : ?>
-                                <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs">
+                                <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
                             <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                 <?php if ($filter_types[$filter] === 'chips') : ?>
                                     <div class="filter-chip-wrapper">
@@ -112,13 +121,16 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                     <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
                                         <div class="filter-dropdown">
                                             <?php 
-                                            $filter_info = $available_filters[$filter] ?? [];
-                                            $filter_label = $filter_info['label'] ?? '';
-                                            $filter_placeholder = $filter_info['placeholder'] ?? 'Velg';
+                                            // Hent filter info fra den forberedte arrayen
+                                            $current_filter_info = $filter_display_info[$filter] ?? [];
+                                            $filter_label = $current_filter_info['label'] ?? '';
+                                            $filter_placeholder = $current_filter_info['placeholder'] ?? 'Velg';
                                             
+                                            // Hent aktive filtre fra URL
                                             $url_key = $taxonomy_data[$filter]['url_key'];
                                             $active_filters = isset($_GET[$url_key]) ? explode(',', $_GET[$url_key]) : [];
                                             
+                                            // Finn display tekst
                                             if (empty($active_filters)) {
                                                 $display_text = $filter_placeholder;
                                             } else {
@@ -160,7 +172,7 @@ $taxonomy_data['language']['terms'] = $language_terms;
                                                         <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
                                                     </label>
                                                 <?php endforeach; ?>
-                                            </div><
+                                            </div>
                                         </div>
                                     </div>
                                 <?php endif; ?>
@@ -175,14 +187,18 @@ $taxonomy_data['language']['terms'] = $language_terms;
                 <div class="course-grid col-1-4">
                     <!-- Venstre kolonne -->
                     <div class="filter left-column">
-                        <p>Venstre kolonne</p>
                         <?php if ($has_left_filters) : ?>
                             <div class="filter-container filter-left">
-                                <p>Filter</p>
                                 <?php foreach ($left_filters as $filter) : ?>
                                     <div class="filter-item">
+                                        <?php
+                                        // Hent filter info fra den forberedte arrayen
+                                        $current_filter_info = $filter_display_info[$filter] ?? [];
+                                        $filter_label = $current_filter_info['label'] ?? '';
+                                        ?>
+                                        <h5><?php echo $filter_label; ?></h5>
                                         <?php if ($filter === 'search') : ?>
-                                            <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs">
+                                            <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
                                         <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                             <?php if ($filter_types[$filter] === 'chips') : ?>
                                                 <div class="filter-chip-wrapper">
@@ -223,9 +239,22 @@ $taxonomy_data['language']['terms'] = $language_terms;
                             $index = 0;
                             ?>
 
-                            <div id="course-count"><?php echo $course_count; ?> kurs</div>
-                            <div id="active-filters" class="active-filters-container"></div><a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
-
+                            <div class="courselist-header">
+                                
+                                <div id="courselist-header-left" class="active-filters-container">
+                                    <div id="course-count"><?php echo $course_count; ?> kurs</div>
+                                    <div id="active-filters" class="active-filters-container"></div><a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
+                                </div>
+                                <div id="courselist-header-right">
+                                    
+                                    <div class="filter-dropdown">
+                                        <span class="selected-text">Sorter etter</span>
+                                        <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Template part from /partials -->
                             <div class="courselist-items" id="filter-results">
                                 <?php
                                 $args = [

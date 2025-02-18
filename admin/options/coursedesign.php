@@ -20,6 +20,7 @@ class Designmaler {
 
     public function design_create_admin_page() {
         $this->design_options = get_option('design_option_name');
+        
         $available_filters = [
             'search' => [
                 'label' => 'Søk',

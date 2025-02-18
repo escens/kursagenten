@@ -24,6 +24,7 @@ $related_course_info = get_course_info_by_location($related_course_id);
 if ($related_course_info) {
     $course_link = esc_url($related_course_info['permalink']);
     $featured_image_thumb = $related_course_info['thumbnail'];
+    $excerpt = $related_course_info['excerpt'];
 }
 
 if (!$course_link) {
@@ -43,16 +44,20 @@ $item_class = $course_count === 1 ? ' single-item' : '';
             </a>
         </div>
         -->
+        <!-- Image area -->
         <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
         </div>
+        <!-- Text area -->
         <div class="text-area col">
+            <!-- Title area -->
             <div class="title-area">
                 <span class="title"><a href="<?php echo esc_url($course_link); ?>" class="course-link small"><h3 class="course-title"><?php echo esc_html($course_title); ?></h3></a></span>
                 <span class="course-available">Ledige plasser</span>
-                <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
+                
             </div>
+            <!-- Details area - date and location -->
             <div class="details-area iconlist horizontal">
                 <?php if (!empty($first_course_date)) : ?>
                     <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>
@@ -61,6 +66,7 @@ $item_class = $course_count === 1 ? ' single-item' : '';
                     <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                 <?php endif; ?>
             </div>
+            <!-- Meta area -->
             <div class="meta-area iconlist horizontal">
                 <?php if (!empty($price)) : ?>
                     <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo esc_html($after_price); ?></div>
@@ -77,7 +83,15 @@ $item_class = $course_count === 1 ? ' single-item' : '';
                 <?php if (!empty($coursetime)) : ?>
                     <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
                 <?php endif; ?>
-                
+                <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
+            </div>
+            <!-- Accordion content -->
+            <div class="courselist-content accordion-content">
+                <?php if (!empty($excerpt)) : ?>
+                    <p><?php echo wp_kses_post($excerpt); ?></p>
+                <?php endif; ?>
+                <p><?php echo esc_html($first_course_date ? 'Kurset varer fra ' . $first_course_date . ' til ' . $last_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
+                <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
             </div>
         </div>
         <div class="links-area col">
@@ -88,8 +102,5 @@ $item_class = $course_count === 1 ? ' single-item' : '';
         </div>
     </div>
 
-    <div class="courselist-content accordion-content">
-        <p><?php echo esc_html($first_course_date ? $first_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
-        <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
-    </div>
+    
 </div>

@@ -35,7 +35,7 @@ define( 'KURSAG_PLUGIN_URL',	plugin_dir_url( KURSAG_PLUGIN_FILE ) );
     require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_custom_cpt_relationships.php';
     require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_custom_taxonomy_fields.php';
     require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_image_fields.php';
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/create_kursdato_table.php';
+    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/visibility_management.php'; // tags/categories: 'skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv' are excluded from the main query.
     // Registrer aktiveringskrok for å opprette tabellen
     //register_activation_hook(__FILE__, 'create_kursdato_table');
 

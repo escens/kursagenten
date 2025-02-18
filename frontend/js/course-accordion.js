@@ -5,17 +5,19 @@ function toggleAccordion(target) {
         return;
     }
 
-    const content = accordionItem.querySelector(".accordion-content");
+    // Støtter både courselist-content og accordion-content
+    const content = accordionItem.querySelector(".courselist-content, .accordion-content");
     const icon = accordionItem.querySelector(".accordion-icon");
 
     if (!content || !icon) {
-        console.error("Feil: Fant ikke accordion-content eller accordion-icon for", accordionItem);
+        console.error("Feil: Fant ikke content eller accordion-icon for", accordionItem);
         return;
     }
 
     console.log("Åpner accordion for:", accordionItem);
 
-    const allContents = document.querySelectorAll(".accordion-content");
+    // Oppdatert selektor for å støtte begge typer innhold
+    const allContents = document.querySelectorAll(".courselist-content, .accordion-content");
     const allItems = document.querySelectorAll(".courselist-item");
     const allIcons = document.querySelectorAll(".accordion-icon");
 

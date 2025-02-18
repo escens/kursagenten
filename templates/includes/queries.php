@@ -1,5 +1,5 @@
 <?php
-error_log('Queries.php er lastet');
+//error_log('Queries.php er lastet');
 
 /**
  * Retrieve data for the first available coursedate.
@@ -15,6 +15,11 @@ function get_selected_coursedate_data($related_coursedate) {
 
     if (!empty($related_coursedate) && is_array($related_coursedate)) {
         foreach ($related_coursedate as $coursedate_id) {
+            // Bruk den nye hjelpefunksjonen
+            if (has_hidden_terms($coursedate_id)) {
+                continue;
+            }
+
             $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
 
             // Hvis course_first_date finnes, sammenlign for å finne den tidligste
@@ -55,7 +60,29 @@ function get_selected_coursedate_data($related_coursedate) {
     ];
 }
 
-
+/**
+ * Helper function to check if a post has hidden terms
+ */
+function has_hidden_terms($post_id) {
+    //error_log("Checking hidden terms for post ID: " . $post_id);
+    
+    $terms = wp_get_post_terms($post_id, 'coursecategory', array('fields' => 'slugs'));
+    if (is_wp_error($terms)) {
+        //error_log("Error getting terms for post ID " . $post_id . ": " . $terms->get_error_message());
+        return false;
+    }
+    
+    $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
+    $intersection = array_intersect($terms, $hidden_terms);
+    
+    //error_log("Post ID: " . $post_id);
+    //error_log("Terms found: " . print_r($terms, true));
+    //error_log("Hidden terms: " . print_r($hidden_terms, true));
+    //error_log("Intersection: " . print_r($intersection, true));
+    //error_log("Is hidden: " . (!empty($intersection) ? "true" : "false"));
+    
+    return !empty($intersection);
+}
 
 /**
  * Retrieve and sort all coursedates by date.
@@ -65,14 +92,35 @@ function get_selected_coursedate_data($related_coursedate) {
  * @return array Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
 function get_all_sorted_coursedates($related_coursedate) {
+    //error_log("Starting get_all_sorted_coursedates");
+    //error_log("Related coursedates: " . print_r($related_coursedate, true));
+    
     $all_coursedates = [];
+    $coursedates_without_date = [];
 
     if (!empty($related_coursedate) && is_array($related_coursedate)) {
         foreach ($related_coursedate as $coursedate_id) {
-            $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
+            //error_log("Processing coursedate ID: " . $coursedate_id);
+            
+            // Sjekk om coursedate har skjulte termer
+            if (has_hidden_terms($coursedate_id)) {
+                //error_log("Coursedate " . $coursedate_id . " has hidden terms, skipping");
+                continue;
+            }
 
-            // Legg til coursedate i listen, uavhengig av om first date er tilgjengelig
-            $all_coursedates[] = [
+            // Sjekk tilknyttet kurs
+            $course_id = get_post_meta($coursedate_id, 'related_course', true);
+            //error_log("Related course ID: " . ($course_id ? $course_id : "none"));
+            
+            if ($course_id && has_hidden_terms($course_id)) {
+                //error_log("Related course " . $course_id . " has hidden terms, skipping coursedate");
+                continue;
+            }
+
+            $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
+            //error_log("Course first date: " . ($course_first_date ? $course_first_date : "none"));
+            
+            $coursedate_data = [
                 'id' => $coursedate_id,
                 'title' => get_the_title($coursedate_id),
                 'course_title' => get_post_meta($coursedate_id, 'course_title', true),
@@ -83,16 +131,30 @@ function get_all_sorted_coursedates($related_coursedate) {
                 'time' => get_post_meta($coursedate_id, 'course_time', true),
                 'button_text' => get_post_meta($coursedate_id, 'course_button_text', true),
                 'signup_url' => get_post_meta($coursedate_id, 'course_signup_url', true),
-                'missing_first_date' => empty($course_first_date), // Indikerer om first_date mangler
+                'missing_first_date' => empty($course_first_date),
             ];
+
+            if (empty($course_first_date)) {
+                //error_log("Adding coursedate " . $coursedate_id . " to without_date array");
+                $coursedates_without_date[] = $coursedate_data;
+            } else {
+                //error_log("Adding coursedate " . $coursedate_id . " to main array");
+                $all_coursedates[] = $coursedate_data;
+            }
         }
 
-        // Sorter coursedates etter first_date (null verdier vil sorteres til slutt)
+        //error_log("Before sorting - Number of coursedates with dates: " . count($all_coursedates));
+        //error_log("Before sorting - Number of coursedates without dates: " . count($coursedates_without_date));
+
+        // Sorter kursdatoer med dato
         usort($all_coursedates, function ($a, $b) {
-            $date_a = empty($a['first_date']) ? PHP_INT_MAX : strtotime($a['first_date']);
-            $date_b = empty($b['first_date']) ? PHP_INT_MAX : strtotime($b['first_date']);
-            return $date_a - $date_b;
+            return strtotime($a['first_date']) - strtotime($b['first_date']);
         });
+
+        // Legg til kursdatoer uten dato på slutten
+        $all_coursedates = array_merge($all_coursedates, $coursedates_without_date);
+        
+        //error_log("Final number of coursedates: " . count($all_coursedates));
     }
 
     return $all_coursedates;
@@ -105,14 +167,13 @@ function get_all_sorted_coursedates($related_coursedate) {
  * @return array Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
 function get_course_dates_query($args = []) {
+    //error_log("Starting get_course_dates_query");
+    
     $default_args = [
         'post_type'      => 'coursedate',
         'posts_per_page' => -1,
-        'meta_key'       => 'course_first_date',
-        'orderby'        => [
-            'meta_value' => 'ASC',
-            'course_first_date'   => 'DESC',
-        ],
+        'orderby'        => 'meta_value',
+        'order'          => 'ASC',
         'meta_query'     => [
             'relation' => 'OR',
             [
@@ -124,10 +185,75 @@ function get_course_dates_query($args = []) {
                 'compare' => 'NOT EXISTS',
             ],
         ],
+        'get_course_dates' => true,
     ];
 
     $query_args = wp_parse_args($args, $default_args);
-    return new WP_Query($query_args);
+    
+    // Hent alle termer først
+    $all_terms = get_terms([
+        'taxonomy' => 'coursecategory',
+        'fields' => 'slugs',
+        'hide_empty' => false
+    ]);
+    
+    if (!is_wp_error($all_terms)) {
+        $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
+        $visible_terms = array_diff($all_terms, $hidden_terms);
+        
+        if (!empty($visible_terms)) {
+            $query_args['tax_query'] = array(
+                'relation' => 'OR',
+                array(
+                    'taxonomy' => 'coursecategory',
+                    'operator' => 'NOT EXISTS'
+                ),
+                array(
+                    'taxonomy' => 'coursecategory',
+                    'field'    => 'slug',
+                    'terms'    => $visible_terms,
+                    'operator' => 'IN'
+                )
+            );
+        }
+    }
+    
+    //error_log("Query args: " . print_r($query_args, true));
+    
+    $query = new WP_Query($query_args);
+    //error_log("Found posts: " . $query->found_posts);
+    
+    // Sorter resultatene etter dato, med poster uten dato sist
+    if ($query->have_posts()) {
+        $posts_with_date = [];
+        $posts_without_date = [];
+        
+        while ($query->have_posts()) {
+            $query->the_post();
+            $post_id = get_the_ID();
+            $first_date = get_post_meta($post_id, 'course_first_date', true);
+            
+            if (!empty($first_date)) {
+                $posts_with_date[] = $post_id;
+            } else {
+                $posts_without_date[] = $post_id;
+            }
+        }
+        wp_reset_postdata();
+        
+        //error_log("Posts with date: " . count($posts_with_date));
+        //error_log("Posts without date: " . count($posts_without_date));
+        
+        // Kombiner listene og oppdater spørringen
+        $sorted_posts = array_merge($posts_with_date, $posts_without_date);
+        if (!empty($sorted_posts)) {
+            $query_args['post__in'] = $sorted_posts;
+            $query_args['orderby'] = 'post__in';
+            return new WP_Query($query_args);
+        }
+    }
+    
+    return $query;
 }
 
 /**
@@ -166,6 +292,7 @@ function get_course_info_by_location($related_course_id) {
             'title'      => get_the_title($course_id),
             'permalink'  => get_permalink($course_id),
             'thumbnail'  => get_the_post_thumbnail_url($course_id, 'thumbnail') ?: 'https://plugin.lanseres.no/wp-content/uploads/placeholder-kurs.jpg',
+            'excerpt'    => get_the_excerpt($course_id),
         ];
 
         wp_reset_postdata(); // Rydd opp etter WP_Query
@@ -176,43 +303,8 @@ function get_course_info_by_location($related_course_id) {
     return null; // Returner null hvis ingen kurs ble funnet
 }
 
-
-
-/**
- * Hide posts with specific terms in 'coursecategory' from the main query.
- *
- * Hides posts with terms 'skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv'.
- * 
- */
-function exclude_hidden_kurs_posts($query) {
-    // Check if it's the main query, not in the admin area, and not a single kurs page
-    if (!is_admin() && $query->is_main_query() && !is_singular('kurs') && !$query->is_search()) {
-
-        // Define the custom tax_query to exclude posts with specific terms in 'kurskategori'
-        $tax_query = array(
-            'relation' => 'AND', // Use AND to ensure all conditions are respected
-            array(
-                'taxonomy' => 'coursecategory',
-                'field'    => 'slug',
-                'terms'    => array('skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv'),
-                'operator' => 'NOT IN',
-            ),
-        );
-
-        // Get the existing tax_query if any
-        $existing_tax_query = $query->get('tax_query');
-
-        // Merge the existing tax_query (if any) with our custom one
-        if (!empty($existing_tax_query)) {
-            $tax_query = array_merge($existing_tax_query, $tax_query);
-        }
-
-        // Set the updated tax_query
-        $query->set('tax_query', $tax_query);
-    }
-}
-add_action('pre_get_posts', 'exclude_hidden_kurs_posts', 20);
-
 function get_course_languages() {
     // ... eksisterende kode ...
 }
+/* Check admin/post_types/visibility_management.php for visibility management 
+   tags/categories: 'skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv' are excluded from the main query.*/
