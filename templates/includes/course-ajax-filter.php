@@ -19,18 +19,76 @@ function filter_courses_handler() {
         'post_type'      => 'coursedate',
         'posts_per_page' => 10,
         'paged'          => isset($_POST['paged']) ? intval($_POST['paged']) : 1,
-        'meta_query'     => [
-            'relation' => 'OR',
-            [
-                'key'     => 'course_first_date',
-                'compare' => 'EXISTS',
-            ],
-            [
-                'key'     => 'course_first_date',
-                'compare' => 'NOT EXISTS',
-            ],
-        ],
+        'tax_query'      => ['relation' => 'AND'],
+        'meta_query'     => ['relation' => 'AND'],
     ];
+
+    // Hent alle termer først
+    $all_terms = get_terms([
+        'taxonomy' => 'coursecategory',
+        'fields' => 'slugs',
+        'hide_empty' => false
+    ]);
+    
+    if (!is_wp_error($all_terms)) {
+        $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
+        $visible_terms = array_diff($all_terms, $hidden_terms);
+        
+        if (!empty($visible_terms)) {
+            // Legg til synlighetsfilter i tax_query
+            $base_args['tax_query'][] = array(
+                'relation' => 'OR',
+                array(
+                    'taxonomy' => 'coursecategory',
+                    'operator' => 'NOT EXISTS'
+                ),
+                array(
+                    'taxonomy' => 'coursecategory',
+                    'field'    => 'slug',
+                    'terms'    => $visible_terms,
+                    'operator' => 'IN'
+                )
+            );
+        }
+    }
+
+    // Parameter mapping - database_field => incoming_parameter
+    $param_mapping = [
+        'course_location' => 'sted',
+        'course_first_date' => 'dato',
+        'coursecategory' => 'k',
+        'instructors' => 'i',
+        'course_language' => 'sprak',
+    ];
+    $search_param = 'sok';
+
+    // Håndter filtre
+    if (!empty($_POST)) {
+        foreach ($param_mapping as $db_field => $param_name) {
+            if (!empty($_POST[$param_name])) {
+                error_log("Legger til filter for {$db_field}: " . print_r($_POST[$param_name], true));
+                
+                if (in_array($db_field, ['coursecategory', 'instructors'])) {
+                    $base_args['tax_query'][] = [
+                        'taxonomy' => $db_field,
+                        'field'    => 'slug',
+                        'terms'    => $_POST[$param_name],
+                    ];
+                } else {
+                    $base_args['meta_query'][] = [
+                        'key'     => $db_field,
+                        'value'   => $_POST[$param_name],
+                        'compare' => 'IN',
+                    ];
+                }
+            }
+        }
+    }
+
+    // Håndter søk
+    if (!empty($_POST[$search_param])) {
+        $base_args['s'] = sanitize_text_field($_POST[$search_param]);
+    }
 
     // Håndter sortering
     $sort = sanitize_text_field($_POST['sort'] ?? '');
@@ -59,7 +117,6 @@ function filter_courses_handler() {
                     $date_str = get_post_meta($post_id, 'course_first_date', true);
 
                     if (!empty($date_str)) {
-                        // Konverter fra DD.MM.YYYY til timestamp
                         $date_parts = explode('.', $date_str);
                         if (count($date_parts) === 3) {
                             $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
@@ -71,23 +128,19 @@ function filter_courses_handler() {
                 }
                 wp_reset_postdata();
 
-                // Sorter etter timestamp
                 if (strtoupper($order) === 'DESC') {
                     arsort($posts_with_date);
                 } else {
                     asort($posts_with_date);
                 }
 
-                // Kombiner sorterte poster
                 $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
-                
-                // Ny spørring med sorterte poster
                 $base_args['post__in'] = $sorted_posts;
                 $base_args['orderby'] = 'post__in';
                 break;
         }
     } else {
-        // Standard datosortering når ingen sortering er valgt
+        // Standard datosortering
         $query = new WP_Query($base_args);
         $posts_with_date = [];
         $posts_without_date = [];
@@ -98,7 +151,6 @@ function filter_courses_handler() {
             $date_str = get_post_meta($post_id, 'course_first_date', true);
 
             if (!empty($date_str)) {
-                // Konverter fra DD.MM.YYYY til timestamp
                 $date_parts = explode('.', $date_str);
                 if (count($date_parts) === 3) {
                     $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
@@ -110,16 +162,13 @@ function filter_courses_handler() {
         }
         wp_reset_postdata();
 
-        // Sorter etter timestamp
         asort($posts_with_date);
-
-        // Kombiner sorterte poster
         $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
-        
-        // Ny spørring med sorterte poster
         $base_args['post__in'] = $sorted_posts;
         $base_args['orderby'] = 'post__in';
     }
+
+    error_log('Final WP_Query args: ' . print_r($base_args, true));
 
     $query = new WP_Query($base_args);
 
@@ -136,13 +185,9 @@ function filter_courses_handler() {
             'max_num_pages' => $query->max_num_pages
         ]);
     } else {
-        wp_send_json_error([
-            'message' => '<div class="filter-no-results"><strong>Ingen resultater</strong> <br>Prøv å fjerne ett eller flere filtre, eller <a style="display:inline-block; padding:0;font-size: inherit;" href="#" id="reset-filters-message" class="reset-filters reset-filters-btn">nullstill alle filtre</a>.</div>',
-            'debug' => [
-                'query_vars' => $query->query_vars,
-                'sql' => $query->request,
-                'filters' => $_POST
-            ]
+        wp_send_json_success([
+            'html' => '<div class="filter-no-results"><p>Ingen kurs funnet. Fjern ett eller flere filtre, eller<a href="#" class="reset-filters"> nullstill alle filtre</a></p></div>',
+            'max_num_pages' => 0
         ]);
     }
 }
