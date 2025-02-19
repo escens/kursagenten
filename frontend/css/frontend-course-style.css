@@ -12,7 +12,7 @@
   width: 100%;
   max-width: var(--ka-max-width);
   margin: 0 auto;
-  padding: 2em;
+  padding: 1em 2em;
 }
 /* COMMON */
 .kursagenten-wrapper h1.medium { font-size: 22px;}
@@ -442,6 +442,9 @@ div#courselist-header-right {
   .course-grid.col-1-4{
     grid-template-columns: 1fr 4fr;
   }
+  .course-grid.col-1{
+    grid-template-columns: 1fr;
+  }
 
   /* SINGLE COURSE LAYOUT */
 
@@ -591,10 +594,13 @@ picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit
   padding: 0 10px;
   transition: height 0.3s ease, padding 0.3s ease;
   background: white;
+  font-size: 15px;
 }
 .courselist-content.open {
   padding: 10px;
   background: rgba(255, 255, 255, 0.568);
+  border-top: 1px dashed #eee;
+  margin-top: 1em;
 }
   
   /* FILTER */
@@ -603,6 +609,11 @@ picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit
   .filter-section .filter-item{
     display: inline-flex;
     gap: 20px;
+  }
+  .filter-item.chips {
+    display: flex ;
+    flex-wrap: wrap;
+    margin: 6px 0;
   }
   .filter-item h4, .filter-item h5{
     font-weight: 500;
@@ -618,7 +629,8 @@ picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit
     font-size: var(--ka-filter-font-size);
 }
   span.active-filter-chip {
-    background: antiquewhite;
+    background: var(--ka-color);
+    color: white;
     margin-right: 5px;
     padding: 0 0 0 10px;
     border-radius: 5px;
@@ -702,7 +714,10 @@ input[type="text"].filter-search {
   font-size: var(--ka-filter-font-size);
 }
 .filter-item.wide-search {
-  width: 100%;
+  width: 80%;
+  margin: 0 10%;
+  height: 50px;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.1);
 }
 .filter-item.wide-search #search {
   text-align: center;

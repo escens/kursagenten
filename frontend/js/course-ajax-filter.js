@@ -96,7 +96,9 @@
         const filterKeyMap = {
             'language': 'sprak',
             'locations': 'sted',
-            'instructors': 'i'
+            'instructors': 'i',
+            'categories': 'k',
+            //add more in archive-course.php
         };
     
         // Update dropdown texts for all filter types

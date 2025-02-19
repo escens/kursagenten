@@ -218,9 +218,9 @@ class Designmaler {
         </script>
         <style>
             .filter-containers {display: grid; grid-template-columns: 1fr 2fr; gap: 1em; }
-            .sortable-list { list-style: none; padding: 10px; background: #f7f7f7; min-height: 50px; border: 1px solid #e9e9e9; }
+            .sortable-list { list-style: none; padding: 10px; background: #ffffff7a; min-height: 50px; border: 2px dashed #cccccc61;border-radius: 8px; }
             .sortable-list li { padding: 10px 10px; margin: 10px 5px; background: #fff; cursor: move; border: 1px solid #e5e5e5; border-radius: 5px; font-weight: bold;}
-            #available-filters.sortable-list { display: flex; border: 0; background: transparent; padding: 0; }
+            #available-filters.sortable-list { display: flex; border: 0; background: #ffffff7a; padding: 1em; border: 2px dashed #ccc; border-radius: 8px; }
             #available-filters.sortable-list li { width: fit-content; height: fit-content; padding: 10px 15px;}
             #available-filters .filter-type-options { display: none; }
             .filter-type-options { float: right; margin-left: 10px; font-weight: normal; color: #777; }

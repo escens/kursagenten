@@ -89,7 +89,7 @@ $item_class = $course_count === 1 ? ' single-item' : '';
             <!-- Accordion content -->
             <div class="courselist-content accordion-content">
                 <?php if (!empty($excerpt)) : ?>
-                    <p><?php echo wp_kses_post($excerpt); ?></p>
+                    <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
                 <?php endif; ?>
                 <p><?php echo esc_html($first_course_date ? 'Kurset varer fra ' . $first_course_date . ' til ' . $last_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
                 <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
