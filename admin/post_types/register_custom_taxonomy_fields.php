@@ -1,4 +1,7 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 // Custom fields for CPT kurs and taxonomies
 //****************************************** */
@@ -7,7 +10,11 @@
 // Taxonomy Rich text metabox
 // -----------------------------
 function custom_taxonomy_rich_text_editor($term) {
-    $rich_description = get_term_meta($term->term_id, 'rich_description', true); // Get existing value
+    if (!isset($term->term_id)) {
+        return;
+    }
+    
+    $rich_description = get_term_meta($term->term_id, 'rich_description', true);
     ?>
     <tr class="form-field">
         <th scope="row" valign="top"><label for="rich_description">Utvidet beskrivelse</label></th>
@@ -23,14 +30,16 @@ function custom_taxonomy_rich_text_editor($term) {
     </tr>
     <?php
 }
-add_action('coursecategory_edit_form_fields', 'custom_taxonomy_rich_text_editor');
-add_action('course_location_edit_form_fields', 'custom_taxonomy_rich_text_editor');
 
 
 
 // Taxonomy Image upload metabox
 // -----------------------------
 function add_taxonomy_image_field($term, $taxonomy, $field_name, $label_text, $button_type_label, $description = '') {
+    if (!isset($term->term_id)) {
+        return;
+    }
+    
     $image_url = get_term_meta($term->term_id, $field_name, true);
     ?>
     <tr class="form-field">
@@ -64,22 +73,38 @@ add_action('course_location_edit_form_fields', 'add_course_location_image_field'
 
 
 
-// Taxonomy save function
+// Taxonomy save function med forbedret sikkerhet
 // -----------------------------
 function save_taxonomy_field($term_id) {
-    if (isset($_POST['image_coursecategory'])) {
-        update_term_meta($term_id, 'image_coursecategory', esc_url($_POST['image_coursecategory']));
+    // Verify nonce would be good to add here
+    if (!current_user_can('manage_categories')) {
+        return;
     }
-    if (isset($_POST['icon_coursecategory'])) {
-        update_term_meta($term_id, 'icon_coursecategory', esc_url($_POST['icon_coursecategory']));
-    }
-    if (isset($_POST['image_course_location'])) {
-        update_term_meta($term_id, 'image_course_location', esc_url($_POST['image_course_location']));
-    }
-    if (isset($_POST['rich_description'])) {
-        update_term_meta($term_id, 'rich_description', wp_kses_post($_POST['rich_description']));
+    
+    $fields = [
+        'image_coursecategory' => 'esc_url',
+        'icon_coursecategory' => 'esc_url',
+        'image_course_location' => 'esc_url',
+        'rich_description' => 'wp_kses_post'
+    ];
+    
+    foreach ($fields as $field => $sanitize_callback) {
+        if (isset($_POST[$field])) {
+            $value = $_POST[$field];
+            if (is_callable($sanitize_callback)) {
+                $value = call_user_func($sanitize_callback, $value);
+            }
+            update_term_meta($term_id, $field, $value);
+        }
     }
 }
+
+// Register hooks
+add_action('coursecategory_edit_form_fields', 'custom_taxonomy_rich_text_editor');
+add_action('course_location_edit_form_fields', 'custom_taxonomy_rich_text_editor');
+add_action('coursecategory_edit_form_fields', 'add_coursecategory_image_field');
+add_action('coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
+add_action('course_location_edit_form_fields', 'add_course_location_image_field');
 add_action('edited_coursecategory', 'save_taxonomy_field');
 add_action('edited_course_location', 'save_taxonomy_field');
 

@@ -1,4 +1,8 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 // Creates bidirectional relationships between kurs, kursdato, and instruktor
 
 add_action('add_meta_boxes', 'related_add_custom_metabox');

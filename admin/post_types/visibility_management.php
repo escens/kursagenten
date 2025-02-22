@@ -1,11 +1,17 @@
 <?php
+if (!defined('ABSPATH')) {
+    exit;
+}
+
 /**
  * Visibility management for courses and coursedates
  * Handles admin columns, filters and visibility logic for hidden posts
  */
 
 // Define hidden terms globally for reuse
-define('KURSAG_HIDDEN_TERMS', serialize(array('skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv')));
+if (!defined('KURSAG_HIDDEN_TERMS')) {
+    define('KURSAG_HIDDEN_TERMS', serialize(array('skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv')));
+}
 
 /**
  * Hide posts with specific terms in 'coursecategory' from the main query
@@ -141,12 +147,12 @@ add_filter('manage_edit-coursedate_sortable_columns', 'make_visibility_column_so
 function add_visibility_filter() {
     global $typenow;
     if ($typenow === 'course' || $typenow === 'coursedate') {
-        $current = isset($_GET['course_visibility']) ? $_GET['course_visibility'] : '';
+        $current = isset($_GET['course_visibility']) ? sanitize_text_field($_GET['course_visibility']) : '';
         ?>
         <select name="course_visibility" id="course_visibility">
-            <option value="">Vis alle synligheter</option>
-            <option value="hidden" <?php selected($current, 'hidden'); ?>>Skjulte kurs</option>
-            <option value="visible" <?php selected($current, 'visible'); ?>>Synlige kurs</option>
+            <option value=""><?php esc_html_e('Vis alle synligheter', 'kursagenten'); ?></option>
+            <option value="hidden" <?php selected($current, 'hidden'); ?>><?php esc_html_e('Skjulte kurs', 'kursagenten'); ?></option>
+            <option value="visible" <?php selected($current, 'visible'); ?>><?php esc_html_e('Synlige kurs', 'kursagenten'); ?></option>
         </select>
         <?php
     }
@@ -163,16 +169,21 @@ function handle_visibility_filter($query) {
 
     global $typenow;
     if (($typenow === 'course' || $typenow === 'coursedate') && 
-        isset($_GET['course_visibility']) && 
-        !empty($_GET['course_visibility'])) {
+        isset($_GET['course_visibility'])) {
         
-        $hidden_terms = array('skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv');
+        // Sanitize input
+        $visibility = sanitize_text_field($_GET['course_visibility']);
+        if (empty($visibility)) {
+            return;
+        }
+        
+        $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
         $tax_query = array(
             array(
                 'taxonomy' => 'coursecategory',
                 'field'    => 'slug',
                 'terms'    => $hidden_terms,
-                'operator' => $_GET['course_visibility'] === 'hidden' ? 'IN' : 'NOT IN'
+                'operator' => $visibility === 'hidden' ? 'IN' : 'NOT IN'
             )
         );
 
