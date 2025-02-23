@@ -45,6 +45,7 @@ get_header();
     $contact_name = get_post_meta(get_the_ID(), 'course_contactperson_name', true);
     $contact_phone = get_post_meta(get_the_ID(), 'course_contactperson_phone', true);
     $contact_email = get_post_meta(get_the_ID(), 'course_contactperson_email', true);
+    error_log('course_related_coursedate: ' . $related_coursedate);
 
     // Get WP data
     $featured_image_full = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: 'path/to/default-image.jpg';

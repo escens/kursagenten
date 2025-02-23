@@ -1,5 +1,4 @@
 <?php
-//error_log('Queries.php er lastet');
 
 /**
  * Retrieve data for the first available coursedate.
@@ -9,18 +8,29 @@
  * @return array|null Returns an array with metadata for the selected coursedate, or null if none found.
  */
 function get_selected_coursedate_data($related_coursedate) {
+    error_log('get_selected_coursedate_data input: ' . print_r($related_coursedate, true));
+    
     $earliest_date = null;
     $selected_coursedate = null;
     $coursedatemissing = true; // Anta at datoen mangler til vi finner en
 
     if (!empty($related_coursedate) && is_array($related_coursedate)) {
         foreach ($related_coursedate as $coursedate_id) {
-            // Bruk den nye hjelpefunksjonen
+            error_log('Processing coursedate_id: ' . $coursedate_id);
+            
+            // Skip if coursedate_id is empty or invalid
+            if (empty($coursedate_id) || !get_post($coursedate_id)) {
+                error_log('Invalid coursedate_id: ' . $coursedate_id);
+                continue;
+            }
+
             if (has_hidden_terms($coursedate_id)) {
+                error_log('Coursedate has hidden terms: ' . $coursedate_id);
                 continue;
             }
 
             $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
+            error_log('Course first date for ' . $coursedate_id . ': ' . $course_first_date);
 
             // Hvis course_first_date finnes, sammenlign for å finne den tidligste
             if (!empty($course_first_date)) {
@@ -39,7 +49,7 @@ function get_selected_coursedate_data($related_coursedate) {
         }
 
         if ($selected_coursedate) {
-            return [
+            $result = [
                 'id' => $selected_coursedate,
                 'title' => get_the_title($selected_coursedate),
                 'first_date' => get_post_meta($selected_coursedate, 'course_first_date', true),
@@ -52,12 +62,16 @@ function get_selected_coursedate_data($related_coursedate) {
                 'signup_url' => get_post_meta($selected_coursedate, 'course_signup_url', true),
                 'coursedatemissing' => $coursedatemissing,
             ];
+            error_log('Returning result: ' . print_r($result, true));
+            return $result;
         }
     }
 
-    return [
+    $result = [
         'coursedatemissing' => $coursedatemissing, // Returner true hvis ingen gyldige datoer finnes
     ];
+    error_log('Returning result: ' . print_r($result, true));
+    return $result;
 }
 
 /**
