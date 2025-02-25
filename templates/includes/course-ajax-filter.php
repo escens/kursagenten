@@ -17,7 +17,7 @@ function filter_courses_handler() {
 
     $base_args = [
         'post_type'      => 'coursedate',
-        'posts_per_page' => 10,
+        'posts_per_page' => 5,
         'paged'          => isset($_POST['paged']) ? intval($_POST['paged']) : 1,
         'tax_query'      => ['relation' => 'AND'],
         'meta_query'     => ['relation' => 'AND'],
@@ -90,11 +90,48 @@ function filter_courses_handler() {
         $base_args['s'] = sanitize_text_field($_POST[$search_param]);
     }
 
-    // Håndter sortering
+    // Håndter sortering - Ny implementasjon
     $sort = sanitize_text_field($_POST['sort'] ?? '');
     $order = sanitize_text_field($_POST['order'] ?? '');
+    
+    if ($sort === 'date') {
+        // Kjør første spørring for å få alle poster
+        $initial_query = new WP_Query($base_args);
+        $posts_with_date = [];
+        $posts_without_date = [];
 
-    if ($sort && $order) {
+        while ($initial_query->have_posts()) {
+            $initial_query->the_post();
+            $post_id = get_the_ID();
+            $date_str = get_post_meta($post_id, 'course_first_date', true);
+
+            if (!empty($date_str)) {
+                $date_parts = explode('.', $date_str);
+                if (count($date_parts) === 3) {
+                    $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
+                    $posts_with_date[$post_id] = $timestamp;
+                }
+            } else {
+                $posts_without_date[] = $post_id;
+            }
+        }
+        wp_reset_postdata();
+
+        // Sorter etter dato basert på sorteringsretning
+        if (strtoupper($order) === 'DESC') {
+            arsort($posts_with_date);
+        } else {
+            asort($posts_with_date);
+        }
+        
+        // Slå sammen listene
+        $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
+        
+        // Oppdater spørringsargumentene med sorterte poster
+        $base_args['post__in'] = $sorted_posts;
+        $base_args['orderby'] = 'post__in';
+    } elseif ($sort && $order) {
+        // For andre sorteringstyper (title, price etc.)
         switch ($sort) {
             case 'title':
                 $base_args['orderby'] = 'title';
@@ -105,48 +142,15 @@ function filter_courses_handler() {
                 $base_args['meta_key'] = 'course_price';
                 $base_args['order'] = strtoupper($order);
                 break;
-            case 'date':
-                // Håndter datosortering manuelt
-                $query = new WP_Query($base_args);
-                $posts_with_date = [];
-                $posts_without_date = [];
-
-                while ($query->have_posts()) {
-                    $query->the_post();
-                    $post_id = get_the_ID();
-                    $date_str = get_post_meta($post_id, 'course_first_date', true);
-
-                    if (!empty($date_str)) {
-                        $date_parts = explode('.', $date_str);
-                        if (count($date_parts) === 3) {
-                            $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
-                            $posts_with_date[$post_id] = $timestamp;
-                        }
-                    } else {
-                        $posts_without_date[] = $post_id;
-                    }
-                }
-                wp_reset_postdata();
-
-                if (strtoupper($order) === 'DESC') {
-                    arsort($posts_with_date);
-                } else {
-                    asort($posts_with_date);
-                }
-
-                $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
-                $base_args['post__in'] = $sorted_posts;
-                $base_args['orderby'] = 'post__in';
-                break;
         }
     } else {
-        // Standard datosortering
-        $query = new WP_Query($base_args);
+        // Standard datosortering (ASC)
+        $initial_query = new WP_Query($base_args);
         $posts_with_date = [];
         $posts_without_date = [];
 
-        while ($query->have_posts()) {
-            $query->the_post();
+        while ($initial_query->have_posts()) {
+            $initial_query->the_post();
             $post_id = get_the_ID();
             $date_str = get_post_meta($post_id, 'course_first_date', true);
 
@@ -179,6 +183,13 @@ function filter_courses_handler() {
             include __DIR__ . '/../partials/coursedates_default.php';
         }
         wp_reset_postdata();
+
+        error_log('AJAX FILTER - Debug pagination:');
+        error_log('POST paged: ' . (isset($_POST['paged']) ? $_POST['paged'] : 'not set'));
+        error_log('Query max_num_pages: ' . $query->max_num_pages);
+        error_log('Query current page: ' . $query->get('paged'));
+        error_log('Query posts per page: ' . $query->get('posts_per_page'));
+        error_log('Query found posts: ' . $query->found_posts);
 
         wp_send_json_success([
             'html' => ob_get_clean(),

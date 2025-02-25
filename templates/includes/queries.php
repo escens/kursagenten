@@ -181,9 +181,16 @@ function get_all_sorted_coursedates($related_coursedate) {
  * @return array Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
 function get_course_dates_query($args = []) {
+    // Sikre at paged alltid er minst 1
+    $current_page = isset($args['paged']) ? max(1, intval($args['paged'])) : max(1, get_query_var('paged'));
+    
+    error_log('QUERIES.PHP - Initial query args:');
+    error_log(print_r($args, true));
+    
     $default_args = [
         'post_type'      => 'coursedate',
-        'posts_per_page' => -1,
+        'posts_per_page' => 5,
+        'paged'          => $current_page,
         'meta_query'     => [
             'relation' => 'OR',
             [
@@ -195,11 +202,8 @@ function get_course_dates_query($args = []) {
                 'compare' => 'NOT EXISTS',
             ],
         ],
-        'get_course_dates' => true,
     ];
 
-    $query_args = wp_parse_args($args, $default_args);
-    
     // Hent alle termer først
     $all_terms = get_terms([
         'taxonomy' => 'coursecategory',
@@ -212,59 +216,75 @@ function get_course_dates_query($args = []) {
         $visible_terms = array_diff($all_terms, $hidden_terms);
         
         if (!empty($visible_terms)) {
-            $query_args['tax_query'] = array(
-                'relation' => 'OR',
-                array(
-                    'taxonomy' => 'coursecategory',
-                    'operator' => 'NOT EXISTS'
-                ),
-                array(
-                    'taxonomy' => 'coursecategory',
-                    'field'    => 'slug',
-                    'terms'    => $visible_terms,
-                    'operator' => 'IN'
-                )
-            );
+            $default_args['tax_query'] = [
+                'relation' => 'AND',
+                [
+                    'relation' => 'OR',
+                    [
+                        'taxonomy' => 'coursecategory',
+                        'operator' => 'NOT EXISTS'
+                    ],
+                    [
+                        'taxonomy' => 'coursecategory',
+                        'field'    => 'slug',
+                        'terms'    => $visible_terms,
+                        'operator' => 'IN'
+                    ]
+                ]
+            ];
         }
     }
+
+    $query_args = wp_parse_args($args, $default_args);
+    error_log('QUERIES.PHP - Final query args:');
+    error_log(print_r($query_args, true));
     
-    $query = new WP_Query($query_args);
+    // Kjør første spørring for å få ALLE poster
+    $initial_args = $query_args;
+    $initial_args['posts_per_page'] = -1;  // Hent alle poster
+    $initial_args['paged'] = 1;            // Ingen paginering for initial spørring
+    $initial_query = new WP_Query($initial_args);
     
-    // Sorter resultatene etter dato med korrekt datohåndtering
-    if ($query->have_posts()) {
-        $posts_with_date = [];
-        $posts_without_date = [];
-        
-        while ($query->have_posts()) {
-            $query->the_post();
-            $post_id = get_the_ID();
-            $date_str = get_post_meta($post_id, 'course_first_date', true);
-            
-            if (!empty($date_str)) {
-                // Konverter fra DD.MM.YYYY til timestamp
-                $date_parts = explode('.', $date_str);
-                if (count($date_parts) === 3) {
-                    $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
-                    $posts_with_date[$post_id] = $timestamp;
-                }
-            } else {
-                $posts_without_date[] = $post_id;
+    // Sorter poster etter dato
+    $posts_with_date = [];
+    $posts_without_date = [];
+    
+    while ($initial_query->have_posts()) {
+        $initial_query->the_post();
+        $post_id = get_the_ID();
+        $date_str = get_post_meta($post_id, 'course_first_date', true);
+
+        if (!empty($date_str)) {
+            $date_parts = explode('.', $date_str);
+            if (count($date_parts) === 3) {
+                $timestamp = strtotime($date_parts[2] . '-' . $date_parts[1] . '-' . $date_parts[0]);
+                $posts_with_date[$post_id] = $timestamp;
             }
-        }
-        wp_reset_postdata();
-        
-        // Sorter etter timestamp
-        asort($posts_with_date);
-        
-        // Kombiner listene
-        $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
-        
-        if (!empty($sorted_posts)) {
-            $query_args['post__in'] = $sorted_posts;
-            $query_args['orderby'] = 'post__in';
-            return new WP_Query($query_args);
+        } else {
+            $posts_without_date[] = $post_id;
         }
     }
+    wp_reset_postdata();
+
+    // Hent sorteringsretning fra argumenter
+    $sort_order = isset($args['order']) ? strtoupper($args['order']) : 'ASC';
+    
+    // Sorter etter dato basert på sorteringsretning
+    if ($sort_order === 'DESC') {
+        arsort($posts_with_date);
+    } else {
+        asort($posts_with_date);
+    }
+    
+    // Slå sammen listene og behold rekkefølgen
+    $sorted_posts = array_merge(array_keys($posts_with_date), $posts_without_date);
+    
+    // Oppdater spørringsargumentene med sorterte poster
+    $query_args['post__in'] = $sorted_posts;
+    $query_args['orderby'] = 'post__in';  // Dette forteller WordPress å respektere rekkefølgen i post__in
+    
+    // Kjør endelig spørring med paginering
+    $query = new WP_Query($query_args);
     
     return $query;
 }

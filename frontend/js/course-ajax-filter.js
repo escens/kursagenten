@@ -202,6 +202,9 @@
         data.action = 'filter_courses';
         data.nonce = kurskalender_data.filter_nonce;
         
+        // Vis loading indikator
+        $('.course-loading').show();
+        
         $.ajax({
             url: kurskalender_data.ajax_url,
             type: 'POST',
@@ -213,6 +216,11 @@
                     initSlideInPanel();
                     updatePagination(response.data.max_num_pages);
                     updateCourseCount();
+                    
+                    // Scroll til toppen av resultatene
+                    $('html, body').animate({
+                        scrollTop: $('#filter-results').offset().top - 100
+                    }, 500);
                     
                     // Update dropdown states based on current URL filters
                     const currentFilters = getCurrentFiltersFromURL();
@@ -247,6 +255,10 @@
             },
             error: function(xhr, status, error) {
                 console.error('AJAX Error:', {xhr, status, error});
+            },
+            complete: function() {
+                // Skjul loading indikator
+                $('.course-loading').hide();
             }
         });
         
@@ -375,8 +387,34 @@
     }
 
     function updatePagination(maxPages) {
-        // Pagination update logic here if needed
+        // Legg til click handlers for paginering
+        $('.pagination-wrapper .page-numbers a').on('click', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            const href = $(this).attr('href');
+            
+            // Oppdater URL uten å laste siden på nytt
+            window.history.pushState({}, '', href);
+            
+            // Hent eksisterende filtre
+            const currentFilters = getCurrentFiltersFromURL();
+            
+            // Legg til side parameter
+            const updatedFilters = {
+                ...currentFilters,
+                side: page
+            };
+            
+            // Hent nye resultater via AJAX
+            fetchCourses(updatedFilters);
+        });
     }
+
+    // Håndter browser back/forward
+    window.addEventListener('popstate', function() {
+        const currentFilters = getCurrentFiltersFromURL();
+        fetchCourses(currentFilters);
+    });
 
     function updateCourseCount() {
         const counter = document.querySelector("#course-count");

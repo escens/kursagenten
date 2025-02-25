@@ -106,7 +106,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
                     <?php endif; ?>
                     <div class="filter-container filter-top">
                         <?php foreach ($top_filters as $filter) : ?>
-                            <div class="filter-item <?php echo esc_attr($filter_types[$filter]); ?> <?php echo esc_attr($search_class); ?>">
+                            <div class="filter-item <?php echo esc_attr($filter_types[$filter] ?? ''); ?> <?php echo esc_attr($search_class); ?>">
                                 <?php if ($filter === 'search') : ?>
                                     <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
                                 <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
@@ -282,14 +282,68 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 endwhile;
                                 ?>
                             </div>
-                            <!-- Paginering -->
+                            <!-- Endre pagineringsdelen -->
                             <div class="pagination">
                                 <?php
-                                echo paginate_links([
-                                    'total'   => $query->max_num_pages,
-                                    'current' => max(1, get_query_var('paged')),
-                                ]);
+                                // Debug info
+                                $current_page = max(1, $query->get('paged'));
+                                
+                                // Hent eksisterende query params
+                                $current_query = $_GET;
+                                
+                                echo '<div class="pagination-wrapper">';
+                                
+                                if ($query->max_num_pages > 1) {
+                                    echo '<ul class="page-numbers">';
+                                    
+                                    // Forrige-knapp
+                                    if ($current_page > 1) {
+                                        $prev_query = array_merge($current_query, ['side' => $current_page - 1]);
+                                        echo sprintf(
+                                            '<li><a class="prev page-numbers" href="%s" data-page="%d">&laquo; Forrige</a></li>',
+                                            esc_url(add_query_arg($prev_query)),
+                                            $current_page - 1
+                                        );
+                                    }
+                                    
+                                    // Sidenumre
+                                    for ($i = 1; $i <= $query->max_num_pages; $i++) {
+                                        $page_query = array_merge($current_query, ['side' => $i]);
+                                        if ($i === $current_page) {
+                                            echo sprintf(
+                                                '<li><span class="page-numbers current">%d</span></li>',
+                                                $i
+                                            );
+                                        } else {
+                                            echo sprintf(
+                                                '<li><a class="page-numbers" href="%s" data-page="%d">%d</a></li>',
+                                                esc_url(add_query_arg($page_query)),
+                                                $i,
+                                                $i
+                                            );
+                                        }
+                                    }
+                                    
+                                    // Neste-knapp
+                                    if ($current_page < $query->max_num_pages) {
+                                        $next_query = array_merge($current_query, ['side' => $current_page + 1]);
+                                        echo sprintf(
+                                            '<li><a class="next page-numbers" href="%s" data-page="%d">Neste &raquo;</a></li>',
+                                            esc_url(add_query_arg($next_query)),
+                                            $current_page + 1
+                                        );
+                                    }
+                                    
+                                    echo '</ul>';
+                                }
+                                
+                                echo '</div>';
                                 ?>
+                            </div>
+
+                            <!-- Legg til en loading-indikator -->
+                            <div class="course-loading" style="display: none;">
+                                <div class="loading-spinner"></div>
                             </div>
                         <?php
                             wp_reset_postdata();
