@@ -17,7 +17,7 @@ function filter_courses_handler() {
 
     $base_args = [
         'post_type'      => 'coursedate',
-        'posts_per_page' => 5,
+        'posts_per_page' => 15,
         'paged'          => isset($_POST['paged']) ? intval($_POST['paged']) : 1,
         'tax_query'      => ['relation' => 'AND'],
         'meta_query'     => ['relation' => 'AND'],

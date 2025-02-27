@@ -189,7 +189,7 @@ function get_course_dates_query($args = []) {
     
     $default_args = [
         'post_type'      => 'coursedate',
-        'posts_per_page' => 5,
+        'posts_per_page' => 15,
         'paged'          => $current_page,
         'meta_query'     => [
             'relation' => 'OR',
