@@ -1,24 +1,7 @@
 <?php
-// Hent taxonomiene
-/*$instructors = get_the_terms($course_id, 'instructors');
-$course_categories = get_the_terms($course_id, 'coursecategory');
-$course_locations = get_the_terms($course_id, 'course_location');
-
-// Funksjon for å formatere taxonomilisten som kommaseparert
-function format_taxonomy_list($terms) {
-    if (empty($terms) || is_wp_error($terms)) {
-        return 'Ingen';
-    }
-    return implode(', ', wp_list_pluck($terms, 'name'));
-}
-
-$instructors_list = format_taxonomy_list($instructors);
-$categories_list = format_taxonomy_list($course_categories);
-$locations_list = format_taxonomy_list($course_locations);
-*/
-
 
 $course_id = get_the_ID();
+
 $course_title =             get_post_meta($course_id, 'course_title', true);
 $first_course_date =        get_post_meta($course_id, 'course_first_date', true);
 $last_course_date =         get_post_meta($course_id, 'course_last_date', true);
@@ -36,20 +19,46 @@ $signup_url =               get_post_meta($course_id, 'course_signup_url', true)
 
 $related_course_id =        get_post_meta($course_id, 'location_id', true);
 
-$course_link = get_course_url_by_location($related_course_id);
+$related_course_info = get_course_info_by_location($related_course_id);
+
+if ($related_course_info) {
+    $course_link = esc_url($related_course_info['permalink']);
+    $featured_image_thumb = $related_course_info['thumbnail'];
+    $excerpt = $related_course_info['excerpt'];
+}
 
 if (!$course_link) {
     $course_link = false;
 }
-$item_class = $course_count === 1 ? 'course-item courselist-item single-item' : 'course-item courselist-item';
+$course_count = $course_count ?? 0;
+$item_class = $course_count === 1 ? ' single-item' : '';
+
 ?>
-<div class="<?php echo $item_class; ?>">
-    <div class="courselist-header">
-        <div class="text">
+<div class="courselist-item<?php echo $item_class; ?>">
+    <div class="courselist-main with-image">
+        <!--
+        <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
+                <picture>
+                    <img src="" alt="<?php echo esc_attr($course_title); ?>" class="course-image" decoding="async">
+                </picture>
+            </a>
+        </div>
+        -->
+        <!-- Image area -->
+        <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
+            </a>
+        </div>
+        <!-- Text area -->
+        <div class="text-area col">
+            <!-- Title area -->
             <div class="title-area">
-                <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
-                <span class="title"><a href="<?php echo esc_url($course_link); ?>" class="course-link small tooltip" data-title="Vis kurs"><h3 class="course-title"><?php echo esc_html($course_title); ?></h3></a></span>
+                <span class="title">sdfsdfd<a href="<?php echo esc_url($course_link); ?>" class="course-link small"><h3 class="course-title"><?php echo esc_html($course_title); ?></h3></a></span>
+                <span class="course-available">Ledige plasser</span>
+                
             </div>
+            <!-- Details area - date and location -->
             <div class="details-area iconlist horizontal">
                 <?php if (!empty($first_course_date)) : ?>
                     <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>
@@ -58,6 +67,7 @@ $item_class = $course_count === 1 ? 'course-item courselist-item single-item' : 
                     <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                 <?php endif; ?>
             </div>
+            <!-- Meta area -->
             <div class="meta-area iconlist horizontal">
                 <?php if (!empty($price)) : ?>
                     <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo esc_html($after_price); ?></div>
@@ -74,19 +84,24 @@ $item_class = $course_count === 1 ? 'course-item courselist-item single-item' : 
                 <?php if (!empty($coursetime)) : ?>
                     <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
                 <?php endif; ?>
-                
+                <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
+            </div>
+            <!-- Accordion content -->
+            <div class="courselist-content accordion-content">
+                <?php if (!empty($excerpt)) : ?>
+                    <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
+                <?php endif; ?>
+                <p><?php echo esc_html($first_course_date ? 'Kurset varer fra ' . $first_course_date . ' til ' . $last_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
+                <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
             </div>
         </div>
-        <div class="links">
-            <a href="<?php echo esc_url($course_link); ?>" class="course-link small">Les mer</a>
+        <div class="links-area col">
             <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
-            <?php echo esc_html($button_text) ?>
+                <?php echo esc_html($button_text) ?>
             </button>
+            <a href="<?php echo esc_url($course_link); ?>" class="course-link small">Mer informasjon</a>
         </div>
     </div>
 
-    <div class="course-content accordion-content">
-        <p><?php echo esc_html($first_course_date ? $first_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
-        <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
-    </div>
+    
 </div>

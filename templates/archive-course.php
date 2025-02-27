@@ -1,4 +1,4 @@
-<?php 
+<?php
 // Load required dependencies
 if (!function_exists('get_course_languages')) {
     require_once dirname(dirname(__FILE__)) . '/templates/includes/queries.php';
@@ -101,7 +101,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
         <div class="courselist">
             <div class="inner-container filter-section">
                 <div class="course-grid <?php echo esc_attr($left_column_class); ?>">
-                    <?php if ($has_left_filters) : ?>    
+                    <?php if ($has_left_filters) : ?>
                     <div class="left-column"></div>
                     <?php endif; ?>
                     <div class="filter-container filter-top">
@@ -124,16 +124,16 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                     <?php elseif ($filter_types[$filter] === 'list') : ?>
                                         <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
                                             <div class="filter-dropdown">
-                                                <?php 
+                                                <?php
                                                 // Hent filter info fra den forberedte arrayen
                                                 $current_filter_info = $filter_display_info[$filter] ?? [];
                                                 $filter_label = $current_filter_info['label'] ?? '';
                                                 $filter_placeholder = $current_filter_info['placeholder'] ?? 'Velg';
-                                                
+
                                                 // Hent aktive filtre fra URL
                                                 $url_key = $taxonomy_data[$filter]['url_key'];
                                                 $active_filters = isset($_GET[$url_key]) ? explode(',', $_GET[$url_key]) : [];
-                                                
+
                                                 // Finn display tekst
                                                 if (empty($active_filters)) {
                                                     $display_text = $filter_placeholder;
@@ -151,15 +151,15 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                                             }
                                                         }
                                                     }
-                                                    
-                                                    $display_text = count($active_names) <= 2 ? 
-                                                        implode(', ', $active_names) : 
+
+                                                    $display_text = count($active_names) <= 2 ?
+                                                        implode(', ', $active_names) :
                                                         sprintf('%d %s valgt', count($active_names), strtolower($filter_label));
                                                 }
-                                                
+
                                                 $has_active_filters = !empty($active_filters) ? 'has-active-filters' : '';
                                                 ?>
-                                                <div class="filter-dropdown-toggle <?php echo esc_attr($has_active_filters); ?>" 
+                                                <div class="filter-dropdown-toggle <?php echo esc_attr($has_active_filters); ?>"
                                                     data-filter="<?php echo esc_attr($filter); ?>"
                                                     data-label="<?php echo esc_attr($filter_label); ?>"
                                                     data-placeholder="<?php echo esc_attr($filter_placeholder); ?>">
@@ -245,13 +245,13 @@ foreach ($available_filters as $filter_key => $filter_info) {
                             ?>
 
                             <div class="courselist-header">
-                                
+
                                 <div id="courselist-header-left" class="active-filters-container">
                                     <div id="course-count"><?php echo $course_count; ?> kurs</div>
                                     <div id="active-filters" class="active-filters-container"></div><a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
                                 </div>
                                 <div id="courselist-header-right">
-                                    
+
                                     <div class="sort-dropdown">
                                         <div class="sort-dropdown-toggle">
                                             <span class="selected-text">Sorter etter</span>
@@ -268,7 +268,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Template part from /partials -->
                             <div class="courselist-items" id="filter-results">
                                 <?php
@@ -282,64 +282,25 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 endwhile;
                                 ?>
                             </div>
+
                             <!-- Endre pagineringsdelen -->
-                            <div class="pagination">
-                                <?php
-                                // Debug info
-                                $current_page = max(1, $query->get('paged'));
-                                
-                                // Hent eksisterende query params
-                                $current_query = $_GET;
-                                
-                                echo '<div class="pagination-wrapper">';
-                                
-                                if ($query->max_num_pages > 1) {
-                                    echo '<ul class="page-numbers">';
-                                    
-                                    // Forrige-knapp
-                                    if ($current_page > 1) {
-                                        $prev_query = array_merge($current_query, ['side' => $current_page - 1]);
-                                        echo sprintf(
-                                            '<li><a class="prev page-numbers" href="%s" data-page="%d">&laquo; Forrige</a></li>',
-                                            esc_url(add_query_arg($prev_query)),
-                                            $current_page - 1
-                                        );
-                                    }
-                                    
-                                    // Sidenumre
-                                    for ($i = 1; $i <= $query->max_num_pages; $i++) {
-                                        $page_query = array_merge($current_query, ['side' => $i]);
-                                        if ($i === $current_page) {
-                                            echo sprintf(
-                                                '<li><span class="page-numbers current">%d</span></li>',
-                                                $i
-                                            );
-                                        } else {
-                                            echo sprintf(
-                                                '<li><a class="page-numbers" href="%s" data-page="%d">%d</a></li>',
-                                                esc_url(add_query_arg($page_query)),
-                                                $i,
-                                                $i
-                                            );
-                                        }
-                                    }
-                                    
-                                    // Neste-knapp
-                                    if ($current_page < $query->max_num_pages) {
-                                        $next_query = array_merge($current_query, ['side' => $current_page + 1]);
-                                        echo sprintf(
-                                            '<li><a class="next page-numbers" href="%s" data-page="%d">Neste &raquo;</a></li>',
-                                            esc_url(add_query_arg($next_query)),
-                                            $current_page + 1
-                                        );
-                                    }
-                                    
-                                    echo '</ul>';
-                                }
-                                
-                                echo '</div>';
-                                ?>
-                            </div>
+														<div class="pagination-wrapper">
+															<div class="pagination">
+															<?php
+															$url_options = get_option('kag_seo_option_name');
+															$kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
+															echo paginate_links([
+																'base' => get_home_url(null, $kurs) .'?%_%',
+																'current' => max(1, $query->get('paged')),
+																'format' => 'side=%#%',
+																'total' => $query->max_num_pages,
+																'add_args' => array_map(function ($item) {
+																	return is_array($item) ? join(',', $item) : $item;
+																}, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+															]);
+															?>
+															</div>
+														</div>
 
                             <!-- Legg til en loading-indikator -->
                             <div class="course-loading" style="display: none;">

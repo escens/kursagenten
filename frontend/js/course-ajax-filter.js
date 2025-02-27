@@ -42,7 +42,7 @@
 
         // Update dropdown text immediately
         updateDropdownText(filterKey, selectedValues);
-        
+
         // Update filters and perform AJAX call with empty arrays if no values are selected
         const filterUpdate = selectedValues.length > 0 ? { [urlKey]: selectedValues } : { [urlKey]: null };
         updateFiltersAndFetch(filterUpdate);
@@ -86,12 +86,12 @@
     priceMin.text(priceSlider.slider("values", 0) + " kr");
     priceMax.text(priceSlider.slider("values", 1) + " kr");
 */
-    
+
 
     function updateFiltersAndFetch(newFilters) {
         const currentFilters = getCurrentFiltersFromURL();
         const updatedFilters = { ...currentFilters, ...newFilters };
-    
+
         // Map filter keys to their URL parameters
         const filterKeyMap = {
             'language': 'sprak',
@@ -100,7 +100,7 @@
             'categories': 'k',
             //add more in archive-course.php
         };
-    
+
         // Update dropdown texts for all filter types
         Object.entries(filterKeyMap).forEach(([filterKey, urlKey]) => {
             if (newFilters.hasOwnProperty(urlKey)) {
@@ -111,17 +111,17 @@
                 updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
             }
         });
-    
+
         // Ensure date filter is properly formatted
         if (updatedFilters.dato && typeof updatedFilters.dato === "object") {
             updatedFilters.dato.from = updatedFilters.dato.from || "";
             updatedFilters.dato.to = updatedFilters.dato.to || "";
         }
-    
+
         delete updatedFilters.nonce;
         delete updatedFilters.action;
         updateURLParams(updatedFilters);
-        fetchCourses(updatedFilters);
+        fetchCourses(Object.assign(updatedFilters, {side: 1}));
         updateActiveFiltersList(updatedFilters);
         toggleResetFiltersButton(updatedFilters);
     }
@@ -131,7 +131,7 @@
         if (!$dropdown.length) return;
 
         const placeholder = $dropdown.data('placeholder') || 'Velg';
-        
+
         // If no active filters, show only placeholder
         if (!activeFilters || activeFilters.length === 0) {
             const placeholderHtml = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
@@ -156,7 +156,7 @@
         // Display text format: show all if 2 or fewer, otherwise show count
         let displayText = activeNames.length <= 2 ? activeNames.join(', ') : `${activeNames.length} valgt`;
         const finalHtml = `<span class="selected-text">${displayText}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
-        
+
         $dropdown.html(finalHtml);
         $dropdown.addClass('has-active-filters');
     }
@@ -185,14 +185,14 @@
             updatedFilters.sort = sort;
             updatedFilters.order = order;
         }
-        
+
         updateURLParams(updatedFilters);
         fetchCourses({
             ...updatedFilters,
             action: 'filter_courses',
             nonce: kurskalender_data.filter_nonce
         });
-        
+
         updateActiveFiltersList(updatedFilters);
         toggleResetFiltersButton(updatedFilters);
     }
@@ -201,10 +201,10 @@
         // Add required AJAX parameters
         data.action = 'filter_courses';
         data.nonce = kurskalender_data.filter_nonce;
-        
+
         // Vis loading indikator
         $('.course-loading').show();
-        
+
         $.ajax({
             url: kurskalender_data.ajax_url,
             type: 'POST',
@@ -214,37 +214,37 @@
                     $('#filter-results').html(response.data.html);
                     initAccordion();
                     initSlideInPanel();
-                    updatePagination(response.data.max_num_pages);
+                    updatePagination(response.data.html_pagination);
                     updateCourseCount();
-                    
+
                     // Scroll til toppen av resultatene
                     $('html, body').animate({
                         scrollTop: $('#filter-results').offset().top - 100
                     }, 500);
-                    
+
                     // Update dropdown states based on current URL filters
                     const currentFilters = getCurrentFiltersFromURL();
-                    
+
                     // Handle language filter updates
                     if (currentFilters.sprak) {
-                        const languages = Array.isArray(currentFilters.sprak) ? 
-                            currentFilters.sprak : 
+                        const languages = Array.isArray(currentFilters.sprak) ?
+                            currentFilters.sprak :
                             [currentFilters.sprak];
                         updateDropdownText('language', languages);
                     }
-                    
+
                     // Handle location filter updates
                     if (currentFilters.sted) {
-                        const locations = Array.isArray(currentFilters.sted) ? 
-                            currentFilters.sted : 
+                        const locations = Array.isArray(currentFilters.sted) ?
+                            currentFilters.sted :
                             [currentFilters.sted];
                         updateDropdownText('locations', locations);
                     }
-                    
+
                     // Handle instructor filter updates
                     if (currentFilters.i) {
-                        const instructors = Array.isArray(currentFilters.i) ? 
-                            currentFilters.i : 
+                        const instructors = Array.isArray(currentFilters.i) ?
+                            currentFilters.i :
                             [currentFilters.i];
                         updateDropdownText('instructors', instructors);
                     }
@@ -261,16 +261,16 @@
                 $('.course-loading').hide();
             }
         });
-        
+
         previousData = {...data};
     }
 
     function updateURLParams(params) {
         const url = new URL(window.location.href);
-        
+
         // Clear existing parameters
         url.search = '';
-        
+
         // Add updated parameters
         Object.entries(params).forEach(([key, value]) => {
             if (value && value.length) {
@@ -278,37 +278,37 @@
                 url.searchParams.set(key, paramValue);
             }
         });
-        
+
         window.history.pushState({}, '', url);
     }
 
     function getCurrentFiltersFromURL() {
         const url = new URL(window.location.href);
         const params = {};
-        
+
         // Process all URL parameters
         for (const [key, value] of url.searchParams.entries()) {
             // Split comma-separated values into arrays
             params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
         }
-        
+
         return params;
     }
 
     function initializeFiltersFromURL() {
         const filters = getCurrentFiltersFromURL();
-    
+
         // Initialize each filter based on URL parameters
         Object.keys(filters).forEach(function (filterKey) {
             const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
-    
+
             // Handle chip-based filters
             if ($('.chip[data-url-key="' + filterKey + '"]').length) {
                 values.forEach(value => {
                     $('.chip[data-filter="' + value + '"][data-url-key="' + filterKey + '"]').addClass('active');
                 });
             }
-    
+
             // Handle checkbox-based filters
             if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
                 values.forEach(value => {
@@ -321,7 +321,7 @@
                 });
             }
         });
-    
+
         updateActiveFiltersList(filters);
         toggleResetFiltersButton(filters);
     }
@@ -333,7 +333,7 @@
         // Create chips for each active filter
         Object.keys(filters).forEach(key => {
             // Ekskluder sorteringsparametere og andre systemparametere
-            if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && 
+            if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'side' &&
                 filters[key] && filters[key].length > 0) {
                 const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
                 values.forEach(value => {
@@ -372,8 +372,8 @@
 
     function toggleResetFiltersButton(filters) {
         const $resetButton = $('#reset-filters');
-        const hasActiveFilters = Object.keys(filters).some(key => 
-            key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && 
+        const hasActiveFilters = Object.keys(filters).some(key =>
+            key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' &&
             filters[key] && filters[key].length > 0
         );
         hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
@@ -381,33 +381,25 @@
 
     // Initialize filters on page load
     initializeFiltersFromURL();
-    const initialFilters = getCurrentFiltersFromURL();
-    if (Object.keys(initialFilters).length > 0) {
-        fetchCourses(initialFilters);
-    }
+    // const initialFilters = getCurrentFiltersFromURL();
+    // if (Object.keys(initialFilters).length > 0) {
+    //     // fetchCourses(initialFilters);
+    // }
 
-    function updatePagination(maxPages) {
-        // Legg til click handlers for paginering
-        $('.pagination-wrapper .page-numbers a').on('click', function(e) {
-            e.preventDefault();
-            const page = $(this).data('page');
-            const href = $(this).attr('href');
-            
-            // Oppdater URL uten å laste siden på nytt
-            window.history.pushState({}, '', href);
-            
-            // Hent eksisterende filtre
-            const currentFilters = getCurrentFiltersFromURL();
-            
-            // Legg til side parameter
-            const updatedFilters = {
-                ...currentFilters,
-                side: page
-            };
-            
-            // Hent nye resultater via AJAX
-            fetchCourses(updatedFilters);
-        });
+		$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
+			e.preventDefault();
+			const href = $(this).attr('href');
+			const locate = new URL(href);
+
+			// Oppdater URL uten å laste siden på nytt
+			window.history.pushState({}, '', href);
+
+			// Hent nye resultater via AJAX
+			fetchCourses(Object.fromEntries(locate.searchParams.entries()));
+		})
+
+    function updatePagination(html) {
+				$('.pagination-wrapper .pagination').html(html);
     }
 
     // Håndter browser back/forward
@@ -446,27 +438,27 @@
             rangeLabel: "Velg periode",
             ranges: [
                 {
-                    title: "1 uke",                    
+                    title: "1 uke",
                     startDate: moment(),
                     endDate: moment().add(6, "days")
                 },
                 {
-                    title: "Neste 30 dager",                    
+                    title: "Neste 30 dager",
                     startDate: moment(),
                     endDate: moment().add(30, "days")
                 },
                 {
-                    title: "Neste 3 måneder",                    
+                    title: "Neste 3 måneder",
                     startDate: moment(),
                     endDate: moment().add(90, "days")
                 },
                 {
-                    title: "Neste halvår",                    
+                    title: "Neste halvår",
                     startDate: moment(),
                     endDate: moment().add(180, "days")
                 },
                 {
-                    title: "Ett år",                    
+                    title: "Ett år",
                     startDate: moment(),
                     endDate: moment().add(365, "days")
                 }
@@ -481,7 +473,7 @@
         // Prevent calendar from closing on first input field click
         dateInput.addEventListener("click", function (event) {
             event.stopPropagation();
-            let caleranInstance = document.querySelector("#date-range").caleran; 
+            let caleranInstance = document.querySelector("#date-range").caleran;
             if (!caleranInstance.isOpen) {
                 caleranInstance.showDropdown();
             }
@@ -509,30 +501,46 @@
             $(this).toggleClass('active');
         });
 
+				const setCurrentSorting = () => {
+					const currentAddress = new URL(window.location.toString());
+					const sort = currentAddress.searchParams.get('sort');
+					const order = currentAddress.searchParams.get('order');
+
+					if (sort && order) {
+						const title = $('.sort-option[data-sort="' + sort + '"][data-order="' + order + '"]').text();
+						if (title) {
+							$('.sort-dropdown .selected-text').text(title);
+						}
+					}
+				}
+
+				setCurrentSorting();
+
         // Handle sort option clicks
         $('.sort-option').on('click', function(e) {
             e.stopPropagation();
             const sortBy = $(this).data('sort');
             const order = $(this).data('order');
-            
+
             console.log('Sorting clicked:', { sortBy, order });
-            
+
             // Oppdater selected text
             $('.sort-dropdown .selected-text').text($(this).text());
-            
+
             // Hent eksisterende filtre og legg til sortering
             const currentFilters = getCurrentFiltersFromURL();
             const updatedFilters = {
                 ...currentFilters,
                 sort: sortBy,
-                order: order
+                order: order,
+								side: 1
             };
-            
+
             console.log('Updated filters:', updatedFilters);
-            
+
             // Utfør filtrering med sortering
             updateFiltersAndFetch(updatedFilters);
-            
+
             // Lukk dropdown
             $('.sort-dropdown').removeClass('active');
         });
@@ -668,7 +676,7 @@ document.addEventListener("DOMContentLoaded", function () {
             dropdownToggle.addEventListener("click", function (event) {
                 event.stopPropagation();
                 const isOpen = dropdownContent.style.display === "block";
-                
+
                 // Close all other dropdowns first
                 dropdowns.forEach(otherDropdown => {
                     if (otherDropdown !== dropdown) {
@@ -685,8 +693,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 // Toggle current dropdown
                 dropdown.classList.toggle("open", !isOpen);
                 dropdownContent.style.display = isOpen ? "none" : "block";
-                dropdownIcon.innerHTML = isOpen ? 
-                    '<i class="ka-icon icon-chevron-down"></i>' : 
+                dropdownIcon.innerHTML = isOpen ?
+                    '<i class="ka-icon icon-chevron-down"></i>' :
                     '<i class="ka-icon icon-minus"></i>';
             });
         }
@@ -721,20 +729,20 @@ document.querySelectorAll('.sort-option').forEach(option => {
     option.addEventListener('click', function() {
         const sortBy = this.dataset.sort;
         const order = this.dataset.order;
-        
+
         document.querySelector('.sort-dropdown .selected-text').textContent = this.textContent;
-        
+
         currentSort = sortBy;
-        currentOrder = order;
-        
-        updateResults();
+        currentOrder = order; 
+
+        updateResults(); 
     });
 });
 
 function updateResults() {
     const filters = getActiveFilters();
     const searchQuery = document.querySelector('.filter-search')?.value || '';
-    
+
     const data = {
         action: 'filter_courses',
         filters: filters,
@@ -752,4 +760,4 @@ function updateResults() {
     // ... existing document.ready code ...
 });*/
 
-// ... rest of existing code ... 
+// ... rest of existing code ... TEST
