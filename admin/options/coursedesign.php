@@ -116,8 +116,8 @@ class Designmaler {
                                     <?php echo esc_html($filter['label']); ?>
                                     <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language'])) : ?>
                                         <span class="filter-type-options">
-                                            <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Chips</label>
-                                            <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
+                                            <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Knapper</label>
+                                            <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (!isset($filter_types[$key]) || $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
                                         </span>
                                     <?php endif; ?>
                                 </li>
@@ -139,11 +139,11 @@ class Designmaler {
                                         <span class="filter-type-options">
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
-                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Tagger
+                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
                                             </label>
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
-                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Avkrysningsliste
+                                                    <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
                                             </label>
                                         </span>
                                     <?php endif; ?>
@@ -165,11 +165,11 @@ class Designmaler {
                                         <span class="filter-type-options">
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
-                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Tagger
+                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
                                             </label>
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
-                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Avkrysningsliste
+                                                    <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
                                             </label>
                                         </span>
                                     <?php endif; ?>
@@ -204,8 +204,8 @@ class Designmaler {
                                 if ($(this).find(".filter-type-options").length === 0) {
                                     $(this).append(`
                                         <span class="filter-type-options">
-                                            <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="chips" checked> Tagger</label>
-                                            <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="list"> Avkrysningsliste</label>
+                                            <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="chips"> Knapper</label>
+                                            <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="list" checked> Liste</label>
                                         </span>
                                     `);
                                 }

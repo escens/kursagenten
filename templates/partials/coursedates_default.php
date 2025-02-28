@@ -54,9 +54,10 @@ $item_class = $course_count === 1 ? ' single-item' : '';
         <div class="text-area col">
             <!-- Title area -->
             <div class="title-area">
-                <span class="title"><a href="<?php echo esc_url($course_link); ?>" class="course-link small"><h3 class="course-title"><?php echo esc_html($course_title); ?></h3></a></span>
-                <span class="course-available">Ledige plasser</span>
-                
+                <h3 class="course-title">
+                    <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
+                </h3>
+                <span class="course-available">Ledige plasser</span>                
             </div>
             <!-- Details area - date and location -->
             <div class="details-area iconlist horizontal">

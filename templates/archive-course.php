@@ -283,24 +283,26 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 ?>
                             </div>
 
-                            <!-- Endre pagineringsdelen -->
-														<div class="pagination-wrapper">
-															<div class="pagination">
-															<?php
-															$url_options = get_option('kag_seo_option_name');
-															$kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
-															echo paginate_links([
-																'base' => get_home_url(null, $kurs) .'?%_%',
-																'current' => max(1, $query->get('paged')),
-																'format' => 'side=%#%',
-																'total' => $query->max_num_pages,
-																'add_args' => array_map(function ($item) {
-																	return is_array($item) ? join(',', $item) : $item;
-																}, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
-															]);
-															?>
-															</div>
-														</div>
+                            <!-- Pagination -->
+                            <div class="pagination-wrapper">
+                                <div class="pagination">
+                                <?php
+                                $url_options = get_option('kag_seo_option_name');
+                                $kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
+                                echo paginate_links([
+                                    'base' => get_home_url(null, $kurs) .'?%_%',
+                                    'current' => max(1, $query->get('paged')),
+                                    'format' => 'side=%#%',
+                                    'total' => $query->max_num_pages,
+                                    'prev_text' => '<i class="ka-icon icon-chevron-left"></i> <span>Forrige</span>',
+                                    'next_text' => '<span>Neste</span> <i class="ka-icon icon-chevron-right"></i>',
+                                    'add_args' => array_map(function ($item) {
+                                        return is_array($item) ? join(',', $item) : $item;
+                                    }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+                                ]);
+                                ?>
+                                </div>
+                            </div>
 
                             <!-- Legg til en loading-indikator -->
                             <div class="course-loading" style="display: none;">

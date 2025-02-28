@@ -1,9 +1,3 @@
-.courselist-items {
-    display: flex;
-    flex-direction: column;
-    row-gap: 1em;
-}
-
 .courselist-main {
     border-radius: 10px;
     box-shadow: rgba(0, 0, 0, 0.03) 0px 0px 14px 0px;
@@ -20,47 +14,108 @@
   img{ border-radius: 5px 0 0 5px; }
 */
 
+.courselist-main {
+   /* display: grid;
+    grid-template-columns: 5fr 1fr;
+    grid-template-rows: 1fr;
+    grid-column-gap: 16px;
+    grid-row-gap: 0px;
+    align-items: start;*/
+}
+.courselist-main.with-image {
+    display: flex;
+    align-items: stretch;
+    min-height: 150px;
+}
+.courselist-items {
+    display: flex;
+    flex-direction: column;
+    row-gap: 1em;
+}
+.courselist-item {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+}
+/* Image area */
 .courselist-main .image {
     min-width: 80px;
-    height: 100%; 
     overflow: hidden;
     background-repeat: no-repeat;
     background-size: cover;
+    background-position: center;
+    flex: 0 0 150px;
     border-radius: 10px 0 0 10px;
+    position: relative;
 }
 .courselist-main .image .image-inner {
-    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
+    display: block;
 }
+.courselist-main .image .image-inner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+/* Text area */
 .courselist-main .text-area {
-    padding: 1.2em 0 1.5em 0;
+    padding: 1.2em 1.5em 1.5em 1.5em;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
+
+.courselist-main .title-area {
+    display: flex;
+    align-items: center;
+}
+
+.courselist-main .title-area .course-title {
+    /*margin: 0;
+    font-size: 1.2em;
+    line-height: 1.3;
+    flex: 1;*/
+}
+
+.courselist-main .title-area .course-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.courselist-main .title-area .course-title a:hover {
+    text-decoration: underline;
+}
+
+
+/* Links area */
 .courselist-main .links-area {
     padding: 1.2em 1em 1.5em 0;
     width: max-content;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    row-gap: .4em;
+    flex: 0 0 auto;
+    gap: 0.5rem;
+    justify-content: flex-start;
 }
+/* Meta area */
 .courselist-main .meta-area {
     margin-top: 1em;
 }
-
+/* Courselist Content Panel */
 .courselist-content {
     background: transparent;
 }
 
 
-.courselist-item {
-    display: flex;
-    flex-direction: column;
-}
 
-.courselist-main {
-    display: grid;
-    grid-template-columns: 5fr 1fr;
-    grid-template-rows: 1fr;
-    grid-column-gap: 16px;
-    grid-row-gap: 0px;
-    align-items: start;
-}
-.courselist-main.with-image {
-    grid-template-columns: 1fr 5fr 1fr;
-}
+
+

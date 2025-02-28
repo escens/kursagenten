@@ -1,8 +1,22 @@
 :root {
     --ka-max-width: 1200px;
     --ka-color: hsl(32, 96%, 49%);
+    --ka-color-dark: hsl(32, 96%, 40%);
+    --ka-color-light: hsl(32, 96%, 90%);
+    --ka-color-light-hover: hsl(32, 96%, 95%);
+    --ka-color-light-active: hsl(32, 96%, 98%);
+    --ka-color-accent: hsl(310, 45%, 52%);
+    --ka-color-accent-hover: hsl(310, 45%, 58%);
+    --ka-color-accent-active: hsl(310, 45%, 64%);
+    --ka-color-accent-disabled: hsl(310, 45%, 70%);
+    --ka-color-accent-light: hsl(310, 45%, 90%);
+    --ka-color-accent-dark: hsl(310, 45%, 30%);
     --ka-alt-background: color-mix(in hsl, var(--ka-color), white 90%);
     --ka-filter-font-size: 14px;
+    --ka-font-size-small: 0.775rem;
+    --ka-font-size-medium: 1rem;
+    --ka-font-size-large: 1.25rem;
+    --ka-font-size-xlarge: 1.5rem;
 }
 /*rgb(248, 242, 235)*/
 .kursagenten-wrapper {
@@ -25,6 +39,10 @@
 .kursagenten-wrapper .medium { font-size: 15px; line-height: 1.5;}
 .kursagenten-wrapper .uppercase { text-transform: uppercase;}
 .kursagenten-wrapper a:not(.content a) { text-decoration: none;}
+
+.kursagenten-wrapper p {
+  margin-bottom: .5em;
+}
 
 
 /* ELEMTENTS */
@@ -125,18 +143,18 @@ div#courselist-header-right {
   flex-grow: 1;
 }
 .courselist-main h3{
-  margin-left: 6px;
-  font-size: 14px;
+  margin: 0 0 .3em 0;
+  font-size: var(--ka-font-size-medium);
   color: #444;
 }
 .courselist-main .details-area{
   margin-top: 5px;
-  font-size: 14px;
+  font-size: var(--ka-font-size-small);
 }
 .courselist-main .meta-area{
   display: flex;
   flex-wrap: wrap;
-  font-size: 13px;
+  font-size: var(--ka-font-size-small);
   color: #666;
 }
 .courselist-main .links-area {
@@ -563,8 +581,9 @@ picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit
     display: flex;
   }
   span.course-available {
-    font-size: 12px;
+    font-size: var(--ka-font-size-small);
     color: #999;
+    white-space: nowrap;
   }
   span.course-available:before {
     content: "";
@@ -581,10 +600,10 @@ picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit
 
 /* COURSELIST STYLES */
 .courselist-item {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.041);
+  /*border-bottom: 1px solid rgba(0, 0, 0, 0.041);*/
 }
 .courselist-item:last-child {
-  border-bottom: none;
+  /*border-bottom: none;*/
 }
 
 /* Courselist Content Panel */
@@ -601,6 +620,75 @@ picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit
   background: rgba(255, 255, 255, 0.568);
   border-top: 1px dashed #eee;
   margin-top: 1em;
+}
+
+/* Pagination Styling */
+.pagination-wrapper {
+  margin: 2rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pagination .page-numbers {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  text-decoration: none;
+  background-color: #ffffff;
+  color: #555;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-size: var(--ka-font-size-small);
+}
+
+.pagination .page-numbers.current {
+  background-color: var(--ka-color);
+  color: white;
+}
+
+.pagination .prev,
+.pagination .next {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.pagination .prev:hover,
+.pagination .next:hover,
+.pagination .page-numbers:hover:not(.current) {
+  background-color: var(--ka-color-light);
+  transform: translateY(-1px);
+}
+
+.pagination .ka-icon {
+  font-size: var(--ka-font-size-small);
+  width: 0.875rem;
+  height: 0.775rem;
+  background-color: var(--ka-color);
+}
+
+.pagination span {
+  font-size: var(--ka-font-size-small);
+}
+
+@media (max-width: 768px) {
+  .pagination {
+      flex-wrap: wrap;
+      justify-content: center;
+  }
+  
+  .pagination .page-numbers {
+      padding: 0.4rem 0.8rem;
+      font-size: var(--ka-font-size-small);
+  }
 }
   
   /* FILTER */
@@ -1065,6 +1153,7 @@ header p{
   border-radius: 5px;
   text-align: center;
   border: 1px solid color-mix(in srgb, var(--ka-color) 30%, white);
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 input[type="number"]::-webkit-outer-spin-button,
@@ -1102,6 +1191,7 @@ input[type="number"]::-webkit-inner-spin-button {
   top: -5px;
   background: none;
   pointer-events: none;
+  appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
 }
@@ -1124,6 +1214,8 @@ input[type="range"]::-moz-range-thumb{
   -moz-appearance: none;
   box-shadow: 0 0 6px rgba(0,0,0,0.05);
 }
+
+
 
 
 
