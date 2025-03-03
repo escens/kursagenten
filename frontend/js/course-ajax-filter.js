@@ -733,9 +733,9 @@ document.querySelectorAll('.sort-option').forEach(option => {
         document.querySelector('.sort-dropdown .selected-text').textContent = this.textContent;
 
         currentSort = sortBy;
-        currentOrder = order; 
+        currentOrder = order;
 
-        updateResults(); 
+        updateResults();
     });
 });
 
@@ -760,4 +760,4 @@ function updateResults() {
     // ... existing document.ready code ...
 });*/
 
-// ... rest of existing code ... TEST
+// ... rest of existing code ...

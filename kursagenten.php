@@ -309,6 +309,7 @@ add_filter('archive_template', 'kursagenten_get_archive_template');
             KURSAG_VERSION
         );
 
+
         wp_enqueue_script(
             'kursagenten-ajax-filter',
             KURSAG_PLUGIN_URL . 'frontend/js/course-ajax-filter.js',
@@ -325,6 +326,14 @@ add_filter('archive_template', 'kursagenten_get_archive_template');
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'filter_nonce' => wp_create_nonce('filter_nonce')
             )
+        );
+
+        
+        wp_enqueue_script(
+            'kursagenten-filter-mobile',
+            KURSAG_PLUGIN_URL . '/frontend/js/course-filter-mobile.js',
+            array(),
+            KURSAG_VERSION
         );
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');

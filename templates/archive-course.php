@@ -283,26 +283,24 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 ?>
                             </div>
 
-                            <!-- Pagination -->
-                            <div class="pagination-wrapper">
-                                <div class="pagination">
-                                <?php
-                                $url_options = get_option('kag_seo_option_name');
-                                $kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
-                                echo paginate_links([
-                                    'base' => get_home_url(null, $kurs) .'?%_%',
-                                    'current' => max(1, $query->get('paged')),
-                                    'format' => 'side=%#%',
-                                    'total' => $query->max_num_pages,
-                                    'prev_text' => '<i class="ka-icon icon-chevron-left"></i> <span>Forrige</span>',
-                                    'next_text' => '<span>Neste</span> <i class="ka-icon icon-chevron-right"></i>',
-                                    'add_args' => array_map(function ($item) {
-                                        return is_array($item) ? join(',', $item) : $item;
-                                    }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
-                                ]);
-                                ?>
-                                </div>
-                            </div>
+                            <!-- Endre pagineringsdelen -->
+														<div class="pagination-wrapper">
+															<div class="pagination">
+															<?php
+															$url_options = get_option('kag_seo_option_name');
+															$kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
+															echo paginate_links([
+																'base' => get_home_url(null, $kurs) .'?%_%',
+																'current' => max(1, $query->get('paged')),
+																'format' => 'side=%#%',
+																'total' => $query->max_num_pages,
+																'add_args' => array_map(function ($item) {
+																	return is_array($item) ? join(',', $item) : $item;
+																}, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+															]);
+															?>
+															</div>
+														</div>
 
                             <!-- Legg til en loading-indikator -->
                             <div class="course-loading" style="display: none;">
@@ -316,18 +314,130 @@ foreach ($available_filters as $filter_key => $filter_info) {
                         ?>
                     </div>
 
-                    <div class="footer">
-                        <h4>Footer</h4>
-                    </div>
+                    
 
-                    <div id="slidein-overlay"></div>
-                    <div id="slidein-panel">
-                        <button class="close-btn" aria-label="Close">&times;</button>
-                        <iframe id="kursagenten-iframe" src=""></iframe>
-                        <script type="text/javascript" src="https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js"></script>
+                    
+                </div>
+
+                <div class="footer">
+                        <h4>Footeren</h4>
+                </div>
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+            <!-- MOBILE FILTERS -->
+            <button class="filter-toggle-button">
+                <i class="ka-icon icon-filter"></i>
+                <span>Filter</span>
+            </button>
+            <div class="mobile-filter-overlay">
+                <div class="mobile-filter-header">
+                    <h4>Filter</h4>
+                    <button class="close-filter-button">
+                        <i class="ka-icon icon-close"></i>
+                    </button>
+                </div>
+                <div class="mobile-filter-content">
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+                    <p>Filter innhold</p>
+
+                    <?php
+        // Kombiner top_filters og left_filters for mobil
+        $mobile_filters = array_unique(array_merge($top_filters, $left_filters));
+                    foreach ($mobile_filters as $filter) :
+            if (empty($taxonomy_data[$filter]['terms'])) continue;
+        ?>
+            <div class="mobile-filter-section">
+                <h5><?php echo esc_html($filter_display_info[$filter]['label']); ?></h5>
+                <?php if ($filter_types[$filter] === 'chips') : ?>
+                    <div class="filter-chip-wrapper">
+                        <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                            <button class="chip filter-chip"
+                                data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
+                                data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
+                                data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
+                                <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                <?php else : ?>
+                    <div id="filter-list-location" class="filter-list">
+                        <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                            <label class="filter-list-item checkbox">
+                                <input type="checkbox" class="filter-checkbox"
+                                    value="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>"
+                                    data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
+                                    data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
+                                <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        <?php endforeach; ?>
+
+
+
+
+
+                    <div class="mobile-filter-footer">
+                        <button class="apply-filters-button">Vis resultater</button>
+                        <button class="reset-filters-button reset-filters reset-filters-btn">Nullstill filter</button>
                     </div>
                 </div>
             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            <!-- SLIDEIN Sign up form -->
+
+            <div id="slidein-overlay"></div>
+            <div id="slidein-panel">
+                <button class="close-btn" aria-label="Close">&times;</button>
+                <iframe id="kursagenten-iframe" src=""></iframe>
+                <script type="text/javascript" src="https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js"></script>
+            </div>
+
         </div>
     </div>
 </main>

@@ -53,9 +53,13 @@ class Designmaler {
             'date' => [
                 'label' => 'Dato',
                 'placeholder' => 'Velg dato'
+            ],
+            'month' => [
+                'label' => 'Month',
+                'placeholder' => 'Choose month'
             ]
         ];
-        $inactive_filters = ['price', 'date','time_of_day']; // Filtre som ikke er i bruk
+        $inactive_filters = ['time_of_day']; // Filtre som ikke er i bruk
         $top_filters = get_option('kursagenten_top_filters', []);
         $left_filters = get_option('kursagenten_left_filters', []);
         $filter_types = get_option('kursagenten_filter_types', []);
@@ -114,7 +118,7 @@ class Designmaler {
                             if (!in_array($key, $top_filters) && !in_array($key, $left_filters)) : ?>
                                 <li data-filter="<?php echo esc_attr($key); ?>" class="ui-sortable-handle <?php echo $disabled_class; ?>"> 
                                     <?php echo esc_html($filter['label']); ?>
-                                    <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language'])) : ?>
+                                    <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language', 'month'])) : ?>
                                         <span class="filter-type-options">
                                             <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Knapper</label>
                                             <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (!isset($filter_types[$key]) || $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
@@ -135,7 +139,7 @@ class Designmaler {
                                 <?php if (!empty($filter)) : ?>
                                 <li data-filter="<?php echo esc_attr($filter); ?>">
                                     <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                    <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'time_of_day'])) : ?>
+                                    <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'time_of_day', 'month'])) : ?>
                                         <span class="filter-type-options">
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
@@ -161,7 +165,7 @@ class Designmaler {
                                 <?php if (!empty($filter)) : ?>
                                 <li data-filter="<?php echo esc_attr($filter); ?>">
                                     <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                    <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'time_of_day'])) : ?>
+                                    <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'month', 'time_of_day'])) : ?>
                                         <span class="filter-type-options">
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
@@ -200,7 +204,7 @@ class Designmaler {
                         // Beholder radioknappene etter flytting
                         $(".sortable-list li").each(function() {
                             let filter = $(this).attr("data-filter");
-                            if (["categories", "locations", "instructors", "language", "time_of_day"].includes(filter)) {
+                            if (["categories", "locations", "instructors", "language", "month", "time_of_day"].includes(filter)) {
                                 if ($(this).find(".filter-type-options").length === 0) {
                                     $(this).append(`
                                         <span class="filter-type-options">
