@@ -435,7 +435,6 @@ foreach ($available_filters as $filter_key => $filter_info) {
             <div id="slidein-panel">
                 <button class="close-btn" aria-label="Close">&times;</button>
                 <iframe id="kursagenten-iframe" src=""></iframe>
-                <script type="text/javascript" src="https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js"></script>
             </div>
 
         </div>

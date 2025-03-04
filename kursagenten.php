@@ -196,29 +196,90 @@ function kursagenten_get_archive_template($archive) {
 }
 add_filter('archive_template', 'kursagenten_get_archive_template');
 
+function kursagenten_get_taxonomy_template($template) {
+    if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
+        return plugin_dir_path(__FILE__) . 'templates/taxonomy.php';
+    }
+    return $template;
+}
+add_filter('taxonomy_template', 'kursagenten_get_taxonomy_template');
+
 // Sørg for at funksjonen er inkludert
     require_once KURSAG_PLUGIN_DIR . '/templates/includes/template-functions.php';
     require_once KURSAG_PLUGIN_DIR . '/templates/includes/queries.php';
     require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
     
     function kursagenten_enqueue_styles() {
-        // Oppdater stier for frontend CSS
-        if (is_singular('course') || is_post_type_archive('course')) {
-            wp_enqueue_style(
-                'kursagenten-course-style',
-                KURSAG_PLUGIN_URL . '/frontend/css/frontend-course-style.css',
-                array(),
-                KURSAG_VERSION
-            );
+        // Last inn base CSS for alle Kursagenten sider
+        wp_enqueue_style(
+            'kursagenten-course-style',
+            KURSAG_PLUGIN_URL . '/frontend/css/frontend-course-style.css',
+            array(),
+            KURSAG_VERSION
+        );
 
+        // Last inn datepicker CSS for alle Kursagenten sider
+        wp_enqueue_style(
+            'kursagenten-datepicker-style',
+            KURSAG_PLUGIN_URL . '/frontend/css/datepicker-caleran.min.css',
+            array(),
+            KURSAG_VERSION
+        );
+
+        // Last inn archive-course spesifikk CSS
+        if (is_post_type_archive('course')) {
+            // Hent valgt stil for archive
+            $default_style = get_option('kursagenten_archive_style', 'default');
+            $specific_style = get_option('kursagenten_archive_style_course', '');
+            $template_style = !empty($specific_style) ? $specific_style : $default_style;
+
+            // Last inn base archive CSS
             wp_enqueue_style(
-                'kursagenten-courselist-style-default',
+                'kursagenten-archive-base',
                 KURSAG_PLUGIN_URL . '/frontend/css/frontend-courselist-default.css',
                 array(),
                 KURSAG_VERSION
             );
+
+            // Last inn spesifikk stil hvis det ikke er default
+            if ($template_style !== 'default') {
+                wp_enqueue_style(
+                    'kursagenten-archive-' . $template_style,
+                    KURSAG_PLUGIN_URL . '/frontend/css/frontend-courselist-' . $template_style . '.css',
+                    array('kursagenten-archive-base'),
+                    KURSAG_VERSION
+                );
+            }
         }
 
+        // CSS for taxonomy templates
+        if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
+            // Hent valgt stil
+            $taxonomy = get_queried_object()->taxonomy;
+            $default_style = get_option('kursagenten_taxonomy_style', 'default');
+            $specific_style = get_option("kursagenten_taxonomy_style_{$taxonomy}", '');
+            $template_style = !empty($specific_style) ? $specific_style : $default_style;
+
+            // Last inn base CSS
+            wp_enqueue_style(
+                'kursagenten-taxonomy-base',
+                KURSAG_PLUGIN_URL . '/assets/css/taxonomy-default.css',
+                array(),
+                KURSAG_VERSION
+            );
+
+            // Load specific style if it's not the default
+            if ($template_style !== 'default') {
+                wp_enqueue_style(
+                    'kursagenten-taxonomy-' . $template_style,
+                    KURSAG_PLUGIN_URL . '/assets/css/taxonomy-' . $template_style . '.css',
+                    array('kursagenten-taxonomy-base'),
+                    KURSAG_VERSION
+                );
+            }
+        }
+
+        // Instructor styling (beholdt som den er)
         if (is_singular('instructor') || is_post_type_archive('instructor')) {
             wp_enqueue_style(
                 'kursagenten-instructor-style',
@@ -227,13 +288,6 @@ add_filter('archive_template', 'kursagenten_get_archive_template');
                 KURSAG_VERSION
             );
         }
-
-        wp_enqueue_style(
-            'kursagenten-datepicker-style',
-            KURSAG_PLUGIN_URL . '/frontend/css/datepicker-caleran.min.css',
-            array(),
-            KURSAG_VERSION
-        );
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_styles');
 
@@ -280,20 +334,10 @@ add_filter('archive_template', 'kursagenten_get_archive_template');
             return;
         }
         
-        // Oppdater stier for frontend JavaScript
-        wp_enqueue_script(
-            'kursagenten-accordion_script',
-            KURSAG_PLUGIN_URL . '/frontend/js/course-accordion.js',
-            array(),
-            KURSAG_VERSION
-        );
-
-        wp_enqueue_script(
-            'kursagenten-slidein-panel',
-            KURSAG_PLUGIN_URL . '/frontend/js/course-slidein-panel.js',
-            array(),
-            KURSAG_VERSION
-        );
+        // Enqueue scripts and styles
+        wp_enqueue_script('kursagenten-iframe-resizer', 'https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js', array(), null, true);
+        wp_enqueue_script('kursagenten-slidein-panel', plugins_url('frontend/js/course-slidein-panel.js', __FILE__), array('jquery', 'kursagenten-iframe-resizer'), KURSAG_VERSION, true);
+        wp_enqueue_script('kursagenten-ajax-filter', plugins_url('frontend/js/course-ajax-filter.js', __FILE__), array('jquery', 'kursagenten-slidein-panel'), KURSAG_VERSION, true);
 
         wp_enqueue_script(
             'kursagenten-datepicker-moment',
@@ -309,13 +353,11 @@ add_filter('archive_template', 'kursagenten_get_archive_template');
             KURSAG_VERSION
         );
 
-
         wp_enqueue_script(
-            'kursagenten-ajax-filter',
-            KURSAG_PLUGIN_URL . 'frontend/js/course-ajax-filter.js',
-            ['jquery', 'kursagenten-datepicker-script', 'kursagenten-datepicker-moment'],
-            KURSAG_VERSION,
-            true
+            'kursagenten-accordion_script',
+            KURSAG_PLUGIN_URL . '/frontend/js/course-accordion.js',
+            array(),
+            KURSAG_VERSION
         );
 
         // Lokaliser scriptet med nødvendige data

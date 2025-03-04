@@ -1,8 +1,12 @@
 document.addEventListener('DOMContentLoaded', function() {
     const filterButton = document.querySelector('.filter-toggle-button');
     const filterOverlay = document.querySelector('.mobile-filter-overlay');
-    const closeButton = document.querySelector('.close-filter-button');
-    const applyButton = document.querySelector('.apply-filters-button');
+    const closeButton = filterOverlay ? filterOverlay.querySelector('.close-filter-button') : null;
+    const applyButton = filterOverlay ? filterOverlay.querySelector('.apply-filters-button') : null;
+
+    if (!filterButton || !filterOverlay || !closeButton) {
+        return; // Exit if any required elements are missing
+    }
 
     // Vis/skjul filter-knapp basert på skjermstørrelse
     function toggleFilterButton() {
@@ -36,3 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('resize', toggleFilterButton);
     toggleFilterButton();
 });
+
+
+
+

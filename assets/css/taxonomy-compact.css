@@ -1,0 +1,205 @@
+/* Compact Taxonomy Template Styles */
+
+.taxonomy-compact {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Styles */
+.taxonomy-header.compact-style {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: start;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color, #eee);
+}
+
+.taxonomy-header-content {
+    padding-right: 2rem;
+}
+
+.taxonomy-image {
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+}
+
+.taxonomy-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.taxonomy-icon {
+    width: 40px;
+    height: 40px;
+    margin-bottom: 1rem;
+}
+
+.taxonomy-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.taxonomy-title {
+    font-size: 2rem;
+    margin: 0 0 1rem;
+    color: var(--heading-color, #333);
+}
+
+.taxonomy-description {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--text-color, #666);
+}
+
+/* Course Section Styles */
+.course-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.course-count {
+    font-size: 1rem;
+    color: var(--text-color, #666);
+}
+
+.course-list.compact-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Related Terms Section */
+.related-terms.compact-style {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color, #eee);
+}
+
+.related-terms.compact-style h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--heading-color, #333);
+}
+
+.terms-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.term-link {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    text-decoration: none;
+    background: var(--card-bg, #fff);
+    border: 1px solid var(--border-color, #eee);
+    border-radius: 8px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.term-link:hover {
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.term-link .term-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.term-link .term-icon img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.term-info {
+    min-width: 0; /* For text truncation */
+}
+
+.term-link .term-name {
+    font-size: 1.1rem;
+    margin: 0 0 0.25rem;
+    color: var(--heading-color, #333);
+}
+
+.term-link .term-excerpt {
+    font-size: 0.9rem;
+    color: var(--text-color, #666);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.term-arrow {
+    color: var(--text-color, #666);
+    transition: transform 0.2s;
+}
+
+.term-link:hover .term-arrow {
+    transform: translateX(4px);
+}
+
+/* No Courses Message */
+.no-courses {
+    text-align: center;
+    padding: 2rem;
+    background: var(--light-bg, #f9f9f9);
+    border-radius: 8px;
+    margin: 2rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .taxonomy-compact {
+        padding: 1rem;
+    }
+
+    .taxonomy-header.compact-style {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .taxonomy-header-content {
+        padding-right: 0;
+        order: 2;
+    }
+
+    .taxonomy-image {
+        order: 1;
+    }
+
+    .taxonomy-title {
+        font-size: 1.8rem;
+    }
+
+    .term-link {
+        padding: 0.75rem;
+    }
+
+    .term-link .term-excerpt {
+        display: none;
+    }
+}
+
+/* Custom Properties */
+:root {
+    --heading-color: #333;
+    --text-color: #666;
+    --border-color: #eee;
+    --card-bg: #fff;
+    --light-bg: #f9f9f9;
+} 

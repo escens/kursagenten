@@ -262,12 +262,10 @@ get_header();
 
 
 <div id="slidein-overlay"></div>
-    <div id="slidein-panel">
-        <button class="close-btn" aria-label="Close">&times;</button>
-        <iframe id="kursagenten-iframe" src=""></iframe>
-
-        <script type="text/javascript" src="https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js"></script>
-    </div>
+<div id="slidein-panel">
+    <button class="close-btn" aria-label="Close">&times;</button>
+    <iframe id="kursagenten-iframe" src=""></iframe>
+</div>
 
 
 

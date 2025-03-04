@@ -103,6 +103,57 @@ class Designmaler {
                     ?>
                 </select>
 
+                <h3>Taksonomidesign</h3>
+                <p>Velg hvordan taksonomisidene skal vises.</p>
+                <select name="kursagenten_taxonomy_style" id="taxonomy-style">
+                    <?php
+                    $current_tax_style = get_option('kursagenten_taxonomy_style', 'default');
+                    $taxonomy_styles = array(
+                        'default' => 'Standard visning',
+                        'grid' => 'Rutenett med stort bilde',
+                        'compact' => 'Kompakt liste'
+                    );
+                    foreach ($taxonomy_styles as $value => $label) {
+                        printf(
+                            '<option value="%s" %s>%s</option>',
+                            esc_attr($value),
+                            selected($current_tax_style, $value, false),
+                            esc_html($label)
+                        );
+                    }
+                    ?>
+                </select>
+
+                <div class="taxonomy-specific-settings">
+                    <h4>Spesifikke innstillinger per taksonomi</h4>
+                    <?php
+                    $taxonomies = array(
+                        'coursecategory' => 'Kurskategorier',
+                        'course_location' => 'Kurssteder',
+                        'instructors' => 'Instruktører'
+                    );
+                    
+                    foreach ($taxonomies as $tax_name => $tax_label) :
+                        $tax_style = get_option("kursagenten_taxonomy_style_{$tax_name}", '');
+                    ?>
+                        <div class="taxonomy-style-override">
+                            <label for="taxonomy-style-<?php echo esc_attr($tax_name); ?>">
+                                <?php echo esc_html($tax_label); ?>:
+                            </label>
+                            <select name="kursagenten_taxonomy_style_<?php echo esc_attr($tax_name); ?>" 
+                                    id="taxonomy-style-<?php echo esc_attr($tax_name); ?>">
+                                <option value="">Bruk standard innstilling</option>
+                                <?php foreach ($taxonomy_styles as $value => $label) : ?>
+                                    <option value="<?php echo esc_attr($value); ?>" 
+                                            <?php selected($tax_style, $value); ?>>
+                                        <?php echo esc_html($label); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+
                 <h3>Filterinnstillinger</h3>
                 <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste.
                     <br>Velg om filteret skal vises som tagger eller avkrysningsliste.</p>
@@ -231,6 +282,26 @@ class Designmaler {
             #left-filters .filter-type-options { float: none; clear: both; display: block; margin-top: 10px; }
             .disabled-filter {color: #616161; pointer-events: none; opacity: 0.6; position: relative;}
             li.disabled-filter::after { content: "kommer"; display: block; position: absolute; right: -4px; bottom: -11px;background: #fff; color: #4d4d4d; font-size: 10px; font-weight: normal; padding: 0 4px; border-radius: 3px; border: 1px solid #eee;}
+            .taxonomy-specific-settings {
+                margin: 2em 0;
+                padding: 1.5em;
+                background: #fff;
+                border: 1px solid #ccd0d4;
+                border-radius: 4px;
+            }
+            .taxonomy-style-override {
+                margin: 1em 0;
+                display: grid;
+                grid-template-columns: 200px 1fr;
+                align-items: center;
+                gap: 1em;
+            }
+            .taxonomy-style-override label {
+                font-weight: 500;
+            }
+            .taxonomy-style-override select {
+                max-width: 300px;
+            }
         </style>
         <?php
     }
@@ -242,7 +313,7 @@ class Designmaler {
             array($this, 'design_sanitize')
         );
 
-        // Legg til registrering av template style option
+        // Register template style options
         register_setting(
             'design_option_group',
             'kursagenten_template_style',
@@ -253,10 +324,48 @@ class Designmaler {
             )
         );
 
+        // Register taxonomy template style options
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_style',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'default'
+            )
+        );
+
+        // Register individual taxonomy style options
+        $taxonomies = array('coursecategory', 'course_location', 'instructors');
+        foreach ($taxonomies as $taxonomy) {
+            register_setting(
+                'design_option_group',
+                "kursagenten_taxonomy_style_{$taxonomy}",
+                array(
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field'
+                )
+            );
+        }
+
         register_setting('design_option_group', 'kursagenten_top_filters');
         register_setting('design_option_group', 'kursagenten_left_filters');
         register_setting('design_option_group', 'kursagenten_filter_types');
         register_setting('design_option_group', 'kursagenten_available_filters');
+    }
+
+    public function design_sanitize($input) {
+        $sanitary_values = array();
+        
+        if (isset($input['template_style'])) {
+            $sanitary_values['template_style'] = sanitize_text_field($input['template_style']);
+        }
+        
+        if (isset($input['taxonomy_style'])) {
+            $sanitary_values['taxonomy_style'] = sanitize_text_field($input['taxonomy_style']);
+        }
+        
+        return $sanitary_values;
     }
 }
 
