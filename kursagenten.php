@@ -146,21 +146,26 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
 /* ENQUEUE JS & CSS ADMIN SCRIPTS */
     function enqueue_custom_admin_script() {
         if (is_admin()) {
-            
             $screen = get_current_screen();
             $plugin_admin_pages = array('kursagenten', 'bedriftsinformasjon', 'kursinnstillinger', 'seo', 'avansert');
             $enqueue_plugin_pages = false;
+            
+            // Sjekk om vi er på en Kursagenten admin-side
             foreach ($plugin_admin_pages as $slug) {
-                if (strpos($screen->id, $slug) !== false) { $enqueue_plugin_pages = true; break; }
+                if (strpos($screen->id, $slug) !== false) { 
+                    $enqueue_plugin_pages = true; 
+                    break; 
+                }
             }
             
-            wp_enqueue_media();// Enqueue media scripts for file uploads (necessary for image upload functionality)
+            // Sjekk om vi er på en taxonomi-redigeringsside
+            if ($screen && in_array($screen->taxonomy, array('coursecategory', 'course_location', 'instructors'))) {
+                $enqueue_plugin_pages = true;
+            }
             
-            //Remember to add class handle in bottom of image-upload.js
-            wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'admin/js/image-upload.js', array('jquery'), '1.0.3',  true  );
-            //wp_enqueue_script( 'custom-admin-sync-script', plugin_dir_url(__FILE__) . 'admin/js/kursagenten-admin-sync.js', array('jquery'), '1.0.3',  true  );
-            
-            if ($enqueue_plugin_pages) { // Enqueue custom CSS for admin pages
+            if ($enqueue_plugin_pages) {
+                wp_enqueue_media();// Enqueue media scripts for file uploads
+                wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'admin/js/image-upload.js', array('jquery'), '1.0.3',  true  );
                 wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'admin/css/kursagenten-admin.css', array(), '1.0.56' );
             }
         }

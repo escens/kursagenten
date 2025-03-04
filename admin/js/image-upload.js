@@ -52,4 +52,5 @@ jQuery(document).ready(function($) {
     handleImageUpload('image_coursecategory');
     handleImageUpload('icon_coursecategory');
     handleImageUpload('image_course_location');
+    handleImageUpload('image_instructor');
 });

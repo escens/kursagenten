@@ -79,7 +79,6 @@ function kursagenten_display_instructor_term($post) {
         if ($term) {
             ?>
             <article class="instructor-search-result">
-                
                 <?php if ($term->description): ?>
                     <div class="entry-content">
                         <?php echo wp_kses_post($term->description); ?>
@@ -101,98 +100,6 @@ add_filter('the_content', function($content) {
     }
     return $content;
 });
-
-/**
- * Legg til metafelter for instruktør-termer
- */
-function kursagenten_add_instructor_term_fields($term) {
-    // Hent eksisterende verdier
-    $bio = get_term_meta($term->term_id, 'instructor_bio', true);
-    $image = get_term_meta($term->term_id, 'instructor_image', true);
-    $email = get_term_meta($term->term_id, 'instructor_email', true);
-    $phone = get_term_meta($term->term_id, 'instructor_phone', true);
-    ?>
-    <tr class="form-field">
-        <th scope="row">
-            <label for="instructor_bio">Biografi</label>
-        </th>
-        <td>
-            <textarea name="instructor_bio" id="instructor_bio" rows="5" cols="50"><?php echo esc_textarea($bio); ?></textarea>
-        </td>
-    </tr>
-    <tr class="form-field">
-        <th scope="row">
-            <label for="instructor_image">Bilde</label>
-        </th>
-        <td>
-            <input type="text" name="instructor_image" id="instructor_image" value="<?php echo esc_attr($image); ?>" class="regular-text">
-            <button type="button" class="button" id="instructor_image_button">Velg bilde</button>
-        </td>
-    </tr>
-    <tr class="form-field">
-        <th scope="row">
-            <label for="instructor_email">E-post</label>
-        </th>
-        <td>
-            <input type="email" name="instructor_email" id="instructor_email" value="<?php echo esc_attr($email); ?>" class="regular-text">
-        </td>
-    </tr>
-    <tr class="form-field">
-        <th scope="row">
-            <label for="instructor_phone">Telefon</label>
-        </th>
-        <td>
-            <input type="tel" name="instructor_phone" id="instructor_phone" value="<?php echo esc_attr($phone); ?>" class="regular-text">
-        </td>
-    </tr>
-    <?php
-}
-add_action('instructors_edit_form_fields', 'kursagenten_add_instructor_term_fields');
-
-/**
- * Lagre metafelter for instruktør-termer
- */
-function kursagenten_save_instructor_term_fields($term_id) {
-    if (isset($_POST['instructor_bio'])) {
-        update_term_meta($term_id, 'instructor_bio', sanitize_textarea_field($_POST['instructor_bio']));
-    }
-    if (isset($_POST['instructor_image'])) {
-        update_term_meta($term_id, 'instructor_image', sanitize_text_field($_POST['instructor_image']));
-    }
-    if (isset($_POST['instructor_email'])) {
-        update_term_meta($term_id, 'instructor_email', sanitize_email($_POST['instructor_email']));
-    }
-    if (isset($_POST['instructor_phone'])) {
-        update_term_meta($term_id, 'instructor_phone', sanitize_text_field($_POST['instructor_phone']));
-    }
-}
-add_action('edited_instructors', 'kursagenten_save_instructor_term_fields');
-
-/**
- * Legg til JavaScript for bildevelger
- */
-function kursagenten_instructor_admin_scripts() {
-    wp_enqueue_media();
-    ?>
-    <script>
-    jQuery(document).ready(function($) {
-        $('#instructor_image_button').click(function(e) {
-            e.preventDefault();
-            var image = wp.media({
-                title: 'Velg instruktørbilde',
-                multiple: false
-            }).open()
-            .on('select', function(e){
-                var uploaded_image = image.state().get('selection').first();
-                var image_url = uploaded_image.toJSON().url;
-                $('#instructor_image').val(image_url);
-            });
-        });
-    });
-    </script>
-    <?php
-}
-add_action('admin_footer', 'kursagenten_instructor_admin_scripts');
 
 // Endre link for instruktører
 add_filter('the_permalink', function($permalink, $post) {
@@ -223,4 +130,4 @@ add_filter('post_type_link', function($permalink, $post) {
         }
     }
     return $permalink;
-}, 10, 2); 
+}, 10, 2);
