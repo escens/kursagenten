@@ -106,6 +106,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/api/api_connection.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api-webhook-handler.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 
 /* MISC ADMIN FUNCTIONS */
 require_once KURSAG_PLUGIN_DIR . '/admin/misc/hide_course-images_in_mediafolder.php';
