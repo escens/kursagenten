@@ -182,9 +182,6 @@ function kursagenten_get_single_template($single) {
     if ($post->post_type == 'course') {
         return plugin_dir_path(__FILE__) . 'templates/single-course.php';
     }
-    if ($post->post_type == 'instructor') {
-        return plugin_dir_path(__FILE__) . 'templates/single-instructor.php';
-    }
     
     return $single;
 }
@@ -193,9 +190,6 @@ add_filter('single_template', 'kursagenten_get_single_template');
 function kursagenten_get_archive_template($archive) {
     if (is_post_type_archive('course')) {
         return plugin_dir_path(__FILE__) . 'templates/archive-course.php';
-    }
-    if (is_post_type_archive('instructor')) {
-        return plugin_dir_path(__FILE__) . 'templates/archive-instructor.php';
     }
     
     return $archive;

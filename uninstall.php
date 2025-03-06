@@ -57,7 +57,7 @@ foreach ($taxonomies as $taxonomy) {
 }
 
 // Clean up relationships meta
-$post_types = array('course', 'instructor', 'coursedate');
+$post_types = array('course', 'coursedate');
 foreach ($post_types as $post_type) {
     $posts = get_posts(array(
         'post_type' => $post_type,

@@ -93,8 +93,6 @@ function create_new_course($data, $main_course_id, $location_id, $language) {
         $data_instructors = array_column($location_instructors, 'fullname');
         update_instructor_taxonomies($post_id, $data_instructors);
 
-        create_or_update_instructor_cpt($location_instructors, $post_id, null);
-        
         sync_main_course_data($main_course_id);
 
         set_featured_image_from_url($data, $post_id, $main_course_id, $location_id);
@@ -148,8 +146,6 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language) 
         
         update_instructor_taxonomies($post_id, $instructor_fullnames);
 
-        create_or_update_instructor_cpt($location_instructors, $post_id, null);
-        
         sync_main_course_data($main_course_id);
 
         set_featured_image_from_url($data, $post_id, $main_course_id, $data['id']);
@@ -191,8 +187,6 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
         $location_instructors = $instructors['instructors_location'];
         $data_instructors = array_column($location_instructors, 'fullname');
         update_instructor_taxonomies($post_id, $data_instructors);
-
-        create_or_update_instructor_cpt($location_instructors, $post_id, null);
 
         if ($main_course_id) {
             sync_main_course_data($main_course_id);
@@ -628,6 +622,17 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
             }
             if (!is_wp_error($instructor_term)) {
                 $instructors[] = (int)$instructor_term['term_id']; // Legg til term ID
+                
+                // Oppdater metafelter for instruktøren
+                if (isset($instructor['userId'])) {
+                    update_term_meta($instructor_term['term_id'], 'instructor_id', sanitize_text_field($instructor['userId']));
+                }
+                if (isset($instructor['email'])) {
+                    update_term_meta($instructor_term['term_id'], 'instructor_email', sanitize_email($instructor['email']));
+                }
+                if (isset($instructor['phone'])) {
+                    update_term_meta($instructor_term['term_id'], 'instructor_phone', sanitize_text_field($instructor['phone']));
+                }
             }
         }
 
@@ -641,76 +646,6 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
     }
 }
 
-
-
-function create_or_update_instructor_cpt($instructors_location, $post_id = null, $coursedate_post_id = null) {
-    foreach ($instructors_location as $instructor_data) {
-        $fullname = $instructor_data['fullname'] ?? '';
-        if (empty($fullname)) {
-            continue;
-        }
-
-        // Sjekk om instruktøren allerede finnes basert på tittel
-        $existing_instructor = get_posts([
-            'post_type' => 'instructor',
-            'title' => $fullname,
-            'post_status' => 'publish',
-            'numberposts' => 1,
-        ]);
-
-        $instructor_post_id = $existing_instructor[0]->ID ?? null;
-
-        if (!$instructor_post_id) {
-            // Opprett ny instruktør CPT hvis ikke eksisterer
-            $instructor_post_id = wp_insert_post([
-                'post_title' => $fullname,
-                'post_type' => 'instructor',
-                'post_status' => 'publish',
-            ]);
-        }
-
-        if (is_wp_error($instructor_post_id)) {
-            error_log('Kunne ikke opprette instruktør: ' . $fullname);
-            continue;
-        }
-
-        // Oppdater metafeltene
-        update_post_meta($instructor_post_id, 'course_instructor_id', $instructor_data['id'] ?? '');
-        update_post_meta($instructor_post_id, 'course_instructor_firstname', $instructor_data['firstname'] ?? '');
-        update_post_meta($instructor_post_id, 'course_instructor_lastname', $instructor_data['lastname'] ?? '');
-        update_post_meta($instructor_post_id, 'course_instructor_email', $instructor_data['email'] ?? '');
-        update_post_meta($instructor_post_id, 'course_instructor_phone', $instructor_data['phone'] ?? '');
-
-        // Oppdater relaterte kurs eller kursdatoer
-        if ($post_id) {
-            $related_courses = get_post_meta($instructor_post_id, 'course_related_course', true) ?: [];
-            if (!in_array($post_id, $related_courses)) {
-                $related_courses[] = $post_id;
-                update_post_meta($instructor_post_id, 'course_related_course', $related_courses);
-            }
-
-            $related_instructors = get_post_meta($post_id, 'course_related_instructor', true) ?: [];
-            if (!in_array($instructor_post_id, $related_instructors)) {
-                $related_instructors[] = $instructor_post_id;
-                update_post_meta($post_id, 'course_related_instructor', $related_instructors);
-            }
-        }
-
-        if ($coursedate_post_id) {
-            $related_coursesdate = get_post_meta($instructor_post_id, 'course_related_coursedate', true) ?: [];
-            if (!in_array($coursedate_post_id, $related_coursesdate)) {
-                $related_coursesdate[] = $coursedate_post_id;
-                update_post_meta($instructor_post_id, 'course_related_coursedate', $related_coursesdate);
-            }
-
-            $related_instructors_coursedate = get_post_meta($coursedate_post_id, 'course_related_instructor', true) ?: [];
-            if (!in_array($instructor_post_id, $related_instructors_coursedate)) {
-                $related_instructors_coursedate[] = $instructor_post_id;
-                update_post_meta($coursedate_post_id, 'course_related_instructor', $related_instructors_coursedate);
-            }
-        }
-    }
-}
 
 
 function get_instructors_in_courselist($data, $location_id) {
