@@ -50,7 +50,7 @@ function filter_courses_handler() {
 							'%d kurs %s',
 		          $query->found_posts,
 		          $query->max_num_pages > 1 ? sprintf(
-								'- page %d / %d',
+								'- side %d av %d',
 			          $query->get('paged'),
 			          $query->max_num_pages
 		          ) : ''

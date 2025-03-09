@@ -404,15 +404,18 @@
 				});
 			}
 		});
+
 	}
 
 	function toggleResetFiltersButton(filters) {
 		const $resetButton = $('#reset-filters');
+        const $activeFiltersContainer = $('#active-filters-container');
 		const hasActiveFilters = Object.keys(filters).some(key =>
 			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' &&
 			filters[key] && filters[key].length > 0
 		);
 		hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
+		hasActiveFilters ? $activeFiltersContainer.addClass('active') : $activeFiltersContainer.removeClass('active');
 	}
 
 	// Initialize filters on page load

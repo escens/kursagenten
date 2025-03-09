@@ -215,6 +215,10 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
+                        <div id="active-filters-container">
+                            <div id="active-filters" class="active-filters"></div>
+                            <a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
+                        </div>
                     </div> <!-- End .filter-container filter-top -->
                 </div> <!-- End .course-grid -->    
             </div> <!-- End .filter-section (top filters)-->
@@ -264,8 +268,8 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                         <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
-                            </div>
-                        </div>
+                            </div> <!-- End .filter-container filter-left -->
+                        </div> <!-- End .filter left-column -->
                     <?php endif; ?>
 
                     <!-- Right Column -->
@@ -281,11 +285,9 @@ error_log('Filter types: ' . print_r($filter_types, true));
                             ?>
 
                             <div class="courselist-header">
-                                <!-- Course Count and Active Filters Display -->
-                                <div id="courselist-header-left" class="active-filters-container">
-                                    <div id="course-count"><?php echo $course_count; ?> kurs <?php echo $query->max_num_pages > 1 ? sprintf("- page %d / %d", $query->get('paged'), $query->max_num_pages) : ''; ?></div>
-                                    <div id="active-filters" class="active-filters-container"></div>
-                                    <a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
+                                <!-- Course Count -->
+                                <div id="courselist-header-left">
+                                    <div id="course-count"><?php echo $course_count; ?> kurs <?php echo $query->max_num_pages > 1 ? sprintf("- side %d av %d", $query->get('paged'), $query->max_num_pages) : ''; ?></div>                              
                                 </div>
 
                                 <!-- Sorting Controls -->

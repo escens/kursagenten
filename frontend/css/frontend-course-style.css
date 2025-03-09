@@ -740,6 +740,9 @@ font-size: var(--ka-font-size-small);
 } 
   
 /* filter: active filters */
+#active-filters-container.active{
+  margin-top: 1em;
+}
 div#active-filters {
   display: inline-block;
   font-size: var(--ka-font-size-small);
