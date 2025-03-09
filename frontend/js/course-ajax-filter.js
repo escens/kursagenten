@@ -1,560 +1,621 @@
 (function($) {
-    // Store a reference to $ in the outer scope
-    let previousData = {};
+	// Store a reference to $ in the outer scope
+	let previousData = {};
 
-    // Get filter settings from PHP (WordPress options)
-    const filterSettingsElement = $("#filter-settings");
-    let filterSettings = {};
+	// Get filter settings from PHP (WordPress options)
+	const filterSettingsElement = $("#filter-settings");
+	let filterSettings = {};
 
-    if (filterSettingsElement.length && filterSettingsElement.text().trim().length > 0) {
-        try {
-            filterSettings = JSON.parse(filterSettingsElement.text());
-        } catch (error) {
-            console.error("Error parsing filter settings:", error);
-        }
-    } else {
-        console.warn("No filter settings found or invalid JSON.");
-    }
+	if (filterSettingsElement.length && filterSettingsElement.text().trim().length > 0) {
+		try {
+			filterSettings = JSON.parse(filterSettingsElement.text());
+		} catch (error) {
+			console.error("Error parsing filter settings:", error);
+		}
+	} else {
+		console.warn("No filter settings found or invalid JSON.");
+	}
 
-    // Dynamic handling of filter chips
-    $(document).on('click', '.filter-chip', function () {
-        const filterKey = $(this).data('filter-key'); // Internal filter reference
-        const urlKey = $(this).data('url-key') || filterKey; // Use data-url-key if available
-        const filterValue = $(this).data('filter');
+	// Dynamic handling of filter chips
+	$(document).on('click', '.filter-chip', function () {
+		const filterKey = $(this).data('filter-key'); // Internal filter reference
+		const urlKey = $(this).data('url-key') || filterKey; // Use data-url-key if available
+		const filterValue = $(this).data('filter');
 
-        if ($(this).hasClass('active')) {
-            $(this).removeClass('active');
-            updateFiltersAndFetch({ [urlKey]: null }); // Remove from URL
-        } else {
-            $('.chip[data-filter-key="' + filterKey + '"]').removeClass('active');
-            $(this).addClass('active');
-            updateFiltersAndFetch({ [urlKey]: filterValue }); // Add to URL
-        }
-    });
+		if ($(this).hasClass('active')) {
+			$(this).removeClass('active');
+			updateFiltersAndFetch({ [urlKey]: null }); // Remove from URL
+		} else {
+			$('.chip[data-filter-key="' + filterKey + '"]').removeClass('active');
+			$(this).addClass('active');
+			updateFiltersAndFetch({ [urlKey]: filterValue }); // Add to URL
+		}
+	});
 
-    // Dynamic handling of checkbox-based filter lists
-    $(document).on('change', '.filter-checkbox', function () {
-        const filterKey = $(this).data('filter-key');
-        const urlKey = $(this).data('url-key') || filterKey;
-        const selectedValues = $('.filter-checkbox[data-filter-key="' + filterKey + '"]:checked').map(function () {
-            return $(this).val();
-        }).get();
+	// Dynamic handling of checkbox-based filter lists
+	$(document).on('change', '.filter-checkbox', function (e) {
+		const filterKey = $(this).data('filter-key');
+		const urlKey = $(this).data('url-key') || filterKey;
+		
+		const selectedValues = $('.filter-checkbox[data-filter-key="' + filterKey + '"]:checked').map(function () {
+			return $(this).val();
+		}).get();
 
-        // Update dropdown text immediately
-        updateDropdownText(filterKey, selectedValues);
+		// Update dropdown text immediately
+		updateDropdownText(filterKey, selectedValues);
 
-        // Update filters and perform AJAX call with empty arrays if no values are selected
-        const filterUpdate = selectedValues.length > 0 ? { [urlKey]: selectedValues } : { [urlKey]: null };
-        updateFiltersAndFetch(filterUpdate);
-    });
+		// Update filters and perform AJAX call with empty arrays if no values are selected
+		const filterUpdate = selectedValues.length > 0 ? { [urlKey]: selectedValues } : { [urlKey]: null };
+		updateFiltersAndFetch(filterUpdate);
+	});
 
-    // Handle search field
-    $('#search').on('keyup', function () {
-        const sok = $(this).val();
-        updateFiltersAndFetch({ sok: sok });
-    });
+	// Handle search field
+	$('#search').on('keyup', function () {
+		const sok = $(this).val();
+		updateFiltersAndFetch({ sok: sok });
+	});
 
-    // Handle price slider
-    /*const priceSlider = $("#price-range");
-    const priceMin = $("#price-min");
-    const priceMax = $("#price-max");
+	// Handle price slider
+	/*const priceSlider = $("#price-range");
+	const priceMin = $("#price-min");
+	const priceMax = $("#price-max");
 
-    priceSlider.slider({
-        range: true,
-        min: 0,
-        max: 10000, // Juster dette etter maks kurspris
-        values: [500, 5000], // Standardverdier, kan endres
-        slide: function (event, ui) {
-            priceMin.text(ui.values[0] + " kr");
-            priceMax.text(ui.values[1] + " kr");
-        },
-        change: function (event, ui) {
-            priceMin.text(ui.values[0] + " kr");
-            priceMax.text(ui.values[1] + " kr");
+	priceSlider.slider({
+			range: true,
+			min: 0,
+			max: 10000, // Juster dette etter maks kurspris
+			values: [500, 5000], // Standardverdier, kan endres
+			slide: function (event, ui) {
+					priceMin.text(ui.values[0] + " kr");
+					priceMax.text(ui.values[1] + " kr");
+			},
+			change: function (event, ui) {
+					priceMin.text(ui.values[0] + " kr");
+					priceMax.text(ui.values[1] + " kr");
 
-            updateFiltersAndFetch({
-                price_min: ui.values[0],
-                price_max: ui.values[1]
-            });
-        }
-    });
+					updateFiltersAndFetch({
+							price_min: ui.values[0],
+							price_max: ui.values[1]
+					});
+			}
+	});
 
-    // Sett innitiale verdier i tekstfeltene
-    priceMin.text(priceSlider.slider("values", 0) + " kr");
-    priceMax.text(priceSlider.slider("values", 1) + " kr");
+	// Sett innitiale verdier i tekstfeltene
+	priceMin.text(priceSlider.slider("values", 0) + " kr");
+	priceMax.text(priceSlider.slider("values", 1) + " kr");
 
-    priceMin.text(priceSlider.slider("values", 0) + " kr");
-    priceMax.text(priceSlider.slider("values", 1) + " kr");
+	priceMin.text(priceSlider.slider("values", 0) + " kr");
+	priceMax.text(priceSlider.slider("values", 1) + " kr");
 */
 
 
-    function updateFiltersAndFetch(newFilters) {
-        const currentFilters = getCurrentFiltersFromURL();
-        const updatedFilters = { ...currentFilters, ...newFilters };
+	function updateFiltersAndFetch(newFilters) {
+		const currentFilters = getCurrentFiltersFromURL();
+		const updatedFilters = { ...currentFilters, ...newFilters };
+		
+		// Map filter keys to their URL parameters
+		const filterKeyMap = {
+			'language': 'sprak',
+			'locations': 'sted',
+			'instructors': 'i',
+			'categories': 'k',
+			'months': 'mnd',
+		};
 
-        // Map filter keys to their URL parameters
-        const filterKeyMap = {
-            'language': 'sprak',
-            'locations': 'sted',
-            'instructors': 'i',
-            'categories': 'k',
-            //add more in archive-course.php
-        };
+		// Update dropdown texts for all filter types
+		Object.entries(filterKeyMap).forEach(([filterKey, urlKey]) => {
+			if (newFilters.hasOwnProperty(urlKey)) {
+				const values = newFilters[urlKey] || [];
+				updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
+			} else if (updatedFilters[urlKey]) {
+				const values = updatedFilters[urlKey];
+				updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
+			}
+		});
 
-        // Update dropdown texts for all filter types
-        Object.entries(filterKeyMap).forEach(([filterKey, urlKey]) => {
-            if (newFilters.hasOwnProperty(urlKey)) {
-                const values = newFilters[urlKey] || [];
-                updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
-            } else if (updatedFilters[urlKey]) {
-                const values = updatedFilters[urlKey];
-                updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
-            }
-        });
+		delete updatedFilters.nonce;
+		delete updatedFilters.action;
+		updateURLParams(updatedFilters);
+		fetchCourses(Object.assign(updatedFilters, {side: 1}));
+		updateActiveFiltersList(updatedFilters);
+		toggleResetFiltersButton(updatedFilters);
+	}
 
-        // Ensure date filter is properly formatted
-        if (updatedFilters.dato && typeof updatedFilters.dato === "object") {
-            updatedFilters.dato.from = updatedFilters.dato.from || "";
-            updatedFilters.dato.to = updatedFilters.dato.to || "";
-        }
+	function updateDropdownText(filterKey, activeFilters) {
+		const $dropdown = $(`.filter-dropdown-toggle[data-filter="${filterKey}"]`);
+		if (!$dropdown.length) {
+			return;
+		}
 
-        delete updatedFilters.nonce;
-        delete updatedFilters.action;
-        updateURLParams(updatedFilters);
-        fetchCourses(Object.assign(updatedFilters, {side: 1}));
-        updateActiveFiltersList(updatedFilters);
-        toggleResetFiltersButton(updatedFilters);
-    }
+		const placeholder = $dropdown.data('placeholder') || 'Velg';
 
-    function updateDropdownText(filterKey, activeFilters) {
-        const $dropdown = $(`.filter-dropdown-toggle[data-filter="${filterKey}"]`);
-        if (!$dropdown.length) return;
+		// If no active filters, show only placeholder
+		if (!activeFilters || activeFilters.length === 0) {
+			const placeholderHtml = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
+			$dropdown.html(placeholderHtml);
+			$dropdown.removeClass('has-active-filters');
+			return;
+		}
 
-        const placeholder = $dropdown.data('placeholder') || 'Velg';
+		// Process active filter names
+		let activeNames = [];
+		if (filterKey === 'language') {
+			activeNames = activeFilters.map(filter => filter.charAt(0).toUpperCase() + filter.slice(1));
+		} else {
+			activeFilters.forEach(slug => {
+				const $element = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${slug}"]`);
+				if ($element.length) {
+					const labelText = $element.siblings('.checkbox-label').text().trim();
+					activeNames.push(labelText);
+				}
+			});
+		}
 
-        // If no active filters, show only placeholder
-        if (!activeFilters || activeFilters.length === 0) {
-            const placeholderHtml = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
-            $dropdown.html(placeholderHtml);
-            $dropdown.removeClass('has-active-filters');
-            return;
-        }
+		// Display text format: show all if 2 or fewer, otherwise show count
+		let displayText = activeNames.length <= 2 ? activeNames.join(', ') : `${activeNames.length} valgt`;
+		const finalHtml = `<span class="selected-text">${displayText}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
 
-        // Process active filter names
-        let activeNames = [];
-        if (filterKey === 'language') {
-            activeNames = activeFilters.map(filter => filter.charAt(0).toUpperCase() + filter.slice(1));
-        } else {
-            activeFilters.forEach(slug => {
-                const $element = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${slug}"]`);
-                if ($element.length) {
-                    activeNames.push($element.siblings('.checkbox-label').text().trim());
-                }
-            });
-        }
+		$dropdown.html(finalHtml);
+		$dropdown.addClass('has-active-filters');
+	}
 
-        // Display text format: show all if 2 or fewer, otherwise show count
-        let displayText = activeNames.length <= 2 ? activeNames.join(', ') : `${activeNames.length} valgt`;
-        const finalHtml = `<span class="selected-text">${displayText}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
+	function resetAllFilters() {
+		// Lagre eksisterende sorteringsparametere
+		const currentFilters = getCurrentFiltersFromURL();
+		const sort = currentFilters.sort;
+		const order = currentFilters.order;
 
-        $dropdown.html(finalHtml);
-        $dropdown.addClass('has-active-filters');
-    }
+		// Reset all dropdowns to their placeholder state
+		$('.filter-dropdown-toggle').each(function() {
+			const $dropdown = $(this);
+			const placeholder = $dropdown.data('placeholder') || 'Velg';
+			const html = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
+			$dropdown.html(html);
+			$dropdown.removeClass('has-active-filters');
+		});
 
-    function resetAllFilters() {
-        // Lagre eksisterende sorteringsparametere
-        const currentFilters = getCurrentFiltersFromURL();
-        const sort = currentFilters.sort;
-        const order = currentFilters.order;
+		// Clear all active checkboxes
+		$('.filter-checkbox:checked').prop('checked', false);
 
-        // Reset all dropdowns to their placeholder state
-        $('.filter-dropdown-toggle').each(function() {
-            const $dropdown = $(this);
-            const placeholder = $dropdown.data('placeholder') || 'Velg';
-            const html = `<span class="selected-text">${placeholder}</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>`;
-            $dropdown.html(html);
-            $dropdown.removeClass('has-active-filters');
-        });
+		// Oppdater URL og fetch med bare sorteringsparametere
+		const updatedFilters = {};
+		if (sort && order) {
+			updatedFilters.sort = sort;
+			updatedFilters.order = order;
+		}
 
-        // Clear all active checkboxes
-        $('.filter-checkbox:checked').prop('checked', false);
+		updateURLParams(updatedFilters);
+		fetchCourses({
+			...updatedFilters,
+			action: 'filter_courses',
+			nonce: kurskalender_data.filter_nonce
+		});
 
-        // Oppdater URL og fetch med bare sorteringsparametere
-        const updatedFilters = {};
-        if (sort && order) {
-            updatedFilters.sort = sort;
-            updatedFilters.order = order;
-        }
+		updateActiveFiltersList(updatedFilters);
+		toggleResetFiltersButton(updatedFilters);
+	}
 
-        updateURLParams(updatedFilters);
-        fetchCourses({
-            ...updatedFilters,
-            action: 'filter_courses',
-            nonce: kurskalender_data.filter_nonce
-        });
+	function fetchCourses(data) {
+		// Add required AJAX parameters
+		data.action = 'filter_courses';
+		data.nonce = kurskalender_data.filter_nonce;
 
-        updateActiveFiltersList(updatedFilters);
-        toggleResetFiltersButton(updatedFilters);
-    }
+		// Vis loading indikator
+		$('.course-loading').show();
 
-    function fetchCourses(data) {
-        // Add required AJAX parameters
-        data.action = 'filter_courses';
-        data.nonce = kurskalender_data.filter_nonce;
+		$.ajax({
+			url: kurskalender_data.ajax_url,
+			type: 'POST',
+			data: data,
+			success: function(response) {
+				if (response.success) {
+					$('#filter-results').html(response.data.html);
+					$('#course-count').html(response.data['course-count']);
+					initAccordion();
+					initSlideInPanel();
+					updatePagination(response.data.html_pagination);
 
-        // Vis loading indikator
-        $('.course-loading').show();
+					// Scroll til toppen av resultatene med større offset
+					$('html, body').animate({
+						scrollTop: $('#filter-results').offset().top - 170
+					}, 500);
 
-        $.ajax({
-            url: kurskalender_data.ajax_url,
-            type: 'POST',
-            data: data,
-            success: function(response) {
-                if (response.success) {
-                    $('#filter-results').html(response.data.html);
-                    initAccordion();
-                    initSlideInPanel();
-                    updatePagination(response.data.html_pagination);
-                    updateCourseCount();
+					// Update dropdown states based on current URL filters
+					const currentFilters = getCurrentFiltersFromURL();
 
-                    // Scroll til toppen av resultatene
-                    $('html, body').animate({
-                        scrollTop: $('#filter-results').offset().top - 100
-                    }, 500);
+					// Handle language filter updates
+					if (currentFilters.sprak) {
+						const languages = Array.isArray(currentFilters.sprak) ?
+							currentFilters.sprak :
+							[currentFilters.sprak];
+						updateDropdownText('language', languages);
+					}
 
-                    // Update dropdown states based on current URL filters
-                    const currentFilters = getCurrentFiltersFromURL();
+					// Handle location filter updates
+					if (currentFilters.sted) {
+						const locations = Array.isArray(currentFilters.sted) ?
+							currentFilters.sted :
+							[currentFilters.sted];
+						updateDropdownText('locations', locations);
+					}
 
-                    // Handle language filter updates
-                    if (currentFilters.sprak) {
-                        const languages = Array.isArray(currentFilters.sprak) ?
-                            currentFilters.sprak :
-                            [currentFilters.sprak];
-                        updateDropdownText('language', languages);
-                    }
+					// Handle instructor filter updates
+					if (currentFilters.i) {
+						const instructors = Array.isArray(currentFilters.i) ?
+							currentFilters.i :
+							[currentFilters.i];
+						updateDropdownText('instructors', instructors);
+					}
 
-                    // Handle location filter updates
-                    if (currentFilters.sted) {
-                        const locations = Array.isArray(currentFilters.sted) ?
-                            currentFilters.sted :
-                            [currentFilters.sted];
-                        updateDropdownText('locations', locations);
-                    }
+					// Handle month filter updates
+					if (currentFilters.mnd) {
+						const months = Array.isArray(currentFilters.mnd) ?
+							currentFilters.mnd :
+							[currentFilters.mnd];
+						updateDropdownText('months', months);
+					}
+				} else {
+					console.error('Filter Error:', response.data);
+					$('#filter-results').html(response.data.message);
+					$('#course-count').html('');
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('AJAX Error:', {xhr, status, error});
+			},
+			complete: function() {
+				// Skjul loading indikator
+				$('.course-loading').hide();
+			}
+		});
 
-                    // Handle instructor filter updates
-                    if (currentFilters.i) {
-                        const instructors = Array.isArray(currentFilters.i) ?
-                            currentFilters.i :
-                            [currentFilters.i];
-                        updateDropdownText('instructors', instructors);
-                    }
-                } else {
-                    console.error('Filter Error:', response.data);
-                    $('#filter-results').html(response.data.message);
-                }
-            },
-            error: function(xhr, status, error) {
-                console.error('AJAX Error:', {xhr, status, error});
-            },
-            complete: function() {
-                // Skjul loading indikator
-                $('.course-loading').hide();
-            }
-        });
+		previousData = {...data};
+	}
 
-        previousData = {...data};
-    }
+	function clean(obj) {
+		for (let propName in obj) {
+			if (obj[propName] === null || obj[propName] === undefined || obj[propName] === "") {
+				delete obj[propName];
+			}
+		}
+		return obj
+	}
 
-    function updateURLParams(params) {
-        const url = new URL(window.location.href);
 
-        // Clear existing parameters
-        url.search = '';
+	function updateURLParams(params) {
+		const url = new URL(window.location.href);
+		url.search = new URLSearchParams(clean(params)).toString();
 
-        // Add updated parameters
-        Object.entries(params).forEach(([key, value]) => {
-            if (value && value.length) {
-                const paramValue = Array.isArray(value) ? value.join(',') : value;
-                url.searchParams.set(key, paramValue);
-            }
-        });
+		window.history.pushState({}, '', url.toString());
+	}
 
-        window.history.pushState({}, '', url);
-    }
+	function getCurrentFiltersFromURL() {
+		const url = new URL(window.location.href);
+		const params = {};
 
-    function getCurrentFiltersFromURL() {
-        const url = new URL(window.location.href);
-        const params = {};
+		// Process all URL parameters
+		for (const [key, value] of url.searchParams.entries()) {
+			// Split comma-separated values into arrays
+			params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+		}
 
-        // Process all URL parameters
-        for (const [key, value] of url.searchParams.entries()) {
-            // Split comma-separated values into arrays
-            params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
-        }
+		return params;
+	}
 
-        return params;
-    }
+	function initializeFiltersFromURL() {
+		const filters = getCurrentFiltersFromURL();
 
-    function initializeFiltersFromURL() {
-        const filters = getCurrentFiltersFromURL();
+		// Initialize each filter based on URL parameters
+		Object.keys(filters).forEach(function (filterKey) {
+			const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
 
-        // Initialize each filter based on URL parameters
-        Object.keys(filters).forEach(function (filterKey) {
-            const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
+			// Handle chip-based filters
+			if ($('.chip[data-url-key="' + filterKey + '"]').length) {
+				values.forEach(value => {
+					$('.chip[data-filter="' + value + '"][data-url-key="' + filterKey + '"]').addClass('active');
+				});
+			}
 
-            // Handle chip-based filters
-            if ($('.chip[data-url-key="' + filterKey + '"]').length) {
-                values.forEach(value => {
-                    $('.chip[data-filter="' + value + '"][data-url-key="' + filterKey + '"]').addClass('active');
-                });
-            }
+			// Handle checkbox-based filters
+			if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
+				values.forEach(value => {
+					const lowercaseValue = value.toLowerCase();
+					$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
+						if ($(this).val().toLowerCase() === lowercaseValue) {
+							$(this).prop('checked', true);
+						}
+					});
+				});
+			}
+		});
 
-            // Handle checkbox-based filters
-            if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
-                values.forEach(value => {
-                    const lowercaseValue = value.toLowerCase();
-                    $('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
-                        if ($(this).val().toLowerCase() === lowercaseValue) {
-                            $(this).prop('checked', true);
-                        }
-                    });
-                });
-            }
-        });
+		updateActiveFiltersList(filters);
+		toggleResetFiltersButton(filters);
+	}
 
-        updateActiveFiltersList(filters);
-        toggleResetFiltersButton(filters);
-    }
+	function updateActiveFiltersList(filters) {
+		const $activeFiltersContainer = $('#active-filters');
+		$activeFiltersContainer.empty();
 
-    function updateActiveFiltersList(filters) {
-        const $activeFiltersContainer = $('#active-filters');
-        $activeFiltersContainer.empty();
+		// Create chips for each active filter
+		Object.keys(filters).forEach(key => {
+			// Ekskluder sorteringsparametere og andre systemparametere
+			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'side' &&
+				filters[key] && filters[key].length > 0) {
+				const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
+				values.forEach(value => {
+					// For månedsfilteret, bruk 'months' som filter-key for å matche med checkbox
+					const filterKey = key === 'mnd' ? 'months' : key;
+					
+					// Finn riktig visningstekst basert på filtertype
+					let displayText = value;
+					
+					// Prøv å finne checkbox med data-filter-key
+					let $checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${value}"]`);
+					
+					// Hvis ikke funnet, prøv med data-url-key
+					if (!$checkbox.length) {
+						$checkbox = $(`.filter-checkbox[data-url-key="${key}"][value="${value}"]`);
+					}
+					
+					if ($checkbox.length) {
+						displayText = $checkbox.siblings('.checkbox-label').text().trim();
+					} else if (filterKey === 'language' || key === 'sprak') {
+						displayText = value.charAt(0).toUpperCase() + value.slice(1);
+					}
 
-        // Create chips for each active filter
-        Object.keys(filters).forEach(key => {
-            // Ekskluder sorteringsparametere og andre systemparametere
-            if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'side' &&
-                filters[key] && filters[key].length > 0) {
-                const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
-                values.forEach(value => {
-                    const filterChip = $(
-                        `<span class="active-filter-chip" data-filter-key="${key}" data-filter-value="${value}">
-                            ${value} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
-                        </span>`
-                    );
-                    // Handle filter removal
-                    filterChip.find('.remove-filter').on('click', function () {
-                        const filterKey = $(this).parent().data('filter-key');
-                        const filterValue = $(this).parent().data('filter-value');
+					const filterChip = $(`<span class="active-filter-chip" data-filter-key="${filterKey}" data-filter-value="${value}">
+						${displayText} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
+					</span>`);
 
-                        if (filters[filterKey]) {
-                            if (Array.isArray(filters[filterKey])) {
-                                filters[filterKey] = filters[filterKey].filter(item => item !== filterValue);
-                            } else {
-                                filters[filterKey] = null;
-                            }
-                        }
+					// Handle filter removal
+					filterChip.find('.remove-filter').on('click', function () {
+						const filterKey = $(this).parent().data('filter-key');
+						const filterValue = $(this).parent().data('filter-value');
 
-                        // Behold sorteringsparameterne når et filter fjernes
-                        const updatedFilters = {
-                            ...filters,
-                            sort: filters.sort,
-                            order: filters.order
-                        };
-                        updateFiltersAndFetch(updatedFilters);
-                        $('.filter-checkbox[value="' + filterValue + '"]').prop('checked', false);
-                    });
-                    $activeFiltersContainer.append(filterChip);
-                });
-            }
-        });
-    }
+						// Konverter tilbake til URL-nøkkel for månedsfilteret
+						const urlKey = filterKey === 'months' ? 'mnd' : filterKey;
 
-    function toggleResetFiltersButton(filters) {
-        const $resetButton = $('#reset-filters');
-        const hasActiveFilters = Object.keys(filters).some(key =>
-            key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' &&
-            filters[key] && filters[key].length > 0
-        );
-        hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
-    }
+						if (filters[urlKey]) {
+							if (Array.isArray(filters[urlKey])) {
+								filters[urlKey] = filters[urlKey].filter(item => item !== filterValue);
+							} else {
+								filters[urlKey] = null;
+							}
+						}
 
-    // Initialize filters on page load
-    initializeFiltersFromURL();
-    // const initialFilters = getCurrentFiltersFromURL();
-    // if (Object.keys(initialFilters).length > 0) {
-    //     // fetchCourses(initialFilters);
-    // }
+						// Behold sorteringsparameterne når et filter fjernes
+						const updatedFilters = {
+							...filters,
+							sort: filters.sort,
+							order: filters.order
+						};
 
-		$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
+						// Uncheck the corresponding checkbox
+						const $checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
+						if ($checkbox.length) {
+							$checkbox.prop('checked', false);
+						}
+
+						// Update filters and fetch new results
+						updateFiltersAndFetch(updatedFilters);
+					});
+					$activeFiltersContainer.append(filterChip);
+				});
+			}
+		});
+	}
+
+	function toggleResetFiltersButton(filters) {
+		const $resetButton = $('#reset-filters');
+		const hasActiveFilters = Object.keys(filters).some(key =>
+			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' &&
+			filters[key] && filters[key].length > 0
+		);
+		hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
+	}
+
+	// Initialize filters on page load
+	initializeFiltersFromURL();
+
+
+
+	$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
+		e.preventDefault();
+		const href = $(this).attr('href');
+		const locate = new URL(href);
+
+		// Oppdater URL uten å laste siden på nytt
+		window.history.pushState({}, '', href);
+
+		// Hent nye resultater via AJAX
+		fetchCourses(Object.fromEntries(locate.searchParams.entries()));
+	})
+
+	function updatePagination(html) {
+		$('.pagination-wrapper .pagination').html(html);
+	}
+
+	// Håndter browser back/forward
+	window.addEventListener('popstate', function() {
+		const currentFilters = getCurrentFiltersFromURL();
+		fetchCourses(currentFilters);
+	});
+
+	// Date picker configuration
+	const dateInput = document.getElementById("date-range");
+
+	if (dateInput) {
+		caleran("#date-range", {
+			format: "DD.MM.YYYY",
+			rangeOrientation: "vertical",
+			calendarCount: 2,
+			showHeader: true,
+			showFooter: true,
+			showButtons: true,
+			applyLabel: "Bruk",
+			cancelLabel: "Avbryt",
+			showOn: "bottom",
+			arrowOn: "center",
+			autoAlign: false,
+			inline: false,
+			nextMonthIcon: '<i class="ka-icon icon-chevron-right"></i>',
+			prevMonthIcon: '<i class="ka-icon icon-chevron-left"></i>',
+			rangeIcon: '<i class="ka-icon icon-calendar"></i>',
+			headerSeparator: '<i class="ka-icon icon-chevron-right calendar-header-separator"></i>',
+			rangeLabel: "Velg periode",
+			ranges: [
+				{
+					title: "1 uke",
+					startDate: moment(),
+					endDate: moment().add(6, "days")
+				},
+				{
+					title: "Neste 30 dager",
+					startDate: moment(),
+					endDate: moment().add(30, "days")
+				},
+				{
+					title: "Neste 3 måneder",
+					startDate: moment(),
+					endDate: moment().add(90, "days")
+				},
+				{
+					title: "Neste halvår",
+					startDate: moment(),
+					endDate: moment().add(180, "days")
+				},
+				{
+					title: "Ett år",
+					startDate: moment(),
+					endDate: moment().add(365, "days")
+				}
+			],
+			onafterselect: function (caleran, startDate, endDate) {
+				const fromDate = startDate.format("YYYY-MM-DD");
+				const toDate = endDate.format("YYYY-MM-DD");
+				updateFiltersAndFetch({ 'dato[from]': fromDate, 'dato[to]': toDate});
+			}
+		});
+
+		// // Prevent calendar from closing on first input field click
+		// dateInput.addEventListener("click", function (event) {
+		// 	event.stopPropagation();
+		// 	let caleranInstance = document.querySelector("#date-range").caleran;
+		// 	if (!caleranInstance.isOpen) {
+		// 		caleranInstance.showDropdown();
+		// 	}
+		// });
+		// dateInput.addEventListener("focus", function (e) {
+		// 	e.stopPropagation();
+		// 	if (!dateInput.caleran.isOpen) {
+		// 		dateInput.caleran.showDropdown();
+		// 	}
+		// })
+	}
+
+	// Initialize reset filters functionality
+	$(document).ready(function() {
+		$(document).on('click', '.reset-filters', function(e) {
 			e.preventDefault();
-			const href = $(this).attr('href');
-			const locate = new URL(href);
+			resetAllFilters();
+		});
+	});
 
-			// Oppdater URL uten å laste siden på nytt
-			window.history.pushState({}, '', href);
+	function initializeSorting() {
+		const $sortDropdown = $('.sort-dropdown');
+		if (!$sortDropdown.length) {
+			console.log('Sort dropdown not found');
+			return;
+		}
 
-			// Hent nye resultater via AJAX
-			fetchCourses(Object.fromEntries(locate.searchParams.entries()));
+		// Toggle dropdown
+		$('.sort-dropdown').on('click', function(e) {
+			e.stopPropagation();
+			$(this).toggleClass('active');
+		});
+
+		const setCurrentSorting = () => {
+			const currentAddress = new URL(window.location.toString());
+			const sort = currentAddress.searchParams.get('sort');
+			const order = currentAddress.searchParams.get('order');
+
+			if (sort && order) {
+				const title = $('.sort-option[data-sort="' + sort + '"][data-order="' + order + '"]').text();
+				if (title) {
+					$('.sort-dropdown .selected-text').text(title);
+				}
+			}
+		}
+
+		setCurrentSorting();
+
+		// Handle sort option clicks
+		$('.sort-option').on('click', function(e) {
+			e.stopPropagation();
+			const sortBy = $(this).data('sort');
+			const order = $(this).data('order');
+
+			// Oppdater selected text
+			$('.sort-dropdown .selected-text').text($(this).text());
+
+			// Hent eksisterende filtre og legg til sortering
+			const currentFilters = getCurrentFiltersFromURL();
+			const updatedFilters = {
+				...currentFilters,
+				sort: sortBy,
+				order: order,
+				side: 1
+			};
+
+			// Utfør filtrering med sortering
+			updateFiltersAndFetch(updatedFilters);
+
+			// Lukk dropdown
+			$('.sort-dropdown').removeClass('active');
+		});
+
+		// Lukk dropdown når man klikker utenfor
+		$(document).on('click', function(e) {
+			if (!$(e.target).closest('.sort-dropdown').length) {
+				$('.sort-dropdown').removeClass('active');
+			}
+		});
+	}
+
+	// Initialiser sortering - nå innenfor IIFE
+	initializeSorting();
+
+	function initializeRangePrice() {
+		const rangeMin = document.getElementById('range-min');
+		const rangeMax = document.getElementById('range-max');
+		const priceMin = document.getElementById('price-min');
+		const priceMax = document.getElementById('price-max');
+
+		if (!rangeMin || !rangeMax || !priceMin || !priceMax) {
+			return;
+		}
+
+		rangeMin.addEventListener('input', function () {
+			priceMin.value = Math.min(this.value, rangeMax.value);
+			this.value = priceMin.value;
+		})
+		rangeMax.addEventListener('input', function () {
+			priceMax.value = Math.max(this.value, priceMin.value);
+			this.value = priceMax.value;
 		})
 
-    function updatePagination(html) {
-				$('.pagination-wrapper .pagination').html(html);
-    }
+		function updateRangeFilter() {
+			updateFiltersAndFetch({'pris[from]': priceMin.value, 'pris[to]': priceMax.value})
+		}
 
-    // Håndter browser back/forward
-    window.addEventListener('popstate', function() {
-        const currentFilters = getCurrentFiltersFromURL();
-        fetchCourses(currentFilters);
-    });
+		rangeMax.addEventListener('change', updateRangeFilter)
+		rangeMin.addEventListener('change', updateRangeFilter)
+		priceMin.addEventListener('change', updateRangeFilter)
+		priceMax.addEventListener('change', updateRangeFilter)
+	}
 
-    function updateCourseCount() {
-        const counter = document.querySelector("#course-count");
-        const elements = document.querySelectorAll(".courselist-item");
-        if (elements.length > 0) {
-            counter.textContent = elements.length + " kurs";
-        } else {
-            counter.textContent = "0 kurs med dette filteret";
-        }
-    }
-
-    // Date picker configuration
-    const dateInput = document.getElementById("date-range");
-
-    if (dateInput) {
-        caleran("#date-range", {
-            format: "DD.MM.YYYY",
-            rangeOrientation: "vertical",
-            calendarCount: 2,
-            showHeader: true,
-            showFooter: true,
-            showButtons: true,
-            applyLabel: "Bruk",
-            cancelLabel: "Avbryt",
-            nextMonthIcon: '<i class="ka-icon icon-chevron-right"></i>',
-            prevMonthIcon: '<i class="ka-icon icon-chevron-left"></i>',
-            rangeIcon: '<i class="ka-icon icon-calendar"></i>',
-            headerSeparator: '<i class="ka-icon icon-chevron-right calendar-header-separator"></i>',
-            rangeLabel: "Velg periode",
-            ranges: [
-                {
-                    title: "1 uke",
-                    startDate: moment(),
-                    endDate: moment().add(6, "days")
-                },
-                {
-                    title: "Neste 30 dager",
-                    startDate: moment(),
-                    endDate: moment().add(30, "days")
-                },
-                {
-                    title: "Neste 3 måneder",
-                    startDate: moment(),
-                    endDate: moment().add(90, "days")
-                },
-                {
-                    title: "Neste halvår",
-                    startDate: moment(),
-                    endDate: moment().add(180, "days")
-                },
-                {
-                    title: "Ett år",
-                    startDate: moment(),
-                    endDate: moment().add(365, "days")
-                }
-            ],
-            onafterselect: function (caleran, startDate, endDate) {
-                const fromDate = startDate.format("YYYY-MM-DD");
-                const toDate = endDate.format("YYYY-MM-DD");
-                updateFiltersAndFetch({ dato: { from: fromDate, to: toDate } });
-            }
-        });
-
-        // Prevent calendar from closing on first input field click
-        dateInput.addEventListener("click", function (event) {
-            event.stopPropagation();
-            let caleranInstance = document.querySelector("#date-range").caleran;
-            if (!caleranInstance.isOpen) {
-                caleranInstance.showDropdown();
-            }
-        });
-    }
-
-    // Initialize reset filters functionality
-    $(document).ready(function() {
-        $(document).on('click', '.reset-filters', function(e) {
-            e.preventDefault();
-            resetAllFilters();
-        });
-    });
-
-    function initializeSorting() {
-        const $sortDropdown = $('.sort-dropdown');
-        if (!$sortDropdown.length) {
-            console.log('Sort dropdown not found');
-            return;
-        }
-
-        // Toggle dropdown
-        $('.sort-dropdown').on('click', function(e) {
-            e.stopPropagation();
-            $(this).toggleClass('active');
-        });
-
-				const setCurrentSorting = () => {
-					const currentAddress = new URL(window.location.toString());
-					const sort = currentAddress.searchParams.get('sort');
-					const order = currentAddress.searchParams.get('order');
-
-					if (sort && order) {
-						const title = $('.sort-option[data-sort="' + sort + '"][data-order="' + order + '"]').text();
-						if (title) {
-							$('.sort-dropdown .selected-text').text(title);
-						}
-					}
-				}
-
-				setCurrentSorting();
-
-        // Handle sort option clicks
-        $('.sort-option').on('click', function(e) {
-            e.stopPropagation();
-            const sortBy = $(this).data('sort');
-            const order = $(this).data('order');
-
-            console.log('Sorting clicked:', { sortBy, order });
-
-            // Oppdater selected text
-            $('.sort-dropdown .selected-text').text($(this).text());
-
-            // Hent eksisterende filtre og legg til sortering
-            const currentFilters = getCurrentFiltersFromURL();
-            const updatedFilters = {
-                ...currentFilters,
-                sort: sortBy,
-                order: order,
-								side: 1
-            };
-
-            console.log('Updated filters:', updatedFilters);
-
-            // Utfør filtrering med sortering
-            updateFiltersAndFetch(updatedFilters);
-
-            // Lukk dropdown
-            $('.sort-dropdown').removeClass('active');
-        });
-
-        // Lukk dropdown når man klikker utenfor
-        $(document).on('click', function(e) {
-            if (!$(e.target).closest('.sort-dropdown').length) {
-                $('.sort-dropdown').removeClass('active');
-            }
-        });
-    }
-
-    // Initialiser sortering - nå innenfor IIFE
-    initializeSorting();
+	initializeRangePrice();
 
 })(jQuery);
 
@@ -664,56 +725,79 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 /* Filter list dropdown - functionality for dropdown*/
 document.addEventListener("DOMContentLoaded", function () {
-    const dropdowns = document.querySelectorAll(".filter-dropdown");
+	const dropdowns = document.querySelectorAll(".filter-dropdown");
 
-    dropdowns.forEach(dropdown => {
-        const dropdownToggle = dropdown.querySelector(".filter-dropdown-toggle");
-        const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
-        const dropdownIcon = dropdown.querySelector(".dropdown-icon");
+	dropdowns.forEach(dropdown => {
+		const dropdownToggle = dropdown.querySelector(".filter-dropdown-toggle");
+		const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
+		const dropdownIcon = dropdown.querySelector(".dropdown-icon");
 
-        if (dropdownToggle && dropdownContent && dropdownIcon) {
-            // Open/close dropdown on toggle click
-            dropdownToggle.addEventListener("click", function (event) {
-                event.stopPropagation();
-                const isOpen = dropdownContent.style.display === "block";
+		if (dropdownToggle && dropdownContent && dropdownIcon) {
+			// Open/close dropdown on toggle click
+			dropdownToggle.addEventListener("click", function (event) {
+				event.stopPropagation();
+				const isOpen = dropdownContent.style.display === "block";
 
-                // Close all other dropdowns first
-                dropdowns.forEach(otherDropdown => {
-                    if (otherDropdown !== dropdown) {
-                        const otherContent = otherDropdown.querySelector(".filter-dropdown-content");
-                        const otherIcon = otherDropdown.querySelector(".dropdown-icon");
-                        if (otherContent && otherIcon) {
-                            otherContent.style.display = "none";
-                            otherIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
-                            otherDropdown.classList.remove("open");
-                        }
-                    }
-                });
+				// Close all other dropdowns first
+				dropdowns.forEach(otherDropdown => {
+					if (otherDropdown !== dropdown) {
+						const otherContent = otherDropdown.querySelector(".filter-dropdown-content");
+						const otherIcon = otherDropdown.querySelector(".dropdown-icon");
+						if (otherContent && otherIcon) {
+							otherContent.style.display = "none";
+							otherIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
+							otherDropdown.classList.remove("open");
+						}
+					}
+				});
 
-                // Toggle current dropdown
-                dropdown.classList.toggle("open", !isOpen);
-                dropdownContent.style.display = isOpen ? "none" : "block";
-                dropdownIcon.innerHTML = isOpen ?
-                    '<i class="ka-icon icon-chevron-down"></i>' :
-                    '<i class="ka-icon icon-minus"></i>';
-            });
-        }
-    });
+				// Toggle current dropdown
+				dropdown.classList.toggle("open", !isOpen);
+				dropdownContent.style.display = isOpen ? "none" : "block";
+				dropdownIcon.innerHTML = isOpen ?
+					'<i class="ka-icon icon-chevron-down"></i>' :
+					'<i class="ka-icon icon-minus"></i>';
+			});
+		}
+	});
 
-    // Close all dropdowns when clicking outside
-    document.addEventListener("click", function (event) {
-        if (!event.target.closest('.filter-dropdown')) {
-            dropdowns.forEach(dropdown => {
-                const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
-                const dropdownIcon = dropdown.querySelector(".dropdown-icon");
-                if (dropdownContent && dropdownIcon) {
-                    dropdownContent.style.display = "none";
-                    dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
-                    dropdown.classList.remove("open");
-                }
-            });
-        }
-    });
+	// Close all dropdowns when clicking outside
+	document.addEventListener("click", function (event) {
+		// Sjekk om klikket var utenfor alle dropdowns
+		if (!event.target.closest('.filter-dropdown')) {
+			dropdowns.forEach(dropdown => {
+				const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
+				const dropdownIcon = dropdown.querySelector(".dropdown-icon");
+				if (dropdownContent && dropdownIcon) {
+					dropdownContent.style.display = "none";
+					dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
+					dropdown.classList.remove("open");
+				}
+			});
+		}
+	});
+
+	// Stopp propagering av klikk inni dropdowns
+	dropdowns.forEach(dropdown => {
+		dropdown.addEventListener("click", function(event) {
+			event.stopPropagation();
+		});
+	});
+
+	// Lukk dropdowns når man trykker ESC
+	document.addEventListener("keydown", function(event) {
+		if (event.key === "Escape") {
+			dropdowns.forEach(dropdown => {
+				const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
+				const dropdownIcon = dropdown.querySelector(".dropdown-icon");
+				if (dropdownContent && dropdownIcon) {
+					dropdownContent.style.display = "none";
+					dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
+					dropdown.classList.remove("open");
+				}
+			});
+		}
+	});
 });
 
 // Fjern eller kommenter ut alle disse gamle funksjonene og variabler

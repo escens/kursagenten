@@ -28,15 +28,16 @@
 /*rgb(248, 242, 235)*/
 .kursagenten-wrapper {
   position: relative;
+  width: 100%;
+  max-width: var(--ka-max-width);
+  margin: 0 auto;
+  padding: 1em 2em;
 }
 .kursagenten-wrapper .inner-container{
-width: 100%;
-max-width: var(--ka-max-width);
-margin: 0 auto;
-padding: 1em 2em;
+    width: 100%;
 }
 @media screen and (max-width: 768px) {
-.kursagenten-wrapper .inner-container{
+.kursagenten-wrapper{
   padding: 1em .8em;
 }
 }

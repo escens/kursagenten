@@ -174,14 +174,25 @@ function get_all_sorted_coursedates($related_coursedate) {
     return $all_coursedates;
 }
 
+add_filter( 'posts_where', function (string $where, \WP_Query $query) {
+	global $wpdb;
+	if ($query->get('course_month')) {
+		$months = is_array($query->get('course_month')) ? $query->get('course_month') : explode(',', $query->get('course_month'));
+		$prepare = join(',', array_fill(0, count($months), '%s'));
+		$where .= ' AND DATE_FORMAT(STR_TO_DATE(course_month.meta_value, "%d.%m.%Y"), "%m") IN (' . $wpdb->prepare($prepare, ...$months) . ')';
+	}
+	return $where;
+}, 10, 2 );
 add_filter( 'posts_join', function (string $join, WP_Query $query) {
 	global $wpdb;
+	if ($query->get('course_month')) {
+		$join .= " LEFT JOIN $wpdb->postmeta as course_month ON ( wp_posts.ID = course_month.post_id AND course_month.meta_key = 'course_first_date' )";
+	}
 	if ( $query->get( 'orderby' ) == 'course_first_date' ) {
 		$join .= " LEFT JOIN $wpdb->postmeta as pcfd ON ( wp_posts.ID = pcfd.post_id AND pcfd.meta_key = 'course_first_date' )";
 	}
 	return $join;
 }, 10, 2 );
-
 add_filter( 'posts_orderby', function ($orderby_clause, $query) {
 	if ( $query->get( 'orderby' ) == 'course_first_date' ) {
 		$format = empty($query->get('meta_custom_date_format')) ? "%d.%m.%Y" : $query->get('meta_custom_date_format');
@@ -191,6 +202,17 @@ add_filter( 'posts_orderby', function ($orderby_clause, $query) {
 
 	return $orderby_clause;
 }, 10, 2 );
+add_filter( 'posts_clauses', function ($clauses) {
+	global $wpdb;
+	$original = [
+		"$wpdb->postmeta.meta_key = 'course_first_date' AND CAST($wpdb->postmeta.meta_value AS DATE)"
+	];
+	$replaces = [
+		"$wpdb->postmeta.meta_key = 'course_first_date' AND STR_TO_DATE($wpdb->postmeta.meta_value, \"%d.%m.%Y\")"
+	];
+	$clauses['where'] = str_replace($original, $replaces, $clauses['where']);
+	return $clauses;
+} );
 
 /**
  * Retrieve and sort all coursedates by date.
@@ -208,6 +230,7 @@ function get_course_dates_query($args = []) {
 		'coursecategory' => 'k',
 		'instructors' => 'i',
 		'course_language' => 'sprak',
+		'course_price' => 'pris',
 	];
 	$search_param = 'sok';
 
@@ -266,12 +289,38 @@ function get_course_dates_query($args = []) {
 				'terms'    => $param,
 			];
 		} else {
-			$query_args['meta_query'][] = [
-				'key'     => $db_field,
-				'value'   => $param,
-				'compare' => 'IN',
-			];
+			if ($db_field === 'course_first_date') {
+				if ( ! empty( $param['from'] ) && ! empty( $param['to'] ) ) {
+					$from                       = date( 'Y-m-d', strtotime( $param['from'] ) );
+					$to                         = date( 'Y-m-d', strtotime( $param['to'] ) );
+					$query_args['meta_query'][] = [
+						'key'     => $db_field,
+						'value'   => [ $from, $to ],
+						'compare' => 'BETWEEN',
+						'type'    => 'DATE'
+					];
+				}
+			} else if ($db_field === 'course_price') {
+				if (! empty($param['from']) && !empty($param['to'])) {
+					$query_args['meta_query'][] = [
+						'key'     => $db_field,
+						'value'   => [ $param['from'], $param['to'] ],
+						'compare' => 'BETWEEN',
+						'type'    => 'NUMERIC'
+					];
+				}
+			} else {
+				$query_args['meta_query'][] = [
+					'key'     => $db_field,
+					'value'   => $param,
+					'compare' => 'IN',
+				];
+			}
 		}
+	}
+
+	if (!empty($_REQUEST['mnd'])) {
+		$query_args['course_month'] = $_REQUEST['mnd'];
 	}
 
 	if (!empty($_REQUEST[$search_param])) {
@@ -351,5 +400,51 @@ function get_course_info_by_location($related_course_id) {
 function get_course_languages() {
     // ... eksisterende kode ...
 }
+
+/**
+ * Get all available months from course dates
+ * 
+ * @return array Array of month objects with name and number
+ */
+function get_course_months() {
+    global $wpdb;
+    
+    // Get all unique months from course dates
+    $months = $wpdb->get_results(
+        "SELECT DISTINCT 
+            MONTH(STR_TO_DATE(meta_value, '%d.%m.%Y')) as month_num,
+            DATE_FORMAT(STR_TO_DATE(meta_value, '%d.%m.%Y'), '%M') as month_name
+        FROM {$wpdb->postmeta} 
+        WHERE meta_key = 'course_first_date' 
+        AND meta_value != '' 
+        AND meta_value IS NOT NULL 
+        ORDER BY month_num ASC"
+    );
+    
+    // Convert to array of objects with name and number
+    $formatted_months = array_map(function($month) {
+        return (object) [
+            'slug' => str_pad($month->month_num, 2, '0', STR_PAD_LEFT),
+            'name' => ucfirst(date_i18n('F', strtotime($month->month_name . ' 1'))),
+            'value' => str_pad($month->month_num, 2, '0', STR_PAD_LEFT) // Add value property for checkbox
+        ];
+    }, $months);
+    
+    return $formatted_months;
+}
+
 /* Check admin/post_types/visibility_management.php for visibility management
    tags/categories: 'skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv' are excluded from the main query.*/
+
+/**
+ * Modify WP_Query to handle month filtering
+ */
+add_filter('pre_get_posts', function($query) {
+    if (!is_admin() && $query->is_main_query() && isset($_GET['mnd'])) {
+        $months = explode(',', $_GET['mnd']);
+        if (!empty($months)) {
+            $query->set('course_month', $months);
+        }
+    }
+    return $query;
+});

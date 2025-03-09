@@ -45,13 +45,23 @@ function filter_courses_handler() {
         wp_send_json_success([
             'html' => ob_get_clean(),
 						'html_pagination' => $pagination,
-            'max_num_pages' => $query->max_num_pages
+            'max_num_pages' => $query->max_num_pages,
+	          'course-count' => sprintf(
+							'%d kurs %s',
+		          $query->found_posts,
+		          $query->max_num_pages > 1 ? sprintf(
+								'- page %d / %d',
+			          $query->get('paged'),
+			          $query->max_num_pages
+		          ) : ''
+	          )
         ]);
     } else {
         wp_send_json_success([
             'html' => '<div class="filter-no-results"><p>Ingen kurs funnet. Fjern ett eller flere filtre, eller<a href="#" class="reset-filters"> nullstill alle filtre</a></p></div>',
 						'html_pagination' => '',
-            'max_num_pages' => 0
+            'max_num_pages' => 0,
+            'course-count' => ''
         ]);
     }
 }

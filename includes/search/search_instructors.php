@@ -12,10 +12,10 @@ if (!defined('ABSPATH')) {
  */
 function kursagenten_modify_search_query($query) {
     if (!is_admin() && $query->is_main_query() && $query->is_search()) {
-        error_log('Kursagenten: Starting modify_search_query');
+        //error__log('Kursagenten: Starting modify_search_query');
         
         $search_term = $query->get('s');
-        error_log('Kursagenten: Search term: ' . $search_term);
+        //error__log('Kursagenten: Search term: ' . $search_term);
         
         if (!empty($search_term)) {
             // Find instructor terms matching the search term
@@ -25,7 +25,7 @@ function kursagenten_modify_search_query($query) {
                 'hide_empty' => false
             ));
             
-            error_log('Kursagenten: Found instructor terms: ' . print_r($instructor_terms, true));
+            //error__log('Kursagenten: Found instructor terms: ' . print_r($instructor_terms, true));
             
             if (!empty($instructor_terms)) {
                 // Set post type and other query parameters
@@ -63,11 +63,11 @@ function kursagenten_modify_search_query($query) {
                         
                         // Get image
                         $instructor_image = get_term_meta($term->term_id, 'image_instructor', true);
-                        error_log('Kursagenten: Instructor image for term ' . $term->term_id . ': ' . print_r($instructor_image, true));
+                        //error__log('Kursagenten: Instructor image for term ' . $term->term_id . ': ' . print_r($instructor_image, true));
                         if ($instructor_image) {
                             // Convert URL to image ID
                             $image_id = attachment_url_to_postid($instructor_image);
-                            error_log('Kursagenten: Converted image URL to ID: ' . $image_id);
+                            //error__log('Kursagenten: Converted image URL to ID: ' . $image_id);
                             if ($image_id) {
                                 // Get image in full size
                                 $image = wp_get_attachment_image_src($image_id, 'large');
@@ -76,7 +76,7 @@ function kursagenten_modify_search_query($query) {
                                 $image_sizes = wp_get_attachment_image_sizes($image_id);
                                 $srcset = wp_get_attachment_image_srcset($image_id, 'large');
                                 
-                                error_log('Kursagenten: Image data: ' . print_r($image, true));
+                                //error__log('Kursagenten: Image data: ' . print_r($image, true));
                                 
                                 // Mark that we have an image
                                 $post->has_instructor_image = true;
@@ -94,7 +94,7 @@ function kursagenten_modify_search_query($query) {
                                     $image_sizes ?: '(max-width: ' . $image[1] . 'px) 100vw, ' . $image[1] . 'px'
                                 );
                                 
-                                error_log('Kursagenten: Generated image HTML: ' . $content);
+                                //error__log('Kursagenten: Generated image HTML: ' . $content);
                             }
                         }
                         
@@ -113,7 +113,7 @@ function kursagenten_modify_search_query($query) {
                 });
             }
         }
-        error_log('Kursagenten: Finished modify_search_query');
+        //error__log('Kursagenten: Finished modify_search_query');
     }
 }
 add_action('pre_get_posts', 'kursagenten_modify_search_query');

@@ -21,15 +21,15 @@ if (!is_array($left_filters)) {
     $left_filters = explode(',', $left_filters);
 }
 
-// Check if left column is empty
+// Check if left column is empty and set appropriate class
 $has_left_filters = !empty($left_filters) && is_array($left_filters) && count(array_filter($left_filters)) > 0;
 $left_column_class = $has_left_filters ? 'col-1-4' : 'col-1 hidden-left-column';
 
-// Check if search is the only filter on top
+// Check if search is the only filter on top and set appropriate class
 $is_search_only = is_array($top_filters) && count($top_filters) === 1 && in_array('search', $top_filters);
 $search_class = $is_search_only ? 'wide-search' : '';
 
-// Get data for taxonomies and meta fields
+// Define taxonomy and meta field data structure for filters
 $taxonomy_data = [
     'categories' => [
         'taxonomy' => 'coursecategory',
@@ -54,9 +54,20 @@ $taxonomy_data = [
         'terms' => get_course_languages(),
         'url_key' => 'sprak',
         'filter_key' => 'language',
+    ],
+    'months' => [
+        'taxonomy' => '',
+        'terms' => get_course_months(),
+        'url_key' => 'mnd',
+        'filter_key' => 'months',
     ]
 ];
 
+// Rett etter $taxonomy_data definisjonen
+error_log('Initial months data: ' . print_r($taxonomy_data['months']['terms'], true));
+
+// **Meta fields
+// Language
 // Get language from meta fields for course dates
 $args = [
     'post_type'      => 'coursedate',
@@ -77,7 +88,14 @@ foreach ($coursedates as $post_id) {
 $language_terms = array_unique($language_terms);
 $taxonomy_data['language']['terms'] = $language_terms;
 
-// Forbered filter-informasjon (plasser dette etter at $available_filters og $taxonomy_data er definert)
+// Months
+// Get months from course_first_date meta field
+
+// Legg til månedene i taxonomy_data
+//$taxonomy_data['month']['terms'] = $month_terms;
+
+// **Bring terms and meta data together
+// Prepare filter-information (place after $available_filters and $taxonomy_data are defined)
 $filter_display_info = [];
 foreach ($available_filters as $filter_key => $filter_info) {
     $filter_display_info[$filter_key] = [
@@ -87,6 +105,12 @@ foreach ($available_filters as $filter_key => $filter_info) {
         'url_key' => $taxonomy_data[$filter_key]['url_key'] ?? ''
     ];
 }
+
+// Rett før filter-genereringen
+error_log('Available filters: ' . print_r($available_filters, true));
+error_log('Top filters: ' . print_r($top_filters, true));
+error_log('Left filters: ' . print_r($left_filters, true));
+error_log('Filter types: ' . print_r($filter_types, true));
 ?>
 
 <main id="main" class="site-main kursagenten-wrapper" role="main">
@@ -104,13 +128,18 @@ foreach ($available_filters as $filter_key => $filter_info) {
                     <?php if ($has_left_filters) : ?>
                     <div class="left-column"></div>
                     <?php endif; ?>
+
                     <div class="filter-container filter-top">
+
+
+                        <!-- Dynamic Filter Generation -->
                         <?php foreach ($top_filters as $filter) : ?>
                             <div class="filter-item <?php echo esc_attr($filter_types[$filter] ?? ''); ?> <?php echo esc_attr($search_class); ?>">
                                 <?php if ($filter === 'search') : ?>
-                                    <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
+                                 <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
                                 <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                     <?php if ($filter_types[$filter] === 'chips') : ?>
+                                        <!-- Chip-style Filter Display -->
                                         <div class="filter-chip-wrapper">
                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                 <button class="chip filter-chip"
@@ -122,19 +151,20 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                             <?php endforeach; ?>
                                         </div><!-- End .filter-chip-wrapper -->
                                     <?php elseif ($filter_types[$filter] === 'list') : ?>
+                                        <!-- List-style Filter Display -->
                                         <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
                                             <div class="filter-dropdown">
                                                 <?php
-                                                // Hent filter info fra den forberedte arrayen
+                                                // Get filter information from prepared array
                                                 $current_filter_info = $filter_display_info[$filter] ?? [];
                                                 $filter_label = $current_filter_info['label'] ?? '';
                                                 $filter_placeholder = $current_filter_info['placeholder'] ?? 'Velg';
 
-                                                // Hent aktive filtre fra URL
+                                                // Get active filters from URL parameters
                                                 $url_key = $taxonomy_data[$filter]['url_key'];
                                                 $active_filters = isset($_GET[$url_key]) ? explode(',', $_GET[$url_key]) : [];
 
-                                                // Finn display tekst
+                                                // Generate display text based on active filters
                                                 if (empty($active_filters)) {
                                                     $display_text = $filter_placeholder;
                                                 } else {
@@ -144,7 +174,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                                             $active_names[] = ucfirst($slug);
                                                         } else {
                                                             foreach ($taxonomy_data[$filter]['terms'] as $term) {
-                                                                if (is_object($term) && $term->slug === $slug) {
+                                                                if (is_object($term) && ($filter === 'months' ? $term->value : $term->slug) === $slug) {
                                                                     $active_names[] = $term->name;
                                                                     break;
                                                                 }
@@ -159,6 +189,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
 
                                                 $has_active_filters = !empty($active_filters) ? 'has-active-filters' : '';
                                                 ?>
+                                                <!-- Filter Dropdown Toggle -->
                                                 <div class="filter-dropdown-toggle <?php echo esc_attr($has_active_filters); ?>"
                                                     data-filter="<?php echo esc_attr($filter); ?>"
                                                     data-label="<?php echo esc_attr($filter_label); ?>"
@@ -166,11 +197,12 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                                     <span class="selected-text"><?php echo esc_html($display_text); ?></span>
                                                     <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
                                                 </div>
+                                                <!-- Filter Dropdown Content -->
                                                 <div class="filter-dropdown-content">
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                         <label class="filter-list-item checkbox">
                                                             <input type="checkbox" class="filter-checkbox"
-                                                                value="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>"
+                                                                value="<?php echo esc_attr(is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term)); ?>"
                                                                 data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                 data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
                                                             <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
@@ -183,14 +215,14 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
-                    </div>
-                </div>
-            </div>
+                    </div> <!-- End .filter-container filter-top -->
+                </div> <!-- End .course-grid -->    
+            </div> <!-- End .filter-section (top filters)-->
 
-            <!-- Hoved-container med kolonner -->
+            <!-- Main Content Container with Columns -->
             <div class="inner-container main-section">
                 <div class="course-grid <?php echo esc_attr($left_column_class); ?>">
-                    <!-- Venstre kolonne -->
+                    <!-- Left Column -->
                     <?php if ($has_left_filters) : ?>
                         <div class="filter left-column">
                             <div class="filter-container filter-left">
@@ -221,7 +253,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                         <label class="filter-list-item checkbox">
                                                             <input type="checkbox" class="filter-checkbox"
-                                                                value="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>"
+                                                                value="<?php echo esc_attr(is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term)); ?>"
                                                                 data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                 data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
                                                             <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
@@ -236,22 +268,28 @@ foreach ($available_filters as $filter_key => $filter_info) {
                         </div>
                     <?php endif; ?>
 
-                    <!-- Høyre kolonne -->
+                    <!-- Right Column -->
                     <div class="courselist-items-wrapper right-column">
                         <?php if ($query instanceof WP_Query && $query->have_posts()) : ?>
                             <?php
-                            $course_count = $query->post_count; // Hent totalt antall kurs
+
+                            // SERGII - This should be changed to the actual number of courses. I want to display something like 22 courses - page 1 of 3
+                            // Get total number of courses
+                            $course_count = $query->found_posts;
+                            $page_count = $query->post_count;
                             $index = 0;
                             ?>
 
                             <div class="courselist-header">
-
+                                <!-- Course Count and Active Filters Display -->
                                 <div id="courselist-header-left" class="active-filters-container">
-                                    <div id="course-count"><?php echo $course_count; ?> kurs</div>
-                                    <div id="active-filters" class="active-filters-container"></div><a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
+                                    <div id="course-count"><?php echo $course_count; ?> kurs <?php echo $query->max_num_pages > 1 ? sprintf("- page %d / %d", $query->get('paged'), $query->max_num_pages) : ''; ?></div>
+                                    <div id="active-filters" class="active-filters-container"></div>
+                                    <a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
                                 </div>
-                                <div id="courselist-header-right">
 
+                                <!-- Sorting Controls -->
+                                <div id="courselist-header-right">
                                     <div class="sort-dropdown">
                                         <div class="sort-dropdown-toggle">
                                             <span class="selected-text">Sorter etter</span>
@@ -283,26 +321,31 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                 ?>
                             </div>
 
-                            <!-- Endre pagineringsdelen -->
-														<div class="pagination-wrapper">
-															<div class="pagination">
-															<?php
-															$url_options = get_option('kag_seo_option_name');
-															$kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
-															echo paginate_links([
-																'base' => get_home_url(null, $kurs) .'?%_%',
-																'current' => max(1, $query->get('paged')),
-																'format' => 'side=%#%',
-																'total' => $query->max_num_pages,
-																'add_args' => array_map(function ($item) {
-																	return is_array($item) ? join(',', $item) : $item;
-																}, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
-															]);
-															?>
-															</div>
-														</div>
+                            <!-- Pagination Controls -->
+                            <div class="pagination-wrapper">
+                                <div class="pagination">
+                                <?php
+                                // Get URL rewrite options
+                                $url_options = get_option('kag_seo_option_name');
+                                $kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
 
-                            <!-- Legg til en loading-indikator -->
+                                // Generate pagination links
+                                echo paginate_links([
+                                    'base' => get_home_url(null, $kurs) .'?%_%',
+                                    'current' => max(1, $query->get('paged')),
+                                    'format' => 'side=%#%',
+                                    'total' => $query->max_num_pages,
+                                    'prev_text' => '<i class="ka-icon icon-chevron-left"></i> <span>Forrige</span>',
+                                    'next_text' => '<span>Neste</span> <i class="ka-icon icon-chevron-right"></i>',
+                                    'add_args' => array_map(function ($item) {
+                                        return is_array($item) ? join(',', $item) : $item;
+                                    }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+                                ]);
+                                ?>
+                                </div>
+                            </div>
+
+                            <!-- Loading Indicator -->
                             <div class="course-loading" style="display: none;">
                                 <div class="loading-spinner"></div>
                             </div>
@@ -316,135 +359,29 @@ foreach ($available_filters as $filter_key => $filter_info) {
 
                     
 
-                    
-                </div>
-
-                <div class="footer">
-                        <h4>Footeren</h4>
-                </div>
-            </div>
-
-
-
-
-
-
-
-
-
-
-
-            <!-- MOBILE FILTERS -->
-            <button class="filter-toggle-button">
-                <i class="ka-icon icon-filter"></i>
-                <span>Filter</span>
-            </button>
-            <div class="mobile-filter-overlay">
-                <div class="mobile-filter-header">
-                    <h4>Filter</h4>
-                    <button class="close-filter-button">
-                        <i class="ka-icon icon-close"></i>
-                    </button>
-                </div>
-                <div class="mobile-filter-content">
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-                    <p>Filter innhold</p>
-
-                    <?php
-        // Kombiner top_filters og left_filters for mobil
-        $mobile_filters = array_unique(array_merge($top_filters, $left_filters));
-                    foreach ($mobile_filters as $filter) :
-            if (empty($taxonomy_data[$filter]['terms'])) continue;
-        ?>
-            <div class="mobile-filter-section">
-                <h5><?php echo esc_html($filter_display_info[$filter]['label']); ?></h5>
-                <?php if ($filter_types[$filter] === 'chips') : ?>
-                    <div class="filter-chip-wrapper">
-                        <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
-                            <button class="chip filter-chip"
-                                data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
-                                <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
-                            </button>
-                        <?php endforeach; ?>
+                    <!-- Slide-in Panel for Additional Content -->
+                    <div id="slidein-overlay"></div>
+                    <div id="slidein-panel">
+                        <button class="close-btn" aria-label="Close">&times;</button>
+                        <iframe id="kursagenten-iframe" src=""></iframe>
                     </div>
-                <?php else : ?>
-                    <div id="filter-list-location" class="filter-list">
-                        <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
-                            <label class="filter-list-item checkbox">
-                                <input type="checkbox" class="filter-checkbox"
-                                    value="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>"
-                                    data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                    data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
-                                <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        <?php endforeach; ?>
 
+                </div> <!-- End .course-grid -->
+            </div> <!-- End .main section -->
 
-
-
-
-                    <div class="mobile-filter-footer">
-                        <button class="apply-filters-button">Vis resultater</button>
-                        <button class="reset-filters-button reset-filters reset-filters-btn">Nullstill filter</button>
-                    </div>
-                </div>
+            <div class="footer">
+                <h4>Footer</h4>
             </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            <!-- SLIDEIN Sign up form -->
-
-            <div id="slidein-overlay"></div>
-            <div id="slidein-panel">
-                <button class="close-btn" aria-label="Close">&times;</button>
-                <iframe id="kursagenten-iframe" src=""></iframe>
-            </div>
-
-        </div>
-    </div>
+        </div><!-- End .courselist -->
+    </div> <!-- End .course-container -->
 </main>
 <?php get_footer();?>
 
+<!-- Filter Settings for JavaScript -->
 <script id="filter-settings" type="application/json">
     <?php
-    // Export filter settings for JavaScript usage
+    // Export filter configuration for JavaScript usage
     $filter_data = [
         'top_filters' => get_option('kursagenten_top_filters', []),
         'left_filters' => get_option('kursagenten_left_filters', []),
