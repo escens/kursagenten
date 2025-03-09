@@ -3,9 +3,9 @@
 $course_id = get_the_ID();
 
 $course_title =             get_post_meta($course_id, 'course_title', true);
-$first_course_date =        get_post_meta($course_id, 'course_first_date', true);
-$last_course_date =         get_post_meta($course_id, 'course_last_date', true);
-$registration_deadline =    get_post_meta($course_id, 'course_registration_deadline', true);
+$first_course_date =        ka_format_date(get_post_meta($course_id, 'course_first_date', true));
+$last_course_date =         ka_format_date(get_post_meta($course_id, 'course_last_date', true));
+$registration_deadline =    ka_format_date(get_post_meta($course_id, 'course_registration_deadline', true));
 $duration =                 get_post_meta($course_id, 'course_duration', true);
 $coursetime =               get_post_meta($course_id, 'course_time', true);
 $price =                    get_post_meta($course_id, 'course_price', true);

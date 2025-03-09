@@ -52,8 +52,8 @@ function get_selected_coursedate_data($related_coursedate) {
             $result = [
                 'id' => $selected_coursedate,
                 'title' => get_the_title($selected_coursedate),
-                'first_date' => get_post_meta($selected_coursedate, 'course_first_date', true),
-                'last_date' => get_post_meta($selected_coursedate, 'course_last_date', true),
+                'first_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_first_date', true)),
+                'last_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_last_date', true)),
                 'price' => get_post_meta($selected_coursedate, 'course_price', true),
                 'duration' => get_post_meta($selected_coursedate, 'course_duration', true),
                 'time' => get_post_meta($selected_coursedate, 'course_time', true),
@@ -131,7 +131,7 @@ function get_all_sorted_coursedates($related_coursedate) {
                 continue;
             }
 
-            $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
+            $course_first_date = ka_format_date(get_post_meta($coursedate_id, 'course_first_date', true));
             //error_log("Course first date: " . ($course_first_date ? $course_first_date : "none"));
 
             $coursedate_data = [
@@ -179,7 +179,7 @@ add_filter( 'posts_where', function (string $where, \WP_Query $query) {
 	if ($query->get('course_month')) {
 		$months = is_array($query->get('course_month')) ? $query->get('course_month') : explode(',', $query->get('course_month'));
 		$prepare = join(',', array_fill(0, count($months), '%s'));
-		$where .= ' AND DATE_FORMAT(STR_TO_DATE(course_month.meta_value, "%d.%m.%Y"), "%m") IN (' . $wpdb->prepare($prepare, ...$months) . ')';
+		$where .= ' AND DATE_FORMAT(course_month.meta_value, "%m") IN (' . $wpdb->prepare($prepare, ...$months) . ')';
 	}
 	return $where;
 }, 10, 2 );
@@ -195,9 +195,8 @@ add_filter( 'posts_join', function (string $join, WP_Query $query) {
 }, 10, 2 );
 add_filter( 'posts_orderby', function ($orderby_clause, $query) {
 	if ( $query->get( 'orderby' ) == 'course_first_date' ) {
-		$format = empty($query->get('meta_custom_date_format')) ? "%d.%m.%Y" : $query->get('meta_custom_date_format');
 		$order = $query->get( 'order' ) ?? 'ASC';
-		$orderby_clause = "pcfd.meta_value IS NULL, STR_TO_DATE(pcfd.meta_value, \"$format\") $order";
+		$orderby_clause = "pcfd.meta_value IS NULL, pcfd.meta_value $order";
 	}
 
 	return $orderby_clause;
@@ -208,7 +207,7 @@ add_filter( 'posts_clauses', function ($clauses) {
 		"$wpdb->postmeta.meta_key = 'course_first_date' AND CAST($wpdb->postmeta.meta_value AS DATE)"
 	];
 	$replaces = [
-		"$wpdb->postmeta.meta_key = 'course_first_date' AND STR_TO_DATE($wpdb->postmeta.meta_value, \"%d.%m.%Y\")"
+		"$wpdb->postmeta.meta_key = 'course_first_date' AND $wpdb->postmeta.meta_value"
 	];
 	$clauses['where'] = str_replace($original, $replaces, $clauses['where']);
 	return $clauses;
@@ -290,14 +289,14 @@ function get_course_dates_query($args = []) {
 			];
 		} else {
 			if ($db_field === 'course_first_date') {
-				if ( ! empty( $param['from'] ) && ! empty( $param['to'] ) ) {
-					$from                       = date( 'Y-m-d', strtotime( $param['from'] ) );
-					$to                         = date( 'Y-m-d', strtotime( $param['to'] ) );
+				if (!empty($param['from']) && !empty($param['to'])) {
+					$from = date('Y-m-d H:i:s', strtotime($param['from']));
+					$to = date('Y-m-d H:i:s', strtotime($param['to'] . ' 23:59:59'));
 					$query_args['meta_query'][] = [
 						'key'     => $db_field,
-						'value'   => [ $from, $to ],
+						'value'   => [$from, $to],
 						'compare' => 'BETWEEN',
-						'type'    => 'DATE'
+						'type'    => 'DATETIME'
 					];
 				}
 			} else if ($db_field === 'course_price') {
@@ -409,28 +408,25 @@ function get_course_languages() {
 function get_course_months() {
     global $wpdb;
     
-    // Get all unique months from course dates
     $months = $wpdb->get_results(
         "SELECT DISTINCT 
-            MONTH(STR_TO_DATE(meta_value, '%d.%m.%Y')) as month_num,
-            DATE_FORMAT(STR_TO_DATE(meta_value, '%d.%m.%Y'), '%M') as month_name
+            MONTH(meta_value) as month_num,
+            DATE_FORMAT(meta_value, '%M') as month_name
         FROM {$wpdb->postmeta} 
         WHERE meta_key = 'course_first_date' 
         AND meta_value != '' 
         AND meta_value IS NOT NULL 
+        AND meta_value REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$'
         ORDER BY month_num ASC"
     );
     
-    // Convert to array of objects with name and number
-    $formatted_months = array_map(function($month) {
+    return array_map(function($month) {
         return (object) [
             'slug' => str_pad($month->month_num, 2, '0', STR_PAD_LEFT),
-            'name' => ucfirst(date_i18n('F', strtotime($month->month_name . ' 1'))),
-            'value' => str_pad($month->month_num, 2, '0', STR_PAD_LEFT) // Add value property for checkbox
+            'name' => ucfirst(date_i18n('F', strtotime("2024-{$month->month_num}-01"))),
+            'value' => str_pad($month->month_num, 2, '0', STR_PAD_LEFT)
         ];
     }, $months);
-    
-    return $formatted_months;
 }
 
 /* Check admin/post_types/visibility_management.php for visibility management

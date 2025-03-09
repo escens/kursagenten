@@ -14,6 +14,19 @@ function filter_courses_handler() {
             ]
         ], 403);
     }
+
+    if (!empty($_POST['dato'])) {
+        $date_from = sanitize_text_field($_POST['dato']['from'] ?? '');
+        $date_to = sanitize_text_field($_POST['dato']['to'] ?? '');
+        
+        if ($date_from && $date_to) {
+            $_REQUEST['dato'] = [
+                'from' => date('Y-m-d H:i:s', strtotime($date_from)),
+                'to' => date('Y-m-d H:i:s', strtotime($date_to . ' 23:59:59'))
+            ];
+        }
+    }
+
 		$query = get_course_dates_query();
     if ($query->have_posts()) {
         ob_start();

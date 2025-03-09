@@ -170,7 +170,7 @@ font-size: var(--ka-font-size-small);
 .courselist-main .meta-area{
 display: flex;
 flex-wrap: wrap;
-font-size: var(--ka-font-size-small);
+font-size: var(--ka-font-size-xs);
 color: #666;
 }
 .courselist-main .links-area {

@@ -220,10 +220,12 @@ error_log('Filter types: ' . print_r($filter_types, true));
 
                         <?php //if ($filter_date == true): ?>
 													<?php
-													$date ="";
+													$date = "";
 													if (array_key_exists('dato', $_REQUEST)) {
 														if (array_key_exists('from', $_REQUEST['dato']) && array_key_exists('to', $_REQUEST['dato'])) {
-															$date = sprintf('%s - %s', $_REQUEST['dato']['from'], $_REQUEST['dato']['to']);
+															$from_date = date('Y-m-d', strtotime($_REQUEST['dato']['from']));
+															$to_date = date('Y-m-d', strtotime($_REQUEST['dato']['to']));
+															$date = sprintf('%s - %s', $from_date, $to_date);
 														}
 													}
 													?>

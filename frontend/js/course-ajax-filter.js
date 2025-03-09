@@ -450,7 +450,7 @@
 
 	if (dateInput) {
 		caleran("#date-range", {
-			format: "DD.MM.YYYY",
+			format: "YYYY-MM-DD",
 			rangeOrientation: "vertical",
 			calendarCount: 2,
 			showHeader: true,
@@ -497,7 +497,10 @@
 			onafterselect: function (caleran, startDate, endDate) {
 				const fromDate = startDate.format("YYYY-MM-DD");
 				const toDate = endDate.format("YYYY-MM-DD");
-				updateFiltersAndFetch({ 'dato[from]': fromDate, 'dato[to]': toDate});
+				updateFiltersAndFetch({ 
+					'dato[from]': fromDate + ' 00:00:00', 
+					'dato[to]': toDate + ' 23:59:59'
+				});
 			}
 		});
 

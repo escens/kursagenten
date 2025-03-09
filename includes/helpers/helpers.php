@@ -1,8 +1,25 @@
 <?php
 
-// Datoformatering
-function kursagenten_format_date($date_string) {
-    return date_i18n('d.m.Y', strtotime($date_string));
+/**
+ * Format a date according to WordPress settings and locale
+ *
+ * @param string $date_string Date string in Y-m-d H:i:s format
+ * @param string $format Optional format override
+ * @return string Formatted date
+ */
+function ka_format_date($date_string, $format = '') {
+    if (empty($date_string)) {
+        return '';
+    }
+
+    // Use provided format or get WordPress date format
+    $date_format = $format ?: get_option('date_format');
+    
+    // Convert string to timestamp
+    $timestamp = strtotime($date_string);
+    
+    // Return formatted date using wp_date() which handles timezone and localization
+    return wp_date($date_format, $timestamp);
 }
 
 // Bildelasting
