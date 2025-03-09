@@ -766,17 +766,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
 	// Close all dropdowns when clicking outside
 	document.addEventListener("click", function (event) {
-		// Sjekk om klikket var utenfor alle dropdowns
-		if (!event.target.closest('.filter-dropdown')) {
-			dropdowns.forEach(dropdown => {
-				const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
-				const dropdownIcon = dropdown.querySelector(".dropdown-icon");
-				if (dropdownContent && dropdownIcon) {
-					dropdownContent.style.display = "none";
-					dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
-					dropdown.classList.remove("open");
+		// Sjekk om eventet kommer fra caleran ved å se på event path
+		const isCaleranEvent = event.composedPath && event.composedPath().some(el => 
+			el && el.classList && el.classList.contains('caleran')
+		);
+
+		if (!isCaleranEvent) {
+			try {
+				// Sjekk om klikket var utenfor alle dropdowns
+				const isOutsideDropdowns = !event.target.closest('.filter-dropdown');
+
+				if (isOutsideDropdowns) {
+					dropdowns.forEach(dropdown => {
+						const dropdownContent = dropdown.querySelector(".filter-dropdown-content");
+						const dropdownIcon = dropdown.querySelector(".dropdown-icon");
+						if (dropdownContent && dropdownIcon) {
+							dropdownContent.style.display = "none";
+							dropdownIcon.innerHTML = '<i class="ka-icon icon-chevron-down"></i>';
+							dropdown.classList.remove("open");
+						}
+					});
 				}
-			});
+			} catch (error) {
+				console.debug('Ignorerer event fra caleran date picker');
+			}
 		}
 	});
 

@@ -215,6 +215,33 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
+                        
+
+
+                        <?php //if ($filter_date == true): ?>
+													<?php
+													$date ="";
+													if (array_key_exists('dato', $_REQUEST)) {
+														if (array_key_exists('from', $_REQUEST['dato']) && array_key_exists('to', $_REQUEST['dato'])) {
+															$date = sprintf('%s - %s', $_REQUEST['dato']['from'], $_REQUEST['dato']['to']);
+														}
+													}
+													?>
+
+                            <div id="filter-date" class="filter-date-container">
+                                <label for="date-range">Choose dates:</label>
+                                <input type="text" id="date-range" class="caleran"
+                                    data-filter-key="date"
+                                    data-url-key="dato"
+                                    name="calendar-input"
+                                    value="<?php echo esc_attr($date); ?>">
+                            </div>
+                        <?php //endif; ?>
+
+
+
+
+
                         <div id="active-filters-container">
                             <div id="active-filters" class="active-filters"></div>
                             <a href="#" id="reset-filters" class="reset-filters reset-filters-btn">Nullstill filter</a>
@@ -268,6 +295,7 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                         <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
+
                             </div> <!-- End .filter-container filter-left -->
                         </div> <!-- End .filter left-column -->
                     <?php endif; ?>
