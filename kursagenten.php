@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Dine kurs hentet og synkronisert fra Kursagenten.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Tone B. Hagen
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -14,7 +14,16 @@
  * Requires at least: 6.0
  */
 
- if ( ! defined('ABSPATH')) {
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    // Bare sett cache headers under utvikling
+    add_action('init', function() {
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
+    });
+}
+
+if (!defined('ABSPATH')) {
     exit;
 }
 
@@ -34,8 +43,13 @@ function kursagenten_check_dependencies() {
 
 
 // Gruppér relaterte konstanter
-define('KURSAG_NAME',        'Kursagenten');
-define('KURSAG_VERSION',     '1.0.0');
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    // Under utvikling - bruk timestamp
+    define('KURSAG_VERSION', date('YmdHis'));
+} else {
+    // I produksjon - bruk vanlig versjonsnummer
+    define('KURSAG_VERSION', '1.0.1');
+}
 define('KURSAG_MIN_PHP',     '7.4');
 define('KURSAG_MIN_WP',      '6.0');
 
@@ -131,7 +145,8 @@ function kursagenten_load_admin_options() {
         'ka_rename_posts' => '/admin/misc/change-post-to-article.php',
         'ka_jquery_support' => '/admin/misc/enable-jquery-support.php',
         'ka_security' => '/admin/misc/security_functions.php',
-        'ka_sitereviews' => '/admin/misc/site-reviews-support.php'
+        'ka_sitereviews' => '/admin/misc/site-reviews-support.php',
+        'ka_disable_gravatar' => '/admin/misc/disable-gravatar.php'
     ];
     
     foreach ($option_files as $option => $file) {
@@ -360,6 +375,13 @@ add_filter('taxonomy_template', 'kursagenten_get_taxonomy_template');
             KURSAG_VERSION
         );
 
+        wp_enqueue_script(
+            'kursagenten-expand-content',
+            KURSAG_PLUGIN_URL . '/frontend/js/course-expand-content.js',
+            array(),
+            KURSAG_VERSION
+        );
+        
         // Lokaliser scriptet med nødvendige data
         wp_localize_script(
             'kursagenten-ajax-filter',

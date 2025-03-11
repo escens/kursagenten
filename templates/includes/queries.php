@@ -289,15 +289,41 @@ function get_course_dates_query($args = []) {
 			];
 		} else {
 			if ($db_field === 'course_first_date') {
-				if (!empty($param['from']) && !empty($param['to'])) {
-					$from = date('Y-m-d H:i:s', strtotime($param['from']));
-					$to = date('Y-m-d H:i:s', strtotime($param['to'] . ' 23:59:59'));
-					$query_args['meta_query'][] = [
-						'key'     => $db_field,
-						'value'   => [$from, $to],
-						'compare' => 'BETWEEN',
-						'type'    => 'DATETIME'
-					];
+				if (!empty($param)) {
+					error_log('Processing date param in query: ' . print_r($param, true));
+					
+					// Hvis param er et array, bruk det direkte
+					if (is_array($param) && isset($param['from']) && isset($param['to'])) {
+						$from = date('Y-m-d H:i:s', strtotime($param['from']));
+						$to = date('Y-m-d H:i:s', strtotime($param['to']));
+					} 
+					// Hvis param er en string (dato-range), parse den
+					else if (is_string($param)) {
+						$dates = explode('-', $param);
+						if (count($dates) === 2) {
+							$from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
+							$to_date = \DateTime::createFromFormat('d.m.Y', trim($dates[1]));
+							
+							if ($from_date && $to_date) {
+								$from = $from_date->format('Y-m-d H:i:s');
+								$to = $to_date->format('Y-m-d H:i:s');
+							}
+						}
+					}
+
+					if (isset($from) && isset($to)) {
+						error_log('Adding date filter to query:');
+						error_log('From date: ' . $from);
+						error_log('To date: ' . $to);
+						
+						$query_args['meta_query'][] = [
+							'key'     => $db_field,
+							'value'   => [$from, $to],
+							'compare' => 'BETWEEN',
+							'type'    => 'DATETIME'
+						];
+						error_log('Meta query: ' . print_r($query_args['meta_query'], true));
+					}
 				}
 			} else if ($db_field === 'course_price') {
 				if (! empty($param['from']) && !empty($param['to'])) {

@@ -93,30 +93,32 @@
 		const currentFilters = getCurrentFiltersFromURL();
 		const updatedFilters = { ...currentFilters, ...newFilters };
 		
-		// Map filter keys to their URL parameters
-		const filterKeyMap = {
-			'language': 'sprak',
-			'locations': 'sted',
-			'instructors': 'i',
-			'categories': 'k',
-			'months': 'mnd',
-		};
-
-		// Update dropdown texts for all filter types
-		Object.entries(filterKeyMap).forEach(([filterKey, urlKey]) => {
-			if (newFilters.hasOwnProperty(urlKey)) {
-				const values = newFilters[urlKey] || [];
-				updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
-			} else if (updatedFilters[urlKey]) {
-				const values = updatedFilters[urlKey];
-				updateDropdownText(filterKey, Array.isArray(values) ? values : [values]);
+		// Fjern null/undefined verdier
+		Object.keys(updatedFilters).forEach(key => {
+			if (updatedFilters[key] === null || updatedFilters[key] === undefined) {
+				delete updatedFilters[key];
 			}
 		});
 
+		// Konverter datoformat hvis nødvendig
+		if (updatedFilters.dato && updatedFilters.dato.includes(',')) {
+			const [fromDate, toDate] = updatedFilters.dato.split(',');
+			const from = moment(fromDate).format('DD.MM.YYYY');
+			const to = moment(toDate).format('DD.MM.YYYY');
+			updatedFilters.dato = `${from}-${to}`;
+		}
+
+		// Reset til side 1 hvis vi fjerner eller legger til filtre
+		// (men ikke hvis vi eksplisitt navigerer til en side)
+		if (!newFilters.hasOwnProperty('side')) {
+			updatedFilters.side = 1;
+		}
+
 		delete updatedFilters.nonce;
 		delete updatedFilters.action;
+		
 		updateURLParams(updatedFilters);
-		fetchCourses(Object.assign(updatedFilters, {side: 1}));
+		fetchCourses(updatedFilters);
 		updateActiveFiltersList(updatedFilters);
 		toggleResetFiltersButton(updatedFilters);
 	}
@@ -177,12 +179,22 @@
 		// Clear all active checkboxes
 		$('.filter-checkbox:checked').prop('checked', false);
 
+		// Reset datofilteret
+		const dateInput = document.getElementById("date-range");
+		if (dateInput) {
+			dateInput.value = '';
+		}
+
 		// Oppdater URL og fetch med bare sorteringsparametere
 		const updatedFilters = {};
 		if (sort && order) {
 			updatedFilters.sort = sort;
 			updatedFilters.order = order;
 		}
+
+		// Fjern datofilteret fra URL-en
+		delete updatedFilters['fromdate'];
+		delete updatedFilters['todate'];
 
 		updateURLParams(updatedFilters);
 		fetchCourses({
@@ -295,8 +307,13 @@
 
 		// Process all URL parameters
 		for (const [key, value] of url.searchParams.entries()) {
-			// Split comma-separated values into arrays
-			params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+			// Spesiell håndtering for dato-parameter
+			if (key === 'dato') {
+				params[key] = value;  // Behold dato-stringen som den er
+			} else {
+				// Håndter andre parametere som før
+				params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+			}
 		}
 
 		return params;
@@ -342,6 +359,30 @@
 			// Ekskluder sorteringsparametere og andre systemparametere
 			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'side' &&
 				filters[key] && filters[key].length > 0) {
+				
+				// Spesiell håndtering for datofilteret
+				if (key === 'dato' && filters['dato']) {
+					const [fromDate, toDate] = filters['dato'].split('-');
+					
+					const filterChip = $(`<span class="active-filter-chip" data-filter-key="date" data-filter-value="date">
+						${fromDate} - ${toDate} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
+					</span>`);
+
+					filterChip.find('.remove-filter').on('click', function() {
+						updateFiltersAndFetch({ 
+							'dato': null
+						});
+					});
+
+					$activeFiltersContainer.append(filterChip);
+					return;
+				}
+
+				// Hopp over todate siden den er håndtert over
+				if (key === 'todate' || key === 'fromdate') {
+					return;
+				}
+
 				const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
 				values.forEach(value => {
 					// For månedsfilteret, bruk 'months' som filter-key for å matche med checkbox
@@ -362,7 +403,7 @@
 						displayText = $checkbox.siblings('.checkbox-label').text().trim();
 					} else if (filterKey === 'language' || key === 'sprak') {
 						displayText = value.charAt(0).toUpperCase() + value.slice(1);
-					}
+					} 
 
 					const filterChip = $(`<span class="active-filter-chip" data-filter-key="${filterKey}" data-filter-value="${value}">
 						${displayText} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
@@ -427,13 +468,29 @@
 		e.preventDefault();
 		const href = $(this).attr('href');
 		const locate = new URL(href);
+		
+		// Behold alle eksisterende filtre
+		const currentFilters = getCurrentFiltersFromURL();
+		
+		// Konverter datoformat hvis nødvendig
+		if (currentFilters.dato && currentFilters.dato.includes(',')) {
+			// Konverter fra YYYY-MM-DD,YYYY-MM-DD til DD.MM.YYYY-DD.MM.YYYY
+			const [fromDate, toDate] = currentFilters.dato.split(',');
+			const from = moment(fromDate).format('DD.MM.YYYY');
+			const to = moment(toDate).format('DD.MM.YYYY');
+			currentFilters.dato = `${from}-${to}`;
+		}
+		
+		// Legg til side-parameter
+		const newFilters = {
+			...currentFilters,
+			side: locate.searchParams.get('side')
+		};
 
-		// Oppdater URL uten å laste siden på nytt
+		// Oppdater URL og hent resultater
 		window.history.pushState({}, '', href);
-
-		// Hent nye resultater via AJAX
-		fetchCourses(Object.fromEntries(locate.searchParams.entries()));
-	})
+		fetchCourses(newFilters);
+	});
 
 	function updatePagination(html) {
 		$('.pagination-wrapper .pagination').html(html);
@@ -445,12 +502,16 @@
 		fetchCourses(currentFilters);
 	});
 
-	// Date picker configuration
-	const dateInput = document.getElementById("date-range");
-
+	// Initialiser Caleran
+	const dateInput = document.getElementById('date-range');
 	if (dateInput) {
-		caleran("#date-range", {
-			format: "YYYY-MM-DD",
+		// Sjekk om datepickeren er i venstre kolonne
+		const isLeftFilter = dateInput.classList.contains('caleran-left');
+		
+		const caleranInstance = caleran(dateInput, {
+			showOnClick: true,
+			autoCloseOnSelect: false,
+			format: "DD.MM.YYYY",
 			rangeOrientation: "vertical",
 			calendarCount: 2,
 			showHeader: true,
@@ -458,10 +519,12 @@
 			showButtons: true,
 			applyLabel: "Bruk",
 			cancelLabel: "Avbryt",
-			showOn: "bottom",
-			arrowOn: "center",
-			autoAlign: false,
+			showOn: isLeftFilter ? "right" : "bottom", // Dynamisk posisjonering
+			arrowOn: isLeftFilter ? "top" : "center",
+			autoAlign: true,
 			inline: false,
+			minDate: moment(),
+			startEmpty: true,
 			nextMonthIcon: '<i class="ka-icon icon-chevron-right"></i>',
 			prevMonthIcon: '<i class="ka-icon icon-chevron-left"></i>',
 			rangeIcon: '<i class="ka-icon icon-calendar"></i>',
@@ -469,55 +532,61 @@
 			rangeLabel: "Velg periode",
 			ranges: [
 				{
-					title: "1 uke",
+					title: "Neste uke",
 					startDate: moment(),
-					endDate: moment().add(6, "days")
-				},
-				{
-					title: "Neste 30 dager",
-					startDate: moment(),
-					endDate: moment().add(30, "days")
+					endDate: moment().add(1, 'week')
 				},
 				{
 					title: "Neste 3 måneder",
 					startDate: moment(),
-					endDate: moment().add(90, "days")
+					endDate: moment().add(3, 'month')
 				},
 				{
-					title: "Neste halvår",
+					title: "Neste 6 måneder",
 					startDate: moment(),
-					endDate: moment().add(180, "days")
+					endDate: moment().add(6, 'month')
 				},
 				{
-					title: "Ett år",
+					title: "Resten av året",
 					startDate: moment(),
-					endDate: moment().add(365, "days")
+					endDate: moment().endOf('year')
+				},
+				{
+					title: "Neste år",
+					startDate: moment().add(1, 'year').startOf('year'),
+					endDate: moment().add(1, 'year').endOf('year')
 				}
 			],
-			onafterselect: function (caleran, startDate, endDate) {
-				const fromDate = startDate.format("YYYY-MM-DD");
-				const toDate = endDate.format("YYYY-MM-DD");
+			verticalOffset: 10,
+			locale: 'nb',
+			onafterselect: function(caleran, startDate, endDate) {
+				if (startDate && endDate) {
+					const fromDate = startDate.format("DD.MM.YYYY");
+					const toDate = endDate.format("DD.MM.YYYY");
+					updateFiltersAndFetch({ 
+						'dato': `${fromDate}-${toDate}`
+					});
+				}
+			},
+			oncancel: function() {
 				updateFiltersAndFetch({ 
-					'dato[from]': fromDate + ' 00:00:00', 
-					'dato[to]': toDate + ' 23:59:59'
+					'dato': null
 				});
 			}
 		});
 
-		// // Prevent calendar from closing on first input field click
-		// dateInput.addEventListener("click", function (event) {
-		// 	event.stopPropagation();
-		// 	let caleranInstance = document.querySelector("#date-range").caleran;
-		// 	if (!caleranInstance.isOpen) {
-		// 		caleranInstance.showDropdown();
-		// 	}
-		// });
-		// dateInput.addEventListener("focus", function (e) {
-		// 	e.stopPropagation();
-		// 	if (!dateInput.caleran.isOpen) {
-		// 		dateInput.caleran.showDropdown();
-		// 	}
-		// })
+		// Enkel CSS for å sikre at kalenderen vises over andre elementer
+		const style = document.createElement('style');
+		style.textContent = `
+			.caleran-container { 
+				z-index: 100000 !important;
+				transform: translateY(5px) !important; // Justerer posisjonen ned
+			}
+			body.admin-bar .caleran-container {
+				transform: translateY(35px) !important; // Ekstra justering når admin-bar er til stede
+			}
+		`;
+		document.head.appendChild(style);
 	}
 
 	// Initialize reset filters functionality
@@ -565,13 +634,24 @@
 			// Oppdater selected text
 			$('.sort-dropdown .selected-text').text($(this).text());
 
-			// Hent eksisterende filtre og legg til sortering
+			// Hent eksisterende filtre
 			const currentFilters = getCurrentFiltersFromURL();
+			
+			// Konverter datoformat hvis nødvendig
+			if (currentFilters.dato && currentFilters.dato.includes(',')) {
+				// Konverter fra YYYY-MM-DD,YYYY-MM-DD til DD.MM.YYYY-DD.MM.YYYY
+				const [fromDate, toDate] = currentFilters.dato.split(',');
+				const from = moment(fromDate).format('DD.MM.YYYY');
+				const to = moment(toDate).format('DD.MM.YYYY');
+				currentFilters.dato = `${from}-${to}`;
+			}
+
+			// Oppdater sorteringsparametere og reset side til 1
 			const updatedFilters = {
 				...currentFilters,
 				sort: sortBy,
 				order: order,
-				side: 1
+				side: 1  // Reset til side 1 ved ny sortering
 			};
 
 			// Utfør filtrering med sortering
@@ -622,6 +702,8 @@
 	}
 
 	initializeRangePrice();
+
+
 
 })(jQuery);
 

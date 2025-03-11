@@ -31,7 +31,6 @@
 get_header(); 
 ?>
 
-<main>
 
 <?php
     // Get post meta data
@@ -269,7 +268,7 @@ get_header();
 
 
 
-</main>
+
 <?php get_footer(); ?>
 
 <?php

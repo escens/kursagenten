@@ -64,7 +64,7 @@ $taxonomy_data = [
 ];
 
 // Rett etter $taxonomy_data definisjonen
-error_log('Initial months data: ' . print_r($taxonomy_data['months']['terms'], true));
+//error_log('Initial months data: ' . print_r($taxonomy_data['months']['terms'], true));
 
 // **Meta fields
 // Language
@@ -106,11 +106,6 @@ foreach ($available_filters as $filter_key => $filter_info) {
     ];
 }
 
-// Rett før filter-genereringen
-error_log('Available filters: ' . print_r($available_filters, true));
-error_log('Top filters: ' . print_r($top_filters, true));
-error_log('Left filters: ' . print_r($left_filters, true));
-error_log('Filter types: ' . print_r($filter_types, true));
 ?>
 
 <main id="main" class="site-main kursagenten-wrapper" role="main">
@@ -137,6 +132,34 @@ error_log('Filter types: ' . print_r($filter_types, true));
                             <div class="filter-item <?php echo esc_attr($filter_types[$filter] ?? ''); ?> <?php echo esc_attr($search_class); ?>">
                                 <?php if ($filter === 'search') : ?>
                                  <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
+                                <?php elseif ($filter === 'date') : ?>
+                                    <?php
+                                    $date = "";
+                                    if (isset($_REQUEST['dato'])) {
+                                        $dates = explode('-', $_REQUEST['dato']);
+                                        if (count($dates) === 2) {
+                                            $from_date = ka_format_date(\DateTime::createFromFormat('d.m.Y', trim($dates[0]))->format('Y-m-d'));
+                                            $to_date = ka_format_date(\DateTime::createFromFormat('d.m.Y', trim($dates[1]))->format('Y-m-d'));
+                                            $date = sprintf('%s - %s', $from_date, $to_date);
+                                        }
+                                    }
+                                    
+                                    // Sjekk om dette filteret er i left_filters array
+                                    $is_left_filter = in_array('date', $left_filters);
+                                    $caleran_class = $is_left_filter ? 'caleran caleran-left' : 'caleran';
+                                    ?>
+                                    <div class="date-range-wrapper">
+                                        <input type="text" 
+                                               id="date-range" 
+                                               class="<?php echo esc_attr($caleran_class); ?>"
+                                               data-filter-key="date"
+                                               data-url-key="dato"
+                                               name="calendar-input"
+                                               placeholder="Velg fra-til dato"
+                                               value="<?php echo esc_attr($date); ?>"
+                                               aria-label="Velg datoer">
+                                        <i class="ka-icon icon-chevron-down"></i>
+                                    </div>
                                 <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                     <?php if ($filter_types[$filter] === 'chips') : ?>
                                         <!-- Chip-style Filter Display -->
@@ -215,30 +238,8 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
-                        
 
-
-                        <?php //if ($filter_date == true): ?>
-													<?php
-													$date = "";
-													if (array_key_exists('dato', $_REQUEST)) {
-														if (array_key_exists('from', $_REQUEST['dato']) && array_key_exists('to', $_REQUEST['dato'])) {
-															$from_date = date('Y-m-d', strtotime($_REQUEST['dato']['from']));
-															$to_date = date('Y-m-d', strtotime($_REQUEST['dato']['to']));
-															$date = sprintf('%s - %s', $from_date, $to_date);
-														}
-													}
-													?>
-
-                            <div id="filter-date" class="filter-date-container">
-                                <label for="date-range">Choose dates:</label>
-                                <input type="text" id="date-range" class="caleran"
-                                    data-filter-key="date"
-                                    data-url-key="dato"
-                                    name="calendar-input"
-                                    value="<?php echo esc_attr($date); ?>">
-                            </div>
-                        <?php //endif; ?>
+                
 
 
 
@@ -255,7 +256,7 @@ error_log('Filter types: ' . print_r($filter_types, true));
             <!-- Main Content Container with Columns -->
             <div class="inner-container main-section">
                 <div class="course-grid <?php echo esc_attr($left_column_class); ?>">
-                    <!-- Left Column -->
+                    <!-- Left Column left filters-->
                     <?php if ($has_left_filters) : ?>
                         <div class="filter left-column">
                             <div class="filter-container filter-left">
@@ -269,6 +270,34 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                         <h5><?php echo $filter_label; ?></h5>
                                         <?php if ($filter === 'search') : ?>
                                             <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
+                                        <?php elseif ($filter === 'date') : ?>
+                                            <?php
+                                            $date = "";
+                                            if (isset($_REQUEST['dato'])) {
+                                                $dates = explode('-', $_REQUEST['dato']);
+                                                if (count($dates) === 2) {
+                                                    $from_date = ka_format_date(\DateTime::createFromFormat('d.m.Y', trim($dates[0]))->format('Y-m-d'));
+                                                    $to_date = ka_format_date(\DateTime::createFromFormat('d.m.Y', trim($dates[1]))->format('Y-m-d'));
+                                                    $date = sprintf('%s - %s', $from_date, $to_date);
+                                                }
+                                            }
+                                            
+                                            // Sjekk om dette filteret er i left_filters array
+                                            $is_left_filter = in_array('date', $left_filters);
+                                            $caleran_class = $is_left_filter ? 'caleran caleran-left' : 'caleran';
+                                            ?>
+                                            <div class="date-range-wrapper">
+                                                <input type="text" 
+                                                       id="date-range" 
+                                                       class="<?php echo esc_attr($caleran_class); ?>"
+                                                       data-filter-key="date"
+                                                       data-url-key="dato"
+                                                       name="calendar-input"
+                                                       placeholder="Velg fra-til dato"
+                                                       value="<?php echo esc_attr($date); ?>"
+                                                       aria-label="Velg datoer">
+                                                <i class="ka-icon icon-chevron-down"></i>
+                                            </div>
                                         <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                             <?php if ($filter_types[$filter] === 'chips') : ?>
                                                 <div class="filter-chip-wrapper">
@@ -282,7 +311,7 @@ error_log('Filter types: ' . print_r($filter_types, true));
                                                     <?php endforeach; ?>
                                                 </div>
                                             <?php elseif ($filter_types[$filter] === 'list') : ?>
-                                                <div id="filter-list-location" class="filter-list">
+                                                <div id="filter-list-location" class="filter-list expand-content" data-size="100">
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                         <label class="filter-list-item checkbox">
                                                             <input type="checkbox" class="filter-checkbox"

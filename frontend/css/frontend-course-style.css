@@ -1,7 +1,7 @@
 :root {
   --ka-max-width: 1200px;
   --ka-color: hsl(32, 96%, 49%);
-  --ka-color-dark: hsl(32, 96%, 40%);
+  --ka-color-dark: hsl(32, 96%, 45%);
   --ka-color-light: hsl(32, 96%, 90%);
   --ka-color-light-hover: hsl(32, 96%, 95%);
   --ka-color-light-active: hsl(32, 96%, 98%);
@@ -261,7 +261,7 @@ line-height: 20px;
 .accordion-icon {
 margin-right: 10px;
 transition: transform 0.3s;
-font-size: 20px;
+font-size: 22px;
 cursor: pointer;
 height: .8em;
 display: flex;
@@ -383,6 +383,42 @@ opacity: 0.9;
 visibility: visible; 
 }
 
+/* expand collapse elements with expand-content class and data-size attribute*/
+.expand-content {
+    position: relative;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.expand-content.collapsed {
+    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+.expand-toggle {
+    display: none;
+    width: 100%;
+    padding: 8px 0;
+    margin-top: 10px;
+    color: var(--ka-color);
+    cursor: pointer;
+    font-size: var(--ka-font-size-small);
+}
+
+.expand-toggle:hover {
+    color: var(--ka-color-dark);
+}
+
+.expand-toggle i.ka-icon {
+    width: 12px;
+    height: 10px;
+    margin-left: 5px;
+    transition: transform 0.3s ease;
+}
+
+.expand-content.expanded .expand-toggle i.ka-icon {
+    transform: rotate(180deg);
+}
 
 /* UTILITIES */
 /* show/hide elements */
@@ -641,7 +677,7 @@ overflow: hidden;
 padding: 0 10px;
 transition: height 0.3s ease, padding 0.3s ease;
 background: white;
-font-size: 15px;
+font-size: var(--ka-font-size-small);
 }
 .courselist-content.open {
 padding: 10px;
@@ -732,8 +768,9 @@ font-size: var(--ka-font-size-small);
   margin: 6px 0;
 }
 .filter-item h4, .filter-item h5{
-  font-weight: 500;
+  font-weight: bold;
   padding-top: 1em;
+  margin: 0 0 .5em 0;
 } 
 .filter-item:has(#search) h4, .filter-item:has(#search) h5{
   display: none;
@@ -864,15 +901,17 @@ text-align: center;
 
 
 
-/* filter: filter list - dropdown wrapper for list*/
-.filter-dropdown {
+/* filter: filter list - dropdown wrapper for list. More caleran styling below*/
+.filter-dropdown,
+.date-range-wrapper {
   position: relative;
   display: inline-block;
   width: fit-content;
   min-width: 150px;
 }
 
-.filter-dropdown-toggle {
+.filter-dropdown-toggle,
+.date-range-wrapper input {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -906,8 +945,10 @@ text-align: center;
 }
 
 .dropdown-icon i.ka-icon {
-position: relative;
-top: 3px;
+  position: relative;
+  top: 3px;
+  width: 14px;
+  height: 14px;
 }
 
 .filter-dropdown-content {
@@ -1122,6 +1163,37 @@ background: #f8f8ff59!important;
 background: #f8f8ff!important;
 text-decoration: none!important;
 }
+/* Font and Placeholder styling for date picker input */
+.date-range-wrapper input {
+  color: #636363;
+  font-size: var(--ka-filter-font-size);
+  width: 145px;
+  padding-right: 30px; /* Gjør plass til ikonet */
+}
+
+.date-range-wrapper .ka-icon {
+  position: absolute;
+  right: 13px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  pointer-events: none; /* Sikrer at ikonet ikke forstyrrer klikk på input */
+}
+.date-range-wrapper input::placeholder {
+    color: #333;
+    font-size: var(--ka-filter-font-size);
+    opacity: 1;
+}
+
+/* For eldre nettlesere */
+.date-range-wrapper input::-webkit-input-placeholder,/* Chrome/Safari/Opera */
+.date-range-wrapper input::-moz-placeholder,/* Firefox */
+.date-range-wrapper input:-ms-input-placeholder /* IE/Edge */ { 
+    color: #333;
+    opacity: 1;
+}
+
 
 /* filter range slider */
 

@@ -72,6 +72,14 @@ class Avansert {
                             <br><br></p>
                         </td>
                     </tr>
+                    <tr valign="top">
+                        <td>
+                            <label for="ka_disable_gravatar">
+                            <?php $this->ka_disable_gravatar_callback(); ?>
+                            Deaktiver Gravatar på frontend</label>
+                            <p class="description">Dette valget deaktiverer Gravatar på frontend og bruker et lokalt standardbilde i stedet. Dette kan løse problemer med tracking prevention i enkelte nettlesere.<br><br></p>
+                        </td>
+                    </tr>
                 </table>
 
                 <?php submit_button(); ?>
@@ -102,6 +110,12 @@ class Avansert {
         $current_value = isset($this->kag_avansert_options['ka_security']) ? $this->kag_avansert_options['ka_security'] : 0;
         ?>
              <input type="checkbox" id="ka_security" name="kag_avansert_option_name[ka_security]" value="1" <?php checked($current_value, 1); ?> />     
+        <?php
+    }
+    public function ka_disable_gravatar_callback() {
+        $current_value = isset($this->kag_avansert_options['ka_disable_gravatar']) ? $this->kag_avansert_options['ka_disable_gravatar'] : 0;
+        ?>
+        <input type="checkbox" id="ka_disable_gravatar" name="kag_avansert_option_name[ka_disable_gravatar]" value="1" <?php checked($current_value, 1); ?> />
         <?php
     }
 

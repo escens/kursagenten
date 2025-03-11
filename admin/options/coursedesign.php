@@ -59,7 +59,7 @@ class Designmaler {
                 'placeholder' => 'Velg måned'
             ]
         ];
-        $inactive_filters = ['time_of_day']; // Filtre som ikke er i bruk
+        $inactive_filters = ['time_of_day', 'price']; // Filtre som ikke er i bruk
         $top_filters = get_option('kursagenten_top_filters', []);
         $left_filters = get_option('kursagenten_left_filters', []);
         $filter_types = get_option('kursagenten_filter_types', []);
@@ -190,7 +190,7 @@ class Designmaler {
                                 <?php if (!empty($filter)) : ?>
                                 <li data-filter="<?php echo esc_attr($filter); ?>">
                                     <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                    <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'time_of_day', 'months'])) : ?>
+                                    <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
                                         <span class="filter-type-options">
                                             <label>
                                                 <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
@@ -245,6 +245,21 @@ class Designmaler {
             jQuery(document).ready(function($) {
                 $(".sortable-list").sortable({
                     connectWith: ".sortable-list",
+                    placeholder: "ui-state-highlight",
+                    start: function(event, ui) {
+                        ui.placeholder.css({
+                            'height': ui.item.height(),
+                            'background': '#f3f8ff',
+                            'border': '1px dashed #1e88e5',
+                            'margin': '10px 5px'
+                        });
+                    },
+                    over: function(event, ui) {
+                        $(this).addClass('ui-state-hover');
+                    },
+                    out: function(event, ui) {
+                        $(this).removeClass('ui-state-hover');
+                    },
                     update: function() {
                         let topFilters = $("#top-filters").sortable("toArray", { attribute: "data-filter" });
                         let leftFilters = $("#left-filters").sortable("toArray", { attribute: "data-filter" });
@@ -273,7 +288,20 @@ class Designmaler {
         </script>
         <style>
             .filter-containers {display: grid; grid-template-columns: 1fr 2fr; gap: 1em; }
-            .sortable-list { list-style: none; padding: 10px; background: #ffffff7a; min-height: 50px; border: 2px dashed #cccccc61;border-radius: 8px; }
+            .sortable-list { list-style: none; padding: 10px; background: #ffffff7a; min-height: 50px; border: 2px dashed #cccccc61; border-radius: 8px; }
+            /* Add styles for valid drop target */
+            .sortable-list.ui-state-hover {
+                background: #e8f0fe;
+                border: 2px dashed #1e88e5;
+                transition: all 0.2s ease;
+            }
+            /* Add styles for dragging state */
+            .sortable-list li.ui-sortable-helper {
+                background: #ffffff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                transform: scale(1.02);
+                transition: all 0.2s ease;
+            }
             .sortable-list li { padding: 10px 10px; margin: 10px 5px; background: #fff; cursor: move; border: 1px solid #e5e5e5; border-radius: 5px; font-weight: bold;}
             #available-filters.sortable-list { display: flex; border: 0; background: #ffffff7a; padding: 1em; border: 2px dashed #ccc; border-radius: 8px; }
             #available-filters.sortable-list li { width: fit-content; height: fit-content; padding: 10px 15px;}
