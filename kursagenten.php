@@ -121,6 +121,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/api/api-webhook-handler.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
 
 /* MISC ADMIN FUNCTIONS */
 require_once KURSAG_PLUGIN_DIR . '/admin/misc/hide_course-images_in_mediafolder.php';
@@ -181,7 +182,7 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
             if ($enqueue_plugin_pages) {
                 wp_enqueue_media();// Enqueue media scripts for file uploads
                 wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'admin/js/image-upload.js', array('jquery'), '1.0.3',  true  );
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'admin/css/kursagenten-admin.css', array(), '1.0.56' );
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'admin/css/kursagenten-admin.css', array(), '1.0.59' );
             }
         }
     }
@@ -191,38 +192,13 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
 
  /* FRONT END */   
 
-function kursagenten_get_single_template($single) {
-    global $post;
-    
-    if ($post->post_type == 'course') {
-        return plugin_dir_path(__FILE__) . 'templates/single-course.php';
-    }
-    
-    return $single;
-}
-add_filter('single_template', 'kursagenten_get_single_template');
-
-function kursagenten_get_archive_template($archive) {
-    if (is_post_type_archive('course')) {
-        return plugin_dir_path(__FILE__) . 'templates/archive-course.php';
-    }
-    
-    return $archive;
-}
-add_filter('archive_template', 'kursagenten_get_archive_template');
-
-function kursagenten_get_taxonomy_template($template) {
-    if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
-        return plugin_dir_path(__FILE__) . 'templates/taxonomy.php';
-    }
-    return $template;
-}
-add_filter('taxonomy_template', 'kursagenten_get_taxonomy_template');
+// Definer en konstant for plugin path som brukes i template-functions.php
+define('KURSAGENTEN_PATH', KURSAG_PLUGIN_DIR);
 
 // Sørg for at funksjonen er inkludert
-    require_once KURSAG_PLUGIN_DIR . '/templates/includes/template-functions.php';
-    require_once KURSAG_PLUGIN_DIR . '/templates/includes/queries.php';
-    require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/templates/template-functions.php';
+require_once KURSAG_PLUGIN_DIR . '/templates/includes/queries.php';
+require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
     
     function kursagenten_enqueue_styles() {
         // Last inn base CSS for alle Kursagenten sider
@@ -243,37 +219,66 @@ add_filter('taxonomy_template', 'kursagenten_get_taxonomy_template');
 
         // Last inn archive-course spesifikk CSS
         if (is_post_type_archive('course')) {
-            // Hent valgt stil for archive
-            $default_style = get_option('kursagenten_archive_style', 'default');
-            $specific_style = get_option('kursagenten_archive_style_course', '');
-            $template_style = !empty($specific_style) ? $specific_style : $default_style;
+            // Oppdater variabelnavn for å matche nye innstillinger
+            $design = get_option('kursagenten_archive_design', 'default');
+            $layout = get_option('kursagenten_archive_layout', 'default');
+            $list_type = get_option('kursagenten_archive_list_type', 'standard');
 
-            // Last inn base archive CSS
+            // Last inn base CSS
             wp_enqueue_style(
                 'kursagenten-archive-base',
-                KURSAG_PLUGIN_URL . '/frontend/css/frontend-courselist-default.css',
+                KURSAG_PLUGIN_URL . '/frontend/css/list-standard.css',
                 array(),
                 KURSAG_VERSION
             );
 
-            // Last inn spesifikk stil hvis det ikke er default
-            if ($template_style !== 'default') {
+            // Last inn design-spesifikk CSS hvis ikke default
+            if ($design !== 'default') {
                 wp_enqueue_style(
-                    'kursagenten-archive-' . $template_style,
-                    KURSAG_PLUGIN_URL . '/frontend/css/frontend-courselist-' . $template_style . '.css',
+                    'kursagenten-archive-design-' . $design,
+                    KURSAG_PLUGIN_URL . '/frontend/css/design-' . $design . '.css',
                     array('kursagenten-archive-base'),
                     KURSAG_VERSION
                 );
             }
+
+            // Last inn layout-spesifikk CSS
+            /*if ($layout !== 'default') {
+                wp_enqueue_style(
+                    'kursagenten-archive-layout-' . $layout,
+                    KURSAG_PLUGIN_URL . '/frontend/css/layout-' . $layout . '.css',
+                    array('kursagenten-archive-base'),
+                    KURSAG_VERSION
+                );
+            }*/
+
+            // Last inn list-type-spesifikk CSS
+            wp_enqueue_style(
+                'kursagenten-list-type-' . $list_type,
+                KURSAG_PLUGIN_URL . '/frontend/css/list-' . $list_type . '.css',
+                array('kursagenten-archive-base'),
+                KURSAG_VERSION
+            );
         }
 
-        // CSS for taxonomy templates
+        // CSS for taxonomy templates - oppdater for å bruke nye innstillinger
         if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
-            // Hent valgt stil
             $taxonomy = get_queried_object()->taxonomy;
-            $default_style = get_option('kursagenten_taxonomy_style', 'default');
-            $specific_style = get_option("kursagenten_taxonomy_style_{$taxonomy}", '');
-            $template_style = !empty($specific_style) ? $specific_style : $default_style;
+            $override_enabled = get_option("kursagenten_taxonomy_{$taxonomy}_override", false);
+            
+            if ($override_enabled) {
+                $design = get_option("kursagenten_taxonomy_{$taxonomy}_design", '');
+                $layout = get_option("kursagenten_taxonomy_{$taxonomy}_layout", '');
+                $list_type = get_option("kursagenten_taxonomy_{$taxonomy}_list_type", '');
+                
+                if (empty($design)) $design = get_option('kursagenten_taxonomy_design', 'default');
+                if (empty($layout)) $layout = get_option('kursagenten_taxonomy_layout', 'default');
+                if (empty($list_type)) $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+            } else {
+                $design = get_option('kursagenten_taxonomy_design', 'default');
+                $layout = get_option('kursagenten_taxonomy_layout', 'default');
+                $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+            }
 
             // Last inn base CSS
             wp_enqueue_style(
@@ -283,12 +288,64 @@ add_filter('taxonomy_template', 'kursagenten_get_taxonomy_template');
                 KURSAG_VERSION
             );
 
-            // Load specific style if it's not the default
-            if ($template_style !== 'default') {
+            // Last inn design-spesifikk CSS
+            if ($design !== 'default') {
                 wp_enqueue_style(
-                    'kursagenten-taxonomy-' . $template_style,
-                    KURSAG_PLUGIN_URL . '/assets/css/taxonomy-' . $template_style . '.css',
+                    'kursagenten-taxonomy-design-' . $design,
+                    KURSAG_PLUGIN_URL . '/assets/css/design-' . $design . '.css',
                     array('kursagenten-taxonomy-base'),
+                    KURSAG_VERSION
+                );
+            }
+
+            // Last inn layout-spesifikk CSS
+            if ($layout !== 'default') {
+                wp_enqueue_style(
+                    'kursagenten-taxonomy-layout-' . $layout,
+                    KURSAG_PLUGIN_URL . '/assets/css/layout-' . $layout . '.css',
+                    array('kursagenten-taxonomy-base'),
+                    KURSAG_VERSION
+                );
+            }
+
+            // Last inn list-type-spesifikk CSS
+            wp_enqueue_style(
+                'kursagenten-taxonomy-list-' . $list_type,
+                KURSAG_PLUGIN_URL . '/assets/css/list-' . $list_type . '.css',
+                array('kursagenten-taxonomy-base'),
+                KURSAG_VERSION
+            );
+        }
+
+        // Single course styling
+        if (is_singular('course')) {
+            $design = get_option('kursagenten_single_design', 'default');
+            $layout = get_option('kursagenten_single_layout', 'default');
+
+            // Last inn base CSS
+            wp_enqueue_style(
+                'kursagenten-single-base',
+                KURSAG_PLUGIN_URL . '/frontend/css/frontend-single-default.css',
+                array(),
+                KURSAG_VERSION
+            );
+
+            // Last inn design-spesifikk CSS
+            if ($design !== 'default') {
+                wp_enqueue_style(
+                    'kursagenten-single-design-' . $design,
+                    KURSAG_PLUGIN_URL . '/frontend/css/design-' . $design . '.css',
+                    array('kursagenten-single-base'),
+                    KURSAG_VERSION
+                );
+            }
+
+            // Last inn layout-spesifikk CSS
+            if ($layout !== 'default') {
+                wp_enqueue_style(
+                    'kursagenten-single-layout-' . $layout,
+                    KURSAG_PLUGIN_URL . '/frontend/css/layout-' . $layout . '.css',
+                    array('kursagenten-single-base'),
                     KURSAG_VERSION
                 );
             }

@@ -20,72 +20,70 @@ class Avansert {
     }
 
     public function kag_avansert_create_admin_page() {
-        $this->kag_avansert_options = get_option('kag_avansert_option_name'); ?>
+        $this->kag_avansert_options = get_option('kag_avansert_option_name');
 
-        <div class="wrap options-form">
-            <h2>Avanserte innstillinger</h2>
-            <p>Skru på de innstillingene du ønsker å bruke:</p>
-            <?php settings_errors(); ?>
+        // Start page with header
+        kursagenten_admin_header('Avanserte innstillinger');
+        ?>
+        <p>Skru på de innstillingene du ønsker å bruke:</p>
 
-            <form method="post" action="options.php">
-                <?php
-                settings_fields('kag_avansert_option_group');
-                do_settings_sections('avansert-admin');
-                ?>
+        <?php
+        settings_fields('kag_avansert_option_group');
+        do_settings_sections('avansert-admin');
+        ?>
 
-                <!-- Innlegg til artikler -->
-                <h3>Omdøp innlegg til Artikler</h3>
-                <table class="form-table">
-                    <tr valign="top">
-                        <td>
-                            <label for="ka_rename_posts">
-                            <?php $this->ka_rename_posts_callback(); ?>
-                            Omdøp innlegg til Artikler</label>
-                            <p class="description">I Wordpress finnes to typer sider: Sider og innlegg. Innlegg tilsvarer blogginnlegg eller annet som har kategorier og tagger. Aktiver for å omdøpe innlegg til "Artikler".<br><br></p>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <td>
-                            <label for="ka_jquery_support">
-                            <?php $this->ka_jquery_support_callback(); ?>
-                            Aktiver støtte for jQuery</label>
-                            <p class="description">Wordpress har stort sett støtte for javascript biblioteket Jquery. Hvis det ikke er støtte for dette, kan du velge å aktivere det her.<br><br></p>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <td>
-                            <label for="ka_sitereviews">
-                            <?php $this->ka_sitereviews_callback(); ?>
-                            Støtte for "Site Reviews"-plugin, anmeldelser</label>
-                            <p class="description">Dette legger inn rating i Course schema via Rank Math på kurssidene. Det legger også inn redirect basert på querystrings i eposter fra Kursagenten, til rating skjema på korrekt kursside.<br><br></p>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <td>
-                            <label for="ka_security">
-                            <?php $this->ka_security_callback(); ?>
-                            Aktiver ekstra sikkerhetsfunksjoner</label>
-                            <p class="description">Dette valget legger til:<br>
-                            1) Clickjacking Protection (X-Frame-Options) i WordPress, styrker security headers.<br>
-                            2) Deaktiverer tema- og plugin redigering<br>
-                            3) Fjerner WP versjonsnummer
-                            <br><br></p>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <td>
-                            <label for="ka_disable_gravatar">
-                            <?php $this->ka_disable_gravatar_callback(); ?>
-                            Deaktiver Gravatar på frontend</label>
-                            <p class="description">Dette valget deaktiverer Gravatar på frontend og bruker et lokalt standardbilde i stedet. Dette kan løse problemer med tracking prevention i enkelte nettlesere.<br><br></p>
-                        </td>
-                    </tr>
-                </table>
+        <!-- Innlegg til artikler -->
+        <h3 id="innstillinger">Ulike tilleggsfunksjoner</h3>
+        <table class="form-table">
+            <tr valign="top">
+                <td>
+                    <label for="ka_rename_posts">
+                    <?php $this->ka_rename_posts_callback(); ?>
+                    Omdøp innlegg til Artikler</label>
+                    <p class="description">I Wordpress finnes to typer sider: Sider og innlegg. Innlegg tilsvarer blogginnlegg eller annet som har kategorier og tagger. Aktiver for å omdøpe innlegg til "Artikler".<br><br></p>
+                </td>
+            </tr>
+            <tr valign="top">
+                <td>
+                    <label for="ka_jquery_support">
+                    <?php $this->ka_jquery_support_callback(); ?>
+                    Aktiver støtte for jQuery</label>
+                    <p class="description">Wordpress har stort sett støtte for javascript biblioteket Jquery. Hvis det ikke er støtte for dette, kan du velge å aktivere det her.<br><br></p>
+                </td>
+            </tr>
+            <tr valign="top">
+                <td>
+                    <label for="ka_sitereviews">
+                    <?php $this->ka_sitereviews_callback(); ?>
+                    Støtte for "Site Reviews"-plugin, anmeldelser</label>
+                    <p class="description">Dette legger inn rating i Course schema via Rank Math på kurssidene. Det legger også inn redirect basert på querystrings i eposter fra Kursagenten, til rating skjema på korrekt kursside.<br><br></p>
+                </td>
+            </tr>
+            <tr valign="top">
+                <td>
+                    <label for="ka_security">
+                    <?php $this->ka_security_callback(); ?>
+                    Aktiver ekstra sikkerhetsfunksjoner</label>
+                    <p class="description">Dette valget legger til:<br>
+                    1) Clickjacking Protection (X-Frame-Options) i WordPress, styrker security headers.<br>
+                    2) Deaktiverer tema- og plugin redigering<br>
+                    3) Fjerner WP versjonsnummer
+                    <br><br></p>
+                </td>
+            </tr>
+            <tr valign="top">
+                <td>
+                    <label for="ka_disable_gravatar">
+                    <?php $this->ka_disable_gravatar_callback(); ?>
+                    Deaktiver Gravatar på frontend</label>
+                    <p class="description">Dette valget deaktiverer Gravatar på frontend og bruker et lokalt standardbilde i stedet. Dette kan løse problemer med tracking prevention i enkelte nettlesere.<br><br></p>
+                </td>
+            </tr>
+        </table>
 
-                <?php submit_button(); ?>
-            </form>
-        </div>
+
     <?php
+    kursagenten_admin_footer();
     }
     
     public function ka_rename_posts_callback() {

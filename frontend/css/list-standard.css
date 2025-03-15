@@ -76,6 +76,9 @@
     flex-direction: column;
     flex: 1;
 }
+.courselist-main.with-image .text-area {
+    padding-left: 0.5em;
+}
 
 .courselist-main .title-area {
     display: flex;

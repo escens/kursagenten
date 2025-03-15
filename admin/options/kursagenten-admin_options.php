@@ -5,13 +5,14 @@ require_once plugin_dir_path(__FILE__) . 'kursinnstillinger.php';
 require_once plugin_dir_path(__FILE__) . 'coursedesign.php';
 require_once plugin_dir_path(__FILE__) . 'seo.php';
 require_once plugin_dir_path(__FILE__) . 'avansert.php';
+require_once KURSAG_PLUGIN_DIR . '/admin/includes/admin-helpers.php';
 
 // Instantiate the classes to add them as submenus
 if (is_admin()) {
     $kursinnstillinger = new Kursinnstillinger();
-    $bedriftsinformasjon = new Bedriftsinformasjon();
     $designmaler = new Designmaler();
     $seo = new SEO();
+    $bedriftsinformasjon = new Bedriftsinformasjon();
     $avansert = new Avansert();
 }
 

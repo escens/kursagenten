@@ -24,11 +24,15 @@ input[type=textarea] {
     border-color: #ddd;
 }
 
-.options-form{
-    max-width: 900px;
-    margin-left: 2vw;
+.wrap.options-form{
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
 }
-.options-form h2,
+.wrap-inner{
+    padding: 2vw;
+}
 .options-form h3 {
     padding-top: 1em!important;
 }
@@ -36,17 +40,7 @@ input[type=textarea] {
     font-weight: 600!important;
     font-size: 2.1em!important;
 }
-.wrap h2:before {
-    content: '';
-    display: block;
-    background: url(https://login.kursagenten.no/kursagenten-nettstedsikon.png);
-    width: 30px;
-    height: 30px;
-    background-size: contain;
-    float: left;
-    padding-right: 10px;
-    background-repeat: no-repeat;
-}
+
 .options-form table.form-table,
 .options-card {
     background: white;

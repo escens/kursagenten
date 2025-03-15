@@ -202,7 +202,7 @@ function get_course_template_part($args = []) {
     $style = get_option('kursagenten_template_style', 'default');
     
     // Bygg filnavn og path
-    $template_file = "{$style}.php";
+    $template_file = "coursedates_{$style}.php";
     $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$template_file}";
     
     // Sjekk om template eksisterer

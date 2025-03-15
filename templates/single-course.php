@@ -92,38 +92,40 @@ get_header();
     @media (max-width: 768px) { .background-blur { background-image: url('<?php echo esc_url($featured_image_thumb); ?>'); } }
 </style>
 
-<div class="kursagenten-wrapper"> 
-    <div class="course-container">
+<main id="ka-main" class="kursagenten-single-course" role="main">
+    <article class="ka-outer-container course-container">
         <?php if ($admin_view === 'true') : ?>
         <div class="edit-course edit-link"><a href="<?php echo "https://www.kursagenten.no/User.aspx?page=regKurs&id=" . $course_id; ?>" target="_blank"><span class="ka-icon-button"><i class="ka-icon icon-edit"></i></span><span class="edit-text">Rediger kurs</span></a></div>
         <?php endif; ?>
         <!-- HEADER -->
-        <div class="header">
-            <div class="background-blur"></div>
-            <div class="overlay"></div>
-            <div class="inner-container header-content">
-                <h1 class="medium"><?php the_title(); ?></h1>
-                <div class="header-links iconlist horizontal uppercase small">
-                    <div><a href="<?php echo get_post_type_archive_link('course'); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
-                    <div class="taxonomy-list horizontal">
-                        <?php if (!empty($coursecategory_links)) : ?>
-                            <i class="ka-icon icon-tag"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
+        <header class="ka-section ka-header">
+            <div class="ka-content-container">
+                <div class="background-blur"></div>
+                <div class="overlay"></div>
+                <div class="ka-content-container header-content">
+                    <h1><?php the_title(); ?></h1>
+                    <div class="header-links iconlist horizontal uppercase small">
+                        <div><a href="<?php echo get_post_type_archive_link('course'); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
+                        <div class="taxonomy-list horizontal">
+                            <?php if (!empty($coursecategory_links)) : ?>
+                                <i class="ka-icon icon-tag"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="course-buttons">
+                        <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
+                            <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                                <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
+                            </a>
                         <?php endif; ?>
+                        <a href="#" class="button">Legg til i ønskeliste</a>
                     </div>
                 </div>
-                <div class="course-buttons">
-                    <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
-                        <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
-                            <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
-                        </a>
-                    <?php endif; ?>
-                    <a href="#" class="button">Legg til i ønskeliste</a>
-                </div>
             </div>
-        </div>
+        </header>
         <!-- DETAILS -->
-        <div class="details">
-            <div class="inner-container">
+        <section class="ka-section details">
+            <div class="ka-content-container">
                 <div class="course-grid col-1-3">
                     <!-- Next course information -->
                     <div class="nextcourse">
@@ -158,7 +160,7 @@ get_header();
                             <?php if (!empty($all_coursedates)) : ?>
                             <div class="all-coursedates">
                                 <h2 class="small">Kurstider og steder</h2>
-                                <div class="accordion courselist-items-wrapper">
+                                <div class="accordion courselist-items-wrapper expand-content" data-size="180px">
                                     <?php 
                                     $totalCourses = count($all_coursedates);
                                     foreach ($all_coursedates as $index => $coursedate) : 
@@ -202,11 +204,11 @@ get_header();
 
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- COURSE INFORMATION -->
-        <div class="course-information">
-            <div class="inner-container">
+        <section class="ka-section course-information">
+            <div class="ka-content-container">
                 <div class="course-grid">
                     <!-- Content -->
                     <div class="content">
@@ -247,14 +249,17 @@ get_header();
                         <?php endif; ?>
                     </div>
 
-                    <!-- Footer -->
-                    <div class="footer"><h3>Footer</h3></div>
 
                 </div>
             </div>
-        </div>
-    </div>
-</div>
+        </section>
+        <section class="ka-section ka-footer">
+            <div class="ka-content-container title-section">
+                <h4>Footer</h4>
+            </div>
+        </section>
+    </article>
+</main>
 
 
 
