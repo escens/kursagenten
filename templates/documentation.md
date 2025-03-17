@@ -55,8 +55,9 @@ The template system uses a hierarchical approach where designs and layouts are l
    templates/designs/taxonomy/new-design.php/
    ```
 
-   Main html structure
-   All template files are wrapped in "main", in layout default or full width
+   **Main html structure.**
+
+   All template files are wrapped in "main", in layout/ default or full width
    ```html
    <main id="ka-main" class="kursagenten-wrapper" role="main"> <!--remove, is added in /in layout/ default or full width-->
    </main>
