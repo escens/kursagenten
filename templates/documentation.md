@@ -1,7 +1,7 @@
 # Kursagenten templating system
 
 ## Directory Structure
-
+```
 templates/
 ├── designs/            # Design variations for different views
 │   ├── single/         # Single course page designs
@@ -55,22 +55,26 @@ The template system uses a hierarchical approach where designs and layouts are l
    templates/designs/taxonomy/new-design.php/
    ```
 
-#### Main html structure
+Main html structure
+All template files are wrapped in <main>, in layout default or full width
 ```html
 <main id="ka-main" class="kursagenten-wrapper" role="main"> <!--remove, is added in /in layout/ default or full width-->
-	<article class="ka-outer-container course-container">
-		<header class="ka-section ka-header">
-			<div class="header-title">
-				<h1>Kurs</h1>
-			</div>
-		</header>
-		<section class="ka-section ka-main-content">
-			<div class="ka-content-container describe-content-with-class">
-				<div class="course-grid"></div>
-			</div>
-		</section>
-	</article>
 </main>
+```
+This is the structure to use in new template/design files
+```html
+<article class="ka-outer-container course-container">
+   <header class="ka-section ka-header">
+      <div class="header-title">
+         <h1>Title</h1>
+      </div>
+   </header>
+   <section class="ka-section ka-main-content">
+      <div class="ka-content-container describe-content-with-class">
+         <div class="course-grid"></div>
+      </div>
+   </section>
+</article>
 ```
 
 2. Add CSS files:
