@@ -23,7 +23,7 @@ $related_course_info = get_course_info_by_location($related_course_id);
 
 if ($related_course_info) {
     $course_link = esc_url($related_course_info['permalink']);
-    $featured_image_thumb = $related_course_info['thumbnail'];
+    $featured_image_thumb = $related_course_info['thumbnail-medium'];
     $excerpt = $related_course_info['excerpt'];
 }
 
@@ -33,80 +33,79 @@ if (!$course_link) {
 $course_count = $course_count ?? 0;
 $item_class = $course_count === 1 ? ' single-item' : '';
 
+// Sjekk om bilder skal vises
+$show_images = get_option('kursagenten_show_images', 'yes');
+$with_image_class = $show_images === 'yes' ? ' with-image' : '';
+
 ?>
-<div class="courselist-item<?php echo $item_class; ?>">
-    <div class="courselist-main with-image">
-        <!--
-        <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
-            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
-                <picture>
-                    <img src="" alt="<?php echo esc_attr($course_title); ?>" class="course-image" decoding="async">
-                </picture>
-            </a>
-        </div>
-        -->
+<div class="courselist-item grid-item<?php echo $item_class; ?>">
+    <div class="courselist-card<?php echo $with_image_class; ?>">
+        <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
-        <div class="image column" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+        <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
+            <span class="card-availability course-available">Ledige plasser</span>
         </div>
-        <div class="text-area-wrapper">
-            <!-- Text area -->
-            <div class="text-area column">
+        <?php endif; ?>
+        
+        <div class="card-content">
+            <div class="card-content-upper">
                 <!-- Title area -->
                 <div class="title-area">
                     <h3 class="course-title">
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
-                        <span class="course-available">Ledige plasser grid</span>
                     </h3>
-                                    
-                </div>
-                <!-- Details area - date and location -->
-                <div class="details-area iconlist horizontal">
-                    <?php if (!empty($first_course_date)) : ?>
-                        <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>
-                    <?php endif; ?>
-                    <?php if (!empty($location)) : ?>
-                        <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                    <?php if ($show_images === 'no') : ?>
+                    <div class="course-availability tooltip tooltip-left" data-title="Ledige plasser">
+                        <span class="card-availability course-available"></span>
+                    </div>
                     <?php endif; ?>
                 </div>
-                <!-- Meta area -->
-                <div class="meta-area iconlist horizontal">
-                    <?php if (!empty($price)) : ?>
-                        <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo esc_html($after_price); ?></div>
-                    <?php endif; ?>
-                    <?php if (!empty($duration)) : ?>
-                        <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
-                    <?php endif; ?>
-                    <?php if (!empty($location_freetext)) : ?>
-                        <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
-                    <?php endif; ?>
-                    <?php if (!empty($location_room)) : ?>
-                        <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
-                    <?php endif; ?>
-                    <?php if (!empty($coursetime)) : ?>
-                        <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
-                    <?php endif; ?>
-                    <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
+                
+                <!-- Location -->
+                <?php if (!empty($location)) : ?>
+                <div class="card-location">
+                    <strong><?php echo esc_html($location); ?></strong>
                 </div>
-                <!-- Accordion content -->
-                <div class="courselist-content accordion-content">
-                    <?php if (!empty($excerpt)) : ?>
-                        <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
-                    <?php endif; ?>
-                    <p><?php echo esc_html($first_course_date ? 'Kurset varer fra ' . $first_course_date . ' til ' . $last_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
-                    <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
+                <?php endif; ?>
+                
+                <!-- Excerpt -->
+                <?php if (!empty($excerpt)) : ?>
+                <div class="card-excerpt">
+                    <?php echo wp_trim_words(wp_kses_post($excerpt), 20, '...'); ?>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Course details -->
+                <div class="card-details">
+                    <ul class="card-details-list">
+                        <?php if (!empty($first_course_date)) : ?>
+                        <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></li>
+                        <?php endif; ?>
+                        <?php if (!empty($coursetime)) : ?>
+                        <li><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></li>
+                        <?php endif; ?>
+                    </ul>
                 </div>
             </div>
             
-            <div class="links-area column">
-                <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
-                    <?php echo esc_html($button_text) ?>
-                </button>
-                <a href="<?php echo esc_url($course_link); ?>" class="course-link small">Mer informasjon</a>
+            <div class="card-content-lower">
+                <div class="card-separator"></div>
+                
+                <!-- Footer area -->
+                <div class="card-footer">
+                    <?php if (!empty($price)) : ?>
+                    <div class="card-price">
+                        <strong><?php echo esc_html($price); ?> <?php echo esc_html($after_price); ?></strong>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
+                        <?php echo esc_html($button_text) ?>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-
-    
 </div>

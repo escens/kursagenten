@@ -158,6 +158,24 @@ class Designmaler {
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- Vis bilder -->
+                    <div class="option-row">
+                        <label class="option-label">Vis bilder:</label>
+                        <div class="option-input">
+                            <?php
+                            $show_images = get_option('kursagenten_show_images', 'yes');
+                            ?>
+                            <label class="radio-label">
+                                <input type="radio" name="kursagenten_show_images" value="yes" <?php checked($show_images, 'yes'); ?>>
+                                Ja
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="kursagenten_show_images" value="no" <?php checked($show_images, 'no'); ?>>
+                                Nei
+                            </label>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Taxonomi -->
@@ -390,6 +408,17 @@ class Designmaler {
                 );
             }
         }
+        
+        // Registrer innstilling for bildevisning
+        register_setting(
+            'design_option_group',
+            'kursagenten_show_images',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'yes'
+            )
+        );
 
         // Registrer taksonomi-spesifikke innstillinger
         $taxonomies = ['coursecategory' => 'Kurskategorier', 
@@ -437,7 +466,8 @@ class Designmaler {
             'archive_list_type',
             'taxonomy_layout',
             'taxonomy_design',
-            'taxonomy_list_type'
+            'taxonomy_list_type',
+            'show_images'
         ];
 
         foreach ($valid_keys as $key) {

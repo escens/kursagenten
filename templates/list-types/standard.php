@@ -33,23 +33,20 @@ if (!$course_link) {
 $course_count = $course_count ?? 0;
 $item_class = $course_count === 1 ? ' single-item' : '';
 
+// Sjekk om bilder skal vises
+$show_images = get_option('kursagenten_show_images', 'yes');
+$with_image_class = $show_images === 'yes' ? ' with-image' : '';
+
 ?>
 <div class="courselist-item<?php echo $item_class; ?>">
-    <div class="courselist-main with-image">
-        <!--
-        <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
-            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
-                <picture>
-                    <img src="" alt="<?php echo esc_attr($course_title); ?>" class="course-image" decoding="async">
-                </picture>
-            </a>
-        </div>
-        -->
+    <div class="courselist-main<?php echo $with_image_class; ?>">
+        <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
         <div class="image column" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
         </div>
+        <?php endif; ?>
         <div class="text-area-wrapper">
             <!-- Text area -->
             <div class="text-area column">

@@ -1,3 +1,108 @@
+# Kursagenten templating system
+
+## Directory Structure
+
+templates/
+├── designs/            # Design variations for different views
+│   ├── single/         # Single course page designs
+│   ├── taxonomy/       # Taxonomy page designs
+│   └── archive/        # Archive page designs
+├── list-types/         # Course listing display types, included in archives and taxonomy designs.
+│   ├── grid.php        # Grid view template
+│   ├── standard.php    # Standard list view template
+│   └── compact.php     # Compact list view template
+├── layouts/            # Use theme standard width or force full width
+│   ├── default.php     # Theme width
+│   ├── full-width.php  # Full width
+```
+
+## Template Loading System
+
+The template system uses a hierarchical approach where designs and layouts are loaded based on admin settings in `coursedesign.php`. The system follows this loading order:
+
+1. Base styles (`frontend-course-style.css`)
+2. Design specific styles (`design-{type}-{design}.css`)
+3. List type specific styles (`list-{type}.css`)
+
+## Creating New Templates
+
+### Adding a New List Type
+1. Create new template file in `templates/list-types/`:
+   ```php
+   // templates/list-types/new-type.php
+   ```
+
+2. Add corresponding CSS file:
+   ```css
+   // frontend/css/list-new-type.css
+   ```
+
+3. Add to options in `coursedesign.php`:
+   ```php
+   $list_types = [
+       'standard' => 'Standard liste',
+       'grid' => 'Rutenett',
+       'compact' => 'Kompakt liste',
+       'new-type' => 'New Type Name'  // Add this line
+   ];
+   ```
+
+### Adding a New Design
+1. Create design files for type:
+   ```
+   templates/designs/single/new-design.php/
+   templates/designs/archive/new-design.php/
+   templates/designs/taxonomy/new-design.php/
+   ```
+
+2. Add CSS files:
+   ```
+   frontend/css/design-single-new-design.css
+   frontend/css/design-archive-new-design.css
+   frontend/css/design-taxonomy-new-design.css
+   ```
+
+3. Add to options in `coursedesign.php`:
+   ```php
+   $designs = [
+       'default' => 'Standard',
+       'modern' => 'Moderne',
+       'minimal' => 'Minimal',
+       'new-design' => 'New Design Name'  // Add this line
+   ];
+   ```
+
+## Style Integration
+All designs must follow these integration points:
+
+1. Base Styles: Always extend from `frontend-course-style.css`
+2. List Types: Must include required HTML structure from base templates
+3. Design Variations: Modify appearance. Base it on default.php template.
+
+## Required Template Files
+For each new design, ensure you have:
+
+1. Template files:
+   - designs/single/`default.php` for single course view
+   - designs/archive/`default.php` for course listing pages (archives)
+   - designs/taxonomy/`default.php` for category/location pages
+   - list-types/`standard.php` for category/location pages
+
+2. Style files:
+   - Base CSS for the design
+   - Responsive styles
+   - List type specific modifications
+
+## CSS Loading Order
+The system automatically handles CSS loading based on selected options:
+
+1. Base styles are always loaded first
+2. List type styles are loaded second
+3. Design-specific styles are loaded last
+
+This allows for proper cascading and overriding of styles while maintaining consistency.
+
+
 # Kursagenten Course Filtering System Documentation
 
 ## Overview
@@ -225,3 +330,4 @@ define('KURSAG_HIDDEN_TERMS', serialize([
    - Filter hook documentation
    - Action hook documentation
    - Extension possibilities
+

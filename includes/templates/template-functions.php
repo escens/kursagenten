@@ -198,11 +198,33 @@ add_filter('body_class', 'kursagenten_add_body_classes');
  * Hjelper-funksjon for å hente template-deler
  */
 function get_course_template_part($args = []) {
-    // Hent valgt template style
-    $style = get_option('kursagenten_template_style', 'default');
+    // Bestem hvilken listevisning som skal brukes basert på kontekst
+    if (is_post_type_archive('course')) {
+        $style = get_option('kursagenten_archive_list_type', 'standard');
+    } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+        $current_tax = get_queried_object();
+        if ($current_tax && isset($current_tax->taxonomy)) {
+            $tax_name = $current_tax->taxonomy;
+            $override_enabled = get_option("kursagenten_taxonomy_{$tax_name}_override", false);
+            
+            if ($override_enabled) {
+                $style = get_option("kursagenten_taxonomy_{$tax_name}_list_type", '');
+                if (empty($style)) {
+                    $style = get_option('kursagenten_taxonomy_list_type', 'standard');
+                }
+            } else {
+                $style = get_option('kursagenten_taxonomy_list_type', 'standard');
+            }
+        } else {
+            $style = get_option('kursagenten_taxonomy_list_type', 'standard');
+        }
+    } else {
+        // Fallback til global innstilling
+        $style = get_option('kursagenten_template_style', 'standard');
+    }
     
     // Bygg filnavn og path
-    $template_file = "coursedates_{$style}.php";
+    $template_file = "{$style}.php";
     $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$template_file}";
     
     // Sjekk om template eksisterer

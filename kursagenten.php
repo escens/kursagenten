@@ -224,39 +224,19 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
             $layout = get_option('kursagenten_archive_layout', 'default');
             $list_type = get_option('kursagenten_archive_list_type', 'standard');
 
-            // Last inn base CSS
+            // Last inn list-type-spesifikk CSS
             wp_enqueue_style(
-                'kursagenten-archive-base',
-                KURSAG_PLUGIN_URL . '/frontend/css/list-standard.css',
+                'kursagenten-list-type-' . $list_type,
+                KURSAG_PLUGIN_URL . '/frontend/css/list-' . $list_type . '.css',
                 array(),
                 KURSAG_VERSION
             );
 
             // Last inn design-spesifikk CSS hvis ikke default
-            if ($design !== 'default') {
-                wp_enqueue_style(
-                    'kursagenten-archive-design-' . $design,
-                    KURSAG_PLUGIN_URL . '/frontend/css/design-' . $design . '.css',
-                    array('kursagenten-archive-base'),
-                    KURSAG_VERSION
-                );
-            }
-
-            // Last inn layout-spesifikk CSS
-            /*if ($layout !== 'default') {
-                wp_enqueue_style(
-                    'kursagenten-archive-layout-' . $layout,
-                    KURSAG_PLUGIN_URL . '/frontend/css/layout-' . $layout . '.css',
-                    array('kursagenten-archive-base'),
-                    KURSAG_VERSION
-                );
-            }*/
-
-            // Last inn list-type-spesifikk CSS
             wp_enqueue_style(
-                'kursagenten-list-type-' . $list_type,
-                KURSAG_PLUGIN_URL . '/frontend/css/list-' . $list_type . '.css',
-                array('kursagenten-archive-base'),
+                'kursagenten-archive-design-' . $design,
+                KURSAG_PLUGIN_URL . '/frontend/css/design-archive-' . $design . '.css',
+                array('kursagenten-list-type-' . $list_type),
                 KURSAG_VERSION
             );
         }
@@ -320,38 +300,26 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
         // Single course styling
         if (is_singular('course')) {
             $design = get_option('kursagenten_single_design', 'default');
-            $layout = get_option('kursagenten_single_layout', 'default');
 
-            // Last inn base CSS
+            // Last inn base CSS først
             wp_enqueue_style(
                 'kursagenten-single-base',
-                KURSAG_PLUGIN_URL . '/frontend/css/frontend-single-default.css',
+                KURSAG_PLUGIN_URL . '/frontend/css/frontend-course-style.css',
                 array(),
                 KURSAG_VERSION
             );
 
-            // Last inn design-spesifikk CSS
-            if ($design !== 'default') {
-                wp_enqueue_style(
-                    'kursagenten-single-design-' . $design,
-                    KURSAG_PLUGIN_URL . '/frontend/css/design-' . $design . '.css',
-                    array('kursagenten-single-base'),
-                    KURSAG_VERSION
-                );
-            }
-
-            // Last inn layout-spesifikk CSS
-            if ($layout !== 'default') {
-                wp_enqueue_style(
-                    'kursagenten-single-layout-' . $layout,
-                    KURSAG_PLUGIN_URL . '/frontend/css/layout-' . $layout . '.css',
-                    array('kursagenten-single-base'),
-                    KURSAG_VERSION
-                );
-            }
+            // Deretter last inn design-spesifikk CSS
+            wp_enqueue_style(
+                'kursagenten-single-design-' . $design,
+                KURSAG_PLUGIN_URL . '/frontend/css/design-single-' . $design . '.css',
+                array('kursagenten-single-base'),
+                KURSAG_VERSION
+            );
         }
 
         // Instructor styling (beholdt som den er)
+        /*
         if (is_singular('instructor') || is_post_type_archive('instructor')) {
             wp_enqueue_style(
                 'kursagenten-instructor-style',
@@ -360,6 +328,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
                 KURSAG_VERSION
             );
         }
+        */
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_styles');
 

@@ -2,6 +2,7 @@
   --ka-max-width: 1300px;
   --ka-color: hsl(32, 96%, 49%);
   --ka-color-dark: hsl(32, 96%, 45%);
+  --ka-color-lighter: hsl(32, 96%, 65%);
   --ka-color-light: hsl(32, 96%, 90%);
   --ka-color-light-hover: hsl(32, 96%, 95%);
   --ka-color-light-active: hsl(32, 96%, 98%);
@@ -423,6 +424,11 @@ transition: opacity 0.8s, visibility 0.3s;
 font-size: 12.5px;
 pointer-events: none; /* Hindrer musen i å trigge tooltip igjen */
 } 
+.tooltip-left::after { 
+  top: 126%;
+  right: 100px; 
+
+  } 
 
 .tooltip:hover::after { 
 opacity: 0.9; 
