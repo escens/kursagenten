@@ -13,6 +13,7 @@ $after_price =              get_post_meta($course_id, 'course_text_after_price',
 $location =                 get_post_meta($course_id, 'course_location', true);
 $location_freetext =        get_post_meta($course_id, 'course_location_freetext', true);
 $location_room =            get_post_meta($course_id, 'course_location_room', true);
+$is_full =                  get_post_meta($course_id, 'course_isFull', true);
 
 $button_text =              get_post_meta($course_id, 'course_button_text', true);
 $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
@@ -45,7 +46,11 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
         <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
-            <span class="card-availability course-available">Ledige plasser</span>
+            <?php if (!empty($is_full)) : ?>
+                <span class="card-availability course-available full">Fullt</span>
+            <?php else : ?>
+                <span class="card-availability course-available">Ledige plasser</span>
+            <?php endif; ?>
         </div>
         <?php endif; ?>
         
@@ -57,9 +62,15 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
                     </h3>
                     <?php if ($show_images === 'no') : ?>
-                    <div class="course-availability tooltip tooltip-left" data-title="Ledige plasser">
-                        <span class="card-availability course-available"></span>
-                    </div>
+                    <?php if (!empty($is_full)) : ?>
+                        <div class="course-availability tooltip tooltip-left" data-title="Fullt">
+                            <span class="card-availability course-available full"></span>
+                        </div>
+                    <?php else : ?>
+                        <div class="course-availability tooltip tooltip-left" data-title="Ledige plasser">
+                            <span class="card-availability course-available"></span>
+                        </div>
+                    <?php endif; ?>
                     <?php endif; ?>
                 </div>
                 

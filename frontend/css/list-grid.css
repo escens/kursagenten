@@ -189,6 +189,10 @@
     font-weight: 500;
     z-index: 2;
 }
+.card-availability.full {
+    background-color: #ffe1e0;
+    color: #c74444;
+}
 .course-availability {
     position: absolute;
     right: 0;
@@ -226,20 +230,20 @@ span.course-available:before {
 
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
-    .courselist-wrapper {
+    .courselist-items {
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
     }
 }
 
 @media (max-width: 768px) {
-    .courselist-wrapper {
+    .courselist-items {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 576px) {
-    .courselist-wrapper {
+    .courselist-items {
         grid-template-columns: 1fr;
     }
     

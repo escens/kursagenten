@@ -425,10 +425,12 @@ font-size: 12.5px;
 pointer-events: none; /* Hindrer musen i å trigge tooltip igjen */
 } 
 .tooltip-left::after { 
-  top: 126%;
-  right: 100px; 
-
-  } 
+  top: auto;
+  bottom: -40px;
+  right: -5px; 
+  left: auto;
+  transform: none;
+ } 
 
 .tooltip:hover::after { 
 opacity: 0.9; 

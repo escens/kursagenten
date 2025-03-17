@@ -13,6 +13,7 @@ $after_price =              get_post_meta($course_id, 'course_text_after_price',
 $location =                 get_post_meta($course_id, 'course_location', true);
 $location_freetext =        get_post_meta($course_id, 'course_location_freetext', true);
 $location_room =            get_post_meta($course_id, 'course_location_room', true);
+$is_full =                  get_post_meta($course_id, 'course_isFull', true);
 
 $button_text =              get_post_meta($course_id, 'course_button_text', true);
 $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
@@ -54,7 +55,11 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                 <div class="title-area">
                     <h3 class="course-title">
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
-                        <span class="course-available">Ledige plasser</span>
+                        <?php if (!empty($is_full)) : ?>
+                            <span class="course-available full">Fullt</span>
+                        <?php else : ?>
+                            <span class="course-available">Ledige plasser</span>
+                        <?php endif; ?>
                     </h3>
                                     
                 </div>
