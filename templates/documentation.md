@@ -56,8 +56,8 @@ The template system uses a hierarchical approach where designs and layouts are l
    ```
 
 #### Main html structure
-<main id="ka-main" class="kursagenten-wrapper" role="main"> /in layout/ default or full width
-```
+```html
+<main id="ka-main" class="kursagenten-wrapper" role="main"> <!--remove, is added in /in layout/ default or full width-->
 	<article class="ka-outer-container course-container">
 		<header class="ka-section ka-header">
 			<div class="header-title">
@@ -70,8 +70,8 @@ The template system uses a hierarchical approach where designs and layouts are l
 			</div>
 		</section>
 	</article>
-   ```
 </main>
+```
 
 2. Add CSS files:
    ```
