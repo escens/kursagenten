@@ -55,7 +55,7 @@ The template system uses a hierarchical approach where designs and layouts are l
    templates/designs/taxonomy/new-design.php/
    ```
 
-   **Main html structure.**
+   **Main html structure**
 
    All template files are wrapped in "main", in layout/ default or full width
    ```html

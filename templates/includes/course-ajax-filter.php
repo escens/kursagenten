@@ -1,66 +1,71 @@
 <?php
+// Sjekk om template-functions.php er lastet
+if (!function_exists('get_course_template_part')) {
+    $template_functions_path = KURSAG_PLUGIN_DIR . 'includes/templates/template-functions.php';
+    if (!file_exists($template_functions_path)) {
+        error_log('ERROR: Could not find template functions file at: ' . $template_functions_path);
+    } else {
+        require_once $template_functions_path;
+    }
+}
 
 add_action('wp_ajax_filter_courses', 'filter_courses_handler');
 add_action('wp_ajax_nopriv_filter_courses', 'filter_courses_handler');
 
 function filter_courses_handler() {
-    error_log('Starting filter_courses_handler');
-    error_log('POST data: ' . print_r($_POST, true));
-    error_log('REQUEST data: ' . print_r($_REQUEST, true));
-
     // Verifiser nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'filter_nonce')) {
-        error_log('Nonce verification failed');
+        error_log('Nonce verification failed in filter_courses_handler');
         wp_send_json_error([
-            'message' => 'Sikkerhetssjekk feilet. Vennligst oppdater siden og prøv igjen.',
-            'debug' => [
-                'nonce_exists' => isset($_POST['nonce']),
-                'nonce_value' => $_POST['nonce'] ?? 'missing'
-            ]
+            'message' => 'Sikkerhetssjekk feilet. Vennligst oppdater siden og prøv igjen.'
         ], 403);
     }
 
     try {
-        // Håndter datofilteret - sjekk både POST og REQUEST
+        // Håndter datofilteret
         $date_param = $_POST['dato'] ?? $_REQUEST['dato'] ?? null;
-        if (!empty($date_param)) {
-            error_log('Processing date filter: ' . print_r($date_param, true));
-            
-            if (is_string($date_param)) {
-                $dates = explode('-', sanitize_text_field($date_param));
-                if (count($dates) === 2) {
-                    $from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
-                    $to_date = \DateTime::createFromFormat('d.m.Y', trim($dates[1]));
-                    
-                    if ($from_date && $to_date) {
-                        error_log('Parsed dates - From: ' . $from_date->format('Y-m-d') . ', To: ' . $to_date->format('Y-m-d'));
-                        
-                        $_REQUEST['dato'] = [
-                            'from' => $from_date->format('Y-m-d'),
-                            'to' => $to_date->format('Y-m-d')
-                        ];
-                    }
+        if (!empty($date_param) && is_string($date_param)) {
+            $dates = explode('-', sanitize_text_field($date_param));
+            if (count($dates) === 2) {
+                $from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
+                $to_date = \DateTime::createFromFormat('d.m.Y', trim($dates[1]));
+                
+                if ($from_date && $to_date) {
+                    $_REQUEST['dato'] = [
+                        'from' => $from_date->format('Y-m-d'),
+                        'to' => $to_date->format('Y-m-d')
+                    ];
                 }
             }
         }
 
         $query = get_course_dates_query();
-        error_log('Query args: ' . print_r($query->query_vars, true));
 
         if ($query->have_posts()) {
             ob_start();
+            $context = is_tax() ? 'taxonomy' : 'archive';
+            
             while ($query->have_posts()) {
                 $query->the_post();
-                include __DIR__ . '/../partials/coursedates_default.php';
+                try {
+                    if (!function_exists('get_course_template_part')) {
+                        $fallback_template = __DIR__ . '/../list-types/standard.php';
+                        include $fallback_template;
+                    } else {
+                        $style = get_option('kursagenten_archive_list_type', 'standard');
+                        $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$style}.php";
+                        
+                        if (file_exists($template_path)) {
+                            include $template_path;
+                        } else {
+                            include KURSAG_PLUGIN_DIR . 'templates/list-types/standard.php';
+                        }
+                    }
+                } catch (Exception $e) {
+                    error_log('Error loading template in filter_courses_handler: ' . $e->getMessage());
+                }
             }
             wp_reset_postdata();
-
-            error_log('AJAX FILTER - Debug pagination:');
-            error_log('POST paged: ' . (isset($_POST['paged']) ? $_POST['paged'] : 'not set'));
-            error_log('Query max_num_pages: ' . $query->max_num_pages);
-            error_log('Query current page: ' . $query->get('paged'));
-            error_log('Query posts per page: ' . $query->get('posts_per_page'));
-            error_log('Query found posts: ' . $query->found_posts);
 
             $url_options = get_option('kag_seo_option_name');
             $kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
@@ -98,14 +103,11 @@ function filter_courses_handler() {
         }
     } catch (Exception $e) {
         error_log('Error in filter_courses_handler: ' . $e->getMessage());
-        error_log('Stack trace: ' . $e->getTraceAsString());
         wp_send_json_error([
-            'message' => 'En feil oppstod under filtreringen.',
-            'debug' => $e->getMessage()
+            'message' => 'En feil oppstod under filtreringen.'
         ]);
     }
 }
-
 
 add_action('wp_ajax_get_course_price_range', 'get_course_price_range');
 add_action('wp_ajax_nopriv_get_course_price_range', 'get_course_price_range');
@@ -156,3 +158,31 @@ function handle_course_filter() {
     $query = new WP_Query($args);
 
 }
+
+/**
+ * Hjelpefunksjon for å finne riktig template path
+ */
+/*
+function get_ajax_template_path($context = 'archive') {
+    $style = get_option('kursagenten_' . $context . '_list_type', 'standard');
+    error_log('Template style from get_ajax_template_path: ' . $style);
+    
+    $possible_paths = [
+        KURSAG_PLUGIN_DIR . "templates/list-types/{$style}.php",
+        dirname(__FILE__) . "/../list-types/{$style}.php",
+        dirname(__FILE__) . "/../partials/coursedates_{$style}.php",
+        dirname(__FILE__) . "/../partials/coursedates_default.php"
+    ];
+    
+    foreach ($possible_paths as $path) {
+        error_log('Checking template path: ' . $path);
+        if (file_exists($path)) {
+            error_log('Found valid template at: ' . $path);
+            return $path;
+        }
+    }
+    
+    error_log('No valid template found, using default');
+    return dirname(__FILE__) . "/../partials/coursedates_default.php";
+}
+*/

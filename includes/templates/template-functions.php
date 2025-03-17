@@ -379,3 +379,40 @@ function kursagenten_show_sidebar($context = '') {
     
     return $show_sidebar;
 }
+
+/**
+ * Henter riktig template for AJAX-forespørsler
+ * 
+ * @param string $context Kontekst for forespørselen
+ * @return string Template path
+ */
+function get_ajax_template_path($context = 'archive') {
+    $style = '';
+    
+    switch ($context) {
+        case 'archive':
+            $style = get_option('kursagenten_archive_list_type', 'standard');
+            break;
+        case 'taxonomy':
+            $current_tax = get_queried_object();
+            if ($current_tax && isset($current_tax->taxonomy)) {
+                $tax_name = $current_tax->taxonomy;
+                $override_enabled = get_option("kursagenten_taxonomy_{$tax_name}_override", false);
+                
+                if ($override_enabled) {
+                    $style = get_option("kursagenten_taxonomy_{$tax_name}_list_type", '');
+                    if (empty($style)) {
+                        $style = get_option('kursagenten_taxonomy_list_type', 'standard');
+                    }
+                } else {
+                    $style = get_option('kursagenten_taxonomy_list_type', 'standard');
+                }
+            }
+            break;
+        default:
+            $style = 'standard';
+    }
+    
+    $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$style}.php";
+    return file_exists($template_path) ? $template_path : KURSAG_PLUGIN_DIR . "templates/list-types/standard.php";
+}

@@ -115,7 +115,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
                 <h1><?php post_type_archive_title(); ?></h1>
             </div>
             <div class="course-meta">
-                <h2><?php the_title(); ?></h2>
+
             </div>
         </div>
     </header>
