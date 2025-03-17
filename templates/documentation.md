@@ -55,6 +55,24 @@ The template system uses a hierarchical approach where designs and layouts are l
    templates/designs/taxonomy/new-design.php/
    ```
 
+#### Main html structure
+<main id="ka-main" class="kursagenten-wrapper" role="main"> /in layout/ default or full width
+```
+	<article class="ka-outer-container course-container">
+		<header class="ka-section ka-header">
+			<div class="header-title">
+				<h1>Kurs</h1>
+			</div>
+		</header>
+		<section class="ka-section ka-main-content">
+			<div class="ka-content-container describe-content-with-class">
+				<div class="course-grid"></div>
+			</div>
+		</section>
+	</article>
+   ```
+</main>
+
 2. Add CSS files:
    ```
    frontend/css/design-single-new-design.css
