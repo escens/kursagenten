@@ -70,13 +70,25 @@
 .kursagenten-full-width #content > .site-content,
 .kursagenten-full-width #content > div,
 .kursagenten-full-width #content,
-.kursagenten-full-width .ka-full-width {
+.kursagenten-full-width .ka-full-width,
+.ka-default-width {
     max-width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
     width: 100% !important;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+}
+/* Overstyr temaets container for full bredde */
+.ka-default-width #content > .ast-container,
+.ka-default-width #content > .container,
+.ka-default-width #content > .content-area,
+.ka-default-width #content > .site-content,
+.ka-default-width #content > div,
+.ka-default-width #content {
+
+    display: flex;
+    flex-direction: column;
 }
 /* COMMON */
 #ka-main h1 { font-size: var(--ka-font-xl); line-height: var(--ka-line-height-tight); margin-bottom: 0.5em;}

@@ -63,6 +63,72 @@ register_activation_hook(__FILE__, 'kursagenten_activate');
 register_deactivation_hook(__FILE__, 'kursagenten_deactivate');
 
 /**
+ * Fikser queried object for alle kursrelaterte taksonomier
+ * Added 18.03.2025 due to a bug in the taxonomy template. Didn't find the root of the problem, but this fixed it. See also default.php in the templates/designs/taxonomy folder.
+ */
+function kursagenten_fix_all_taxonomy_queries() {
+    // Bare kjør på frontend
+    if (is_admin()) {
+        return;
+    }
+    
+    // Hent URL-stien direkte
+    $full_path = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
+    $path_segments = explode('/', trim($full_path, '/'));
+    
+    // Sjekk om URL-stien matcher våre taksonomier
+    if (count($path_segments) >= 2) {
+        $taxonomy_slug = $path_segments[0];
+        $term_slug = $path_segments[1];
+        
+        // Fjern eventuelle query-parametere fra term slug
+        if (strpos($term_slug, '?') !== false) {
+            $term_slug = substr($term_slug, 0, strpos($term_slug, '?'));
+        }
+        
+        // Identifiser taksonomi basert på URL-sti
+        $taxonomy = '';
+        switch ($taxonomy_slug) {
+            case 'kurskategori':
+                $taxonomy = 'coursecategory';
+                break;
+            case 'kurssted':
+                $taxonomy = 'course_location';
+                break;
+            case 'instruktorer':
+                $taxonomy = 'instructors';
+                break;
+        }
+        
+        error_log('Taxonomy fix: URL Path: ' . $full_path);
+        error_log('Taxonomy fix: URL taxonomy slug: ' . $taxonomy_slug);
+        error_log('Taxonomy fix: Detected taxonomy: ' . $taxonomy);
+        error_log('Taxonomy fix: Requested term slug: ' . $term_slug);
+        
+        // Sjekk om vi har gyldig taksonomi og term
+        if (!empty($taxonomy) && !empty($term_slug)) {
+            // Hent term basert på slug og taksonomi
+            $term = get_term_by('slug', $term_slug, $taxonomy);
+            
+            if ($term) {
+                error_log('Taxonomy fix: Found term: ' . $term->name . ' (ID: ' . $term->term_id . ')');
+                
+                // Oppdater globale variabler
+                global $wp_query;
+                $wp_query->queried_object = $term;
+                $wp_query->queried_object_id = $term->term_id;
+                
+                error_log('Taxonomy fix: Updated queried object to: ' . $wp_query->queried_object->name);
+            } else {
+                error_log('Taxonomy fix: Term not found with slug: ' . $term_slug . ' in taxonomy: ' . $taxonomy);
+            }
+        }
+    }
+}
+// Kjør denne funksjonen så tidlig som mulig
+add_action('wp', 'kursagenten_fix_all_taxonomy_queries', 1);
+
+/**
  * Function that runs when plugin is activated
  */
 
@@ -263,7 +329,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
             // Last inn base CSS
             wp_enqueue_style(
                 'kursagenten-taxonomy-base',
-                KURSAG_PLUGIN_URL . '/assets/css/taxonomy-default.css',
+                KURSAG_PLUGIN_URL . '/frontend/css/design-taxonomy-default.css',
                 array(),
                 KURSAG_VERSION
             );
@@ -272,13 +338,14 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
             if ($design !== 'default') {
                 wp_enqueue_style(
                     'kursagenten-taxonomy-design-' . $design,
-                    KURSAG_PLUGIN_URL . '/assets/css/design-' . $design . '.css',
+                    KURSAG_PLUGIN_URL . '/frontend/css/design-' . $design . '.css',
                     array('kursagenten-taxonomy-base'),
                     KURSAG_VERSION
                 );
             }
 
             // Last inn layout-spesifikk CSS
+            /*
             if ($layout !== 'default') {
                 wp_enqueue_style(
                     'kursagenten-taxonomy-layout-' . $layout,
@@ -287,11 +354,12 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
                     KURSAG_VERSION
                 );
             }
+            */
 
             // Last inn list-type-spesifikk CSS
             wp_enqueue_style(
                 'kursagenten-taxonomy-list-' . $list_type,
-                KURSAG_PLUGIN_URL . '/assets/css/list-' . $list_type . '.css',
+                KURSAG_PLUGIN_URL . '/frontend/css/list-' . $list_type . '.css',
                 array('kursagenten-taxonomy-base'),
                 KURSAG_VERSION
             );

@@ -18,6 +18,24 @@ function kursagenten_template_loader($template) {
         return $template;
     }
 
+    // Fikse queried object for taksonomier
+    if (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+        // Hent term direkte fra URL
+        $requested_slug = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
+        $current_taxonomy = get_query_var('taxonomy');
+        
+        // Sjekk om vi har en gyldig slug og taksonomi
+        if ($requested_slug && $current_taxonomy) {
+            $requested_term = get_term_by('slug', $requested_slug, $current_taxonomy);
+            if ($requested_term) {
+                // Oppdater global $wp_query
+                global $wp_query;
+                $wp_query->queried_object = $requested_term;
+                $wp_query->queried_object_id = $requested_term->term_id;
+            }
+        }
+    }
+    
     // Bestem kontekst og layout
     $context = '';
     $layout = 'default';
@@ -188,6 +206,8 @@ function kursagenten_add_body_classes($classes) {
     
     if (isset($layout) && $layout === 'full-width') {
         $classes[] = 'kursagenten-full-width';
+    } else {
+        $classes[] = 'ka-default-width';
     }
     
     return $classes;
@@ -324,6 +344,8 @@ function kursagenten_get_layout_class($context = '') {
     // Returner riktig CSS-klasse basert på layout
     if ($layout === 'full-width') {
         $layout_class = 'ka-full-width-layout';
+    } else {
+        $layout_class = 'ka-default-width';
     }
     
     return $layout_class;

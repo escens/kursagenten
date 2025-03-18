@@ -1,0 +1,205 @@
+/* Taxonomy Template Styles */
+.taxonomy-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Header Styles */
+.ka-taxonomy-header {
+    background-color: #f8f9fa;
+    padding: 3rem 0;
+    margin-bottom: 2rem;
+}
+
+.taxonomy-header-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.taxonomy-header-content h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.taxonomy-description {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #666;
+}
+
+/* Main Content Styles */
+.taxonomy-content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+@media (min-width: 768px) {
+    .taxonomy-content-grid {
+        grid-template-columns: 1fr 2fr;
+    }
+}
+
+.taxonomy-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.taxonomy-rich-description {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: #333;
+}
+
+/* Course Dates Grid */
+.taxonomy-coursedates {
+    margin-top: 3rem;
+}
+
+.taxonomy-coursedates h2 {
+    font-size: 1.8rem;
+    margin-bottom: 1.5rem;
+    color: #333;
+}
+
+.coursedates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.coursedate-card {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.coursedate-card:hover {
+    transform: translateY(-4px);
+}
+
+.coursedate-image {
+    height: 200px;
+    overflow: hidden;
+}
+
+.coursedate-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.coursedate-content {
+    padding: 1.5rem;
+}
+
+.coursedate-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.coursedate-meta {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.coursedate-meta i {
+    margin-right: 0.5rem;
+}
+
+.ka-button {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.ka-button:hover {
+    background-color: #0056b3;
+    color: white;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 767px) {
+    .taxonomy-header-content {
+        padding: 0 1rem;
+    }
+    
+    .coursedates-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .taxonomy-content-grid {
+        gap: 1.5rem;
+    }
+}
+
+/* Kurslistevisning */
+.courselist-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+/* Paginering */
+.pagination-wrapper {
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.pagination {
+    display: inline-flex;
+    gap: 0.5rem;
+}
+
+.pagination a,
+.pagination span {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    background-color: #f5f5f5;
+    color: #333;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.pagination a:hover {
+    background-color: #e0e0e0;
+}
+
+.pagination .current {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Melding når ingen kurs er tilgjengelige */
+.no-courses-message {
+    padding: 2rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.no-courses-message p {
+    font-size: 1.1rem;
+    color: #666;
+}
