@@ -1,15 +1,27 @@
 <?php
 
 function create_or_update_course_and_schedule($course_data, $is_webhook = false) {
-    // Retrieve data from API course list
     $location_id = isset($course_data['location_id']) ? (int) $course_data['location_id'] : 0;
     $main_course_id = isset($course_data['main_course_id']) ? (int) $course_data['main_course_id'] : 0;
     $language = sanitize_text_field($course_data['language'] ?? null); 
 
+    error_log("=== START: create_or_update_course ===");
+    error_log("Kilde: " . ($is_webhook ? "Webhook" : "Manuell synkronisering"));
+    error_log("Location ID: $location_id");
+    error_log("Main Course ID: $main_course_id");
+
     // Retrieve data from API for individual courses
     $individual_course_data = kursagenten_get_course_details($location_id);
     if (empty($individual_course_data)) {
+        error_log("FEIL: Ingen kursdata funnet for location_id: $location_id");
         return false;
+    }
+
+    // Sjekk antall lokasjoner
+    $total_locations = isset($individual_course_data['locations']) ? count($individual_course_data['locations']) : 0;
+    error_log("Antall lokasjoner funnet: $total_locations");
+    if ($total_locations > 0) {
+        error_log("Lokasjons-IDer: " . implode(', ', array_column($individual_course_data['locations'], 'courseId')));
     }
 
     // Check if the course already exists
@@ -21,50 +33,117 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
     ]);
 
     if (!$existing_courses) {
-        // Course does not exist: create a new course
+        error_log("Ingen eksisterende kurs funnet for location_id: $location_id");
+        
         if ((int)$location_id === (int)$main_course_id) {
-            // Create as main course
-            error_log("DEBUG: Opprettet nytt hovedkurs med location_id: $location_id og main_course_id: $main_course_id");
-            return create_new_course($individual_course_data, $main_course_id, $location_id, $language);
-        } else {
-            // Create as sub-course
-            $post_id = create_new_sub_course($individual_course_data, $main_course_id, $location_id, $language);
-            error_log("DEBUG: Opprettet nytt underkurs med location_id: $location_id");
-
-            // Check if there are additional locations tied to this main course. Copy the main course if it does not exist.
+            error_log("Dette er et hovedkurs (location_id = main_course_id)");
+            
+            // Sjekk om det finnes andre kurs med samme main_course_id
             $sibling_courses = get_posts([
                 'post_type' => 'course',
                 'meta_key' => 'main_course_id',
                 'meta_value' => $main_course_id,
                 'posts_per_page' => -1,
-                'meta_query' => [
-                    [
-                        'key' => 'location_id',
-                        'value' => $main_course_id,
-                        'compare' => '!=', // Exclude the main course
-                    ],
-                ],
             ]);
-
-            if (count($sibling_courses) <= 1) { 
-                if (!empty($individual_course_data)) {
-                    // Use data directly from API to create a new sub-course
-                    $individual_course_data = kursagenten_get_course_details($main_course_id);
-                    create_new_sub_course($individual_course_data, $main_course_id, $location_id, $language);
-                    error_log('DEBUG: Opprettet nytt søskenkurs for hovedkurs med location_id: ' . $main_course_id);
+            
+            error_log("Antall eksisterende søskenkurs funnet: " . count($sibling_courses));
+            
+            if ($total_locations > 1) {
+                error_log("Flere lokasjoner funnet, oppretter hovedkurs");
+                $main_post_id = create_new_course($individual_course_data, $main_course_id, $location_id, $language);
+                error_log("Hovedkurs opprettet med ID: $main_post_id");
+                
+                // Opprett underkurs for alle lokasjoner
+                foreach ($individual_course_data['locations'] as $location) {
+                    $loc_id = $location['courseId'];
+                    
+                    // Sjekk om underkurset allerede eksisterer
+                    $existing_sub_course = get_posts([
+                        'post_type' => 'course',
+                        'meta_query' => [
+                            'relation' => 'AND',
+                            [
+                                'key' => 'location_id',
+                                'value' => $loc_id,
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'main_course_id',
+                                'value' => $main_course_id,
+                                'compare' => '='
+                            ],
+                            [
+                                'key' => 'is_parent_course',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ],
+                        'posts_per_page' => 1,
+                    ]);
+                    
+                    if (empty($existing_sub_course)) {
+                        if ($loc_id == $main_course_id) {
+                            error_log("DEBUG: Oppretter underkurs for hovedlokasjon: $loc_id");
+                        } else {
+                            error_log("DEBUG: Oppretter underkurs for location_id: $loc_id");
+                        }
+                        
+                        // Hent korrekt lokasjon-data for dette underkurset
+                        $location_data = $individual_course_data;
+                        $location_data['id'] = $loc_id; // Sett riktig location_id
+                        
+                        // Finn riktig lokasjon i locations-arrayet
+                        foreach ($individual_course_data['locations'] as $loc) {
+                            if ($loc['courseId'] == $loc_id) {
+                                $location_data['locations'] = [$loc];
+                                break;
+                            }
+                        }
+                        
+                        create_new_sub_course($location_data, $main_course_id, $loc_id, $language);
+                    } else {
+                        error_log("DEBUG: Underkurs for location_id: $loc_id eksisterer allerede");
+                    }
                 }
+                
+                return $main_post_id;
+            } else {
+                error_log("Kun én lokasjon, oppretter enkeltstående kurs");
+                return create_new_course($individual_course_data, $main_course_id, $location_id, $language);
             }
-            return $post_id;
+        } else {
+            error_log("Dette er et underkurs (location_id: $location_id, main_course_id: $main_course_id)");
+            
+            if ($is_webhook) {
+                error_log("Webhook: Oppretter underkurs direkte");
+                // Hent data for hovedkurset
+                $main_course_data = kursagenten_get_course_details($main_course_id);
+                if (!empty($main_course_data)) {
+                    // Finn riktig lokasjon i locations-arrayet
+                    $location_data = $main_course_data;
+                    $location_data['id'] = $location_id;
+                    
+                    foreach ($main_course_data['locations'] as $loc) {
+                        if ($loc['courseId'] == $location_id) {
+                            $location_data['locations'] = [$loc];
+                            break;
+                        }
+                    }
+                    
+                    return create_new_sub_course($location_data, $main_course_id, $location_id, $language);
+                }
+            } else {
+                error_log("Manuell synk: Hopper over oppretting av underkurs siden det håndteres av hovedkurset");
+            }
+            return true;
         }
     } else {
-        // Course exists: update existing course
+        error_log("Oppdaterer eksisterende kurs for location_id: $location_id");
         foreach ($existing_courses as $course) {
             update_existing_course($course->ID, $individual_course_data, $main_course_id, $location_id, $language);
-            error_log('DEBUG: Oppdaterte eksisterende kurs med location_id: ' . $location_id);
         }
-        
         return true;
     }
+    error_log("=== SLUTT: create_or_update_course ===");
 }
 
 function create_new_course($data, $main_course_id, $location_id, $language) {
@@ -104,18 +183,44 @@ function create_new_course($data, $main_course_id, $location_id, $language) {
 }
 
 function create_new_sub_course($data, $main_course_id, $location_id, $language) {
+    error_log("=== START: create_new_sub_course ===");
+    error_log("Main Course ID: $main_course_id");
+    error_log("Location ID: $location_id");
+    
     // Check if parent course exists
     $parent_course = get_posts([
         'post_type' => 'course',
-        'meta_key' => 'location_id',
-        'meta_value' => $main_course_id,
+        'meta_query' => [
+            [
+                'key' => 'location_id',
+                'value' => $main_course_id,
+                'compare' => '='
+            ],
+            [
+                'key' => 'is_parent_course',
+                'value' => 'yes',
+                'compare' => '='
+            ]
+        ],
         'posts_per_page' => 1,
     ]);
 
     if (empty($parent_course)) {
-        // Parent course creation logic (if needed)
+        error_log("ADVARSEL: Fant ikke hovedkurs for main_course_id: $main_course_id");
+        error_log("Prøver å opprette hovedkurs først...");
+        
+        // Hent data for hovedkurset og opprett det
+        $main_course_data = kursagenten_get_course_details($main_course_id);
+        if (!empty($main_course_data)) {
+            $parent_id = create_new_course($main_course_data, $main_course_id, $main_course_id, $language);
+            error_log("Opprettet hovedkurs med ID: $parent_id");
+        } else {
+            error_log("FEIL: Kunne ikke hente data for hovedkurset");
+            return false;
+        }
     } else {
         $parent_id = $parent_course[0]->ID;
+        error_log("Fant eksisterende hovedkurs med ID: $parent_id");
     }
 
     // Create sub-course
@@ -153,6 +258,7 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language) 
         create_or_update_course_date($data, $post_id, $main_course_id, $data['id']);
     }
 
+    error_log("=== SLUTT: create_new_sub_course ===");
     return $post_id;
 }
 

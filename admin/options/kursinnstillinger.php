@@ -97,8 +97,8 @@ class Kursinnstillinger {
                 echo kursagenten_sync_courses_button(); 
 
                 if (empty($tilbyder_id) || empty($tilbyder_guid)) : ?>
-                    <div class="" style="margin: 10px 0;padding: 1px 10px; background: white; border-radius: 5px; border-left: 5px solid #d63638; width: fit-content;">
-                        <p><strong>OBS!</strong> Fyll inn <a href="#kursagenten-innstillinger">innstillinger fra Kursagenten</a> før du henter alle kursene dine (synkroniser alle kurs).</p>
+co                    <div class="" style="margin: 10px 0;padding: 1px 10px; background: #d63638; border-radius: 5px; color:white; width: fit-content;">
+                        <p><strong>OBS!</strong> Fyll inn <a href="#kursagenten-innstillinger" style="color:white;">innstillinger fra Kursagenten</a> før du henter alle kursene dine (synkroniser alle kurs).</p>
                     </div>
                 <?php endif; ?>
 
