@@ -19,7 +19,7 @@ if (!defined('KURSAG_HIDDEN_TERMS')) {
  */
 function exclude_hidden_kurs_posts($query) {
     // Bare kjør på hovedspørringen og ikke på våre egne spørringer
-    if (!is_admin() && $query->is_main_query() && !isset($query->query_vars['get_course_dates'])) {
+    if (!is_admin() && $query->is_main_query() && !isset($query->query_vars['get_course_dates'])) { 
         $all_terms = get_terms([
             'taxonomy' => 'coursecategory',
             'fields' => 'slugs',
@@ -96,6 +96,19 @@ add_filter('manage_coursedate_posts_columns', 'add_course_visibility_column');
  */
 function course_visibility_column_content($column, $post_id) {
     if ($column === 'visibility') {
+        // Sjekk post status først
+        if (get_post_status($post_id) === 'draft') {
+            echo '<span class="course-hidden-indicator" style="
+                background-color:rgb(231, 111, 123);
+                color: white;
+                padding: 2px 8px;
+                border-radius: 3px;
+                display: inline-block;
+                font-size: 12px;
+            ">Inaktiv</span>';
+            return;
+        }
+
         $terms = wp_get_post_terms($post_id, 'coursecategory');
         $hidden_terms = array('skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv');
         $is_hidden = false;
@@ -109,7 +122,7 @@ function course_visibility_column_content($column, $post_id) {
 
         if ($is_hidden) {
             echo '<span class="course-hidden-indicator" style="
-                background-color: #dc3545;
+                background-color:rgb(233, 181, 84);
                 color: white;
                 padding: 2px 8px;
                 border-radius: 3px;

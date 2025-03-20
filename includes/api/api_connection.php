@@ -35,7 +35,7 @@ function kursagenten_api_request($endpoint, $method = 'GET', $body = []) {
 }
 
 function kursagenten_get_course_list() {
-    $endpoint = 'https://developer.kursagenten.no/api/Course/WP/CourseList?includeParticipantCounts=true&includeFullSchedules=true';
+    $endpoint = 'https://developer.kursagenten.no/api/Course/WP/CourseList?includeParticipantCounts=true&includeFullSchedules=true&includeDeactivedCourses=true';
     $courses = kursagenten_api_request($endpoint);
 
     if (!$courses) {
@@ -47,7 +47,7 @@ function kursagenten_get_course_list() {
 }
 
 function kursagenten_get_course_details($enkeltkurs_id) {
-    $endpoint = 'https://developer.kursagenten.no/api/Course/WP/' . $enkeltkurs_id . '?includeFullSchedules=true';
+    $endpoint = 'https://developer.kursagenten.no/api/Course/WP/' . $enkeltkurs_id . '?includeFullSchedules=true&includeDeactivedCourses=true';
     $course_details = kursagenten_api_request($endpoint);
 
     if (!$course_details) {

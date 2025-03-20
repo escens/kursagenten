@@ -76,7 +76,7 @@ function filter_courses_handler() {
                 'total' => $query->max_num_pages,
                 'add_args' => array_map(function ($item) {
                     return is_array($item) ? join(',', $item) : $item;
-                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true])) 
             ]);
 
             wp_send_json_success([

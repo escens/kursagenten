@@ -30,8 +30,7 @@ function process_webhook_data($request) {
 
     if (!$course_data) {
         error_log("DEBUG: location_id {$location_id} finnes ikke i API-et.");
-        handle_missing_location_in_api($location_id); // Kall til ny funksjon
-        return new WP_REST_Response('Location ID not found in API. Course set to draft and associated coursedates deleted.', 200);
+        return new WP_REST_Response('Location ID not found in API.', 404);
     }
 
     // Legg til location_id i course_data for fullstendig datastruktur
@@ -53,9 +52,9 @@ function process_webhook_data($request) {
 
 
 function get_main_course_id_by_location_id($location_id) {
-    $courses = kursagenten_get_course_list(); // Hent kursliste fra API
+    $courses = kursagenten_get_course_list();
     if (empty($courses)) {
-        return false; // Returner false hvis kurslisten er tom
+        return false;
     }
 
     foreach ($courses as $course) {
@@ -67,10 +66,11 @@ function get_main_course_id_by_location_id($location_id) {
                     'municipality' => $location['municipality'],
                     'county' => $location['county'],
                     'language' => $course['language'],
+                    'is_active' => $location['active'] ?? true,
                 ];
             }
         }
     }
 
-    return false; // Returner false hvis ingen match finnes
+    return false;
 }

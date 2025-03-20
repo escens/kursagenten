@@ -13,26 +13,32 @@ function kursagenten_sync_courses_button() {
 function kursagenten_get_course_ids() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
 
-    $courses = kursagenten_get_course_list(); // Hent liste fra kursliste API
+    $courses = kursagenten_get_course_list();
     if (empty($courses)) {
         wp_send_json_error(['message' => 'Failed to fetch course data.']);
     }
 
-    // Pakk nødvendig data for hvert kurs i en struktur
     $course_data = [];
     foreach ($courses as $course) {
         foreach ($course['locations'] as $location) {
+            $is_active = false;
+            if (isset($location['active'])) {
+                $is_active = filter_var($location['active'], FILTER_VALIDATE_BOOLEAN);
+            } else {
+                $is_active = true; // Default til true hvis ingen verdi er satt
+            }
+            
             $course_data[] = [
-                'location_id' => $location['courseId'],  // Unik ID for lokasjon
-                'main_course_id' => $course['id'],      // ID for hovedkurset
-                'course_name' => $location['courseName'],  // Navn på kurset (fra lokasjon)
+                'location_id' => $location['courseId'],
+                'main_course_id' => $course['id'],
+                'course_name' => $location['courseName'],
                 'municipality' => $location['municipality'],
-                'county' => $location['county'], 
-                'language' => $course['language'], 
+                'county' => $location['county'],
+                'language' => $course['language'],
+                'is_active' => $is_active,
             ];
         }
     }
-    
 
     wp_send_json_success(['courses' => $course_data]);
 }
@@ -47,8 +53,9 @@ function kursagenten_run_sync_kurs() {
 
     foreach ($_POST['courses'] as $course) {
         try {
+            // Konverter is_active til 1 eller tom streng for å matche webhook-formatet
+            $course['is_active'] = filter_var($course['is_active'], FILTER_VALIDATE_BOOLEAN) ? '1' : '';
             create_or_update_course_and_schedule($course);
-            error_log("Kurs synkronisert: " . print_r($course, true));
         } catch (Exception $e) {
             error_log("Feil under synkronisering: " . $e->getMessage());
         }
