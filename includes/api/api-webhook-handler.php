@@ -19,11 +19,15 @@ function process_webhook_data($request) {
 
     $location_id = (int) $body['CourseId'];
 
-    /*if (get_transient('webhook_processed_' . $location_id)) {
-        error_log("Skipping duplicate webhook for CourseId: $location_id");
+    // Øk tidsintervallet og bruk en mer unik nøkkel
+    $transient_key = 'webhook_processed_' . $location_id . '_' . date('Y-m-d-H-i');
+    if (get_transient($transient_key)) {
+        error_log("Skipping duplicate webhook for CourseId: $location_id at " . date('Y-m-d H:i:s'));
         return new WP_REST_Response('Duplicate webhook skipped.', 200);
     }
-    set_transient('webhook_processed_' . $location_id, true, 10);*/
+    
+    // Sett transient med lengre varighet (60 sekunder istedenfor 10)
+    set_transient($transient_key, true, 60);
 
     // Hent main_course data basert på location_id
     $course_data = get_main_course_id_by_location_id($location_id);

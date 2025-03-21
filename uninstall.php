@@ -29,13 +29,13 @@ $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}kursdato");
 // Delete post meta for course images
 $args = array(
     'post_type' => 'attachment',
-    'meta_key' => 'er_kursbilde',
+    'meta_key' => 'is_course_image',
     'posts_per_page' => -1
 );
 
 $attachments = get_posts($args);
 foreach ($attachments as $attachment) {
-    delete_post_meta($attachment->ID, 'er_kursbilde');
+    delete_post_meta($attachment->ID, 'is_course_image');
 }
 
 // Delete term meta for taxonomies

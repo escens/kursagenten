@@ -36,6 +36,7 @@ function kursagenten_get_course_ids() {
                 'county' => $location['county'],
                 'language' => $course['language'],
                 'is_active' => $is_active,
+                //'image_url_alt' => $location['cmsLogo'],
             ];
         }
     }

@@ -1,16 +1,81 @@
 <?php
 
 function create_or_update_course_and_schedule($course_data, $is_webhook = false) {
+    error_log("Starting create_or_update_course_and_schedule for location_id: " . ($course_data['location_id'] ?? 'none'));
+    
     $location_id = isset($course_data['location_id']) ? (int) $course_data['location_id'] : 0;
     $main_course_id = isset($course_data['main_course_id']) ? (int) $course_data['main_course_id'] : 0;
     $language = sanitize_text_field($course_data['language'] ?? null); 
     $is_active = $course_data['is_active'] ?? true;
+    //$image_url_alt = $course_data['image_url_alt'] ?? null;
+
 
     $individual_course_data = kursagenten_get_course_details($location_id);
     if (empty($individual_course_data)) {
+        error_log("Failed to get course details for location_id: $location_id");
         return false;
     }
 
+    // Ny sjekk for manglende underkurs
+    $parent_course = get_posts([
+        'post_type' => 'course',
+        'meta_query' => [
+            'relation' => 'AND',
+            [
+                'key' => 'location_id',
+                'value' => $location_id,
+                'compare' => '='
+            ],
+            [
+                'key' => 'is_parent_course',
+                'value' => 'yes',
+                'compare' => '='
+            ]
+        ],
+        'posts_per_page' => 1
+    ]);
+
+    if (!empty($parent_course)) {
+        // Sjekk om det mangler underkurs
+        $existing_sub_course = get_posts([
+            'post_type' => 'course',
+            'meta_query' => [
+                'relation' => 'AND',
+                [
+                    'key' => 'location_id',
+                    'value' => $location_id,
+                    'compare' => '='
+                ],
+                [
+                    'key' => 'main_course_id',
+                    'value' => $location_id,
+                    'compare' => '='
+                ],
+                [
+                    'key' => 'is_parent_course',
+                    'compare' => 'NOT EXISTS'
+                ]
+            ],
+            'posts_per_page' => 1
+        ]);
+
+        if (empty($existing_sub_course)) {
+            error_log("Manglende underkurs oppdaget for foreldrekurs med location_id: $location_id");
+            $location_data = $individual_course_data;
+            foreach ($individual_course_data['locations'] as $loc) {
+                if ($loc['courseId'] == $location_id) {
+                    $location_data['locations'] = [$loc];
+                    if (isset($loc['bannerImage'])) {
+                        $location_data['bannerImage'] = $loc['bannerImage'];
+                    }
+                    break;
+                }
+            }
+            create_new_sub_course($location_data, $location_id, $location_id, $language, $is_active);
+        }
+    }
+
+    // Fortsett med eksisterende logikk
     $existing_courses = get_posts([
         'post_type' => 'course',
         'meta_key' => 'location_id',
@@ -21,6 +86,7 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
 
     if (!$existing_courses) {
         if ((int)$location_id === (int)$main_course_id) {
+            error_log("This is a main course. Location ID equals Main Course ID: $location_id");
             
             // Sjekk om det finnes andre kurs med samme main_course_id
             $sibling_courses = get_posts([
@@ -31,7 +97,11 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
                 'posts_per_page' => -1,
             ]);
             
+            $total_locations = count($individual_course_data['locations'] ?? []);
+            error_log("Total locations found: $total_locations");
+            
             if ($total_locations > 1) {
+                error_log("Creating main course and sub-courses for location_id: $location_id");
                 $main_post_id = create_new_course($individual_course_data, $main_course_id, $location_id, $language, $is_active);
                 
                 // Opprett underkurs for alle lokasjoner
@@ -62,16 +132,18 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
                     ]);
                     
                     if (empty($existing_sub_course)) {
-
-                        
                         // Hent korrekt lokasjon-data for dette underkurset
                         $location_data = $individual_course_data;
                         $location_data['id'] = $loc_id; // Sett riktig location_id
                         
-                        // Finn riktig lokasjon i locations-arrayet
+                        // Finn riktig lokasjon i locations-arrayet og sett bannerImage
                         foreach ($individual_course_data['locations'] as $loc) {
                             if ($loc['courseId'] == $loc_id) {
                                 $location_data['locations'] = [$loc];
+                                // Legg til bannerImage fra lokasjonen hvis den finnes
+                                if (isset($loc['bannerImage'])) {
+                                    $location_data['bannerImage'] = $loc['bannerImage'];
+                                }
                                 break;
                             }
                         }
@@ -85,25 +157,28 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
                 return create_new_course($individual_course_data, $main_course_id, $location_id, $language, $is_active);
             }
         } else {
-            if ($is_webhook) {
-                // Hent data for hovedkurset
-                $main_course_data = kursagenten_get_course_details($main_course_id); 
-                if (!empty($main_course_data)) {
-                    // Finn riktig lokasjon i locations-arrayet
-                    $location_data = $main_course_data;
-                    $location_data['id'] = $location_id;
-                    
-                    foreach ($main_course_data['locations'] as $loc) {
-                        if ($loc['courseId'] == $location_id) {
-                            $location_data['locations'] = [$loc];
-                            break;
+            // Hent data for hovedkurset
+            $main_course_data = kursagenten_get_course_details($main_course_id); 
+            if (!empty($main_course_data)) {
+                // Finn riktig lokasjon i locations-arrayet
+                $location_data = $main_course_data;
+                $location_data['id'] = $location_id;
+                
+                foreach ($main_course_data['locations'] as $loc) {
+                    if ($loc['courseId'] == $location_id) {
+                        $location_data['locations'] = [$loc];
+                        // Legg til bannerImage fra lokasjonen hvis den finnes
+                        if (isset($loc['bannerImage'])) {
+                            $location_data['bannerImage'] = $loc['bannerImage'];
                         }
+                        break;
                     }
-                    
-                    return create_new_sub_course($location_data, $main_course_id, $location_id, $language, $is_active);
                 }
+                
+                return create_new_sub_course($location_data, $main_course_id, $location_id, $language, $is_active);
             }
-            return true;
+            error_log("Failed to create sub-course for location_id: $location_id, main_course_id: $main_course_id");
+            return false;
         }
     } else {
         foreach ($existing_courses as $course) {
@@ -273,9 +348,11 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
     }
 }
 
-function create_or_update_course_date($data, $post_id, $main_course_id, $location_id, $is_active) { 
-    // Hvis kurset er inaktivt, slett alle eksisterende kursdatoer og avslutt
+function create_or_update_course_date($data, $post_id, $main_course_id, $location_id, $is_active) {
+    error_log("Starting create_or_update_course_date for post_id: $post_id, location_id: $location_id");
+    
     if (!$is_active) {
+        error_log("Course is not active, deleting existing dates for location_id: $location_id");
         $existing_dates = get_posts([
             'post_type' => 'coursedate',
             'post_status' => ['publish', 'draft'],
@@ -293,6 +370,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
     }
 
     if (!isset($data['locations'])) {
+        error_log("No locations data found in course data for location_id: $location_id");
         return;
     }
 
@@ -302,16 +380,12 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
     });
 
     if (empty($location)) {
-        //error_log("Lokasjon med ID {$location_id} ble ikke funnet.");
+        error_log("Location not found in data for location_id: $location_id");
         return;
     }
 
-    $location = reset($location); // Hent første matchende lokasjon
-
-    if (!isset($location['schedules']) || empty($location['schedules'])) {
-        //error_log("Ingen schedules funnet for lokasjon ID {$location_id}.");
-        return;
-    }
+    $location = reset($location);
+    error_log("Found location. Number of schedules: " . count($location['schedules'] ?? []));
 
     // Loop through all schedules and create/update course dates
     foreach ($location['schedules'] as $schedule) {
@@ -922,35 +996,5 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     //return false;
 }
 
-// If the location_id is missing in the API response, set all related courses to draft and delete all related course dates
-function handle_missing_location_in_api($location_id) {
-    error_log("DEBUG: Starter håndtering av manglende location_id: {$location_id}");
 
-    // Finn alle kurs med denne location_id og sett status til kladd
-    $courses = get_posts([
-        'post_type' => 'course',
-        'meta_key' => 'location_id',
-        'meta_value' => $location_id,
-        'posts_per_page' => -1,
-    ]);
 
-    foreach ($courses as $course) {
-        wp_delete_post($course->ID, true);
-        error_log("DEBUG: Kurs med ID {$course->ID} er slettet.");
-    }
-
-    // Slett alle kursdatoer med denne location_id
-    $coursedates = get_posts([
-        'post_type' => 'coursedate',
-        'meta_key' => 'location_id',
-        'meta_value' => $location_id,
-        'posts_per_page' => -1,
-    ]);
-
-    foreach ($coursedates as $coursedate) {
-        wp_delete_post($coursedate->ID, true);
-        error_log("DEBUG: Kursdato med ID {$coursedate->ID} slettet.");
-    }
-
-    error_log("DEBUG: Ferdig med håndtering av manglende location_id: {$location_id}");
-}
