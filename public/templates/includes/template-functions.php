@@ -69,13 +69,13 @@ function kursagenten_template_loader($template) {
     }
 
     // Last inn layout-template
-    $layout_template = KURSAG_PLUGIN_DIR . 'templates/layouts/' . $layout . '.php';
+    $layout_template = KURSAG_PLUGIN_DIR . 'public/templates/layouts/' . $layout . '.php';
     if (file_exists($layout_template)) {
         return $layout_template;
     }
     
     // Fallback til standard layout
-    return KURSAG_PLUGIN_DIR . 'templates/layouts/default.php';
+    return KURSAG_PLUGIN_DIR . 'public/templates/layouts/default.php';
 }
 add_filter('template_include', 'kursagenten_template_loader', 99);
 
@@ -115,12 +115,12 @@ function kursagenten_get_design_template() {
     }
 
     // Last inn design-template
-    $design_template = KURSAG_PLUGIN_DIR . 'templates/designs/' . $context . '/' . $design . '.php';
+    $design_template = KURSAG_PLUGIN_DIR . 'public/templates/designs/' . $context . '/' . $design . '.php';
     if (file_exists($design_template)) {
         include $design_template;
     } else {
         // Fallback til standard design
-        include KURSAG_PLUGIN_DIR . 'templates/designs/' . $context . '/default.php';
+        include KURSAG_PLUGIN_DIR . 'public/templates/designs/' . $context . '/default.php';
     }
 }
 
@@ -151,12 +151,12 @@ function kursagenten_get_list_template() {
     }
 
     // Last inn listevisning-template
-    $list_template = KURSAG_PLUGIN_DIR . 'templates/list-types/' . $list_type . '.php';
+    $list_template = KURSAG_PLUGIN_DIR . 'public/templates/list-types/' . $list_type . '.php';
     if (file_exists($list_template)) {
         include $list_template;
     } else {
         // Fallback til standard listevisning
-        include KURSAG_PLUGIN_DIR . 'templates/list-types/standard.php';
+        include KURSAG_PLUGIN_DIR . 'public/templates/list-types/standard.php';
     }
 }
 
@@ -245,12 +245,12 @@ function get_course_template_part($args = []) {
     
     // Bygg filnavn og path
     $template_file = "{$style}.php";
-    $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$template_file}";
+    $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$template_file}";
     
     // Sjekk om template eksisterer
     if (!file_exists($template_path)) {
         $template_file = "standard.php";
-        $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$template_file}";
+        $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$template_file}";
     }
     
     // Gjør argumentene tilgjengelige for template
@@ -435,6 +435,6 @@ function get_ajax_template_path($context = 'archive') {
             $style = 'standard';
     }
     
-    $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$style}.php";
-    return file_exists($template_path) ? $template_path : KURSAG_PLUGIN_DIR . "templates/list-types/standard.php";
+    $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$style}.php";
+    return file_exists($template_path) ? $template_path : KURSAG_PLUGIN_DIR . "public/templates/list-types/standard.php";
 }

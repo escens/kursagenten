@@ -158,12 +158,12 @@ function kursagenten_activate() {
  * Function to register post types and taxonomies
  */
 function kursagenten_register_post_types() {
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_post_types.php';
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_taxonomies.php';
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_custom_cpt_relationships.php';
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_custom_taxonomy_fields.php';
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/register_image_fields.php';
-    require_once KURSAG_PLUGIN_DIR . '/admin/post_types/visibility_management.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_post_types.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_taxonomies.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_custom_cpt_relationships.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_custom_taxonomy_fields.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_image_fields.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/visibility_management.php';
 }
 
 /**
@@ -179,17 +179,17 @@ function kursagenten_deactivate() {
     flush_rewrite_rules();
 }
 
-require_once KURSAG_PLUGIN_DIR . '/admin/options/kursagenten-admin_options.php';  
+require_once KURSAG_PLUGIN_DIR . '/includes/options/kursagenten-admin_options.php';  
 
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_connection.php';
-require_once KURSAG_PLUGIN_DIR . '/includes/api/api-webhook-handler.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/api/api_webhook_handler.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
 
 /* MISC ADMIN FUNCTIONS */
-require_once KURSAG_PLUGIN_DIR . '/admin/misc/hide_course-images_in_mediafolder.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/misc/hide_course-images_in_mediafolder.php';
 require_once KURSAG_PLUGIN_DIR . '/assets/dynamic-icons.php';
 
 // if (is_admin()) {
@@ -208,11 +208,11 @@ function kursagenten_load_admin_options() {
     $admin_options = get_option('kag_avansert_option_name');
     
     $option_files = [
-        'ka_rename_posts' => '/admin/misc/change-post-to-article.php',
-        'ka_jquery_support' => '/admin/misc/enable-jquery-support.php',
-        'ka_security' => '/admin/misc/security_functions.php',
-        'ka_sitereviews' => '/admin/misc/site-reviews-support.php',
-        'ka_disable_gravatar' => '/admin/misc/disable-gravatar.php'
+        'ka_rename_posts' =>    '/includes/misc/change-post-to-article.php',
+        'ka_jquery_support' =>  '/includes/misc/enable-jquery-support.php',
+        'ka_security' =>        '/includes/misc/security_functions.php',
+        'ka_sitereviews' =>     '/includes/misc/site-reviews-support.php',
+        'ka_disable_gravatar' => '/includes/misc/disable-gravatar.php'
     ];
     
     foreach ($option_files as $option => $file) {
@@ -246,8 +246,8 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
             
             if ($enqueue_plugin_pages) {
                 wp_enqueue_media();// Enqueue media scripts for file uploads
-                wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'admin/js/image-upload.js', array('jquery'), '1.0.3',  true  );
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'admin/css/kursagenten-admin.css', array(), '1.0.59' );
+                wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.59' );
             }
         }
     }
@@ -261,16 +261,16 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
 define('KURSAGENTEN_PATH', KURSAG_PLUGIN_DIR);
 
 // Sørg for at funksjonen er inkludert
-require_once KURSAG_PLUGIN_DIR . '/includes/templates/template-functions.php';
-require_once KURSAG_PLUGIN_DIR . '/templates/includes/queries.php';
-require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
-require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_functions.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template-functions.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
     
     function kursagenten_enqueue_styles() {
         // Last inn base CSS for alle Kursagenten sider
         wp_enqueue_style(
             'kursagenten-course-style',
-            KURSAG_PLUGIN_URL . '/frontend/css/frontend-course-style.css',
+            KURSAG_PLUGIN_URL . '/assets/css/public/frontend-course-style.css',
             array(),
             KURSAG_VERSION
         );
@@ -278,7 +278,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
         // Last inn datepicker CSS for alle Kursagenten sider
         wp_enqueue_style(
             'kursagenten-datepicker-style',
-            KURSAG_PLUGIN_URL . '/frontend/css/datepicker-caleran.min.css',
+            KURSAG_PLUGIN_URL . '/assets/css/public/datepicker-caleran.min.css',
             array(),
             KURSAG_VERSION
         );
@@ -293,7 +293,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             // Last inn list-type-spesifikk CSS
             wp_enqueue_style(
                 'kursagenten-list-type-' . $list_type,
-                KURSAG_PLUGIN_URL . '/frontend/css/list-' . $list_type . '.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/list-' . $list_type . '.css',
                 array(),
                 KURSAG_VERSION
             );
@@ -301,7 +301,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             // Last inn design-spesifikk CSS hvis ikke default
             wp_enqueue_style(
                 'kursagenten-archive-design-' . $design,
-                KURSAG_PLUGIN_URL . '/frontend/css/design-archive-' . $design . '.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/design-archive-' . $design . '.css',
                 array('kursagenten-list-type-' . $list_type),
                 KURSAG_VERSION
             );
@@ -329,7 +329,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             // Last inn base CSS
             wp_enqueue_style(
                 'kursagenten-taxonomy-base',
-                KURSAG_PLUGIN_URL . '/frontend/css/design-taxonomy-default.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/design-taxonomy-default.css',
                 array(),
                 KURSAG_VERSION
             );
@@ -338,7 +338,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             if ($design !== 'default') {
                 wp_enqueue_style(
                     'kursagenten-taxonomy-design-' . $design,
-                    KURSAG_PLUGIN_URL . '/frontend/css/design-' . $design . '.css',
+                    KURSAG_PLUGIN_URL . '/assets/css/public/design-' . $design . '.css',
                     array('kursagenten-taxonomy-base'),
                     KURSAG_VERSION
                 );
@@ -359,7 +359,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             // Last inn list-type-spesifikk CSS
             wp_enqueue_style(
                 'kursagenten-taxonomy-list-' . $list_type,
-                KURSAG_PLUGIN_URL . '/frontend/css/list-' . $list_type . '.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/list-' . $list_type . '.css',
                 array('kursagenten-taxonomy-base'),
                 KURSAG_VERSION
             );
@@ -372,7 +372,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             // Last inn base CSS først
             wp_enqueue_style(
                 'kursagenten-single-base',
-                KURSAG_PLUGIN_URL . '/frontend/css/frontend-course-style.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/frontend-course-style.css',
                 array(),
                 KURSAG_VERSION
             );
@@ -380,7 +380,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
             // Deretter last inn design-spesifikk CSS
             wp_enqueue_style(
                 'kursagenten-single-design-' . $design,
-                KURSAG_PLUGIN_URL . '/frontend/css/design-single-' . $design . '.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/design-single-' . $design . '.css',
                 array('kursagenten-single-base'),
                 KURSAG_VERSION
             );
@@ -391,7 +391,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
         if (is_singular('instructor') || is_post_type_archive('instructor')) {
             wp_enqueue_style(
                 'kursagenten-instructor-style',
-                KURSAG_PLUGIN_URL . '/frontend/css/instructor-style.css',
+                KURSAG_PLUGIN_URL . '/assets/css/public/instructor-style.css',
                 array(),
                 KURSAG_VERSION
             );
@@ -445,33 +445,33 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
         
         // Enqueue scripts and styles
         wp_enqueue_script('kursagenten-iframe-resizer', 'https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js', array(), null, true);
-        wp_enqueue_script('kursagenten-slidein-panel', plugins_url('frontend/js/course-slidein-panel.js', __FILE__), array('jquery', 'kursagenten-iframe-resizer'), KURSAG_VERSION, true);
-        wp_enqueue_script('kursagenten-ajax-filter', plugins_url('frontend/js/course-ajax-filter.js', __FILE__), array('jquery', 'kursagenten-slidein-panel'), KURSAG_VERSION, true);
+        wp_enqueue_script('kursagenten-slidein-panel', plugins_url('assets/js/public/course-slidein-panel.js', __FILE__), array('jquery', 'kursagenten-iframe-resizer'), KURSAG_VERSION, true);
+        wp_enqueue_script('kursagenten-ajax-filter', plugins_url('assets/js/public/course-ajax-filter.js', __FILE__), array('jquery', 'kursagenten-slidein-panel'), KURSAG_VERSION, true);
 
         wp_enqueue_script(
             'kursagenten-datepicker-moment',
-            KURSAG_PLUGIN_URL . '/frontend/js/datepicker/moment.min.js',
+            KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/moment.min.js',
             array(),
             KURSAG_VERSION
         );
 
         wp_enqueue_script(
             'kursagenten-datepicker-script',
-            KURSAG_PLUGIN_URL . '/frontend/js/datepicker/caleran.min.js',
+            KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/caleran.min.js',
             ['kursagenten-datepicker-moment'],
             KURSAG_VERSION
         );
 
         wp_enqueue_script(
             'kursagenten-accordion_script',
-            KURSAG_PLUGIN_URL . '/frontend/js/course-accordion.js',
+            KURSAG_PLUGIN_URL . '/assets/js/public/course-accordion.js',
             array(),
             KURSAG_VERSION
         );
 
         wp_enqueue_script(
             'kursagenten-expand-content',
-            KURSAG_PLUGIN_URL . '/frontend/js/course-expand-content.js',
+            KURSAG_PLUGIN_URL . '/assets/js/public/course-expand-content.js',
             array(),
             KURSAG_VERSION
         );
@@ -489,7 +489,7 @@ require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_function
         
         wp_enqueue_script(
             'kursagenten-filter-mobile',
-            KURSAG_PLUGIN_URL . '/frontend/js/course-filter-mobile.js',
+            KURSAG_PLUGIN_URL . '/assets/js/public/course-filter-mobile.js',
             array(),
             KURSAG_VERSION
         );

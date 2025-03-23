@@ -1,7 +1,7 @@
 <?php
 // Sjekk om template-functions.php er lastet
 if (!function_exists('get_course_template_part')) {
-    $template_functions_path = KURSAG_PLUGIN_DIR . 'includes/templates/template-functions.php';
+    $template_functions_path = KURSAG_PLUGIN_DIR . 'public/templates/includes/template-functions.php';
     if (!file_exists($template_functions_path)) {
         error_log('ERROR: Could not find template functions file at: ' . $template_functions_path);
     } else {
@@ -53,12 +53,12 @@ function filter_courses_handler() {
                         include $fallback_template;
                     } else {
                         $style = get_option('kursagenten_archive_list_type', 'standard');
-                        $template_path = KURSAG_PLUGIN_DIR . "templates/list-types/{$style}.php";
+                        $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$style}.php";
                         
                         if (file_exists($template_path)) {
                             include $template_path;
                         } else {
-                            include KURSAG_PLUGIN_DIR . 'templates/list-types/standard.php';
+                            include KURSAG_PLUGIN_DIR . 'public/templates/list-types/standard.php';
                         }
                     }
                 } catch (Exception $e) {
@@ -158,31 +158,3 @@ function handle_course_filter() {
     $query = new WP_Query($args);
 
 }
-
-/**
- * Hjelpefunksjon for å finne riktig template path
- */
-/*
-function get_ajax_template_path($context = 'archive') {
-    $style = get_option('kursagenten_' . $context . '_list_type', 'standard');
-    error_log('Template style from get_ajax_template_path: ' . $style);
-    
-    $possible_paths = [
-        KURSAG_PLUGIN_DIR . "templates/list-types/{$style}.php",
-        dirname(__FILE__) . "/../list-types/{$style}.php",
-        dirname(__FILE__) . "/../partials/coursedates_{$style}.php",
-        dirname(__FILE__) . "/../partials/coursedates_default.php"
-    ];
-    
-    foreach ($possible_paths as $path) {
-        error_log('Checking template path: ' . $path);
-        if (file_exists($path)) {
-            error_log('Found valid template at: ' . $path);
-            return $path;
-        }
-    }
-    
-    error_log('No valid template found, using default');
-    return dirname(__FILE__) . "/../partials/coursedates_default.php";
-}
-*/

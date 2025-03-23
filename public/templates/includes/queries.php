@@ -372,9 +372,9 @@ function get_course_info_by_location($related_course_id) {
         $course_info = [
             'title'      => get_the_title($course_id),
             'permalink'  => get_permalink($course_id),
-            'thumbnail'  => get_the_post_thumbnail_url($course_id, 'thumbnail') ?: KURSAG_PLUGIN_URL . '/frontend/images/placeholder-kurs.jpg',
-            'thumbnail-medium'  => get_the_post_thumbnail_url($course_id, 'medium') ?: KURSAG_PLUGIN_URL . '/frontend/images/placeholder-kurs.jpg',
-            'thumbnail-full'  => get_the_post_thumbnail_url($course_id, 'full') ?: KURSAG_PLUGIN_URL . '/frontend/images/placeholder-kurs.jpg',
+            'thumbnail'  => get_the_post_thumbnail_url($course_id, 'thumbnail') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg',
+            'thumbnail-medium'  => get_the_post_thumbnail_url($course_id, 'medium') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg',
+            'thumbnail-full'  => get_the_post_thumbnail_url($course_id, 'full') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg',
             'excerpt'    => get_the_excerpt($course_id),
         ];
 

@@ -1,7 +1,7 @@
 <?php
 // Load required dependencies
 if (!function_exists('get_course_languages')) {
-    require_once dirname(dirname(__FILE__)) . '/templates/includes/queries.php';
+    require_once dirname(dirname(__FILE__)) . '/public/templates/includes/queries.php';
 }
 get_header(); ?>
 <?php
@@ -371,7 +371,7 @@ foreach ($available_filters as $filter_key => $filter_info) {
                             </div>
                         </div>
 
-                        <!-- Template part from /partials -->
+                        <!-- Template part from /list-types -->
                         <div class="courselist-items" id="filter-results">
                             <?php
                             $args = [

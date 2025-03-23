@@ -34,7 +34,7 @@ The template system uses a hierarchical approach where designs and layouts are l
 
 2. Add corresponding CSS file:
    ```css
-   // frontend/css/list-new-type.css
+   // assets/css/public/list-new-type.css
    ```
 
 3. Add to options in `coursedesign.php`:
@@ -80,9 +80,9 @@ The template system uses a hierarchical approach where designs and layouts are l
 
 2. Add CSS files:
    ```
-   frontend/css/design-single-new-design.css
-   frontend/css/design-archive-new-design.css
-   frontend/css/design-taxonomy-new-design.css
+   assets/css/public/design-single-new-design.css
+   assets/css/public/design-archive-new-design.css
+   assets/css/public/design-taxonomy-new-design.css
    ```
 
 3. Add to options in `coursedesign.php`:

@@ -79,7 +79,7 @@ function kursagenten_enqueue_admin_scripts($hook) {
     }
     wp_enqueue_script(
         'kursagenten-admin-sync', 
-        KURSAG_PLUGIN_URL . '/admin/js/kursagenten-admin-sync.js', 
+        KURSAG_PLUGIN_URL . '/assets/js/admin/kursagenten-admin-sync.js', 
         array('jquery'), 
         '1.0.1', 
         true
