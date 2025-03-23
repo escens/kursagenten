@@ -43,7 +43,6 @@
     $contact_name = get_post_meta(get_the_ID(), 'course_contactperson_name', true);
     $contact_phone = get_post_meta(get_the_ID(), 'course_contactperson_phone', true);
     $contact_email = get_post_meta(get_the_ID(), 'course_contactperson_email', true);
-    error_log('course_related_coursedate: ' . $related_coursedate);
 
     // Get WP data
     $featured_image_full = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: 'path/to/default-image.jpg';
@@ -127,78 +126,81 @@
             <div class="course-grid col-1-3">
                 <!-- Next course information -->
                 <div class="nextcourse">
-                        <?php if (!empty($selected_coursedate_data['coursedatemissing'])) : ?>
-                            <h2 class="small">Informasjon</h2>
-                        <?php else : ?>
-                            <h2 class="small">Neste kurs</h2>
+                    <?php if (!empty($selected_coursedate_data['coursedatemissing'])) : ?>
+                        <h2 class="small">Informasjon</h2>
+                    <?php else : ?>
+                        <h2 class="small">Neste kurs</h2>
+                    <?php endif; ?>
+                    <div class="iconlist medium">
+                        <?php 
+                        // Add debug output to check the data
+                        ?>
+                        <?php if (!empty($selected_coursedate_data['first_date'])) : ?>
+                            <div><i class="ka-icon icon-calendar"></i>Starter: <?php echo esc_html($selected_coursedate_data['first_date']) ;?></div>
                         <?php endif; ?>
-                        <div class="iconlist medium">
-                            <?php if (!empty($selected_coursedate_data['first_date'])) : ?>
-                                <div><i class="ka-icon icon-calendar"></i>Starter: <?php echo esc_html($selected_coursedate_data['first_date']) ;?></div>
-                            <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['last_date'])) : ?>
-                                <div><i class="ka-icon icon-calendar"></i>Slutter: <?php echo esc_html($selected_coursedate_data['last_date']) ;?></div>
-                            <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['time'])) : ?>
-                                <div><i class="ka-icon icon-time"></i>Kurstider: <?php echo esc_html($selected_coursedate_data['time']) ;?></div>
-                            <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['duration'])) : ?>
-                                <div><i class="ka-icon icon-stopwatch"></i>Varighet: <?php echo esc_html($selected_coursedate_data['duration']) ;?></div>
-                            <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['language'])) : ?>
-                                <div><i class="ka-icon icon-chat-bubble"></i>Språk: <?php echo esc_html($selected_coursedate_data['language']) ;?></div>
-                            <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['price'])) : ?>
-                                <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
-                            <?php endif; ?>
-                        </div>
+                        <?php if (!empty($selected_coursedate_data['last_date'])) : ?>
+                            <div><i class="ka-icon icon-calendar"></i>Slutter: <?php echo esc_html($selected_coursedate_data['last_date']) ;?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($selected_coursedate_data['time'])) : ?>
+                            <div><i class="ka-icon icon-time"></i>Kurstider: <?php echo esc_html($selected_coursedate_data['time']) ;?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($selected_coursedate_data['duration'])) : ?>
+                            <div><i class="ka-icon icon-stopwatch"></i>Varighet: <?php echo esc_html($selected_coursedate_data['duration']) ;?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($selected_coursedate_data['language'])) : ?>
+                            <div><i class="ka-icon icon-chat-bubble"></i>Språk: <?php echo esc_html($selected_coursedate_data['language']) ;?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($selected_coursedate_data['price'])) : ?>
+                            <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
+                        <?php endif; ?>
                     </div>
-                    <!-- Course list -->
-                    <div class="courselist">                          
-                        <?php if (!empty($all_coursedates)) : ?>
-                        <div class="all-coursedates">
-                            <h2 class="small">Kurstider og steder</h2>
-                            <div class="accordion courselist-items-wrapper expand-content" data-size="180px">
-                                <?php 
-                                $totalCourses = count($all_coursedates);
-                                foreach ($all_coursedates as $index => $coursedate) : 
-                                    $item_class = $totalCourses === 1 ? 'courselist-item single-item' : 'courselist-item';
-                                ?>
-                                    <div class="<?php echo $item_class; ?>">
-                                        <div class="courselist-main" onclick="toggleAccordion(this)">
-                                            <div class="text-area">
-                                                <div class="title-area">
-                                                    <span class="accordion-icon">+</span>
-                                                    <span class="courselist-title">
-                                                        <strong><?php echo esc_html($coursedate['location']) ?></strong>
-                                                        <?php echo esc_html($coursedate['first_date']) ?>
-                                                        <?php echo esc_html($coursedate['time']) ?> 
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div class="links-area">
-                                                <button class="courselist-button pameldingskjema clickelement"  data-url="<?php echo esc_url($coursedate['signup_url']); ?>">
-                                                <?php echo esc_html($coursedate['button_text']) ?>
-                                                </button>   
+                </div>
+                <!-- Course list -->
+                <div class="courselist">                          
+                    <?php if (!empty($all_coursedates)) : ?>
+                    <div class="all-coursedates">
+                        <h2 class="small">Kurstider og steder</h2>
+                        <div class="accordion courselist-items-wrapper expand-content" data-size="180px">
+                            <?php 
+                            $totalCourses = count($all_coursedates);
+                            foreach ($all_coursedates as $index => $coursedate) : 
+                                $item_class = $totalCourses === 1 ? 'courselist-item single-item' : 'courselist-item';
+                            ?>
+                                <div class="<?php echo $item_class; ?>">
+                                    <div class="courselist-main" onclick="toggleAccordion(this)">
+                                        <div class="text-area">
+                                            <div class="title-area">
+                                                <span class="accordion-icon">+</span>
+                                                <span class="courselist-title">
+                                                    <strong><?php echo esc_html($coursedate['location']) ?></strong>
+                                                    <?php echo esc_html($coursedate['first_date']) ?>
+                                                    <?php echo esc_html($coursedate['time']) ?> 
+                                                </span>
                                             </div>
                                         </div>
-                                        <div class="accordion-content courselist-content">
-                                            <?php if ($coursedate['missing_first_date']) : ?>
-                                                <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>   
-                                            <?php endif; ?>
-                                            <ul>
-                                                <li>Starts: <?php echo esc_html($coursedate['first_date']) ?></li>
-                                                <li>Price: <?php echo esc_html($coursedate['price']) ?> <?php echo esc_html($price_posttext); ?></li>
-                                                <li>Location: <?php echo esc_html($coursedate['location'] ?? 'N/A') ?></li>
-                                                <li>Duration: <?php echo esc_html($coursedate['duration']) ?></li>
-                                            </ul>
+                                        <div class="links-area">
+                                            <button class="courselist-button pameldingskjema clickelement"  data-url="<?php echo esc_url($coursedate['signup_url']); ?>">
+                                            <?php echo esc_html($coursedate['button_text']) ?>
+                                            </button>   
                                         </div>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
+                                    <div class="accordion-content courselist-content">
+                                        <?php if ($coursedate['missing_first_date']) : ?>
+                                            <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>   
+                                        <?php endif; ?>
+                                        <ul>
+                                            <li>Starts: <?php echo esc_html($coursedate['first_date']) ?></li>
+                                            <li>Price: <?php echo esc_html($coursedate['price']) ?> <?php echo esc_html($price_posttext); ?></li>
+                                            <li>Location: <?php echo esc_html($coursedate['location'] ?? 'N/A') ?></li>
+                                            <li>Duration: <?php echo esc_html($coursedate['duration']) ?></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                    <?php endif; ?>
                     </div>
+                <?php endif; ?>
+                </div>
 
             </div>
         </div>
@@ -278,6 +280,5 @@ add_action('wp_head', function() {
         // Sjekk selected_coursedate_data
         $related_coursedate = get_post_meta(get_the_ID(), 'course_related_coursedate', true);
         $selected_coursedate_data = get_selected_coursedate_data($related_coursedate);
-        error_log('Selected Coursedate Data: ' . print_r($selected_coursedate_data, true));
     }
 });

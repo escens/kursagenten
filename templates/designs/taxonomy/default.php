@@ -6,112 +6,28 @@
 
 if (!defined('ABSPATH')) exit;
 
-// Hent URL-stien direkte
-$full_path = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
-$path_segments = explode('/', trim($full_path, '/'));
-error_log('Taxonomy template: URL Path: ' . $full_path);
-
-// Identifiser taksonomi og term basert på URL-stien
-$taxonomy = '';
-$term_slug = '';
-
-if (count($path_segments) >= 2) {
-    $taxonomy_slug = $path_segments[0];
-    $term_slug = $path_segments[1];
-    
-    // Fjern eventuelle query-parametere
-    if (strpos($term_slug, '?') !== false) {
-        $term_slug = substr($term_slug, 0, strpos($term_slug, '?'));
-    }
-    
-    // Kartlegg taxonomy_slug til faktisk taksonomi
-    switch ($taxonomy_slug) {
-        case 'kurskategori':
-            $taxonomy = 'coursecategory';
-            break;
-        case 'kurssted':
-            $taxonomy = 'course_location';
-            break;
-        case 'instruktorer':
-            $taxonomy = 'instructors';
-            break;
-    }
-}
-
-error_log('Taxonomy template: URL taxonomy slug: ' . $taxonomy_slug);
-error_log('Taxonomy template: Mapped taxonomy: ' . $taxonomy);
-error_log('Taxonomy template: Requested term slug: ' . $term_slug);
-
-// Prøv å hente term basert på slug og taksonomi
-$term = null;
-if (!empty($taxonomy) && !empty($term_slug)) {
-    $term = get_term_by('slug', $term_slug, $taxonomy);
-    
-    if ($term) {
-        error_log('Taxonomy template: Found term: ' . $term->name . ' (ID: ' . $term->term_id . ')');
-        
-        // Oppdater global query objekt
-        global $wp_query;
-        $wp_query->queried_object = $term;
-        $wp_query->queried_object_id = $term->term_id;
-    } else {
-        error_log('Taxonomy template: Term not found, using get_queried_object as fallback');
-        $term = get_queried_object();
-    }
-} else {
-    error_log('Taxonomy template: Invalid taxonomy or term, using get_queried_object');
-    $term = get_queried_object();
-}
+// Hent taksonomidata
+$taxonomy_data = get_taxonomy_data();
+$term = get_taxonomy_term($taxonomy_data['taxonomy'], $taxonomy_data['term_slug']);
 
 // Sjekk om vi har en gyldig term
 if (!isset($term->term_id) || !isset($term->taxonomy)) {
-    error_log('Taxonomy template: No valid term found, redirecting to home');
     wp_redirect(home_url());
     exit;
 }
 
+// Hent nødvendig data
 $term_id = $term->term_id;
 $taxonomy = $term->taxonomy;
+$rich_description = get_term_meta($term_id, 'rich_description', true);
+$image_url = get_taxonomy_image($term_id, $taxonomy);
+$query = get_taxonomy_courses($term_id, $taxonomy);
 
 // Logg informasjon om termen vi bruker
 error_log('Taxonomy template: Using term ID: ' . $term_id);
 error_log('Taxonomy template: Using taxonomy: ' . $taxonomy);
 error_log('Taxonomy template: Using term name: ' . $term->name);
 error_log('Taxonomy template: Using term slug: ' . $term->slug);
-
-// Hent term metadata
-$rich_description = get_term_meta($term_id, 'rich_description', true);
-$image_url = '';
-
-// Hent riktig bildefelt basert på taksonomi
-switch ($taxonomy) {
-    case 'coursecategory':
-        $image_url = get_term_meta($term_id, 'image_coursecategory', true);
-        break;
-    case 'course_location':
-        $image_url = get_term_meta($term_id, 'image_course_location', true);
-        break;
-    case 'instructors':
-        $image_url = get_term_meta($term_id, 'image_instructor', true);
-        break;
-}
-
-// Hent tilhørende kurs-datoer
-$args = array(
-    'post_type' => 'coursedate',
-    'posts_per_page' => -1,
-    'tax_query' => array(
-        array(
-            'taxonomy' => $taxonomy,
-            'field'    => 'term_id',
-            'terms'    => $term_id
-        )
-    ),
-    'orderby' => 'course_first_date',
-    'order' => 'ASC'
-);
-
-$query = get_course_dates_query($args);
 
 get_header();
 ?>
@@ -197,3 +113,4 @@ get_header();
 </article>
 
 <?php get_footer(); ?>
+

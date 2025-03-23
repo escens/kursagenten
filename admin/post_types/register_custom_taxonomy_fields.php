@@ -76,7 +76,7 @@ add_action('course_location_edit_form_fields', 'add_course_location_image_field'
 
 // Legg til instruktør-felt
 function add_instructor_image_field($term) {
-    add_taxonomy_image_field($term, 'instructors', 'image_instructor', 'Instruktørbilde', 'bilde', 'Bilde av instruktøren som vises på instruktørsiden');
+    add_taxonomy_image_field($term, 'instructors', 'image_instructor', 'Instruktørbilde', 'bilde', 'Bruk et annet bilde enn det som er lagt inn i Kursagenten. Dette bilde blir synlig på instruktørprofilen her på nettsiden.');
 }
 add_action('instructors_edit_form_fields', 'add_instructor_image_field');
 
@@ -150,20 +150,63 @@ function kursagenten_add_instructor_styles() {
             border-radius: 4px;
             margin: 2em 0;
             min-height: 100px;
+            display: flex;
+            align-items: center;
+            gap: 2em;
+        }
+        
+        .instructor-image-container {
+            flex: 0 0 200px; /* Fast bredde på bildecontainer */
+            width: 200px;
+            height: 200px;
+            background: #f0f0f1;
+            border-radius: 100%;
+        }
+        
+        .instructor-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            object-fit: cover; /* Klipper bildet og beholder aspect ratio */
+            object-position: center; /* Midtstiller bildet */
+            border: 3px solid #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .instructor-content {
+            flex: 1;
         }
         
         .instructor-name {
             font-size: 2em;
             font-weight: bold;
             margin-bottom: 1em;
+            color: #23282d;
         }
         
         .instructor-details {
             line-height: 1.6;
         }
         
+        .instructor-details p {
+            margin: .3em 0;
+        }
         .instructor-details strong {
             color: #666;
+            display: inline-block;
+            width: 80px;
+        }
+        
+        .instructor-details a {
+            display: inline-block;
+            margin-top: 1em;
+            color: #0073aa;
+            text-decoration: none;
+            padding: 5px 0;
+        }
+        
+        .instructor-details a:hover {
+            color: #00a0d2;
         }
         
         .content-section {
@@ -209,6 +252,10 @@ function kursagenten_make_fields_readonly($term) {
     
     $email = get_term_meta($term->term_id, 'instructor_email', true);
     $phone = get_term_meta($term->term_id, 'instructor_phone', true);
+    $id = get_term_meta($term->term_id, 'instructor_id', true);
+    $image_ka = get_term_meta($term->term_id, 'image_instructor_ka', true); // image_instructor_ka is the image from Kursagenten. Override is the image_instructor field.
+    error_log("DEBUG: Instructor ID: " . $id);
+    error_log("DEBUG: Instructor image_ka: " . $image_ka);
     ?>
     <script type="text/javascript">
         jQuery(document).ready(function($) {
@@ -226,11 +273,27 @@ function kursagenten_make_fields_readonly($term) {
             
             // Legg til feltene i ny rekkefølge
             $form.prepend(
-                // Kontaktkort seksjon
-                $('<tr><td colspan="2"><div class="instructor-contact-card"><div class="instructor-name"><?php echo esc_js($term->name); ?></div><div class="instructor-details"><strong>Slug:</strong> /<?php echo esc_js($term->slug); ?><br><strong>Telefon:</strong> <?php echo esc_js($phone); ?><br><strong>E-post:</strong> <?php echo esc_js($email); ?></div></div></td></tr>'),
+                $('<tr><td colspan="2"><div class="instructor-contact-card">' +
+                    '<div class="instructor-image-container">' +
+                        '<img src="<?php echo esc_js(esc_url($image_ka)); ?>" ' +
+                        'class="instructor-image" ' +
+                        'style="display:<?php echo $image_ka ? "block" : "none"; ?>" />' +
+                    '</div>' +
+                    '<div class="instructor-content">' +
+                        '<div class="instructor-name"><?php echo esc_js(esc_html($term->name)); ?></div>' +
+                        '<div class="instructor-details">' +
+                            '<p><strong>Slug:</strong> /<?php echo esc_js(esc_attr($term->slug)); ?></p>' +
+                            '<p><strong>Telefon:</strong> <?php echo esc_js(esc_html($phone)); ?></p>' +
+                            '<p><strong>E-post:</strong> <?php echo esc_js(esc_html($email)); ?></p>' +
+                            '<a href="https://kursadmin.kursagenten.no/Profile/<?php echo esc_js(esc_html($id)); ?>" target="_blank">' +
+                                'Rediger i Kursadmin' +
+                            '</a>' +
+                        '</div>' +
+                    '</div>' +
+                '</div></td></tr>'),
                 
                 // Innhold seksjon
-                $('<tr><td colspan="2"><div class="content-section"><h3>Endre innhold</h3></div></td></tr>'),
+                $('<tr><td colspan="2"><div class="content-section"><h3>Legg til innhold</h3></div></td></tr>'),
                 $imageField,
                 $descriptionField,
                 $richDescriptionField

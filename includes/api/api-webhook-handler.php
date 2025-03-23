@@ -18,40 +18,86 @@ function process_webhook_data($request) {
     }
 
     $location_id = (int) $body['CourseId'];
-
-    // Øk tidsintervallet og bruk en mer unik nøkkel
-    $transient_key = 'webhook_processed_' . $location_id . '_' . date('Y-m-d-H-i');
-    if (get_transient($transient_key)) {
-        error_log("Skipping duplicate webhook for CourseId: $location_id at " . date('Y-m-d H:i:s'));
-        return new WP_REST_Response('Duplicate webhook skipped.', 200);
+    $count_key = 'webhook_count_' . $location_id;
+    $webhook_data_key = 'webhook_data_' . $location_id;
+    
+    // Hent eller initialiser teller
+    $count = (int)get_transient($count_key) ?: 0;
+    $count++;
+    
+    error_log("Webhook received for CourseId: $location_id (Count: $count)");
+    error_log("Webhook data: " . json_encode($body));
+    
+    // Lagre webhook data og øk telleren
+    set_transient($count_key, $count, 3); // Hold telleren i 3 sekunder
+    
+    // Lagre webhook data
+    $stored_webhooks = get_transient($webhook_data_key) ?: [];
+    $stored_webhooks[] = [
+        'body' => $body,
+        'time' => time()
+    ];
+    set_transient($webhook_data_key, $stored_webhooks, 3);
+    error_log("Stored webhooks count: " . count($stored_webhooks));
+    
+    // Vent med prosessering hvis dette er første webhook og den ikke har Enabled
+    if ($count === 1 && !isset($body['Enabled'])) {
+        error_log("First webhook received without Enabled parameter - waiting for potential second webhook");
+        return new WP_REST_Response('Waiting for additional webhooks.', 200);
     }
     
-    // Sett transient med lengre varighet (60 sekunder istedenfor 10)
-    set_transient($transient_key, true, 60);
-
-    // Hent main_course data basert på location_id
-    $course_data = get_main_course_id_by_location_id($location_id);
-
-    if (!$course_data) {
-        error_log("DEBUG: location_id {$location_id} finnes ikke i API-et.");
-        return new WP_REST_Response('Location ID not found in API.', 404);
-    }
-
-    // Legg til location_id i course_data for fullstendig datastruktur
-    $course_data['location_id'] = $location_id;
-
-    try {
-        $result = create_or_update_course_and_schedule($course_data, true);
-
-        if ($result) {
-            return new WP_REST_Response('Webhook processed successfully.', 200);
-        } else {
-            return new WP_REST_Response('Failed to process course.', 500);
+    // Hvis dette er andre webhook, eller hvis det er første OG har Enabled
+    if ($count === 2 || isset($body['Enabled'])) {
+        error_log("Processing webhook(s) for CourseId: $location_id");
+        
+        // Bruk webhook med Enabled hvis den finnes
+        $webhook_to_process = $body;
+        if ($count === 2) {
+            $stored_webhooks = get_transient($webhook_data_key) ?: [];
+            foreach ($stored_webhooks as $stored_webhook) {
+                if (isset($stored_webhook['body']['Enabled'])) {
+                    $webhook_to_process = $stored_webhook['body'];
+                    error_log("Found webhook with Enabled parameter - using this for processing");
+                    break;
+                }
+            }
         }
-    } catch (Exception $e) {
-        error_log("Error processing webhook: " . $e->getMessage());
-        return new WP_REST_Response('Error processing webhook.', 500);
+        
+        error_log("Final webhook being processed: " . json_encode($webhook_to_process));
+        
+        // Slett transients
+        delete_transient($count_key);
+        delete_transient($webhook_data_key);
+        error_log("Cleared temporary webhook data");
+        
+        // Fortsett med prosessering
+        $course_data = get_main_course_id_by_location_id($location_id);
+        
+        if (!$course_data) {
+            error_log("DEBUG: location_id {$location_id} finnes ikke i API-et.");
+            return new WP_REST_Response('Location ID not found in API.', 404);
+        }
+
+        $course_data['location_id'] = $location_id;
+        
+        try {
+            error_log("Starting course processing for CourseId: $location_id");
+            $result = create_or_update_course_and_schedule($course_data, true);
+            if ($result) {
+                error_log("Successfully processed course update for CourseId: $location_id");
+                return new WP_REST_Response('Webhook processed successfully.', 200);
+            } else {
+                error_log("Failed to process course update for CourseId: $location_id");
+                return new WP_REST_Response('Failed to process course.', 500);
+            }
+        } catch (Exception $e) {
+            error_log("Error processing webhook: " . $e->getMessage());
+            return new WP_REST_Response('Error processing webhook.', 500);
+        }
     }
+    
+    error_log("Webhook received and stored for CourseId: $location_id - awaiting processing");
+    return new WP_REST_Response('Webhook received.', 200);
 }
 
 

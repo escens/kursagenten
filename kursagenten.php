@@ -58,6 +58,8 @@ define('KURSAG_PLUGIN_FILE', __FILE__);
 define('KURSAG_PLUGIN_BASE', plugin_basename(KURSAG_PLUGIN_FILE));
 define('KURSAG_PLUGIN_DIR',  plugin_dir_path(KURSAG_PLUGIN_FILE));
 define('KURSAG_PLUGIN_URL',  plugin_dir_url(KURSAG_PLUGIN_FILE));
+define('KURSAGENTEN_IMAGE_BASE_URL_INSTRUCTOR', 'https://www.kursagenten.no/UserImages/');
+
 
 register_activation_hook(__FILE__, 'kursagenten_activate');
 register_deactivation_hook(__FILE__, 'kursagenten_deactivate');
@@ -100,10 +102,7 @@ function kursagenten_fix_all_taxonomy_queries() {
                 break;
         }
         
-        error_log('Taxonomy fix: URL Path: ' . $full_path);
-        error_log('Taxonomy fix: URL taxonomy slug: ' . $taxonomy_slug);
-        error_log('Taxonomy fix: Detected taxonomy: ' . $taxonomy);
-        error_log('Taxonomy fix: Requested term slug: ' . $term_slug);
+
         
         // Sjekk om vi har gyldig taksonomi og term
         if (!empty($taxonomy) && !empty($term_slug)) {
@@ -265,6 +264,7 @@ define('KURSAGENTEN_PATH', KURSAG_PLUGIN_DIR);
 require_once KURSAG_PLUGIN_DIR . '/includes/templates/template-functions.php';
 require_once KURSAG_PLUGIN_DIR . '/templates/includes/queries.php';
 require_once KURSAG_PLUGIN_DIR . '/templates/includes/course-ajax-filter.php';
+require_once KURSAG_PLUGIN_DIR . '/templates/includes/template_taxonomy_functions.php';
     
     function kursagenten_enqueue_styles() {
         // Last inn base CSS for alle Kursagenten sider
