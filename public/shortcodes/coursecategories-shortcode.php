@@ -138,7 +138,17 @@ class CourseCategories {
     }
 
     private function generate_html(string $id, array $terms, array $a): string {
-        $output = "<div class='outer-wrapper {$a['layout']} {$a['stil']} {$a['kilde']}{$a['skygge']} {$a['bildeform']}{$a['utdrag']}' id='{$id}'>";
+        // Tilordne variabler med standardverdier
+        $kilde = $a['kilde'];
+        $layout = $a['layout'];
+        $stil = $a['stil'];
+        $skygge = $a['skygge'];
+        $bildeform = $a['bildeform'];
+        $utdrag = $a['utdrag'];
+        $fonttype = $a['fonttype'];
+        $bildeformat = $a['bildeformat'];
+
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {

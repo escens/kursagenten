@@ -4,27 +4,27 @@ declare(strict_types=1);
 if (!defined('ABSPATH')) exit;
 
 /**
- * Shortcode for å vise instruktører i grid-format
- * [instruktorer kilde="bilde/ikon" layout="grid/rad/liste" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmaks="15px" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1 skjul="Iris,Anna"]
+ * Shortcode for å vise kurssteder i grid-format
+ * [kurssteder layout="grid/rad/liste" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1]
  */
-class InstructorGrid {
+class CourseLocationGrid {
     private string $placeholder_image;
     
     public function __construct() {
-        add_shortcode('instruktorer', [$this, 'render_instructors']);
+        add_shortcode('kurssteder', [$this, 'render_locations']);
         $this->set_placeholder_image();
     }
 
     private function set_placeholder_image(): void {
         $options = get_option('kag_kursinnst_option_name');
-        $this->placeholder_image = !empty($options['ka_plassholderbilde_instruktor']) 
-            ? $options['ka_plassholderbilde_instruktor']
-            : KURSAG_PLUGIN_URL . 'assets/images/placeholder-instruktor.jpg';
+        $this->placeholder_image = !empty($options['ka_plassholderbilde_kurssted']) 
+            ? $options['ka_plassholderbilde_sted']
+            : KURSAG_PLUGIN_URL . 'assets/images/placeholder-location.jpg';
     }
 
-    public function render_instructors($atts): string {
+    public function render_locations($atts): string {
+        // Definer standardverdier
         $defaults = [
-            'kilde' => 'bilde_instruktor',
             'layout' => 'stablet',
             'stil' => 'standard',
             'grid' => '3',
@@ -32,36 +32,32 @@ class InstructorGrid {
             'gridmobil' => '1',
             'bildestr' => '100px',
             'bildeform' => 'avrundet',
-            'bildeformat' => '4/4',
+            'bildeformat' => '4/3',
             'skygge' => '',
             'utdrag' => '',
             'fonttype' => 'H3',
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
-            'vis' => 'standard',
-            'skjul' => '',
         ];
 
+        // Slå sammen med brukerens attributter
         $a = shortcode_atts($defaults, $atts);
-        $random_id = 'i-' . uniqid();
+        $random_id = 'l-' . uniqid();
         
         // Prosesser attributter
         $a = $this->process_attributes($a);
         
-        // Hent instruktører
+        // Hent kurssteder
         $terms = $this->get_terms();
         
         if (empty($terms) || is_wp_error($terms)) {
-            return '<div class="no-instructors">Det er for øyeblikket ingen instruktører å vise.</div>';
+            return '<div class="no-locations">Det er for øyeblikket ingen kurssteder å vise.</div>';
         }
 
-        // Generer output ved å bruke felles grid-stiler
+        // Generer output
         $output = \GridStyles::get_grid_styles($random_id, $a);
-        
-        // Legg til instruktør-spesifikk CSS
-        $output .= $this->get_instructor_specific_styles($random_id);
-        
+        $output .= $this->get_location_specific_styles($random_id);
         $output .= $this->generate_html($random_id, $terms, $a);
         
         return $output;
@@ -94,7 +90,7 @@ class InstructorGrid {
     private function get_terms(): array 
     {
         $args = [
-            'taxonomy' => 'instructors',
+            'taxonomy' => 'course_location',
             'hide_empty' => false,
             'meta_query' => [
                 'relation' => 'OR',
@@ -115,7 +111,7 @@ class InstructorGrid {
         return is_wp_error($terms) ? [] : $terms;
     }
 
-    private function get_instructor_specific_styles(string $id): string {
+    private function get_location_specific_styles(string $id): string {
         return "<style>
             #{$id}.skygge:not(.kort) .box img {
                 -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
@@ -136,39 +132,39 @@ class InstructorGrid {
         $fonttype = $a['fonttype'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
             // Hent thumbnail
-            $thumbnail = get_term_meta($term->term_id, 'image_instructor', true);
-            if (empty($thumbnail)) {
-                $thumbnail = get_term_meta($term->term_id, 'image_instructor_ka', true);
-            }
+            $thumbnail = get_term_meta($term->term_id, 'image_course_location', true);
             
-            // Hvis fortsatt ingen bilde, bruk placeholder
+            // Hvis ingen bilde, bruk placeholder
             if (empty($thumbnail)) {
                 $options = get_option('kag_kursinnst_option_name');
-                $thumbnail = isset($options['ka_plassholderbilde_instruktor']) ? 
-                    $options['ka_plassholderbilde_instruktor'] : 
+                $thumbnail = isset($options['ka_plassholderbilde_kurssted']) ? 
+                    $options['ka_plassholderbilde_kurssted'] : 
                     $this->placeholder_image;
             }
 
             // Sikre at URL-en er trygg
             $thumbnail = esc_url($thumbnail);
 
-            // Hent beskrivelse
-            $description = get_term_meta($term->term_id, 'rich_description', true);
-            $description = wp_kses_post($description);
+            // Hent beskrivelser
+            $short_description = wp_kses_post($term->description);
+            $rich_description = wp_kses_post(get_term_meta($term->term_id, 'rich_description', true));
+            
+            // Bruk rich_description hvis tilgjengelig, ellers bruk standard beskrivelse
+            $description = !empty($rich_description) ? $rich_description : $short_description;
 
-            $output .= $this->generate_instructor_html($term, $thumbnail, $description, $a);
+            $output .= $this->generate_location_html($term, $thumbnail, $description, $a);
         }
 
         $output .= "</div></div>";
         return $output;
     }
 
-    private function generate_instructor_html($term, string $thumbnail, string $description, array $a): string {
+    private function generate_location_html($term, string $thumbnail, string $description, array $a): string {
         return "
             <div class='box term-{$term->term_id}'>
                 <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
@@ -187,4 +183,4 @@ class InstructorGrid {
 }
 
 // Initialiser shortcode
-new InstructorGrid(); 
+new CourseLocationGrid(); 

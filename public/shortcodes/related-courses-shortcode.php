@@ -25,7 +25,6 @@ class RelatedCourses {
 
     public function render_related_courses($atts): string {
         $defaults = [
-            'kilde' => 'bilde_kurskategori',
             'layout' => 'stablet',
             'stil' => 'standard',
             'grid' => '3',
@@ -114,7 +113,16 @@ class RelatedCourses {
     }
 
     private function generate_html(string $id, array $posts, array $a): string {
-        $output = "<div class='outer-wrapper {$a['layout']} {$a['stil']} {$a['kilde']}{$a['skygge']} {$a['bildeform']}{$a['utdrag']}' id='{$id}'>";
+        // Tilordne variabler med standardverdier
+        $layout = $a['layout'];
+        $stil = $a['stil'];
+        $skygge = $a['skygge'];
+        $bildeform = $a['bildeform'];
+        $utdrag = $a['utdrag'];
+        $fonttype = $a['fonttype'];
+        $bildeformat = $a['bildeformat'];
+
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($posts as $related_post) {
@@ -165,6 +173,29 @@ class RelatedCourses {
                     <div class='description'>" . get_the_excerpt($post->ID) . "</div>
                 </div>
             </div>";
+    }
+
+    private function get_locations(): array 
+    {
+        $locations = get_terms([
+            'taxonomy' => 'course_location',
+            'hide_empty' => false,
+            'meta_query' => [
+                'relation' => 'OR',
+                [
+                    'key' => 'hide_in_list',
+                    'value' => 'Vis',
+                ],
+                [
+                    'key' => 'hide_in_list',
+                    'compare' => 'NOT EXISTS'
+                ]
+            ],
+            'orderby' => 'name',
+            'order' => 'ASC'
+        ]);
+
+        return is_wp_error($locations) ? [] : $locations;
     }
 }
 

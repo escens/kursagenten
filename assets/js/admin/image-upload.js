@@ -39,7 +39,7 @@ jQuery(document).ready(function($) {
 
         removeButton.on('click', function(e) {
             e.preventDefault();
-            hiddenField.val('');
+            hiddenField.val(null);
             previewImage.hide();
             $(this).hide();
         });
@@ -49,6 +49,7 @@ jQuery(document).ready(function($) {
     handleImageUpload('ka_plassholderbilde_generelt');
     handleImageUpload('ka_plassholderbilde_kurs');
     handleImageUpload('ka_plassholderbilde_instruktor');
+    handleImageUpload('ka_plassholderbilde_sted');
     handleImageUpload('image_coursecategory');
     handleImageUpload('icon_coursecategory');
     handleImageUpload('image_course_location');

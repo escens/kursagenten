@@ -80,6 +80,76 @@ function add_instructor_image_field($term) {
 }
 add_action('instructors_edit_form_fields', 'add_instructor_image_field');
 
+
+// Taxonomy Visibility field
+// -----------------------------
+function add_taxonomy_visibility_field($term) {
+    if (!isset($term->term_id)) {
+        return;
+    }
+    
+    $value = get_term_meta($term->term_id, 'hide_in_list', true);
+    if (empty($value)) {
+        $value = 'Vis'; // Standard verdi
+    }
+    ?>
+    <tr class="form-field">
+        <th scope="row"><label for="hide_in_list">Synlighet</label></th>
+        <td>
+            <label style="margin-right: 15px;">
+                <input type="radio" name="hide_in_list" value="Vis" <?php checked($value, 'Vis'); ?>>
+                Vis i lister
+            </label>
+            <label>
+                <input type="radio" name="hide_in_list" value="Skjul" <?php checked($value, 'Skjul'); ?>>
+                Skjul i lister
+            </label>
+            <p class="description">Velg om denne skal vises i lister og oversikter.</p>
+        </td>
+    </tr>
+    <?php
+}
+
+// Legg til feltet i hurtigredigering
+function add_quick_edit_visibility_field() {
+    ?>
+    <fieldset>
+        <div class="inline-edit-col">
+            <label>
+                <span class="title">Synlighet</span>
+                <span class="input-text-wrap">
+                    <label class="alignleft" style="margin-right: 15px;">
+                        <input type="radio" name="hide_in_list" value="Vis">
+                        <span class="checkbox-title">Vis i lister</span>
+                    </label>
+                    <label class="alignleft">
+                        <input type="radio" name="hide_in_list" value="Skjul">
+                        <span class="checkbox-title">Skjul i lister</span>
+                    </label>
+                </span>
+            </label>
+        </div>
+    </fieldset>
+    <?php
+}
+
+// Legg til kolonne i taksonomi-tabellen
+function add_taxonomy_visibility_column($columns) {
+    $columns['visibility'] = 'Synlighet';
+    return $columns;
+}
+
+// Vis innhold i kolonnen
+function manage_taxonomy_visibility_column($content, $column_name, $term_id) {
+    if ($column_name === 'visibility') {
+        $value = get_term_meta($term_id, 'hide_in_list', true);
+        if ($value === 'Skjul') {
+            return '<span class="visibility-tag" style="background: #e5737d; color: white; padding: 3px 8px; border-radius: 3px;">Skjult</span>';
+        }
+    }
+    return $content;
+}
+
 // Taxonomy save function med forbedret sikkerhet
 // -----------------------------
 function save_taxonomy_field($term_id) {
@@ -95,7 +165,8 @@ function save_taxonomy_field($term_id) {
         'image_instructor' => 'esc_url',
         'rich_description' => 'wp_kses_post',
         'instructor_email' => 'sanitize_email',
-        'instructor_phone' => 'sanitize_text_field'
+        'instructor_phone' => 'sanitize_text_field',
+        'hide_in_list' => 'sanitize_text_field'
     ];
     
     foreach ($fields as $field => $sanitize_callback) {
@@ -118,11 +189,52 @@ add_action('coursecategory_edit_form_fields', 'add_coursecategory_image_field');
 add_action('coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
 add_action('course_location_edit_form_fields', 'add_course_location_image_field');
 add_action('instructors_edit_form_fields', 'add_instructor_image_field');
+add_action('coursecategory_edit_form_fields', 'add_taxonomy_visibility_field');
+add_action('course_location_edit_form_fields', 'add_taxonomy_visibility_field');
+add_action('instructors_edit_form_fields', 'add_taxonomy_visibility_field');
 
 add_action('edited_coursecategory', 'save_taxonomy_field');
 add_action('edited_course_location', 'save_taxonomy_field');
 add_action('edited_instructors', 'save_taxonomy_field');
 
+// Registrer hooks for alle aktuelle taksonomier
+$taxonomies = ['coursecategory', 'instructors', 'course_location'];
+
+foreach ($taxonomies as $taxonomy) {
+    // Legg til kolonne
+    add_filter("manage_edit-{$taxonomy}_columns", 'add_taxonomy_visibility_column');
+    
+    // Håndter kolonneinnhold
+    add_filter("manage_{$taxonomy}_custom_column", 'manage_taxonomy_visibility_column', 10, 3);
+}
+
+// Legg til quick edit
+add_action('quick_edit_custom_box', 'add_quick_edit_visibility_field', 10, 2);
+
+// JavaScript for å håndtere hurtigredigering
+function add_quick_edit_javascript() {
+    ?>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            var wp_inline_edit = inlineEditTax.edit;
+            
+            inlineEditTax.edit = function(id) {
+                wp_inline_edit.apply(this, arguments);
+                var tag_id = 0;
+                if (typeof(id) == 'object') {
+                    tag_id = parseInt(this.getId(id));
+                }
+                
+                if (tag_id > 0) {
+                    var visibility = $('#tag-' + tag_id).find('.visibility-tag').length ? 'Skjul' : 'Vis';
+                    $('input[name="hide_in_list"][value="' + visibility + '"]').prop('checked', true);
+                }
+            };
+        });
+    </script>
+    <?php
+}
+add_action('admin_footer-edit-tags.php', 'add_quick_edit_javascript');
 
 // Endre "Beskrivelse" til "Kort beskrivelse" for alle taksonomier
 function kursagenten_change_description_label($translated_text, $text, $domain) {

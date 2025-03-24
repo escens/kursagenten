@@ -131,7 +131,12 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                             <?php $this->plassholderbilde_instruktor_callback(); ?>
                         </td>
                     </tr>
-                   
+                    <tr valign="top">
+                        <th scope="row">Plassholderbilde kurssted</th>
+                        <td>
+                            <?php $this->plassholderbilde_sted_callback(); ?>
+                        </td>
+                    </tr>
                 </table>
 
                 <!-- Filter Settings -->
@@ -382,6 +387,18 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
         </div>
     <?php
     }
+
+    public function plassholderbilde_sted_callback() {
+        $image_url = isset($this->kag_kursinnst_options['ka_plassholderbilde_sted']) ? $this->kag_kursinnst_options['ka_plassholderbilde_sted'] : '';
+        ?>
+        <div class="image-upload-wrapper">
+            <img id="ka_plassholderbilde_sted_preview" src="<?php echo esc_url($image_url); ?>" style="max-width: 150px; <?php echo $image_url ? '' : 'display: none;'; ?>" />
+            <input type="hidden" id="ka_plassholderbilde_sted" name="kag_kursinnst_option_name[ka_plassholderbilde_sted]" value="<?php echo esc_attr($image_url); ?>" />
+            <button type="button" class="button upload_image_button_ka_plassholderbilde_sted">Velg bilde</button>
+            <button type="button" class="button remove_image_button_ka_plassholderbilde_sted" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
+        </div>
+    <?php
+    }
     
     
     public function kag_kursinnst_page_init() {
@@ -401,7 +418,19 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
 
     public function kag_kursinnst_sanitize($input) {
         $sanitary_values = array();
+        
+        // Legger til plassholderbilde for sted i listen
+        $image_fields = [
+            'ka_plassholderbilde_generelt',
+            'ka_plassholderbilde_kurs',
+            'ka_plassholderbilde_instruktor',
+            'ka_plassholderbilde_sted'
+        ];
+        
         foreach ($input as $key => $value) {
+            if (in_array($key, $image_fields) && empty($value)) {
+                continue;
+            }
             $sanitary_values[$key] = sanitize_text_field($value);
         }
         return $sanitary_values;
