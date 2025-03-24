@@ -265,6 +265,13 @@ require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template-functions.
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
+
+// Shortcodes
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
+
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.php';
     
     function kursagenten_enqueue_styles() {
         // Last inn base CSS for alle Kursagenten sider
