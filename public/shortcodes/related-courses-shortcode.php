@@ -122,7 +122,7 @@ class RelatedCourses {
         $fonttype = $a['fonttype'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($posts as $related_post) {

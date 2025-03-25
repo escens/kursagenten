@@ -268,11 +268,14 @@ require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_f
 
 // Shortcodes
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
-
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.php';
+
+// Blocks
+//require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
+
     
     function kursagenten_enqueue_styles() {
         // Last inn base CSS for alle Kursagenten sider

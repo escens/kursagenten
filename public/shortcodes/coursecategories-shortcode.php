@@ -57,7 +57,18 @@ class CourseCategories {
         $output = \GridStyles::get_grid_styles($random_id, $a);
         $output .= $this->generate_html($random_id, $terms, $a);
         
-        return $output;
+        $styles = BlocksShortcodeStyles::render($random_id, [
+            'grid' => $a['grid'],
+            'gridtablet' => $a['gridtablet'],
+            'gridmobil' => $a['gridmobil'],
+            'bildestr' => $a['bildestr'],
+            'bildeformat' => $a['bildeformat'],
+            'bildeform' => $a['bildeform'],
+            'fontstr' => $a['fontstr'],
+            'avstand' => $a['avstand']
+        ]);
+        
+        return $output . $styles;
     }
 
     private function process_attributes(array $atts): array {
@@ -148,7 +159,7 @@ class CourseCategories {
         $fonttype = $a['fonttype'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {

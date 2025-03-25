@@ -136,7 +136,7 @@ class InstructorGrid {
         $fonttype = $a['fonttype'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
@@ -159,7 +159,7 @@ class InstructorGrid {
 
             // Hent beskrivelse
             $description = get_term_meta($term->term_id, 'rich_description', true);
-            $description = wp_kses_post($description);
+            $description = wpautop(wp_kses_post($description));
 
             $output .= $this->generate_instructor_html($term, $thumbnail, $description, $a);
         }
@@ -180,7 +180,7 @@ class InstructorGrid {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['fonttype']} class='tittel'>{$term->name}</{$a['fonttype']}>
                     </a>
-                    <div class='description'>{$description}</div>
+                    <div class='description'>" . wp_kses_post($description) . "</div>
                 </div>
             </div>";
     }

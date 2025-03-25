@@ -1,0 +1,74 @@
+{
+    "apiVersion": 2,
+    "name": "kursagenten/kurstaxonomy",
+    "title": "Kurskategorier, steder eller instruktører",
+    "category": "kursagenten",
+    "icon": "grid-view",
+    "description": "Viser kurskategorier, kurssteder eller instruktører i et responsivt grid",
+    "supports": {
+        "html": false,
+        "align": true
+    },
+    "textdomain": "kursagenten",
+    "editorScript": "file:../../../../build/kurstaxonomy.js",
+    "attributes": {
+        "sourceType": {
+            "type": "string",
+            "default": "course-category"
+        },
+        "visningstype": {
+            "type": "string",
+            "default": "kort"
+        },
+        "layout": {
+            "type": "string",
+            "default": "stablet"
+        },
+        "grid": {
+            "type": "number",
+            "default": 3
+        },
+        "gridtablet": {
+            "type": "number",
+            "default": 2
+        },
+        "gridmobil": {
+            "type": "number",
+            "default": 1
+        },
+        "bildestr": {
+            "type": "string",
+            "default": "300px"
+        },
+        "bildeformat": {
+            "type": "string",
+            "default": "16/9"
+        },
+        "bildeform": {
+            "type": "string",
+            "default": "0"
+        },
+        "fontmin": {
+            "type": "string",
+            "default": "14"
+        },
+        "fontmaks": {
+            "type": "string",
+            "default": "18"
+        },
+        "avstand": {
+            "type": "string",
+            "default": "0"
+        },
+        "visBeskrivelse": {
+            "type": "boolean",
+            "default": false
+        },
+        "skygge": {
+            "type": "boolean",
+            "default": true
+        }
+    },
+    "editorStyle": "file:./editor.scss",
+    "style": "file:./style.scss"
+} 

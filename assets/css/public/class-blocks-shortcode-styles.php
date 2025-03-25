@@ -3,23 +3,43 @@ declare(strict_types=1);
 
 if (!defined('ABSPATH')) exit;
 
-class GridStyles {
-    /**
-     * Genererer felles grid-basert CSS for shortcodes
-     */
-    public static function get_grid_styles(string $id, array $a): string {
-        $class_id = "#" . $id;
-        
-        return "<style>
+class BlocksShortcodeStyles {
+    private $id;
+    private $config;
+    
+    public function __construct(string $id, array $config) {
+        $this->id = $id;
+        $this->config = wp_parse_args($config, [
+            'grid' => 3,
+            'gridtablet' => 2,
+            'gridmobil' => 1,
+            'bildestr' => '300px',
+            'bildeformat' => '16/9',
+            'bildeform' => '0',
+            'fontmin' => '14',    // i px
+            'fontmaks' => '18',   // i px
+            'avstand' => '0'
+        ]);
+
+        // Kalkuler font størrelse
+        $base_font_size = 16;
+        $min_rem = floatval($this->config['fontmin']) / $base_font_size;
+        $max_rem = floatval($this->config['fontmaks']) / $base_font_size;
+        $this->config['fontstr'] = "clamp({$min_rem}rem, 3.5vw - 0.219rem, {$max_rem}rem)";
+    }
+    
+    private function get_base_styles(): string {
+        $class_id = "#" . $this->id;
+        return "
             /* Outer Wrapper */
             {$class_id}.outer-wrapper {
-                padding: {$a['avstand']};
+                padding: {$this->config['avstand']};
             }
             
             /* Wrapper */
             {$class_id} .wrapper {
                 display: grid;
-                grid-template-columns: repeat({$a['grid']}, 1fr);
+                grid-template-columns: repeat({$this->config['grid']}, 1fr);
                 column-gap: clamp(1vw, 2vw, 2rem);
                 row-gap: 1rem;
                 width: fit-content;
@@ -33,15 +53,15 @@ class GridStyles {
             {$class_id}.rad .wrapper .box { display: flex; column-gap: 0; max-width: 100%; }
             {$class_id}.kort .box {
                 border-radius: 5px;
-                max-width: {$a['bildestr']};
+                max-width: {$this->config['bildestr']};
                 width: 100%;
                 background-color: #fff;
                 -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1);
                 -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1);
                 box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1);
             }
-            {$class_id}.kort.rund .box { max-width: calc({$a['bildestr']} * 2.5); }
-            {$class_id}.rad.kort .box { max-width: calc({$a['bildestr']} * 4); }
+            {$class_id}.kort.rund .box { max-width: calc({$this->config['bildestr']} * 2.5); }
+            {$class_id}.rad.kort .box { max-width: calc({$this->config['bildestr']} * 4); }
             {$class_id}.skygge.kort .box:hover {
                 -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.3);
                 -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.3);
@@ -61,7 +81,7 @@ class GridStyles {
             
             /* Text */
             {$class_id} .text {
-                font-size: clamp(0.875rem, 0.75rem + 0.5714vw, 1rem);
+                font-size: {$this->config['fontstr']};
                 flex-shrink: 2;
                 flex-grow: 3;
             }
@@ -96,15 +116,15 @@ class GridStyles {
             
             /* Picture and Image */
             {$class_id} picture {
-                aspect-ratio: {$a['bildeformat']};
+                aspect-ratio: {$this->config['bildeformat']};
                 display: block;
-                max-width: calc({$a['bildestr']});
+                max-width: calc({$this->config['bildestr']});
                 overflow: hidden;
             }
             {$class_id}.rund picture { aspect-ratio: 1/1; }
             {$class_id}.stablet.kort picture { padding: 0; }
             {$class_id}.rad.kort picture {
-                max-width: calc({$a['bildestr']} * 0.85);
+                max-width: calc({$this->config['bildestr']} * 0.85);
                 padding: 0;
             }
             
@@ -114,10 +134,10 @@ class GridStyles {
                 max-width: 100%;
                 object-fit: cover;
                 object-position: center;
-                border-radius: {$a['bildeform']};
+                border-radius: {$this->config['bildeform']};
             }
             {$class_id}.skygge:not(.kort) picture {
-                max-width: calc({$a['bildestr']} + 8px);
+                max-width: calc({$this->config['bildestr']} + 8px);
                 padding: 8px;
             }
             {$class_id}.skygge:not(.kort) .box:hover img {
@@ -127,25 +147,30 @@ class GridStyles {
                 transition: transform ease 0.3s, box-shadow ease 0.3s;
             }
             {$class_id}.stablet.kort img { border-radius: 5px 5px 0 0; }
-            {$class_id}.stablet.kort.rund img { border-radius: {$a['bildeform']}; }
+            {$class_id}.stablet.kort.rund img { border-radius: {$this->config['bildeform']}; }
             {$class_id}.rad.kort img { border-radius: 5px 0 0 5px; }
             
             /* Font */
             {$class_id} .tittel {
                 margin: 0;
-                font-size: {$a['fontstr']};
+                font-size: {$this->config['fontstr']};
             }
-            
+        ";
+    }
+    
+    private function get_responsive_styles(): string {
+        $class_id = "#" . $this->id;
+        return "
             /* Responsive */
             @media all and (max-width: 1100px) {
                 {$class_id} .wrapper {
-                    grid-template-columns: repeat({$a['gridtablet']}, 1fr);
+                    grid-template-columns: repeat({$this->config['gridtablet']}, 1fr);
                 }
             }
             
             @media all and (max-width: 530px) {
                 {$class_id} .wrapper {
-                    grid-template-columns: repeat({$a['gridmobil']}, 1fr);
+                    grid-template-columns: repeat({$this->config['gridmobil']}, 1fr);
                 }
                 {$class_id}.rad:not(.utdrag) .wrapper .box { align-items: center; }
                 {$class_id}.rad:not(.kort) .wrapper .box { flex-direction: column; }
@@ -162,6 +187,18 @@ class GridStyles {
                 {$class_id}.rad.kort .text a { padding-left: 0; }
                 {$class_id}.rad.skygge .text { padding-left: 8px; }
             }
+        ";
+    }
+    
+    public function get_styles(): string {
+        return "<style>
+            " . $this->get_base_styles() . "
+            " . $this->get_responsive_styles() . "
         </style>";
+    }
+    
+    public static function render(string $id, array $config): string {
+        $instance = new self($id, $config);
+        return $instance->get_styles();
     }
 } 

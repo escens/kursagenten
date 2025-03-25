@@ -132,7 +132,7 @@ class CourseLocationGrid {
         $fonttype = $a['fonttype'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$bildeform}{$utdrag}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
@@ -152,7 +152,8 @@ class CourseLocationGrid {
 
             // Hent beskrivelser
             $short_description = wp_kses_post($term->description);
-            $rich_description = wp_kses_post(get_term_meta($term->term_id, 'rich_description', true));
+            $rich_description = get_term_meta($term->term_id, 'rich_description', true);
+            $rich_description = wpautop(wp_kses_post($rich_description));
             
             // Bruk rich_description hvis tilgjengelig, ellers bruk standard beskrivelse
             $description = !empty($rich_description) ? $rich_description : $short_description;
@@ -176,7 +177,7 @@ class CourseLocationGrid {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['fonttype']} class='tittel'>{$term->name}</{$a['fonttype']}>
                     </a>
-                    <div class='description'>{$description}</div>
+                    <div class='description'>" . wp_kses_post($description) . "</div>
                 </div>
             </div>";
     }
