@@ -158,10 +158,11 @@ class InstructorGrid {
             $thumbnail = esc_url($thumbnail);
 
             // Hent beskrivelse
+            $short_description = wpautop(wp_kses_post($term->description));
             $description = get_term_meta($term->term_id, 'rich_description', true);
             $description = wpautop(wp_kses_post($description));
 
-            $output .= $this->generate_instructor_html($term, $thumbnail, $description, $a);
+            $output .= $this->generate_instructor_html($term, $thumbnail, $short_description, $a);
         }
 
         $output .= "</div></div>";
@@ -180,7 +181,7 @@ class InstructorGrid {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['fonttype']} class='tittel'>{$term->name}</{$a['fonttype']}>
                     </a>
-                    <div class='description'>" . wp_kses_post($description) . "</div>
+                    <div class='description'>" . $description . "</div>
                 </div>
             </div>";
     }
