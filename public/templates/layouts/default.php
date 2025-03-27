@@ -13,7 +13,7 @@ global $query, $top_filters, $left_filters, $filter_types, $available_filters,
        $taxonomy_data, $filter_display_info;
 ?>
 
-<div class="kursagenten-wrapper ka-default-width">
+<div id="ka" class="kursagenten-wrapper ka-default-width">
     <main id="ka-main" class="kursagenten-main" role="main">
         <div class="ka-container">
                                     <?php

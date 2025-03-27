@@ -31,7 +31,12 @@ function related_save_relationships($post_id) {
         // Hent nye relasjoner fra POST (hvis de finnes)
         $related_ids = isset($_POST['related_' . $related_post_type]) 
             ? array_map('intval', $_POST['related_' . $related_post_type]) 
-            : array();
+            : null;
+
+        // Hvis ingen nye relasjoner er sendt inn, behold eksisterende
+        if ($related_ids === null) {
+            continue;
+        }
 
         // Oppdater relasjoner for denne posten
         update_post_meta($post_id, $meta_key, $related_ids);

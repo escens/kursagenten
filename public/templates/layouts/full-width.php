@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) exit;
 get_header();
 ?>
 
-<div class="kursagenten-wrapper ka-full-width">
+<div id="ka" class="kursagenten-wrapper ka-full-width">
     <main id="ka-main" class="kursagenten-main" role="main">
         <?php 
         // Last inn riktig design-template basert på kontekst

@@ -1,1 +1,165 @@
-/**/
+/* design-single-default.css  */
+
+/* SINGLE COURSE LAYOUT */
+/************************/
+
+#ka .details .course-grid{
+    grid-template-areas:
+      "courselist nextcourse";
+  }
+  #ka .course-information .course-grid{
+    grid-template-rows: auto 1fr;
+    grid-template-areas:
+      "content course-image"
+      "content aside"
+      "footer footer";
+  }
+  #ka .course-information .content { grid-area: content;}
+  #ka .course-information .course-image { grid-area: course-image;}
+  #ka .course-information .aside { grid-area: aside;}
+  #ka .course-information .footer { grid-area: footer; }
+  #ka .details .courselist { grid-area: courselist; }
+  #ka .details .nextcourse { grid-area: nextcourse; }
+  
+  @media screen and (max-width: 768px){
+    #ka .course-grid{
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    #ka .details .course-grid{
+      grid-template-columns: 1fr;
+      grid-template-areas:
+      "nextcourse"  
+      "courselist";
+      grid-auto-flow:dense;
+    }
+    #ka .course-information .course-grid{
+      grid-template-rows: auto;
+      grid-template-areas:
+        "course-image"
+        "content"
+        "aside"
+        "footer";
+    }
+    
+  }
+
+/* SINGLE COURSE STYLES */
+/************************/
+
+/* Course header*/
+/****************/
+    #ka .course-container .ka-header{
+        height: 40vh;
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: start;
+        overflow: hidden;
+    }
+    #ka .course-container .ka-header .background-blur {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;;
+        background-size: cover;
+        background-position: center;
+        filter: blur(1px);
+        z-index: 1;
+    }
+    #ka .course-container .ka-header .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9));
+        z-index: 2;
+    }
+    #ka .course-container .header-content{
+        z-index: 3;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        row-gap: .5em;
+    }
+    #ka .course-container .header-content *{
+        color: white;
+    }
+    #ka .course-container .header-content h1{
+        font-size: 28px;
+        margin: 0;
+        padding: 0;
+    }
+    #ka .course-container .header-content .course-buttons {
+        display: flex;
+        margin-top: 2em;
+    }
+    #ka .course-container .header-content .course-buttons .button{
+        padding: 12px 1em;
+        margin-right: .5em;
+        font-size: var(--ka-font-base);
+    }
+      
+/* Course details */
+/******************/
+    #ka .course-container .details {
+    background-color: var(--ka-alt-background);
+    }
+
+/* -- courselist */
+
+    #ka .courselist-item {
+        background-color: #ffffffd1;
+        border-bottom: 1px solid #eee;
+        padding: .6em .2em;
+    }
+    #ka .courselist-item:hover {
+        background-color: #ffffff;
+    }
+    #ka .courselist-item:last-child {
+        border-bottom: none;
+    }
+    #ka .courselist-main .text-area {
+        display: flex;
+        flex-direction: row;
+        flex-grow: 1;
+    }
+    #ka .courselist-main .links-area{
+        flex-direction: row;
+      }
+    #ka .courselist-main .links-area a{
+        color: #68c46b;
+        text-transform: uppercase;
+        background: transparent;
+        font-size: 1em;
+        margin-left: 1em;
+      }
+      #ka .courselist-main .links-area a:hover{
+        color: #3e8041;
+        background: transparent;
+        box-shadow: none;
+      }
+
+  
+/* Course information */
+/**********************/
+
+    #ka picture.course-image { aspect-ratio: 4/3; display: block; max-width: 100%; overflow: hidden; }
+    #ka picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit: cover; object-position: center; border-radius: 10px; }
+
+    @media screen and (max-width: 768px){
+        #ka picture.course-image.mobile { margin-bottom: 1em; }
+    }
+
+/* Course footer */
+/****************/
+    #ka .course-container .ka-footer {
+    background-color: var(--ka-alt-background);
+    padding: 1em;
+    }
+
+
+  
+

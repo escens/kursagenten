@@ -644,7 +644,8 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                 'description' => '',
                 'classes' => array('menu-item', 'menu-item-type-taxonomy', 'menu-item-object-' . $taxonomy),
                 'xfn' => '',
-                'menu_order' => count($new_items) * 1000
+                'menu_order' => count($new_items) * 1000,
+                'status' => 'publish'
             );
             
             $term_to_menu_id[$term->term_id] = $id_counter;
@@ -692,7 +693,8 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                             'description' => '',
                             'classes' => array('menu-item', 'menu-item-type-taxonomy', 'menu-item-object-' . $taxonomy),
                             'xfn' => '',
-                            'menu_order' => count($new_items) * 1000
+                            'menu_order' => count($new_items) * 1000,
+                            'status' => 'publish'
                         );
                         
                         $term_to_menu_id[$child_term->term_id] = $id_counter;

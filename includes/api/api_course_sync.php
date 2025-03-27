@@ -516,70 +516,53 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
 
 
 function cleanup_coursedates($location_id, $schedules_from_api) {
+    error_log("=== START: cleanup_coursedates for location_id: $location_id ===");
+    
     // Hent alle kursdatoer for denne lokasjonen
     $coursedates = get_posts([
         'post_type' => 'coursedate',
+        'posts_per_page' => -1,
         'meta_query' => [
             ['key' => 'location_id', 'value' => $location_id],
         ],
         'numberposts' => -1,
     ]);
 
-    // Lag en liste over schedule_id-er fra API-et
-    $valid_schedule_ids = array_map(function ($schedule) {
-        return $schedule['id'] ?? 0; // Standardverdi for ID-løse schedules
+    // Hent gyldige schedule_id-er fra API
+    $valid_schedule_ids = array_map(function($schedule) {
+        return $schedule['id'] ?? 0;
     }, $schedules_from_api);
 
-    //error_log("DEBUG: Gyldige schedule_id-er fra API for lokasjon {$location_id}: " . print_r($valid_schedule_ids, true));
-
+    // Sjekk hver kursdato
     foreach ($coursedates as $coursedate) {
-        $coursedate_id = $coursedate->ID;
-        $schedule_id = get_post_meta($coursedate_id, 'schedule_id', true);
-        $related_post_id = get_post_meta($coursedate_id, 'course_related_course', true);
+        $schedule_id = get_post_meta($coursedate->ID, 'schedule_id', true);
+        $related_post_id = get_post_meta($coursedate->ID, 'related_course', true);
 
-        // Håndter kursdatoer med schedule_id = 0
-        if ($schedule_id == 0) {
-            // Slett kun hvis 0 IKKE er en gyldig schedule_id i API-et
+        // Hvis schedule_id er 0, sjekk om det er en gyldig verdi
+        if ($schedule_id === '0' || $schedule_id === 0) {
             if (!in_array(0, $valid_schedule_ids)) {
-                remove_coursedate_from_related_course($coursedate_id, $related_post_id);
-                wp_delete_post($coursedate_id, true);
-                //error_log("INFO: Slettet kursdato med schedule_id = 0 for lokasjon {$location_id}");
+                // Slett kursdatoen hvis 0 ikke er en gyldig schedule_id
+                wp_delete_post($coursedate->ID, true);
+                remove_coursedate_from_related_course($coursedate->ID, $related_post_id);
             }
-            continue; // Hopp over til neste kursdato
-        }
-
-        // Slett kursdato med ugyldig schedule_id
-        if (!in_array($schedule_id, $valid_schedule_ids)) {
-            remove_coursedate_from_related_course($coursedate_id, $related_post_id);
-            wp_delete_post($coursedate_id, true);
-            //error_log("INFO: Slettet kursdato med ugyldig schedule_id {$schedule_id} for lokasjon {$location_id}");
+        } else if (!in_array($schedule_id, $valid_schedule_ids)) {
+            // Slett kursdatoen hvis schedule_id ikke lenger er gyldig
+            wp_delete_post($coursedate->ID, true);
+            remove_coursedate_from_related_course($coursedate->ID, $related_post_id);
         }
     }
 }
 
-function remove_coursedate_from_related_course($coursedate_id, $related_post_ids) {
-    if (empty($related_post_ids) || !is_array($related_post_ids)) {
-        return; // Ingen relaterte kurs å oppdatere
-    }
-
-    foreach ($related_post_ids as $related_post_id) {
-        $related_courses = get_post_meta($related_post_id, 'course_related_coursedate', true);
-
-        if (is_array($related_courses)) {
-            // Fjern kursdato ID fra array
-            $updated_kurs = array_filter($related_courses, function ($id) use ($coursedate_id) {
-                return $id != $coursedate_id;
-            });
-
-            // Oppdater meta-feltet for kurs
-            update_post_meta($related_post_id, 'course_related_coursedate', $updated_kurs);
+function remove_coursedate_from_related_course($coursedate_id, $post_id) {
+    if (!empty($post_id)) {
+        $related_coursedates = get_post_meta($post_id, 'course_related_coursedate', true);
+        
+        if (!empty($related_coursedates) && is_array($related_coursedates)) {
+            $related_coursedates = array_diff($related_coursedates, [$coursedate_id]);
+            update_post_meta($post_id, 'course_related_coursedate', array_values($related_coursedates));
         }
     }
 }
-
-
-
-
 
 // Felles funksjoner/ helper funkcions and data
 

@@ -27,6 +27,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+
 register_activation_hook(__FILE__, 'kursagenten_check_dependencies');
 
 function kursagenten_check_dependencies() {
@@ -63,6 +64,9 @@ define('KURSAGENTEN_IMAGE_BASE_URL_INSTRUCTOR', 'https://www.kursagenten.no/User
 
 register_activation_hook(__FILE__, 'kursagenten_activate');
 register_deactivation_hook(__FILE__, 'kursagenten_deactivate');
+
+// Last inn hooks
+//require_once plugin_dir_path(__FILE__) . 'includes/hooks.php';
 
 /**
  * Fikser queried object for alle kursrelaterte taksonomier

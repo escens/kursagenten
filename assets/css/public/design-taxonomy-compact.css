@@ -1,13 +1,13 @@
 /* Compact Taxonomy Template Styles */
 
-.taxonomy-compact {
+#ka .taxonomy-compact {
     max-width: 1000px;
     margin: 0 auto;
     padding: 2rem;
 }
 
 /* Header Styles */
-.taxonomy-header.compact-style {
+#ka .taxonomy-header.compact-style {
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 2rem;
@@ -17,85 +17,85 @@
     border-bottom: 1px solid var(--border-color, #eee);
 }
 
-.taxonomy-header-content {
+#ka .taxonomy-header-content {
     padding-right: 2rem;
 }
 
-.taxonomy-image {
+#ka .taxonomy-image {
     border-radius: 8px;
     overflow: hidden;
     aspect-ratio: 4/3;
 }
 
-.taxonomy-image img {
+#ka .taxonomy-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.taxonomy-icon {
+#ka .taxonomy-icon {
     width: 40px;
     height: 40px;
     margin-bottom: 1rem;
 }
 
-.taxonomy-icon img {
+#ka .taxonomy-icon img {
     width: 100%;
     height: 100%;
     object-fit: contain;
 }
 
-.taxonomy-title {
+#ka .taxonomy-title {
     font-size: 2rem;
     margin: 0 0 1rem;
     color: var(--heading-color, #333);
 }
 
-.taxonomy-description {
+#ka .taxonomy-description {
     font-size: 1rem;
     line-height: 1.6;
     color: var(--text-color, #666);
 }
 
 /* Course Section Styles */
-.course-header {
+#ka .course-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.5rem;
 }
 
-.course-count {
+#ka .course-count {
     font-size: 1rem;
     color: var(--text-color, #666);
 }
 
-.course-list.compact-layout {
+#ka .course-list.compact-layout {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
 /* Related Terms Section */
-.related-terms.compact-style {
+#ka .related-terms.compact-style {
     margin-top: 3rem;
     padding-top: 2rem;
     border-top: 1px solid var(--border-color, #eee);
 }
 
-.related-terms.compact-style h2 {
+#ka .related-terms.compact-style h2 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
     color: var(--heading-color, #333);
 }
 
-.terms-list {
+#ka .terms-list {
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.term-link {
+#ka .term-link {
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
@@ -108,34 +108,34 @@
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.term-link:hover {
+#ka .term-link:hover {
     transform: translateX(4px);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.term-link .term-icon {
+#ka .term-link .term-icon {
     width: 32px;
     height: 32px;
     flex-shrink: 0;
 }
 
-.term-link .term-icon img {
+#ka .term-link .term-icon img {
     width: 100%;
     height: 100%;
     object-fit: contain;
 }
 
-.term-info {
+#ka .term-info {
     min-width: 0; /* For text truncation */
 }
 
-.term-link .term-name {
+#ka .term-link .term-name {
     font-size: 1.1rem;
     margin: 0 0 0.25rem;
     color: var(--heading-color, #333);
 }
 
-.term-link .term-excerpt {
+#ka .term-link .term-excerpt {
     font-size: 0.9rem;
     color: var(--text-color, #666);
     margin: 0;
@@ -144,17 +144,17 @@
     text-overflow: ellipsis;
 }
 
-.term-arrow {
+#ka .term-arrow {
     color: var(--text-color, #666);
     transition: transform 0.2s;
 }
 
-.term-link:hover .term-arrow {
+#ka .term-link:hover .term-arrow {
     transform: translateX(4px);
 }
 
 /* No Courses Message */
-.no-courses {
+#ka .no-courses {
     text-align: center;
     padding: 2rem;
     background: var(--light-bg, #f9f9f9);
@@ -164,33 +164,33 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-    .taxonomy-compact {
+    #ka .taxonomy-compact {
         padding: 1rem;
     }
 
-    .taxonomy-header.compact-style {
+    #ka .taxonomy-header.compact-style {
         grid-template-columns: 1fr;
         gap: 1.5rem;
     }
 
-    .taxonomy-header-content {
+    #ka .taxonomy-header-content {
         padding-right: 0;
         order: 2;
     }
 
-    .taxonomy-image {
+    #ka .taxonomy-image {
         order: 1;
     }
 
-    .taxonomy-title {
+    #ka .taxonomy-title {
         font-size: 1.8rem;
     }
 
-    .term-link {
+    #ka .term-link {
         padding: 0.75rem;
     }
 
-    .term-link .term-excerpt {
+    #ka .term-link .term-excerpt {
         display: none;
     }
 }

@@ -1,13 +1,13 @@
 /* Grid Taxonomy Template Styles */
 
-.taxonomy-grid {
+#ka .taxonomy-grid {
     max-width: 100%;
     margin: 0;
     padding: 0;
 }
 
 /* Hero Header Styles */
-.taxonomy-header.hero-style {
+#ka .taxonomy-header.hero-style {
     position: relative;
     height: 50vh;
     min-height: 400px;
@@ -19,7 +19,7 @@
     text-align: center;
 }
 
-.taxonomy-hero-image {
+#ka .taxonomy-hero-image {
     position: absolute;
     top: 0;
     left: 0;
@@ -28,13 +28,13 @@
     z-index: 1;
 }
 
-.taxonomy-hero-image img {
+#ka .taxonomy-hero-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
 
-.taxonomy-overlay {
+#ka .taxonomy-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -43,84 +43,84 @@
     background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.6));
 }
 
-.taxonomy-title-wrapper {
+#ka .taxonomy-title-wrapper {
     position: relative;
     z-index: 2;
     max-width: 800px;
     padding: 2rem;
 }
 
-.taxonomy-icon {
+#ka .taxonomy-icon {
     width: 64px;
     height: 64px;
     margin: 0 auto 1.5rem;
 }
 
-.taxonomy-icon img {
+#ka .taxonomy-icon img {
     width: 100%;
     height: 100%;
     object-fit: contain;
     filter: brightness(0) invert(1);
 }
 
-.taxonomy-title {
+#ka .taxonomy-title {
     font-size: 3.5rem;
     margin: 0 0 1rem;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
 }
 
-.taxonomy-description {
+#ka .taxonomy-description {
     font-size: 1.2rem;
     line-height: 1.6;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
 }
 
 /* Course Section Styles */
-.taxonomy-courses {
+#ka .taxonomy-courses {
     max-width: 1400px;
     margin: 0 auto;
     padding: 0 2rem;
 }
 
-.course-header {
+#ka .course-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
 }
 
-.course-count {
+#ka .course-count {
     font-size: 1.2rem;
     color: var(--text-color, #666);
 }
 
-.course-grid.grid-layout {
+#ka .course-grid.grid-layout {
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
 }
 
 /* Related Terms Section */
-.related-terms {
+#ka .related-terms {
     max-width: 1400px;
     margin: 4rem auto;
     padding: 3rem 2rem;
     background: var(--light-bg, #f9f9f9);
 }
 
-.related-terms h2 {
+#ka .related-terms h2 {
     font-size: 2rem;
     text-align: center;
     margin-bottom: 3rem;
 }
 
-.terms-grid.grid-layout {
+#ka .terms-grid.grid-layout {
     display: grid;
     gap: 2rem;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-.term-card {
+#ka .term-card {
     display: block;
     text-decoration: none;
     background: var(--card-bg, #fff);
@@ -130,51 +130,51 @@
     transition: transform 0.3s, box-shadow 0.3s;
 }
 
-.term-card:hover {
+#ka .term-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.term-image {
+#ka .term-image {
     aspect-ratio: 16/9;
     overflow: hidden;
 }
 
-.term-image img {
+#ka .term-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s;
 }
 
-.term-card:hover .term-image img {
+#ka .term-card:hover .term-image img {
     transform: scale(1.05);
 }
 
-.term-content {
+#ka .term-content {
     padding: 1.5rem;
 }
 
-.term-card .term-icon {
+#ka .term-card .term-icon {
     width: 40px;
     height: 40px;
     margin-bottom: 1rem;
 }
 
-.term-card .term-name {
+#ka .term-card .term-name {
     font-size: 1.4rem;
     margin: 0 0 1rem;
     color: var(--heading-color, #333);
 }
 
-.term-card .term-excerpt {
+#ka .term-card .term-excerpt {
     font-size: 1rem;
     color: var(--text-color, #666);
     margin: 0;
 }
 
 /* No Courses Message */
-.no-courses {
+#ka .no-courses {
     text-align: center;
     padding: 4rem 2rem;
     background: var(--light-bg, #f9f9f9);
@@ -185,36 +185,36 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
-    .taxonomy-header.hero-style {
+    #ka .taxonomy-header.hero-style {
         height: 40vh;
     }
 
-    .taxonomy-title {
+    #ka .taxonomy-title {
         font-size: 2.8rem;
     }
 }
 
 @media (max-width: 768px) {
-    .taxonomy-header.hero-style {
+    #ka .taxonomy-header.hero-style {
         height: 30vh;
         min-height: 300px;
     }
 
-    .taxonomy-title {
+    #ka .taxonomy-title {
         font-size: 2.2rem;
     }
 
-    .taxonomy-description {
+    #ka .taxonomy-description {
         font-size: 1rem;
     }
 
-    .course-grid.grid-layout,
-    .terms-grid.grid-layout {
+    #ka .course-grid.grid-layout,
+    #ka .terms-grid.grid-layout {
         grid-template-columns: 1fr;
     }
 
-    .taxonomy-courses,
-    .related-terms {
+    #ka     .taxonomy-courses,
+    #ka .related-terms {
         padding: 0 1rem;
     }
 }
