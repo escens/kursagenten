@@ -1,24 +1,110 @@
 <?php
 
 function create_or_update_course_and_schedule($course_data, $is_webhook = false) {
-    error_log("Starting create_or_update_course_and_schedule for location_id: " . ($course_data['location_id'] ?? 'none'));
+    error_log("=== START: create_or_update_course_and_schedule function ===");
+    //error_log("Kurs data: " . print_r($course_data, true));
     
+    // 1. Initialiser grunnleggende variabler
     $location_id = isset($course_data['location_id']) ? (int) $course_data['location_id'] : 0;
     $main_course_id = isset($course_data['main_course_id']) ? (int) $course_data['main_course_id'] : 0;
     $language = sanitize_text_field($course_data['language'] ?? null); 
     $is_active = $course_data['is_active'] ?? true;
-    //$image_url_alt = $course_data['image_url_alt'] ?? null;
+    
+    //error_log("Bruker is_active verdi fra course_data for kurs {$course_data['course_name']}: " . ($is_active ? 'true' : 'false'));
+    error_log("Location ID: $location_id, Main Course ID: $main_course_id");
 
-
+    // 2. Hent kursdetaljer
     $individual_course_data = kursagenten_get_course_details($location_id);
     if (empty($individual_course_data)) {
-        error_log("Failed to get course details for location_id: $location_id");
+        error_log("FEIL: Kunne ikke hente kursdetaljer for location_id: $location_id");
         return false;
     }
 
-    // Finn riktig lokasjon og sett opp location_data
-    $location_data = $individual_course_data;
-    foreach ($individual_course_data['locations'] as $loc) {
+    // 3. Forbered location data
+    $location_data = prepare_location_data($individual_course_data, $location_id);
+    $total_locations = count($individual_course_data['locations'] ?? []);
+    //error_log("Totalt antall lokasjoner for kurs: $total_locations");
+
+    // 4. Finn eksisterende hovedkurs
+    $main_course = get_existing_main_course($main_course_id);
+    $is_main_course_location = ((int)$location_id === (int)$main_course_id);
+
+    // 5. Hovedlogikk
+    if ($main_course) {
+        // Hovedkurset eksisterer
+        error_log("Hovedkurs eksisterer allerede med ID: " . $main_course[0]->ID);
+        
+        if ($is_main_course_location) {
+            // Oppdater hovedkurset
+            error_log("Oppdaterer hovedkurs {$main_course[0]->ID} for location_id: $location_id");
+            update_existing_course($main_course[0]->ID, $location_data, $main_course_id, $location_id, $language, $is_active);
+            
+            // Finn og oppdater subkurs for hovedkursets lokasjon
+            $main_course_sub_course = get_existing_sub_course($location_id, $main_course_id);
+            error_log("Finner antall subkurser for hovedkursets lokasjon: " . count($main_course_sub_course) . " for location_id: $location_id og main_course_id: $main_course_id " . ". Foreldrekurset er: " . $main_course[0]->ID);
+            if ($main_course_sub_course) {
+                // Oppdater eksisterende subkurs
+                error_log("Oppdaterer eksisterende subkurs, kopi av hovedkurs {$main_course_sub_course[0]->ID} for location_id: $location_id");
+                update_existing_course($main_course_sub_course[0]->ID, $location_data, $main_course_id, $location_id, $language, $is_active);
+            } else {
+                // Opprett subkurs hvis det ikke eksisterer
+                error_log("Oppretter nytt subkurs for hovedkursets lokasjon: $location_id");
+                create_new_sub_course($location_data, $main_course_id, $location_id, $language, $is_active);
+            }
+            
+            return $main_course[0]->ID;
+        } else {
+            // Finn og oppdater/opprett subkurs
+            $existing_sub_course = get_existing_sub_course($location_id, $main_course_id);
+            
+            if ($existing_sub_course) {
+                // Oppdater eksisterende subkurs
+                error_log("Oppdaterer eksisterende subkurs {$existing_sub_course[0]->ID} for location_id: $location_id");
+                update_existing_course($existing_sub_course[0]->ID, $location_data, $main_course_id, $location_id, $language, $is_active);
+                return $existing_sub_course[0]->ID;
+            } else {
+                // Opprett nytt subkurs
+                error_log("Oppretter nytt subkurs for location_id: $location_id");
+                return create_new_sub_course($location_data, $main_course_id, $location_id, $language, $is_active);
+            }
+        }
+    } else {
+        // Hovedkurset eksisterer ikke
+        if ($is_main_course_location) {
+            // Opprett hovedkurs
+            error_log("Oppretter nytt hovedkurs for location_id: $location_id");
+            $main_post_id = create_new_course($location_data, $main_course_id, $location_id, $language, $is_active);
+            
+            // Opprett subkurs for hovedkursets lokasjon
+            $main_sub_location_data = prepare_location_data($individual_course_data, $location_id);
+            create_new_sub_course($main_sub_location_data, $main_course_id, $location_id, $language, $is_active);
+            
+            return $main_post_id;
+        } else {
+            // Opprett hovedkurs først, deretter subkurs
+            error_log("Oppretter hovedkurs og subkurs for location_id: $location_id");
+            $main_course_data = kursagenten_get_course_details($main_course_id);
+            if (!empty($main_course_data)) {
+                $main_location_data = prepare_location_data($main_course_data, $main_course_id);
+                $main_post_id = create_new_course($main_location_data, $main_course_id, $main_course_id, $language, $is_active);
+                
+                // Opprett subkurs for hovedkursets lokasjon
+                create_new_sub_course($main_location_data, $main_course_id, $main_course_id, $language, $is_active);
+                
+                // Opprett subkurs for denne lokasjonen
+                return create_new_sub_course($location_data, $main_course_id, $location_id, $language, $is_active);
+            }
+        }
+    }
+
+    error_log("=== SLUTT: create_or_update_course_and_schedule ===");
+    return false;
+}
+
+// Hjelpefunksjoner
+function prepare_location_data($course_data, $location_id) {
+    $location_data = $course_data;
+    foreach ($course_data['locations'] as $loc) {
         if ($loc['courseId'] == $location_id) {
             $location_data['locations'] = [$loc];
             if (isset($loc['bannerImage'])) {
@@ -27,160 +113,60 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
             break;
         }
     }
+    return $location_data;
+}
 
-    // Sjekk antall lokasjoner først
-    $total_locations = count($individual_course_data['locations'] ?? []);
-    error_log("Total locations for course: $total_locations");
-
-    // Hvis kurset bare har én lokasjon, skal vi ikke opprette underkurs
-    if ($total_locations === 1) {
-        error_log("Course has only one location, skipping sub-course creation");
-        
-        // Oppdater eller opprett hovedkurset
-        $existing_courses = get_posts([
-            'post_type' => 'course',
-            'meta_key' => 'location_id',
-            'meta_value' => $location_id,
-            'post_status' => ['publish', 'draft'],
-            'posts_per_page' => -1,
-        ]);
-
-        if (!$existing_courses) {
-            return create_new_course($location_data, $main_course_id, $location_id, $language, $is_active);
-        } else {
-            foreach ($existing_courses as $course) {
-                update_existing_course($course->ID, $location_data, $main_course_id, $location_id, $language, $is_active);
-            }
-            return true;
-        }
-    }
-
-    // Fortsett med eksisterende logikk
-    $existing_courses = get_posts([
+function get_existing_main_course($main_course_id) {
+    return get_posts([
         'post_type' => 'course',
-        'meta_key' => 'location_id',
-        'meta_value' => $location_id,
+        'meta_query' => [
+            'relation' => 'AND',
+            [
+                'key' => 'main_course_id',
+                'value' => $main_course_id,
+                'compare' => '='
+            ],
+            [
+                'key' => 'is_parent_course',
+                'value' => 'yes',
+                'compare' => '='
+            ]
+        ],
         'post_status' => ['publish', 'draft'],
-        'posts_per_page' => -1,
+        'posts_per_page' => 1
     ]);
+}
 
-    if (!$existing_courses) {
-        if ((int)$location_id === (int)$main_course_id) {
-            error_log("This is a main course. Location ID equals Main Course ID: $location_id");
-            
-            // Sjekk om det finnes andre kurs med samme main_course_id
-            $sibling_courses = get_posts([
-                'post_type' => 'course',
-                'meta_key' => 'main_course_id',
-                'meta_value' => $main_course_id,
-                'post_status' => ['publish', 'draft'],
-                'posts_per_page' => -1,
-            ]);
-            
-            $total_locations = count($individual_course_data['locations'] ?? []);
-            error_log("Total locations found: $total_locations");
-            
-            if ($total_locations > 1) {
-                error_log("Creating main course and sub-courses for location_id: $location_id");
-                $main_post_id = create_new_course($location_data, $main_course_id, $location_id, $language, $is_active);
-                
-                // Opprett underkurs for alle lokasjoner
-                foreach ($individual_course_data['locations'] as $location) {
-                    $loc_id = $location['courseId'];
-                    
-                    // Sjekk om underkurset allerede eksisterer
-                    $existing_sub_course = get_posts([
-                        'post_type' => 'course',
-                        'meta_query' => [
-                            'relation' => 'AND',
-                            [
-                                'key' => 'location_id',
-                                'value' => $loc_id,
-                                'compare' => '='
-                            ],
-                            [
-                                'key' => 'main_course_id',
-                                'value' => $main_course_id,
-                                'compare' => '='
-                            ],
-                            [
-                                'key' => 'is_parent_course',
-                                'compare' => 'NOT EXISTS'
-                            ]
-                        ],
-                        'posts_per_page' => 1,
-                    ]);
-                    
-                    if (empty($existing_sub_course)) {
-                        // Hent korrekt lokasjon-data for dette underkurset
-                        $location_data = $individual_course_data;
-                        $location_data['id'] = $loc_id; // Sett riktig location_id
-                        
-                        // Finn riktig lokasjon i locations-arrayet og sett bannerImage
-                        foreach ($individual_course_data['locations'] as $loc) {
-                            if ($loc['courseId'] == $loc_id) {
-                                $location_data['locations'] = [$loc];
-                                // Legg til bannerImage fra lokasjonen hvis den finnes
-                                if (isset($loc['bannerImage'])) {
-                                    $location_data['bannerImage'] = $loc['bannerImage'];
-                                }
-                                break;
-                            }
-                        }
-                        
-                        create_new_sub_course($location_data, $main_course_id, $loc_id, $language, $is_active);
-                    } 
-                }
-                
-                return $main_post_id;
-            } else {
-                return create_new_course($location_data, $main_course_id, $location_id, $language, $is_active);
-            }
-        } else {
-            // Hent data for hovedkurset
-            $main_course_data = kursagenten_get_course_details($main_course_id); 
-            if (!empty($main_course_data)) {
-                // Finn riktig lokasjon i locations-arrayet
-                $location_data = $main_course_data;
-                $location_data['id'] = $location_id;
-                
-                foreach ($main_course_data['locations'] as $loc) {
-                    if ($loc['courseId'] == $location_id) {
-                        $location_data['locations'] = [$loc];
-                        // Legg til bannerImage fra lokasjonen hvis den finnes
-                        if (isset($loc['bannerImage'])) {
-                            $location_data['bannerImage'] = $loc['bannerImage'];
-                        }
-                        break;
-                    }
-                }
-                
-                return create_new_sub_course($location_data, $main_course_id, $location_id, $language, $is_active);
-            }
-            error_log("Failed to create sub-course for location_id: $location_id, main_course_id: $main_course_id");
-            return false;
-        }
-    } else {
-        foreach ($existing_courses as $course) {
-            // Finn riktig lokasjon i locations-arrayet og sett bannerImage
-            $location_data = $individual_course_data;
-            foreach ($individual_course_data['locations'] as $loc) {
-                if ($loc['courseId'] == $location_id) {
-                    $location_data['locations'] = [$loc];
-                    if (isset($loc['bannerImage'])) {
-                        $location_data['bannerImage'] = $loc['bannerImage'];
-                    }
-                    break;
-                }
-            }
-            
-            update_existing_course($course->ID, $location_data, $main_course_id, $location_id, $language, $is_active);
-        }
-        return true;
-    }
+function get_existing_sub_course($location_id, $main_course_id) {
+    //error_log("Søker etter subkurs med location_id: $location_id og main_course_id: $main_course_id");
+    
+    return get_posts([
+        'post_type' => 'course',
+        'meta_query' => [
+            'relation' => 'AND',
+            [
+                'key' => 'location_id',
+                'value' => $location_id,
+                'compare' => '='
+            ],
+            [
+                'key' => 'main_course_id',
+                'value' => $main_course_id,
+                'compare' => '='
+            ],
+            // Sjekk at is_parent_course IKKE eksisterer
+            [
+                'key' => 'is_parent_course',
+                'compare' => 'NOT EXISTS'
+            ]
+        ],
+        'post_status' => ['publish', 'draft'],
+        'posts_per_page' => 1
+    ]);
 }
 
 function create_new_course($data, $main_course_id, $location_id, $language, $is_active) {
+    error_log("=== Start create_new_course with location_id: $location_id and is_active: $is_active");
     $post_status = $is_active ? 'publish' : 'draft';
 
     $post_id = wp_insert_post([
@@ -219,12 +205,13 @@ function create_new_course($data, $main_course_id, $location_id, $language, $is_
 
 function create_new_sub_course($data, $main_course_id, $location_id, $language, $is_active) {
     error_log("=== START: create_new_sub_course ===");
-    error_log("Main Course ID: $main_course_id");
-    error_log("Location ID: $location_id");
-    
+    //error_log("Main Course ID: $main_course_id");
+    //error_log("Location ID: $location_id");
+    //error_log("Is Active: $is_active");
     // Check if parent course exists
     $parent_course = get_posts([
         'post_type' => 'course',
+        'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
                 'key' => 'location_id',
@@ -255,7 +242,7 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
         }
     } else {
         $parent_id = $parent_course[0]->ID;
-        error_log("Fant eksisterende hovedkurs med ID: $parent_id");
+        //error_log("Fant eksisterende hovedkurs med ID: $parent_id");
     }
     $post_status = $is_active ? 'publish' : 'draft';
     // Create sub-course
@@ -296,19 +283,21 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
 }
 
 function update_existing_course($post_id, $data, $main_course_id, $location_id, $language, $is_active) {
+    error_log("=== Start update_existing_course with post_id: $post_id/location_id: $location_id/main_course_id: $main_course_id and is_active: $is_active");
     $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
     $total_locations = count($data['locations'] ?? []);
 
-    if ($is_parent_course === 'yes' && $total_locations > 1) {
+    if ($is_parent_course === 'yes') {
         // Kun hold hovedkurs publisert hvis det har flere lokasjoner
         $updated_title = $data['name'];
         $post_status = 'publish';
+        //error_log("Updating main course with multiple locations {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
     } else {
         $updated_title = $is_parent_course === 'yes' ? $data['name'] : $data['name'] . ' - ' . get_course_location($data);
         $post_status = $is_active ? 'publish' : 'draft';
+        //error_log("Updating sub-course {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
     }
-
-    error_log("Updating course {$post_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
+    error_log("Updating course {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
 
     wp_update_post([
         'ID'           => $post_id,
@@ -342,7 +331,7 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
 }
 
 function create_or_update_course_date($data, $post_id, $main_course_id, $location_id, $is_active) {
-    error_log("Starting create_or_update_course_date for post_id: $post_id, location_id: $location_id");
+    error_log("**Starting create_or_update_course_date for post_id: $post_id, location_id: $location_id");
     
     if (!$is_active) {
         error_log("Course is not active, deleting existing dates for location_id: $location_id");
@@ -378,7 +367,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
     }
 
     $location = reset($location);
-    error_log("Found location. Number of schedules: " . count($location['schedules'] ?? []));
+    //error_log("Found location. Number of schedules: " . count($location['schedules'] ?? []));
 
     // Loop through all schedules and create/update course dates
     foreach ($location['schedules'] as $schedule) {
@@ -691,6 +680,7 @@ function sync_main_course_data($main_course_id) {
     // Finn hovedkursets post-ID basert på $main_course_id som meta-verdi
     $main_course_post = get_posts([
         'post_type' => 'course',
+        'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
                 'key' => 'main_course_id',
@@ -715,6 +705,7 @@ function sync_main_course_data($main_course_id) {
     // Hent alle child_course knyttet til hovedkurset
     $child_courses = get_posts([
         'post_type' => 'course',
+        'post_status' => ['publish', 'draft'],
         'meta_query' => [
             'relation' => 'AND',
             [
@@ -839,7 +830,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
             //error_log("DEBUG: Oppdatert taxonomi 'instructors' på post ID $post_id med term IDs: " . implode(', ', $instructors));
         }
     } else {
-        error_log("DEBUG: Ingen instruktørdata funnet for post ID $post_id.");
+        //error_log("DEBUG: Ingen instruktørdata funnet for post ID $post_id.");
     }
 }
 
@@ -894,146 +885,223 @@ function get_instructors_in_courselist($data, $location_id) {
 
 
 function set_featured_image_from_url($data, $post_id, $main_course_id, $location_id, $location_name) {
-    // Check if the current post already has a featured image
+    error_log("** START: set_featured_image_from_url, post_id: $post_id, location_id: $location_id");
+    //error_log("Post ID: $post_id, Location ID: $location_id");
+    
     $existing_thumbnail_id = get_post_thumbnail_id($post_id);
     $image_url = $data['bannerImage'] ?? null;
-    $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
-    /*error_log('Eksternt bilde: ' . $image_url);
-    error_log('Image URL: ' . var_export($image_url, true));
-    error_log('Nåværende bilde: '. $existing_thumbnail_id);
+    
+    error_log("Eksisterende thumbnail ID: $existing_thumbnail_id - Bilde URL: " . ($image_url ?: 'Ingen URL'));
+    //error_log("Bilde URL: " . ($image_url ?: 'Ingen URL'));
 
-    error_log("DEBUG: Starter funksjon med post_id: $post_id, image_url: " . var_export($image_url, true));
-    */
-    if ($image_url !== null && $image_url !== '') {
-        //error_log("DEBUG: Image URL er gyldig, fortsetter med import.");
-        $filename = basename($image_url);
-        $filename_original = basename($image_url);
-        
-        // Standardiser kjente bildeformater
-        $allowed_types = array(
-            'jpeg' => 'jpg',
-            'jpg' => 'jpg',
-            'png' => 'png',
-            'gif' => 'gif',
-            'webp' => 'webp'
-        );
-        
-        // Hent filendelse
-        $file_ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
-        
-        // Standardiser filendelsen hvis den er i listen over tillatte typer
-        if (array_key_exists($file_ext, $allowed_types)) {
-            $new_ext = $allowed_types[$file_ext];
-            $filename = substr($filename, 0, -(strlen($file_ext))) . $new_ext;
-        }
-        
-        $stored_image_name = get_post_meta($post_id, 'course_image_name', true);
-        /*
-        error_log("**** kursID: $post_id, Lokasjon: $location_id,  Course id: " . $data['id']);
-        error_log("**** stored_image_name: $stored_image_name");
-        error_log("**** filename: $filename");
-        */
-        // Check if the image already exists and is the same to avoid re-downloading
-        if ($existing_thumbnail_id && $stored_image_name === $filename) {
-            error_log("** Image already exists for post ID: $post_id, skipping new import.");
-            return false;
-        }
-
-        // Delete the existing image if it's different
+    if (empty($image_url)) {
+        error_log("ADVARSEL: Ingen bilde-URL tilgjengelig");
         if ($existing_thumbnail_id) {
-            wp_delete_attachment($existing_thumbnail_id, true);
-        }
-
-        $upload_dir = wp_upload_dir();
-        $file_path = $upload_dir['path'] . '/' . $filename;
-
-        // Download the image from the URL
-        $ch = curl_init($image_url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        $image_data = curl_exec($ch);
-        $curl_error = curl_error($ch);
-        curl_close($ch);
-
-        if ($image_data === false) {
-            error_log("** Failed to fetch image from URL: $image_url. Error: $curl_error");
-            return false;
-        }
-
-        // Ensure the upload directory exists
-        if (!file_exists($upload_dir['path'])) {
-            wp_mkdir_p($upload_dir['path']);
-        }
-
-        // Save the image to the uploads directory
-        if (file_put_contents($file_path, $image_data) === false) {
-            error_log("** Failed to save image to: $file_path");
-            return false;
-        }
-
-        // Check the file type and ensure it's valid
-        $wp_filetype = wp_check_filetype($filename, null);
-        if (!$wp_filetype['type']) {
-            // Logg ukjent filtype
-            error_log("Unknown or invalid file type for image: $filename");
-            return false;
-        }
-
-        $formatted_date = date('Y-m-d H:i:s');
-
-        $new_filename = "kursbilde-" . sanitize_file_name($data['name']) . '-' . $location_name;
-        $attachment = array(
-            'post_mime_type' => $wp_filetype['type'],
-            'post_title'     => sanitize_file_name($new_filename),
-            'post_content'   => $data['introText'],
-            'post_excerpt'   => $data['introText'],
-            'post_status'    => 'inherit',
-            'post_date'    => $formatted_date,
-            'post_date_gmt' => get_gmt_from_date($formatted_date),
-        );
-
-        // Insert the attachment into the media library
-        $attach_id = wp_insert_attachment($attachment, $file_path, $post_id);
-        if (is_wp_error($attach_id)) {
-            error_log("** Failed to insert attachment for image: $filename");
-            return false;
-        }
-
-        // Generate attachment metadata and set the featured image
-        require_once(ABSPATH . 'wp-admin/includes/image.php');
-        $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
-        wp_update_attachment_metadata($attach_id, $attach_data);
-        set_post_thumbnail($post_id, $attach_id);
-
-        // Update the image name in custom fields (optional if you use ACF)
-        update_post_meta($attach_id, '_wp_attachment_image_alt', $data['introText']);
-        update_post_meta($post_id, 'course_image_name', $filename_original);
-        update_post_meta($attach_id, 'is_course_image', true);
-
-        error_log("** Image successfully downloaded and set as featured image for post ID: $post_id - kurs: " . $data['name']);
-
-        return true;
-    } else {
-        error_log("DEBUG: Image URL er tom eller null, avslutter tidlig.");
-        if ($existing_thumbnail_id) {
-            error_log("eksisterende bilde $existing_thumbnail_id, slettes for post_id: $post_id");
             wp_delete_attachment($existing_thumbnail_id, true);
             update_post_meta($post_id, 'course_image_name', '');
-
+            error_log("Slettet eksisterende bilde for post_id: $post_id");
         }
         return false;
     }
 
-    // If neither image_url nor parent image is available and post already has an image, do nothing
-    if ($existing_thumbnail_id) {
-        error_log("** Image already exists for post ID: $post_id, no changes needed.");
+    // Legg til ekstra validering av bilde-URL
+    if (!filter_var($image_url, FILTER_VALIDATE_URL)) {
+        error_log("FEIL: Ugyldig bilde-URL format: $image_url");
         return false;
     }
 
-    // If neither image_url nor parent image is available, return false
-    //error_log("** No image available for post ID: " . $post_id);
-    //return false;
+    $filename = basename($image_url);
+    $filename_original = basename($image_url);
+    
+    // Standardiser kjente bildeformater
+    $allowed_types = array(
+        'jpeg' => 'jpg',
+        'jpg' => 'jpg',
+        'png' => 'png',
+        'gif' => 'gif',
+        'webp' => 'webp'
+    );
+    
+    // Hent filendelse
+    $file_ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    
+    // Standardiser filendelsen hvis den er i listen over tillatte typer
+    if (array_key_exists($file_ext, $allowed_types)) {
+        $new_ext = $allowed_types[$file_ext];
+        $filename = substr($filename, 0, -(strlen($file_ext))) . $new_ext;
+    }
+    
+    $stored_image_name = get_post_meta($post_id, 'course_image_name', true);
+    
+    // Check if the image already exists and is the same to avoid re-downloading
+    if ($existing_thumbnail_id && $stored_image_name === $filename) {
+        error_log("** Image already exists for post ID: $post_id, skipping new import.");
+        return false;
+    }
+
+    // Delete the existing image if it's different
+    if ($existing_thumbnail_id) {
+        wp_delete_attachment($existing_thumbnail_id, true);
+    }
+
+    $upload_dir = wp_upload_dir();
+    $file_path = $upload_dir['path'] . '/' . $filename;
+
+    // Download the image from the URL
+    $ch = curl_init($image_url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Sett timeout til 30 sekunder
+    $image_data = curl_exec($ch);
+    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curl_error = curl_error($ch);
+    curl_close($ch);
+
+    if ($http_code !== 200) {
+        error_log("FEIL: HTTP status $http_code ved nedlasting av bilde fra: $image_url");
+        return false;
+    }
+
+    if ($image_data === false) {
+        error_log("FEIL: Kunne ikke laste ned bilde fra: $image_url. Curl feil: $curl_error");
+        return false;
+    }
+
+    // Ensure the upload directory exists
+    if (!file_exists($upload_dir['path'])) {
+        wp_mkdir_p($upload_dir['path']);
+    }
+
+    // Save the image to the uploads directory
+    if (file_put_contents($file_path, $image_data) === false) {
+        error_log("** Failed to save image to: $file_path");
+        return false;
+    }
+
+    // Check the file type and ensure it's valid
+    $wp_filetype = wp_check_filetype($filename, null);
+    if (!$wp_filetype['type']) {
+        // Logg ukjent filtype
+        error_log("Unknown or invalid file type for image: $filename");
+        return false;
+    }
+
+    $formatted_date = date('Y-m-d H:i:s');
+
+    $new_filename = "kursbilde-" . sanitize_file_name($data['name']) . '-' . $location_name;
+    $attachment = array(
+        'post_mime_type' => $wp_filetype['type'],
+        'post_title'     => sanitize_file_name($new_filename),
+        'post_content'   => $data['introText'],
+        'post_excerpt'   => $data['introText'],
+        'post_status'    => 'inherit',
+        'post_date'    => $formatted_date,
+        'post_date_gmt' => get_gmt_from_date($formatted_date),
+    );
+
+    // Insert the attachment into the media library
+    $attach_id = wp_insert_attachment($attachment, $file_path, $post_id);
+    if (is_wp_error($attach_id)) {
+        error_log("** Failed to insert attachment for image: $filename");
+        return false;
+    }
+
+    // Generate attachment metadata and set the featured image
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    $attach_data = wp_generate_attachment_metadata($attach_id, $file_path);
+    wp_update_attachment_metadata($attach_id, $attach_data);
+    set_post_thumbnail($post_id, $attach_id);
+
+    // Update the image name in custom fields (optional if you use ACF)
+    update_post_meta($attach_id, '_wp_attachment_image_alt', $data['introText']);
+    update_post_meta($post_id, 'course_image_name', $filename_original);
+    update_post_meta($attach_id, 'is_course_image', true);
+
+    error_log("** Image successfully downloaded and set as featured image for post ID: $post_id - kurs: " . $data['name']);
+
+    error_log("=== SLUTT: set_featured_image_from_url ===");
+    return true;
 }
 
+/**
+ * Oppdaterer status for hovedkurs basert på status til tilhørende subkurs
+ * 
+ * @param int|null $main_course_id Spesifikk hovedkurs-ID å sjekke, eller null for å sjekke alle
+ * @return void
+ */
+function kursagenten_update_main_course_status($main_course_id = null) {
+    error_log("=== START: Oppdaterer hovedkurs status ===");
+    
+    // Hent alle hovedkurs eller et spesifikt hovedkurs
+    $args = array(
+        'post_type' => 'course',
+        'posts_per_page' => -1,
+        'post_status' => array('publish', 'draft'),
+        'meta_query' => array(
+            array(
+                'key' => 'is_parent_course',
+                'value' => 'yes'
+            )
+        )
+    );
 
+    if ($main_course_id) {
+        $args['meta_query'][] = array(
+            'key' => 'main_course_id',
+            'value' => $main_course_id
+        );
+    }
 
+    $main_courses = get_posts($args);
+
+    foreach ($main_courses as $main_course) {
+        //error_log("Sjekker hovedkurs: {$main_course->ID}");
+        
+        // Hent alle subkurs for dette hovedkurset
+        $sub_courses = get_posts(array(
+            'post_type' => 'course',
+            'posts_per_page' => -1,
+            'post_status' => array('publish', 'draft'),
+            'meta_query' => array(
+                array(
+                    'key' => 'main_course_id',
+                    'value' => get_post_meta($main_course->ID, 'main_course_id', true)
+                ),
+                array(
+                    'key' => 'is_parent_course',
+                    'compare' => 'NOT EXISTS'
+                )
+            )
+        ));
+
+        //error_log("Fant " . count($sub_courses) . " subkurs for hovedkurs {$main_course->ID}");
+        
+        // Tell antall publiserte subkurs
+        $published_count = 0;
+        foreach ($sub_courses as $sub_course) {
+            //error_log("Subkurs {$sub_course->ID} status: {$sub_course->post_status}");
+            if ($sub_course->post_status === 'publish') {
+                $published_count++;
+            }
+        }
+        
+        error_log("Antall publiserte subkurs: $published_count av totalt " . count($sub_courses));
+
+        // Oppdater hovedkursets status basert på antall publiserte subkurs
+        if ($published_count === 0 && $main_course->post_status !== 'draft') {
+            error_log("Setter hovedkurs {$main_course->ID} til kladd - ingen publiserte subkurs");
+            wp_update_post(array(
+                'ID' => $main_course->ID,
+                'post_status' => 'draft'
+            ));
+        } elseif ($published_count > 0 && $main_course->post_status !== 'publish') {
+            error_log("Setter hovedkurs {$main_course->ID} til publisert - har $published_count publiserte subkurs");
+            wp_update_post(array(
+                'ID' => $main_course->ID,
+                'post_status' => 'publish'
+            ));
+        }
+    }
+
+    error_log("=== SLUTT: Oppdaterer hovedkurs status ===");
+}

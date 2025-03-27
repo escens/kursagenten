@@ -273,6 +273,9 @@ require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.php';
 
+// Menus
+require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
+
 // Blocks
 //require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
 

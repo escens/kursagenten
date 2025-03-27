@@ -26,7 +26,7 @@ function process_webhook_data($request) {
     $count++;
     
     error_log("Webhook received for CourseId: $location_id (Count: $count)");
-    error_log("Webhook data: " . json_encode($body));
+    //error_log("Webhook data: " . json_encode($body));
     
     // Lagre webhook data og øk telleren
     set_transient($count_key, $count, 3); // Hold telleren i 3 sekunder
@@ -42,13 +42,13 @@ function process_webhook_data($request) {
     
     // Vent med prosessering hvis dette er første webhook og den ikke har Enabled
     if ($count === 1 && !isset($body['Enabled'])) {
-        error_log("First webhook received without Enabled parameter - waiting for potential second webhook");
+        //error_log("First webhook received without Enabled parameter - waiting for potential second webhook");
         return new WP_REST_Response('Waiting for additional webhooks.', 200);
     }
     
     // Hvis dette er andre webhook, eller hvis det er første OG har Enabled
     if ($count === 2 || isset($body['Enabled'])) {
-        error_log("Processing webhook(s) for CourseId: $location_id");
+        //error_log("Processing webhook(s) for CourseId: $location_id");
         
         // Bruk webhook med Enabled hvis den finnes
         $webhook_to_process = $body;
@@ -57,18 +57,18 @@ function process_webhook_data($request) {
             foreach ($stored_webhooks as $stored_webhook) {
                 if (isset($stored_webhook['body']['Enabled'])) {
                     $webhook_to_process = $stored_webhook['body'];
-                    error_log("Found webhook with Enabled parameter - using this for processing");
+                    //error_log("Found webhook with Enabled parameter - using this for processing");
                     break;
                 }
             }
         }
         
-        error_log("Final webhook being processed: " . json_encode($webhook_to_process));
+        //error_log("Final webhook being processed: " . json_encode($webhook_to_process));
         
         // Slett transients
         delete_transient($count_key);
         delete_transient($webhook_data_key);
-        error_log("Cleared temporary webhook data");
+        //error_log("Cleared temporary webhook data");
         
         // Fortsett med prosessering
         $course_data = get_main_course_id_by_location_id($location_id);
@@ -85,6 +85,12 @@ function process_webhook_data($request) {
             $result = create_or_update_course_and_schedule($course_data, true);
             if ($result) {
                 error_log("Successfully processed course update for CourseId: $location_id");
+                
+                // Oppdater hovedkurs status etter vellykket oppdatering
+                $main_course_id = $course_data['main_course_id'] ?? null;
+                error_log("Oppdaterer hovedkurs status for main_course_id: $main_course_id");
+                kursagenten_update_main_course_status($main_course_id);
+                
                 return new WP_REST_Response('Webhook processed successfully.', 200);
             } else {
                 error_log("Failed to process course update for CourseId: $location_id");
