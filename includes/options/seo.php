@@ -40,7 +40,7 @@ class SEO {
 
                 <!-- Fyll ut feltene under -->
                 <h3 id="url">Endre url prefix</h3>
-                <table class="form-table">
+                <table class="form-table options-card">
                     <tr valign="top">
                         <th scope="row">Url prefix for kurs</th>
                         <td>

@@ -46,10 +46,12 @@ input[type=textarea] {
     background: white;
     border-radius: 10px;
 }
-.options-form tbody,
 .options-card {
     padding: 2em;
     display: block;
+}
+.widefat.light-grey-rows tr:not(:last-child) td{
+    border-bottom: 1px solid #f3f3f3;
 }
 .options-form .form-table th {
     width: auto;
@@ -86,4 +88,16 @@ input[type=textarea] {
 .form-table.with-columns th,
 .form-table.with-columns td {
     padding:16px 10px;
+}
+.ka-wrap .button, 
+.ka-wrap .button-secondary {
+
+    border-color: transparent;
+}
+.ka-wrap .copytext {
+    border-bottom: 1px dashed #ccc;
+    cursor: copy;
+}
+.ka-wrap .copytext:hover {
+    border-bottom: 1px dashed #a0a0a0;
 }

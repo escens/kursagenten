@@ -1,11 +1,13 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__FILE__) . '/includes/grid-styles.php';
+
 if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurskategorier i grid-format
- * [kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1  vis="hovedkategorier/subkategorier/standard"]
+ * [kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" radavstand="1rem" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1  vis="hovedkategorier/subkategorier/standard"]
  */
 class CourseCategories {
     private string $placeholder_image;
@@ -31,6 +33,7 @@ class CourseCategories {
             'grid' => '3',
             'gridtablet' => '2',
             'gridmobil' => '1',
+            'radavstand' => '1rem',
             'bildestr' => '100px',
             'bildeform' => 'avrundet',
             'bildeformat' => '4/4',
@@ -55,20 +58,13 @@ class CourseCategories {
         
         // Generer output ved å bruke felles grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
+        
+        // Legg til kategori-spesifikk CSS
+        $output .= $this->get_category_specific_styles($random_id);
+        
         $output .= $this->generate_html($random_id, $terms, $a);
         
-        $styles = BlocksShortcodeStyles::render($random_id, [
-            'grid' => $a['grid'],
-            'gridtablet' => $a['gridtablet'],
-            'gridmobil' => $a['gridmobil'],
-            'bildestr' => $a['bildestr'],
-            'bildeformat' => $a['bildeformat'],
-            'bildeform' => $a['bildeform'],
-            'fontstr' => $a['fontstr'],
-            'avstand' => $a['avstand']
-        ]);
-        
-        return $output . $styles;
+        return $output;
     }
 
     private function process_attributes(array $atts): array {
@@ -217,10 +213,21 @@ class CourseCategories {
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['fonttype']} class='tittel'>{$term->name}</{$a['fonttype']}>
+                        <{$a['fonttype']} class='tittel'>" . ucfirst($term->name) . "</{$a['fonttype']}>
                     </a>
                 </div>
             </div>";
+    }
+
+    private function get_category_specific_styles(string $id): string {
+        return "<style>
+            #{$id}.skygge:not(.kort) .box img {
+                -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
+                -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
+                box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.15);
+                transition: transform ease 0.3s, box-shadow ease 0.3s;
+            }
+        </style>";
     }
 }
 

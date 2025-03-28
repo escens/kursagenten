@@ -1,12 +1,18 @@
 <?php
 class Kursinnstillinger {
     private $kag_kursinnst_options;
+    private static $required_pages = null;
     
 
 
     public function __construct() {
         add_action('admin_menu', array($this, 'kag_kursinnst_add_plugin_page'));
         add_action('admin_init', array($this, 'kag_kursinnst_page_init'));
+        
+        // Legg til action for å håndtere systemside-operasjoner
+        add_action('admin_post_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
+        // Legg til AJAX action
+        add_action('wp_ajax_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
     }
 
     public function kag_kursinnst_add_plugin_page() {
@@ -27,14 +33,13 @@ class Kursinnstillinger {
         $this->kag_kursinnst_options = get_option('kag_kursinnst_option_name'); 
         require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 
-        // Start page with header
+        // Start page with header (includes form opening tag)
         kursagenten_admin_header('Kursinnstillinger');
         ?>
-            <p>Velg oppsett, design, fonter og farger på de ulike sidene.</p>
+        <p>Velg oppsett, design, fonter og farger på de ulike sidene.</p>
         <?php 
-
-    settings_fields('kag_kursinnst_option_group');
-    do_settings_sections('kursinnstillinger-admin');
+        settings_fields('kag_kursinnst_option_group');
+        do_settings_sections('kursinnstillinger-admin');
         
         // Add filter settings
         $available_filters = [
@@ -84,9 +89,9 @@ class Kursinnstillinger {
         $top_filters = is_array($top_filters) ? $top_filters : explode(',', $top_filters);
         $left_filters = is_array($left_filters) ? $left_filters : explode(',', $left_filters);
 
-        // Save available_filters as an option
-        update_option('kursagenten_available_filters', $available_filters);
-        ?>
+                // Save available_filters as an option
+                update_option('kursagenten_available_filters', $available_filters);
+                ?>
 
                 
                 <?php 
@@ -105,17 +110,17 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                 <!-- Fyll ut feltene under -->
                 <h3 id="valg-for-bilder">Valg for bilder</h3>
                 <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsikoner om nødvendig.</p>
-                <table class="form-table">
+                <table class="form-table options-card">
 
-                    <tr valign="top" style="padding-bottom: 2em; display: block;">
-                        <th scope="row">Kategoribilder</th>
-                        <td style=" padding-top: 16px;">
+                    <tr valign="top">
+                        <th scope="row" style="border-bottom: 1px solid #f3f3f3;">Kategoribilder</th>
+                        <td style="padding-top: 16px; padding-bottom: 1.5em; border-bottom: 1px solid #f3f3f3; margin-bottom: 1.5em;">
                         <?php $this->kategoribilder_callback(); ?>
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Plassholderbilde generelt</th>
-                        <td>
+                        <th scope="row" style="padding-top: 1.5em;">Plassholderbilde generelt</th>
+                        <td style="padding-top: 1.5em;">
                             <?php $this->plassholderbilde_generelt_callback(); ?>
                         </td>
                     </tr>
@@ -221,10 +226,19 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                         
                     </div>
                 </div>
-                <!-- Innstillinger fra Kursagenten -> Bedriftsinformasjon -> Innstillinger -->
+
+                <!-- System Pages Section -->
+                <h3 id="systemsider">Opprett sider</h3>
+                <p>Administrer sider for taksonomiarkiver. Disse sidene brukes for å vise oversikter over kategorier, kurssteder og instruktører.</p>
+                <?php 
+                $this->render_system_pages_section();
+                
+                // Continue with Kursagenten settings
+                ?>
                 <h3 id="kursagenten-innstillinger">Innstillinger fra Kursagenten</h3>
-                <p>Du finner disse innstillingene i Kursagenten under <a href="https://kursadmin.kursagenten.no/ProviderInformation" target="_blank">Bedriftsinsformasjon-> Innstillinger</a>, og under <a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank">Embedded / iframe</a></p>
-                <table class="form-table">
+                <p>Du finner innstillingene for Tilbyder ID og Guid i Kursagenten under <a href="https://kursadmin.kursagenten.no/ProviderInformation" target="_blank">Bedriftsinsformasjon-> Innstillinger</a>, og Temaer under <a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank">Embedded / iframe</a><br><br>
+                I Integrasjonsinnstillinger -> <a href="https://kursadmin.kursagenten.no/IntegrationSettings" target="_blank">Webhooks</a> skal du legge inn <span class="copytext" title="Klikk for å kopiere"><?php echo esc_url(site_url('/wp-json/kursagenten-api/v1/process-webhook')); ?></span> i feltene CourseCreated og CourseUpdated for å få oppdatert kursliste når et kurs endres eller opprettes.</p>
+                <table class="form-table options-card">
                     <tr valign="top">
                         <th scope="row">Tilbyder ID:</th>
                         <td>
@@ -331,8 +345,6 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
     <?php
     kursagenten_admin_footer();
     }
-
-    
     
     public function kategoribilder_callback() {
         $current_value = isset($this->kag_kursinnst_options['ka_kategoribilder']) ? $this->kag_kursinnst_options['ka_kategoribilder'] : 'egne-kategoribilder';
@@ -403,13 +415,17 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
     
     public function kag_kursinnst_page_init() {
         register_setting(
-            'kag_kursinnst_option_group', // option_group
-            'kag_kursinnst_option_name',  // option_name
-            array($this, 'kag_kursinnst_sanitize') // sanitize_callback
+            'kag_kursinnst_option_group',
+            'kag_kursinnst_option_name',
+            array($this, 'kag_kursinnst_sanitize')
         );
 
-        // Sections have been removed since fields are directly integrated in the form HTML
+        // Legg til registrering for systemsider
+        register_setting('kag_kursinnst_option_group', 'ka_page_kurskategorier');
+        register_setting('kag_kursinnst_option_group', 'ka_page_kurssteder');
+        register_setting('kag_kursinnst_option_group', 'ka_page_instruktorer');
 
+        // Eksisterende filter-registreringer
         register_setting('kag_kursinnst_option_group', 'kursagenten_top_filters');
         register_setting('kag_kursinnst_option_group', 'kursagenten_left_filters');
         register_setting('kag_kursinnst_option_group', 'kursagenten_filter_types');
@@ -434,6 +450,278 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
             $sanitary_values[$key] = sanitize_text_field($value);
         }
         return $sanitary_values;
+    }
+
+    public static function get_required_pages() {
+        if (self::$required_pages === null) {
+            self::$required_pages = [
+                'kurskategorier' => [
+                    'title' => 'Kurskategorier',
+                    'content' => '  <!-- wp:shortcode -->
+                                    [kurskategorier kilde=ikon layout=stablet grid=5 gridtablet=3 gridmobil=1 radavstand=2em bildestr=130px bildeformat=4/3 fontmin="14" fontmaks="18"]
+                                    <!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside for alle kurskategorier',
+                    'slug' => 'kurskategorier'
+                ],
+                'kurssteder' => [
+                    'title' => 'Kurssteder',
+                    'content' => '  <!-- wp:shortcode -->
+                                    [kurssteder layout=rad stil=kort grid=3 gridtablet=2 gridmobil=1 radavstand=2em bildestr=100px bildeformat=1/1 fontmin="14" fontmaks="18"]
+                                    <!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside for alle kurssteder',
+                    'slug' => 'kurssteder'
+                ],
+                'instruktorer' => [
+                    'title' => 'Instruktører',
+                    'content' => '  <!-- wp:shortcode -->
+                                    [instruktorer kilde=ikon layout=rad stil=kort grid=2 gridtablet=1 gridmobil=1 radavstand=2em bildestr=250px bildeformat=1/1 fontmin="14" fontmaks="18" utdrag=ja]
+                                    <!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside for alle instruktører',
+                    'slug' => 'instruktorer'
+                ]
+            ];
+        }
+        return self::$required_pages;
+    }
+
+    public function render_system_pages_section() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $required_pages = self::get_required_pages();
+        ?>
+        <div class="ka-pages-manager options-card">
+            <table class="widefat light-grey-rows" style="border: 0;">
+                <thead>
+                    <tr>
+                        <th scope="col">Side</th>
+                        <th scope="col">Beskrivelse</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Handlinger</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($required_pages as $key => $page): 
+                        $page_id = get_option('ka_page_' . $key);
+                        $exists = $page_id && get_post($page_id);
+                        $post_status = $exists ? get_post_status($page_id) : '';
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html($page['title']); ?></td>
+                            <td><?php echo esc_html($page['description']); ?></td>
+                            <td>
+                                <?php if ($exists): ?>
+                                    <span class="status-indicator <?php echo $post_status; ?>">
+                                        <?php 
+                                        switch ($post_status) {
+                                            case 'publish':
+                                                echo '✓ Publisert';
+                                                break;
+                                            case 'draft':
+                                                echo '⚠ Kladd';
+                                                break;
+                                            default:
+                                                echo '? ' . ucfirst($post_status);
+                                        }
+                                        ?>
+                                    </span>
+                                    <div class="page-links">
+                                        <a href="<?php echo get_edit_post_link($page_id); ?>" target="_blank">Rediger</a>
+                                        |
+                                        <a href="<?php echo get_permalink($page_id); ?>" target="_blank">Vis</a>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="status-indicator not-created">✗ Ikke opprettet</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="actions">
+                                <div class="system-page-actions">
+                                    <?php if (!$exists): ?>
+                                        <button type="button" class="button button-primary ka-system-page-action" 
+                                                data-action="create" 
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
+                                            Opprett side
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="button" class="button button-secondary ka-system-page-action"
+                                                data-action="reset"
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
+                                            Tilbakestill innhold
+                                        </button>
+                                        <button type="button" class="button button-link-delete ka-system-page-action"
+                                                data-action="delete"
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
+                                            Slett
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <style>
+            .ka-pages-manager { margin-top: 20px; }
+            .ka-pages-manager td { vertical-align: middle; }
+            .status-indicator { display: inline-block; padding: 3px 8px; border-radius: 3px; }
+            .status-indicator.publish { background: #e8f5e9; color: #2e7d32; }
+            .status-indicator.draft { background: #fff3e0; color: #ef6c00; }
+            .status-indicator.not-created { background: #ffebee; color: #c62828; }
+            .page-links { margin-top: 5px; font-size: 0.9em; }
+            .actions form { display: flex; gap: 5px; }
+        </style>
+        <script>
+        jQuery(document).ready(function($) {
+            $('.ka-system-page-action').on('click', function(e) {
+                e.preventDefault();
+                var button = $(this);
+                
+                // Sjekk om dette er en slette-handling
+                if (button.data('action') === 'delete') {
+                    if (!confirm('Er du sikker på at du vil slette denne siden?')) {
+                        return false; // Stopp hvis brukeren klikker Avbryt
+                    }
+                }
+
+                var data = {
+                    action: 'ka_manage_system_pages',
+                    ka_page_key: button.data('key'),
+                    ka_page_action: button.data('action'),
+                    _wpnonce: button.data('nonce')
+                };
+
+                $.post(ajaxurl, data, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Det oppstod en feil. Vennligst prøv igjen.');
+                    }
+                });
+            });
+        });
+        </script>
+        <?php
+    }
+
+    public function handle_system_pages_actions() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Ingen tillatelse');
+            return;
+        }
+
+        // Sjekk om dette er en AJAX-forespørsel
+        $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
+
+        if (!isset($_POST['ka_page_key'])) {
+            if ($is_ajax) {
+                wp_send_json_error('Mangler page_key');
+            }
+            wp_die('Ugyldig forespørsel');
+        }
+
+        // Verifiser nonce
+        $nonce = isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : '';
+        if (!wp_verify_nonce($nonce, 'ka_manage_pages')) {
+            if ($is_ajax) {
+                wp_send_json_error('Ugyldig sikkerhetskode');
+            }
+            wp_die('Ugyldig sikkerhetskode');
+        }
+
+        $page_key = sanitize_key($_POST['ka_page_key']);
+        $action = isset($_POST['ka_page_action']) ? sanitize_key($_POST['ka_page_action']) : '';
+        $result = false;
+
+        switch ($action) {
+            case 'create':
+                $result = self::create_system_page($page_key);
+                break;
+            case 'delete':
+                $result = self::delete_system_page($page_key);
+                break;
+            case 'reset':
+                $result = self::reset_system_page($page_key);
+                break;
+        }
+
+        if ($is_ajax) {
+            if ($result) {
+                wp_send_json_success(['message' => 'Handling fullført']);
+            } else {
+                wp_send_json_error(['message' => 'Kunne ikke utføre handlingen']);
+            }
+        } else {
+            wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
+            exit;
+        }
+    }
+
+    private static function add_admin_notice($message, $type = 'success') {
+        add_action('admin_notices', function() use ($message, $type) {
+            printf(
+                '<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+                esc_attr($type),
+                esc_html($message)
+            );
+        });
+    }
+
+    public static function create_system_page($page_key) {
+        $pages = self::get_required_pages();
+        if (!isset($pages[$page_key])) {
+            return false;
+        }
+        
+        $page_data = $pages[$page_key];
+        $page_id = wp_insert_post([
+            'post_title' => $page_data['title'],
+            'post_content' => $page_data['content'],
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_name' => $page_data['slug'],
+            'comment_status' => 'closed'
+        ]);
+        
+        if ($page_id) {
+            update_option('ka_page_' . $page_key, $page_id);
+            update_post_meta($page_id, '_ka_system_page', $page_key);
+            self::add_admin_notice('Systemside ble opprettet.');
+        }
+        
+        return $page_id;
+    }
+
+    public static function delete_system_page($page_key) {
+        $page_id = get_option('ka_page_' . $page_key);
+        if ($page_id) {
+            wp_delete_post($page_id, true);
+            delete_option('ka_page_' . $page_key);
+            self::add_admin_notice('Systemside ble slettet.');
+            return true;
+        }
+        return false;
+    }
+
+    public static function reset_system_page($page_key) {
+        $pages = self::get_required_pages();
+        $page_id = get_option('ka_page_' . $page_key);
+        
+        if ($page_id && isset($pages[$page_key])) {
+            wp_update_post([
+                'ID' => $page_id,
+                'post_content' => $pages[$page_key]['content']
+            ]);
+            
+            self::add_admin_notice('Sideinnhold ble tilbakestilt.');
+            return true;
+        }
+        return false;
     }
 }
 

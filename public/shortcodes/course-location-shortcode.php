@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurssteder i grid-format
- * [kurssteder layout="grid/rad/liste" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1]
+ * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]
  */
 class CourseLocationGrid {
     private string $placeholder_image;
@@ -30,6 +30,7 @@ class CourseLocationGrid {
             'grid' => '3',
             'gridtablet' => '2',
             'gridmobil' => '1',
+            'radavstand' => '1rem',
             'bildestr' => '100px',
             'bildeform' => 'avrundet',
             'bildeformat' => '4/3',
@@ -175,7 +176,7 @@ class CourseLocationGrid {
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['fonttype']} class='tittel'>{$term->name}</{$a['fonttype']}>
+                        <{$a['fonttype']} class='tittel'>" . ucfirst($term->name) . "</{$a['fonttype']}>
                     </a>
                     <div class='description'>" . wp_kses_post($description) . "</div>
                 </div>

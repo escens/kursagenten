@@ -156,6 +156,16 @@ function kursagenten_activate() {
     add_option('kag_avansert_option_name', $default_admin_options);
     // Then flush rewrite rules
     flush_rewrite_rules();
+
+    // Opprett systemsider ved aktivering hvis ønskelig
+    $create_pages = apply_filters('kursagenten_create_system_pages_on_activation', false);
+    if ($create_pages) {
+        require_once KURSAG_PLUGIN_DIR . '/includes/options/kursinnstillinger.php';
+        $pages = Kursinnstillinger::get_required_pages();
+        foreach (array_keys($pages) as $page_key) {
+            Kursinnstillinger::create_system_page($page_key);
+        }
+    }
 }
 
 /**
@@ -251,7 +261,8 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
             if ($enqueue_plugin_pages) {
                 wp_enqueue_media();// Enqueue media scripts for file uploads
                 wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.59' );
+                wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), '1.0.317',  true  );  
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.595' );
             }
         }
     }

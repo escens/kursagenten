@@ -34,7 +34,7 @@ class Avansert {
 
         <!-- Innlegg til artikler -->
         <h3 id="innstillinger">Ulike tilleggsfunksjoner</h3>
-        <table class="form-table">
+        <table class="form-table options-card">
             <tr valign="top">
                 <td>
                     <label for="ka_rename_posts">

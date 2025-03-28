@@ -34,7 +34,7 @@ class Bedriftsinformasjon {
 
         <!-- Fyll ut feltene under -->
         <h3>Firmainformasjon</h3>
-        <table class="form-table">
+        <table class="form-table options-card">
             <tr valign="top">
                 <th scope="row">Firmanavn</th>
                 <td>
@@ -77,7 +77,7 @@ class Bedriftsinformasjon {
         <!-- Kort info om bedriften -->
         <h3>Om bedriften</h3>
         <p>Her kan du skrive inn kort informasjon om bedriften. Denne teksten kan vises på med kortkode.</p>
-        <table class="form-table">
+        <table class="form-table options-card">
             <tr valign="top">
                 <th scope="row">Om firmaet</th>
                 <td>
@@ -89,7 +89,7 @@ class Bedriftsinformasjon {
         <!-- URL til sosiale profiler -->
         <h3>Sosiale profiler</h3>
         <p>Her kan du skrive inn URL til sosiale profiler. Disse kan bli brukt rundt på nettsiden.</p>
-        <table class="form-table">
+        <table class="form-table options-card">
             <tr valign="top">
                 <th scope="row">Facebook</th>
                 <td>

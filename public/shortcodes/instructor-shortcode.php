@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise instruktører i grid-format
- * [instruktorer kilde="bilde/ikon" layout="grid/rad/liste" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmaks="15px" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1 skjul="Iris,Anna"]
+ * [instruktorer kilde="bilde/ikon" layout="grid/rad/liste" radavstand="1rem" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmaks="15px" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1 skjul="Iris,Anna"]
  */
 class InstructorGrid {
     private string $placeholder_image;
@@ -30,6 +30,7 @@ class InstructorGrid {
             'grid' => '3',
             'gridtablet' => '2',
             'gridmobil' => '1',
+            'radavstand' => '1rem',
             'bildestr' => '100px',
             'bildeform' => 'avrundet',
             'bildeformat' => '4/4',
@@ -179,7 +180,7 @@ class InstructorGrid {
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['fonttype']} class='tittel'>{$term->name}</{$a['fonttype']}>
+                        <{$a['fonttype']} class='tittel'>" . ucfirst($term->name) . "</{$a['fonttype']}>
                     </a>
                     <div class='description'>" . $description . "</div>
                 </div>

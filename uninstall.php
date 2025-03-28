@@ -70,3 +70,14 @@ foreach ($post_types as $post_type) {
         }
     }
 }
+
+// Slett systemsider
+require_once dirname(__FILE__) . '/includes/options/kursinnstillinger.php';
+$pages = Kursinnstillinger::get_required_pages();
+foreach (array_keys($pages) as $page_key) {
+    $page_id = get_option('ka_page_' . $page_key);
+    if ($page_id) {
+        wp_delete_post($page_id, true);
+        delete_option('ka_page_' . $page_key);
+    }
+}

@@ -1,7 +1,7 @@
 <?php
 function kursagenten_admin_header($title) {
     ?>
-    <div class="wrap options-form">
+    <div class="wrap options-form ka-wrap">
        
         
         <form method="post" action="options.php">
