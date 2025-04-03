@@ -22,17 +22,15 @@ class Designmaler {
     public function design_create_admin_page() {
         $this->design_options = get_option('design_option_name');
         
-        // Start page with header
-        kursagenten_admin_header('Design på kurslister og kurssider');
         ?>
 
-        <div class="wrap">
+        <div class="wrap options-form ka-wrap">
             <form method="post" action="options.php">
                 <?php 
                 settings_fields('design_option_group');
                 do_settings_sections('design-admin');
                 ?>
-
+                <?php kursagenten_sticky_admin_menu(); ?>
                 <!-- Single kurs -->
                 <div class="design-section">
                     <h3>Enkeltkurs</h3>
@@ -323,7 +321,7 @@ class Designmaler {
                             </div>
                         <?php endforeach; ?>
                     </div>
-                </div>
+                
 
                 <style>
                     .design-section {
@@ -373,8 +371,8 @@ class Designmaler {
                 </style>
 
                 <?php submit_button(); ?>
-            </form>
-        </div>
+            
+        
         <?php
         kursagenten_admin_footer();
     }

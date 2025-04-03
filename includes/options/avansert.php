@@ -22,9 +22,11 @@ class Avansert {
     public function kag_avansert_create_admin_page() {
         $this->kag_avansert_options = get_option('kag_avansert_option_name');
 
-        // Start page with header
-        kursagenten_admin_header('Avanserte innstillinger');
         ?>
+        <div class="wrap options-form ka-wrap">
+        <form method="post" action="options.php">
+        <?php kursagenten_sticky_admin_menu(); ?>
+        <h2>Avanserte innstillinger</h2>
         <p>Skru på de innstillingene du ønsker å bruke:</p>
 
         <?php

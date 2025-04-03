@@ -25,6 +25,27 @@ function kursagenten_admin_header($title) {
             <h2 id="toppen"><?php echo esc_html($title); ?></h2> 
     <?php
 }
+function kursagenten_sticky_admin_menu() {
+    ?>
+
+            <div class="sticky-header">
+                <div class="section-nav">
+                    <ul>
+                        <li><a href="#toppen"><img src="https://login.kursagenten.no/kursagenten-nettstedsikon.png" alt="Kursagenten logo" style="width: 30px; height: 30px;"></a></li> 
+                        <li><a href="#toppen">Til toppen</a></li>    
+                        <?php
+                        // Denne delen vil bli fylt dynamisk med JavaScript
+                        ?>
+                    </ul>
+                </div>
+                <div class="sticky-save">
+                    <?php submit_button(null, 'primary', 'submit', false); ?>
+                </div>
+            </div>
+            <div class="wrap-inner">
+            <?php settings_errors(); ?>
+    <?php
+}
 
 function kursagenten_admin_footer() {
     ?>

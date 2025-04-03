@@ -26,11 +26,11 @@ class SEO {
     public function kag_seo_create_admin_page() {
         $this->kag_seo_options = get_option('kag_seo_option_name'); 
         
-        // Start page with header
-        kursagenten_admin_header('Endre url-er');
         ?>
-
-
+        <div class="wrap options-form ka-wrap">
+        <form method="post" action="options.php">
+            <?php kursagenten_sticky_admin_menu(); ?>
+            <h2>Endre url-er</h2>
             <h3 style="margin: 10px 0 5px 0;">Viktig info om url-er</h3><p>Her kan du endre url for kurs, instruktør, kurskategori og kurssted. <span style="color:#b74444;font-weight:bold;">OBS! Ikke rør med mindre du vet hva du gjør.</span> Det kan ødelegge nettstedet, og gjøre disse sidene utilgjengelige. Husk å lagre <a href="/wp-admin/options-permalink.php" target="_blank">permalenkeinnstillingene</a> etter du har gjort en endring.</p>
 
                 <?php

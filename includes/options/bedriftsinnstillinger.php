@@ -22,9 +22,11 @@ class Bedriftsinformasjon {
     public function bedriftsinfo_create_admin_page() {
         $this->bedriftsinfo_options = get_option('kag_bedriftsinfo_option_name'); 
 
-        // Start page with header
-        kursagenten_admin_header('Bedriftsinformasjon');
         ?>
+        <div class="wrap options-form ka-wrap">
+        <form method="post" action="options.php">
+        <?php kursagenten_sticky_admin_menu(); ?>
+        <h2>Bedriftsinformasjon</h2>
         <p>Her kan du skrive inn informasjon som vil bli brukt ulike steder på nettsiden. Dette inkluderer navn på hovedkontakt (personvernerklæring), samt firmanavn og adresse (kontaktside og bunnfelt).</p>
 
         <?php

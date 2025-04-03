@@ -33,9 +33,11 @@ class Kursinnstillinger {
         $this->kag_kursinnst_options = get_option('kag_kursinnst_option_name'); 
         require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 
-        // Start page with header (includes form opening tag)
-        kursagenten_admin_header('Kursinnstillinger');
         ?>
+        <div class="wrap options-form ka-wrap">
+        <form method="post" action="options.php">
+        <?php kursagenten_sticky_admin_menu(); ?>
+        <h2>Kursinnstillinger</h2>
         <p>Velg oppsett, design, fonter og farger på de ulike sidene.</p>
         <?php 
         settings_fields('kag_kursinnst_option_group');

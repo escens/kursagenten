@@ -262,7 +262,7 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
                 wp_enqueue_media();// Enqueue media scripts for file uploads
                 wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
                 wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), '1.0.317',  true  );  
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.595' );
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.597' );
             }
         }
     }
@@ -289,7 +289,9 @@ require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.p
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.php';
 
 // Menus
-require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
+//require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-kurstagger-shortcode.php';
 
 // Blocks
 //require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
@@ -525,3 +527,30 @@ require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
    
+
+
+
+
+
+// Aktiver kortkoder i menylenker
+/*
+add_filter('wp_nav_menu_item_attributes', function($atts, $item, $args) {
+    if (!empty($item->url) && strpos($item->url, '[taxonomy_menu') !== false) {
+        $shortcode = strip_tags($item->url);
+        $atts['href'] = '#';
+        $atts['data-shortcode'] = do_shortcode($shortcode);
+    }
+    return $atts;
+}, 10, 3);
+
+add_filter('wp_nav_menu_items', function($items, $args) {
+    $items = preg_replace_callback(
+        '/<a([^>]*)data-shortcode="([^"]*)"([^>]*)>/',
+        function($matches) {
+            return $matches[2];
+        },
+        $items
+    );
+    return $items;
+}, 20, 2);
+*/

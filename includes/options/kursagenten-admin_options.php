@@ -3,14 +3,16 @@
 require_once plugin_dir_path(__FILE__) . 'bedriftsinnstillinger.php';
 require_once plugin_dir_path(__FILE__) . 'kursinnstillinger.php';
 require_once plugin_dir_path(__FILE__) . 'coursedesign.php';
+require_once plugin_dir_path(__FILE__) . 'theme_specific_customizations.php';
 require_once plugin_dir_path(__FILE__) . 'seo.php';
 require_once plugin_dir_path(__FILE__) . 'avansert.php';
-require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php'; 
 
 // Instantiate the classes to add them as submenus
 if (is_admin()) {
     $kursinnstillinger = new Kursinnstillinger();
     $designmaler = new Designmaler();
+    $theme_specific_customizations = new Kursagenten_Theme_Customizations();
     $seo = new SEO();
     $bedriftsinformasjon = new Bedriftsinformasjon();
     $avansert = new Avansert();
