@@ -38,7 +38,7 @@ function kurstagger($atts){
     }
 
     $output = '';
-    //$output .= '<style>#mobile-drawer .standardmeny,#main-header .mobilmeny, ul.sub-menu:has(li.automeny) li.menu-item-type-custom{display: none;}</style>';
+    //$output .= '<style>#mobile-drawer .ka-desktop-menu,#main-header .ka-mobile-menu, ul.sub-menu:has(li.automeny) li.menu-item-type-custom{display: none;}</style>';
     
     // Hent breakpoint fra innstillinger
     $options = get_option('kursagenten_theme_customizations');
@@ -49,13 +49,13 @@ function kurstagger($atts){
     $output .= '<style> 
                     ul.sub-menu:has(li.automeny) li.menu-item-type-custom{display: none;}
                     @media screen and (max-width: ' . $breakpoint_num . 'px) {
-                        li.automeny .standardmeny {
+                        li.automeny .ka-desktop-menu {
                             display: none;
                         }
                     }
                     
                     @media screen and (min-width: ' . $next_breakpoint . ') {
-                        li.automeny .mobilmeny {
+                        li.automeny .ka-mobile-menu {
                             display: none;
                         }
                     }</style>';
@@ -164,10 +164,10 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
         $structure = [
             'item_simple' => $theme_structure['item_simple'],
             'item_with_children' => $theme_structure['item_with_children'],
-            'item_simple_mobile' => $theme_structure['item_simple_mobile'],
             'item_with_children_mobile' => $theme_structure['item_with_children_mobile'],
             'item_simple_li_class' => $theme_structure['item_simple_li_class'],
-            'item_with_children_li_class' => $theme_structure['item_with_children_li_class']
+            'item_with_children_li_class' => $theme_structure['item_with_children_li_class'],
+            'item_with_children_li_class_mobile' => $theme_structure['item_with_children_li_class_mobile']
         ];
     }
     
@@ -176,8 +176,12 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
             $structure['item_with_children_li_class'] : 
             'menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children';
             
-        $item_with_children = '<li id="menu-item-' . $term->term_id . '" class="' . 
-            esc_attr($li_class) . ' menu-item-' . $term->term_id . '">';
+        $li_class_mobile = isset($structure['item_with_children_li_class_mobile']) && !empty($structure['item_with_children_li_class_mobile']) ? 
+            $structure['item_with_children_li_class_mobile'] : 
+            'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children';
+            
+        $item_with_children = '<li id="menu-item-' . $term->term_id . '" class="automeny ' . 
+            esc_attr($li_class) . ' menu-item-' . $term->term_id . '" data-desktop-class="automeny ' . esc_attr($li_class) . '" data-mobile-class="automeny ' . esc_attr($li_class_mobile) . '">';
             
         // Sjekk om temaet er ekskludert eller om meny-stilene er deaktivert
         $excluded_themes = ['astra', 'oceanwp'];
@@ -218,7 +222,7 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
             $structure['item_simple_li_class'] : 
             'menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course';
             
-        $item_simple = '<li id="menu-item-' . $term->term_id . '" class="' . 
+        $item_simple = '<li id="menu-item-' . $term->term_id . '" class="automeny ' . 
             esc_attr($li_class) . ' menu-item-' . $term->term_id . '">';
         $item_simple .= strtr($structure['item_simple'], $variables);
         $item_simple .= '</li>';
@@ -228,7 +232,7 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
 }
 
 function add_menu_class($html, $type = 'desktop') {
-    $class = ($type === 'desktop') ? 'standardmeny' : 'mobilmeny';
+    $class = ($type === 'desktop') ? 'ka-desktop-menu' : 'ka-mobile-menu';
 
     $options = get_option('kursagenten_theme_customizations');
     $current_theme = strtolower(wp_get_theme()->get('Name'));
@@ -275,5 +279,56 @@ function add_menu_class($html, $type = 'desktop') {
     error_log('add_menu_class - Output HTML: ' . $html);
     return $html;
 }
+
+// Registrer og last inn jQuery
+function kursagenten_enqueue_scripts_menu() {
+    wp_enqueue_script('jquery');
+}
+add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts_menu');
+
+// Legg til JavaScript for å håndtere klasser basert på skjermstørrelse
+function kursagenten_menu_responsive_scripts() {
+    // Hent breakpoint fra innstillinger
+    $options = get_option('kursagenten_theme_customizations');
+    $breakpoint = isset($options['item_breakpoint']) ? intval($options['item_breakpoint']) : 1025;
+    
+    ?>
+    <script>
+    (function() {
+        // Sjekk om jQuery er tilgjengelig
+        if (typeof jQuery === 'undefined') {
+            console.error('Kursagenten: jQuery er ikke tilgjengelig');
+            return;
+        }
+        
+        jQuery(document).ready(function($) {
+            function updateMenuClasses() {
+                // Bruk breakpoint fra innstillinger
+                const breakpoint = <?php echo $breakpoint; ?>;
+                const menuItems = $('.menu-item-has-children[data-desktop-class][data-mobile-class]');
+                
+                menuItems.each(function() {
+                    const desktopClass = $(this).data('desktop-class');
+                    const mobileClass = $(this).data('mobile-class');
+                    
+                    if (window.innerWidth >= breakpoint) {
+                        // På desktop
+                        $(this).attr('class', desktopClass + ' menu-item-' + $(this).attr('id').replace('menu-item-', ''));
+                    } else {
+                        // På mobil
+                        $(this).attr('class', mobileClass + ' menu-item-' + $(this).attr('id').replace('menu-item-', ''));
+                    }
+                });
+            }
+            
+            // Kjør ved oppstart og når vinduet endrer størrelse
+            updateMenuClasses();
+            $(window).on('resize', updateMenuClasses);
+        });
+    })();
+    </script>
+    <?php
+}
+add_action('wp_footer', 'kursagenten_menu_responsive_scripts');
 
 

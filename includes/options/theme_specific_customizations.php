@@ -52,7 +52,6 @@ class Kursagenten_Theme_Customizations {
                 $has_custom_settings = !empty($options) && isset($options['menu_structure']) && 
                     (!empty($options['menu_structure']['item_simple']) || 
                      !empty($options['menu_structure']['item_with_children']) || 
-                     !empty($options['menu_structure']['item_simple_mobile']) || 
                      !empty($options['menu_structure']['item_with_children_mobile']));
 
                 ?>
@@ -108,7 +107,7 @@ class Kursagenten_Theme_Customizations {
                 
                 <table class="form-table">
                     <tr>
-                        <th scope="row">Enkelt menyelement (desktop)</th>
+                        <th scope="row">Enkelt menyelement</th>
                         <td>
                             <pre><code>&lt;li id="menu-item-{{term_id}}" class="<span class="li-class-preview">menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course</span> menu-item-{{term_id}}"&gt;</code></pre>
                             <textarea name="<?php echo esc_attr($this->option_name); ?>[menu_structure][item_simple]" rows="2" class="large-text code"><?php 
@@ -145,26 +144,21 @@ class Kursagenten_Theme_Customizations {
                     </tr>
 
                     <tr>
-                        <th scope="row">Enkelt menyelement (mobil)</th>
-                        <td>
-                            <pre><code>&lt;li id="menu-item-{{term_id}}" class="menu-item menu-item-type-post_type menu-item-object-course menu-item-{{term_id}}"&gt;</code></pre>
-                            <textarea name="<?php echo esc_attr($this->option_name); ?>[menu_structure][item_simple_mobile]" rows="2" class="large-text code"><?php 
-                                echo esc_textarea(isset($options['menu_structure']['item_simple_mobile']) ? $options['menu_structure']['item_simple_mobile'] : ''); 
-                            ?></textarea>
-                            <pre><code>&lt;/li&gt;</code></pre>
-                        </td>
-                    </tr>
-
-                    <tr>
                         <th scope="row">Menyelement med undermeny (mobil)</th>
                         <td>
-                            <pre><code>&lt;li id="menu-item-{{term_id}}" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children menu-item-{{term_id}}"&gt;</code></pre>
+                            <pre><code>&lt;li id="menu-item-{{term_id}}" class="<span class="li-class-preview-mobile">menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children</span> menu-item-{{term_id}}"&gt;</code></pre>
                             <textarea name="<?php echo esc_attr($this->option_name); ?>[menu_structure][item_with_children_mobile]" rows="4" class="large-text code"><?php 
                                 echo esc_textarea(isset($options['menu_structure']['item_with_children_mobile']) ? $options['menu_structure']['item_with_children_mobile'] : ''); 
                             ?></textarea>
                             <pre><code>&lt;ul class="sub-menu"&gt;  ... innhold ...
 &lt;/ul&gt;
 &lt;/li&gt;</code></pre>
+                            <div class="li-class-input">
+                                <label>Ekstra klasser for &lt;li&gt; (mobil):</label>
+                                <input type="text" name="<?php echo esc_attr($this->option_name); ?>[menu_structure][item_with_children_li_class_mobile]" 
+                                       value="<?php echo esc_attr(isset($options['menu_structure']['item_with_children_li_class_mobile']) ? $options['menu_structure']['item_with_children_li_class_mobile'] : 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children'); ?>" 
+                                       class="regular-text li-class-field-mobile">
+                            </div>
                         </td>
                     </tr>
                 </table>
@@ -231,8 +225,6 @@ class Kursagenten_Theme_Customizations {
                         .val(templates[theme].item_simple);
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children]"]')
                         .val(templates[theme].item_with_children);
-                    $('[name="<?php echo $this->option_name; ?>[menu_structure][item_simple_mobile]"]')
-                        .val(templates[theme].item_simple_mobile);
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children_mobile]"]')
                         .val(templates[theme].item_with_children_mobile);
                     
@@ -241,6 +233,8 @@ class Kursagenten_Theme_Customizations {
                         .val(templates[theme].item_simple_li_class);
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children_li_class]"]')
                         .val(templates[theme].item_with_children_li_class);
+                    $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children_li_class_mobile]"]')
+                        .val(templates[theme].item_with_children_li_class_mobile || templates[theme].item_with_children_li_class);
                     
                     // Sett breakpoint-feltet
                     $('[name="<?php echo $this->option_name; ?>[item_breakpoint]"]')
@@ -249,6 +243,11 @@ class Kursagenten_Theme_Customizations {
                     // Oppdater previews
                     $('.li-class-preview').each(function() {
                         const input = $(this).closest('td').find('.li-class-field');
+                        $(this).text(input.val() || 'Standard tema-klasser');
+                    });
+                    
+                    $('.li-class-preview-mobile').each(function() {
+                        const input = $(this).closest('td').find('.li-class-field-mobile');
                         $(this).text(input.val() || 'Standard tema-klasser');
                     });
                 }
@@ -270,7 +269,6 @@ class Kursagenten_Theme_Customizations {
                     // Fjern alle lagrede innstillinger fra skjemaet
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_simple]"]').val('');
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children]"]').val('');
-                    $('[name="<?php echo $this->option_name; ?>[menu_structure][item_simple_mobile]"]').val('');
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children_mobile]"]').val('');
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_simple_li_class]"]').val('');
                     $('[name="<?php echo $this->option_name; ?>[menu_structure][item_with_children_li_class]"]').val('');
@@ -288,6 +286,11 @@ class Kursagenten_Theme_Customizations {
                     // Oppdater previews
                     $('.li-class-preview').each(function() {
                         const input = $(this).closest('td').find('.li-class-field');
+                        $(this).text(input.val() || 'Standard tema-klasser');
+                    });
+                    
+                    $('.li-class-preview-mobile').each(function() {
+                        const input = $(this).closest('td').find('.li-class-field-mobile');
                         $(this).text(input.val() || 'Standard tema-klasser');
                     });
                     
@@ -312,6 +315,17 @@ class Kursagenten_Theme_Customizations {
                         }
                     });
                 }
+            });
+
+            // Håndter li-class-felt endringer
+            $('.li-class-field').on('input', function() {
+                const preview = $(this).closest('td').find('.li-class-preview');
+                preview.text($(this).val() || 'Standard tema-klasser');
+            });
+            
+            $('.li-class-field-mobile').on('input', function() {
+                const preview = $(this).closest('td').find('.li-class-preview-mobile');
+                preview.text($(this).val() || 'Standard tema-klasser');
             });
         });
         </script>
@@ -398,22 +412,22 @@ class Kursagenten_Theme_Customizations {
             'default' => [
                 'desktop' => [
                     'item_breakpoint' => '1025px',
-                    'item_simple' => '<a href="{{term_url}}">{{term_name}}-default-2</a>',
+                    'item_simple' => '<a href="{{term_url}}">{{term_name}}</a>',
                     'item_with_children' => '<li id="menu-item-{{term_id}}" class="menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children menu-item-{{term_id}}">
-                <a class="standardmeny" href="{{term_url}}">{{term_name}}<span class="dropdown-menu-toggle icon-arrow-right">
+                <a class="ka-desktop-menu" href="{{term_url}}">{{term_name}}<span class="dropdown-menu-toggle icon-arrow-right">
                     <svg viewBox="0 0 192 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
                         <path d="M178.425 256.001c0 2.266-1.133 4.815-2.832 6.515L43.599 394.509c-1.7 1.7-4.248 2.833-6.514 2.833s-4.816-1.133-6.515-2.833l-14.163-14.162c-1.699-1.7-2.832-3.966-2.832-6.515 0-2.266 1.133-4.815 2.832-6.515l111.317-111.316L16.407 144.685c-1.699-1.7-2.832-4.249-2.832-6.515s1.133-4.815 2.832-6.515l14.163-14.162c1.7-1.7 4.249-2.833 6.515-2.833s4.815 1.133 6.514 2.833l131.994 131.993c1.7 1.7 2.832 4.249 2.832 6.515z" fill-rule="nonzero"></path>
                     </svg>
                 </span></a>',
-                    'item_simple_mobile' => '<a href="{{term_url}}">{{term_name}}</a>',
                     'item_with_children_mobile' => '<div class="drawer-nav-drop-wrap">
                         <a href="{{term_url}}">{{term_name}}</a>
                         <button class="drawer-sub-toggle" data-toggle-duration="10" aria-expanded="false">
                             <span class="screen-reader-text">Vis/skjul undermeny</span>
                         </button>
                     </div>',
-                    'item_simple_li_class' => 'menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
-                    'item_with_children_li_class' => 'menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
+                    'item_simple_li_class' => 'menu-item menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
+                    'item_with_children_li_class' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children',
+                    'item_with_children_li_class_mobile' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
                 ]
             ],
             'kadence' => [
@@ -426,8 +440,6 @@ class Kursagenten_Theme_Customizations {
 <path d="M5.293 9.707l6 6c0.391 0.391 1.024 0.391 1.414 0l6-6c0.391-0.391 0.391-1.024 0-1.414s-1.024-0.391-1.414 0l-5.293 5.293-5.293-5.293c-0.391-0.391-1.024-0.391-1.414 0s-0.391 1.024 0 1.414z"></path></svg></span>
 </span></span></a>',
 
-'item_simple_mobile' => '<a href="{{term_url}}">{{term_name}}</a>',
-
 'item_with_children_mobile' => '<div class="drawer-nav-drop-wrap">
 <a href="{{term_url}}">{{term_name}}</a>
 <button class="drawer-sub-toggle" data-toggle-duration="10" data-toggle-target="#mobile-menu .menu-item-{{term_id}} > .sub-menu" aria-expanded="false">
@@ -437,8 +449,9 @@ class Kursagenten_Theme_Customizations {
 </button>
 </div>',
 
-'item_simple_li_class' => 'menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
-'item_with_children_li_class' => 'menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
+'item_simple_li_class' => 'menu-item menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
+'item_with_children_li_class' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children',
+'item_with_children_li_class_mobile' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
                 ]
             ],
             'astra' => [
@@ -460,15 +473,14 @@ class Kursagenten_Theme_Customizations {
 <path d="M57.5,38.193l12.5,12.5l12.5-12.5l-2.5-2.5l-10,10l-10-10L57.5,38.193z"></path>
 </svg></span></span></a>',
 
-'item_simple_mobile' => '<a href="{{term_url}}" class="menu-link">{{term_name}}</a>',
-
 'item_with_children_mobile' => '<button class="ast-menu-toggle"><span class="screen-reader-text">Menyveksler</span><span class="ast-icon icon-arrow">
 <svg class="ast-arrow-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" x="0px" y="0px" width="26px" height="16.043px" viewBox="57 35.171 26 16.043" enable-background="new 57 35.171 26 16.043" xml:space="preserve">
 <path d="M57.5,38.193l12.5,12.5l12.5-12.5l-2.5-2.5l-10,10l-10-10L57.5,38.193z"></path>
 </svg></span></button>',
 
-'item_simple_li_class' => 'menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
-'item_with_children_li_class' => 'menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
+'item_simple_li_class' => 'menu-item menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
+'item_with_children_li_class' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children',
+'item_with_children_li_class_mobile' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
                 ]
             ],
             'generatepress' => [
@@ -484,32 +496,28 @@ class Kursagenten_Theme_Customizations {
 </svg></span></span>
 </a>',
 
-'item_simple_mobile' => '<a href="{{term_url}}">{{term_name}}</a>',
-
 'item_with_children_mobile' => '<a href="{{term_url}}">{{term_name}}
 <span role="button" class="dropdown-menu-toggle" tabindex="0" aria-expanded="true" aria-controls="menu-item-{{term_id}}-sub-menu" aria-label="Close Sub-Menu">
 <span class="gp-icon icon-arrow"><svg viewBox="0 0 330 512" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="1em" height="1em">
 <path d="M305.913 197.085c0 2.266-1.133 4.815-2.833 6.514L171.087 335.593c-1.7 1.7-4.249 2.832-6.515 2.832s-4.815-1.133-6.515-2.832L26.064 203.599c-1.7-1.7-2.832-4.248-2.832-6.514s1.132-4.816 2.832-6.515l14.162-14.163c1.7-1.699 3.966-2.832 6.515-2.832 2.266 0 4.815 1.133 6.515 2.832l111.316 111.317 111.316-111.317c1.7-1.699 4.249-2.832 6.515-2.832s4.815 1.133 6.515 2.832l14.162 14.163c1.7 1.7 2.833 4.249 2.833 6.515z"></path>
 </svg></span></span></a>',
-
-'item_simple_li_class' => 'menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
-'item_with_children_li_class' => 'menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
+'item_simple_li_class' => 'menu-item menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course',
+'item_with_children_li_class' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children',
+'item_with_children_li_class_mobile' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
                 ]
             ],
             'blocksy' => [
                 'desktop' => [
                     'item_breakpoint' => '1025px',
-'item_simple' => '<a href="{{term_url}}" class="ct-menu-link">{{term_name}} simple</a>',
+'item_simple' => '<a href="{{term_url}}" class="ct-menu-link">{{term_name}}</a>',
 
-'item_with_children' => '<a href="{{term_url}}" class="ct-menu-link animated-submenu-inline">{{term_name}} barn
+'item_with_children' => '<a href="{{term_url}}" class="ct-menu-link animated-submenu-inline">{{term_name}}
 <span class="ct-toggle-dropdown-desktop">
 <svg class="ct-icon" width="8" height="8" viewBox="0 0 15 15">
 <path d="M2.1,3.2l5.4,5.4l5.4-5.4L15,4.3l-7.5,7.5L0,4.3L2.1,3.2z"></path>
 </svg>
 </span></a>
-<button class="ct-toggle-dropdown-desktop-ghost" aria-label="Utvid nedtrekksmenyen" aria-haspopup="true" aria-expanded="false"></button>',
-
-'item_simple_mobile' => '<a href="{{term_url}}" class="ct-menu-link">{{term_name}}</a>',
+<button class="ct-toggle-dropdown-desktop-ghost ka-desktop-menu" aria-label="Utvid nedtrekksmenyen" aria-haspopup="true" aria-expanded="false"></button>',
 
 'item_with_children_mobile' => '<span class="ct-sub-menu-parent">
 <a href="{{term_url}}" class="ct-menu-link">{{term_name}}</a>
@@ -520,8 +528,9 @@ class Kursagenten_Theme_Customizations {
 </button>
 </span>',
 
-'item_simple_li_class' => 'menu-item automeny menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course ct-menu-item',
-'item_with_children_li_class' => 'menu-item automeny menu-item-type-taxonomy menu-item-object-category menu-item-has-children ct-menu-item animated-submenu animated-submenu-inline'
+'item_simple_li_class' => 'menu-item menu-item-type-post_type menu-item-type-taxonomy menu-item-object-course ct-menu-item',
+'item_with_children_li_class' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children ct-menu-item animated-submenu-inline',
+'item_with_children_li_class_mobile' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children ct-menu-item'
                 ]
             ]
         ];
@@ -674,7 +683,6 @@ class Kursagenten_Theme_Customizations {
             $html_fields = array(
                 'item_simple',
                 'item_with_children',
-                'item_simple_mobile',
                 'item_with_children_mobile'
             );
             
