@@ -110,6 +110,91 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                 <?php endif; ?>
 
                 <!-- Fyll ut feltene under -->
+               
+                <!-- Filter Settings -->
+                <h3 id="filterinnstillinger">Filterinnstillinger</h3>
+                <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.<br>
+                For å fjerne et filter, dra det tilbake til tilgjengelige filtre. Husk å <strong>lagre</strong> endringene dine.
+                </p>
+                <div class="options-card">
+                    <div class="filter-selection">
+                        <h4>Tilgjengelige filtre:</h4>
+                        <ul id="available-filters" class="sortable-list">
+                            <?php foreach ($available_filters as $key => $filter) : 
+                                $disabled_class = in_array($key, $inactive_filters) ? 'disabled-filter' : '';
+                                if (!in_array($key, $top_filters) && !in_array($key, $left_filters)) : ?>
+                                    <li data-filter="<?php echo esc_attr($key); ?>" class="ui-sortable-handle <?php echo $disabled_class; ?>"> 
+                                    <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($filter['label']); ?>
+                                        <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language', 'months'])) : ?>
+                                            <span class="filter-type-options">
+                                                <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Knapper</label>
+                                                <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (!isset($filter_types[$key]) || $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
+                                            </span>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    
+                    <div class="filter-containers">
+                        
+                        <div class="filter-container">
+                            <h4>Filtre i venstre kolonne</h4>
+                            <ul id="left-filters" class="sortable-list">
+                                <?php foreach ($left_filters as $filter) : ?>
+                                    <?php if (!empty($filter)) : ?>
+                                    <li data-filter="<?php echo esc_attr($filter); ?>">
+                                    <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($available_filters[$filter]['label']); ?>
+                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
+                                            <span class="filter-type-options">
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
+                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
+                                                        <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
+                                                </label>
+                                            </span>
+                                        <?php endif; ?>
+                                    </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </ul>
+                            <input type="hidden" name="kursagenten_left_filters" id="left-filters-input" value="<?php echo esc_attr(implode(',', $left_filters)); ?>">
+                        </div>
+
+                        <div class="filter-container">
+                            <h4>Filtre over kurslisten</h4>
+                            <ul id="top-filters" class="sortable-list">
+                                <?php foreach ($top_filters as $filter) : ?>
+                                    <?php if (!empty($filter)) : ?>
+                                    <li data-filter="<?php echo esc_attr($filter); ?>">
+                                    <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($available_filters[$filter]['label']); ?>
+                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
+                                            <span class="filter-type-options">
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
+                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
+                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
+                                                </label>
+                                            </span>
+                                        <?php endif; ?>
+                                    </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </ul>
+                            <input type="hidden" name="kursagenten_top_filters" id="top-filters-input" value="<?php echo esc_attr(implode(',', $top_filters)); ?>">
+                        </div>
+                        
+                    </div>
+                </div>
+
+
                 <h3 id="valg-for-bilder">Valg for bilder</h3>
                 <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsikoner om nødvendig.</p>
                 <table class="form-table options-card">
@@ -146,88 +231,6 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                     </tr>
                 </table>
 
-                <!-- Filter Settings -->
-                <h3 id="filterinnstillinger">Filterinnstillinger</h3>
-                <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.<br>
-                For å fjerne et filter, dra det tilbake til tilgjengelige filtre. Husk å <strong>lagre</strong> endringene dine.
-                </p>
-                <div class="options-card">
-                    <div class="filter-selection">
-                        <h4>Tilgjengelige filtre:</h4>
-                        <ul id="available-filters" class="sortable-list">
-                            <?php foreach ($available_filters as $key => $filter) : 
-                                $disabled_class = in_array($key, $inactive_filters) ? 'disabled-filter' : '';
-                                if (!in_array($key, $top_filters) && !in_array($key, $left_filters)) : ?>
-                                    <li data-filter="<?php echo esc_attr($key); ?>" class="ui-sortable-handle <?php echo $disabled_class; ?>"> 
-                                        <?php echo esc_html($filter['label']); ?>
-                                        <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language', 'months'])) : ?>
-                                            <span class="filter-type-options">
-                                                <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Knapper</label>
-                                                <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (!isset($filter_types[$key]) || $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
-                                            </span>
-                                        <?php endif; ?>
-                                    </li>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                    
-                    <div class="filter-containers">
-                        
-                        <div class="filter-container">
-                            <h4>Filtre i venstre kolonne</h4>
-                            <ul id="left-filters" class="sortable-list">
-                                <?php foreach ($left_filters as $filter) : ?>
-                                    <?php if (!empty($filter)) : ?>
-                                    <li data-filter="<?php echo esc_attr($filter); ?>">
-                                        <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
-                                            <span class="filter-type-options">
-                                                <label>
-                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
-                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
-                                                </label>
-                                                <label>
-                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
-                                                        <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
-                                                </label>
-                                            </span>
-                                        <?php endif; ?>
-                                    </li>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </ul>
-                            <input type="hidden" name="kursagenten_left_filters" id="left-filters-input" value="<?php echo esc_attr(implode(',', $left_filters)); ?>">
-                        </div>
-
-                        <div class="filter-container">
-                            <h4>Filtre over kurslisten</h4>
-                            <ul id="top-filters" class="sortable-list">
-                                <?php foreach ($top_filters as $filter) : ?>
-                                    <?php if (!empty($filter)) : ?>
-                                    <li data-filter="<?php echo esc_attr($filter); ?>">
-                                        <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
-                                            <span class="filter-type-options">
-                                                <label>
-                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
-                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
-                                                </label>
-                                                <label>
-                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
-                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
-                                                </label>
-                                            </span>
-                                        <?php endif; ?>
-                                    </li>
-                                    <?php endif; ?>
-                                <?php endforeach; ?>
-                            </ul>
-                            <input type="hidden" name="kursagenten_top_filters" id="top-filters-input" value="<?php echo esc_attr(implode(',', $top_filters)); ?>">
-                        </div>
-                        
-                    </div>
-                </div>
 
                 <!-- System Pages Section -->
                 <h3 id="systemsider">Opprett sider</h3>
@@ -238,8 +241,8 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                 // Continue with Kursagenten settings
                 ?>
                 <h3 id="kursagenten-innstillinger">Innstillinger fra Kursagenten</h3>
-                <p>Du finner innstillingene for Tilbyder ID og Guid i Kursagenten under <a href="https://kursadmin.kursagenten.no/ProviderInformation" target="_blank">Bedriftsinsformasjon-> Innstillinger</a>, og Temaer under <a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank">Embedded / iframe</a><br><br>
-                I Integrasjonsinnstillinger -> <a href="https://kursadmin.kursagenten.no/IntegrationSettings" target="_blank">Webhooks</a> skal du legge inn <span class="copytext" title="Klikk for å kopiere"><?php echo esc_url(site_url('/wp-json/kursagenten-api/v1/process-webhook')); ?></span> i feltene CourseCreated og CourseUpdated for å få oppdatert kursliste når et kurs endres eller opprettes.</p>
+                <p>Du finner innstillingene for <strong><a href="https://kursadmin.kursagenten.no/ProviderInformation" target="_blank">Tilbyder ID og Tilbyder Guid</a></strong> i Kursagenten under <em>Bedriftsinsformasjon-> Innstillinger</em>, og <strong><a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank">Tema for kurslister</a></strong> under <em>Embedded / iframe</em><br><br>
+                I Integrasjonsinnstillinger, under fanen <strong><a href="https://kursadmin.kursagenten.no/IntegrationSettings" target="_blank">Webhooks</a></strong> skal du legge inn <span class="copytext" title="Klikk for å kopiere"><?php echo esc_url(site_url('/wp-json/kursagenten-api/v1/process-webhook')); ?></span> i feltene CourseCreated og CourseUpdated for å automatisk oppdatere kurs når det blir opprettet eller endret på Kursagenten.</p>
                 <table class="form-table options-card">
                     <tr valign="top">
                         <th scope="row">Tilbyder ID:</th>
@@ -332,9 +335,11 @@ co                    <div class="" style="margin: 10px 0;padding: 1px 10px; bac
                 transform: scale(1.02);
                 transition: all 0.2s ease;
             }
-            .sortable-list li { padding: 10px 10px; margin: 10px 5px; background: #fff; cursor: move; border: 1px solid #e5e5e5; border-radius: 5px; font-weight: bold;}
+            .sortable-list li { padding: 10px 10px; margin: 10px 5px; background: #fff; cursor: move; border: 1px solid #e5e5e5; border-radius: 5px; font-weight: bold; position: relative;}
             #available-filters.sortable-list { display: flex; border: 0; background: #f6f6f67a; padding: 1em; border: 2px dashed #ccc; border-radius: 8px; }
-            #available-filters.sortable-list li { width: fit-content; height: fit-content; padding: 10px 15px;}
+            #available-filters.sortable-list li { width: fit-content; height: fit-content; }
+            .sortable-list li { padding: 10px 15px 10px 20px; position: relative;}
+            .sortable-list li i.ka-icon { position: absolute; top: 12px; left: 2px; }
             #available-filters .filter-type-options { display: none; }
             .filter-type-options { float: right; margin-left: 10px; font-weight: normal; color: #777; }
             #left-filters .filter-type-options { float: none; clear: both; display: block; margin-top: 10px; }

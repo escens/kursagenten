@@ -102,6 +102,19 @@ input[type=textarea] {
     border-bottom: 1px dashed #a0a0a0;
 }
 
+/* IKONER */
+/**********/
+.ka-wrap i.ka-icon {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    background-color: #2271b1;
+    mask-size: contain;
+    -webkit-mask-size: contain;
+    background-size: contain;
+    background-repeat: no-repeat;
+    }
+
 /* Kolonne-layout med CSS Grid */
 
 /*
