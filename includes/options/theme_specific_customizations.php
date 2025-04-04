@@ -38,7 +38,7 @@ class Kursagenten_Theme_Customizations {
         
         // Endre form action til vår custom handler
         ?>
-        <div class="wrap options-form ka-wrap">
+        <div class="wrap options-form ka-wrap" id="toppen">
         <form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
         <?php kursagenten_sticky_admin_menu('Tematilpasninger'); ?>
             <input type="hidden" name="action" value="save_theme_customizations">

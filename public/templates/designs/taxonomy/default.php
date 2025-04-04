@@ -28,8 +28,6 @@ error_log('Taxonomy template: Using term ID: ' . $term_id);
 error_log('Taxonomy template: Using taxonomy: ' . $taxonomy);
 error_log('Taxonomy template: Using term name: ' . $term->name);
 error_log('Taxonomy template: Using term slug: ' . $term->slug);
-
-get_header();
 ?>
 
 <article class="ka-outer-container taxonomy-container">
@@ -111,6 +109,4 @@ get_header();
         </div>
     </section>
 </article>
-
-<?php get_footer(); ?>
 

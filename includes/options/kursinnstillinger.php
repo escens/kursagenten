@@ -37,7 +37,7 @@ class Kursinnstillinger {
         <div class="wrap options-form ka-wrap">
         <form method="post" action="options.php">
         <?php kursagenten_sticky_admin_menu(); ?>
-        <h2>Kursinnstillinger</h2>
+        <h2 id="toppen">Kursinnstillinger</h2>
         <p>Velg oppsett, design, fonter og farger på de ulike sidene.</p>
         <?php 
         settings_fields('kag_kursinnst_option_group');

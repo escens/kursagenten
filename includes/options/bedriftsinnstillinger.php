@@ -23,7 +23,7 @@ class Bedriftsinformasjon {
         $this->bedriftsinfo_options = get_option('kag_bedriftsinfo_option_name'); 
 
         ?>
-        <div class="wrap options-form ka-wrap">
+        <div class="wrap options-form ka-wrap" id="toppen">
         <form method="post" action="options.php">
         <?php kursagenten_sticky_admin_menu(); ?>
         <h2>Bedriftsinformasjon</h2>

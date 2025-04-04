@@ -10,7 +10,9 @@
 function get_selected_coursedate_data($related_coursedate) {
     
     $earliest_date = null;
+    $earliest_full_date = null;
     $selected_coursedate = null;
+    $selected_full_coursedate = null;
     $coursedatemissing = true;
 
     if (!empty($related_coursedate) && is_array($related_coursedate)) {
@@ -26,21 +28,35 @@ function get_selected_coursedate_data($related_coursedate) {
             }
 
             $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
-            //error_log('course_first_date for ' . $coursedate_id . ': ' . $course_first_date);
+            $is_full = get_post_meta($coursedate_id, 'course_isFull', true) || get_post_meta($coursedate_id, 'course_markedAsFull', true);
 
             // Hvis course_first_date finnes, sammenlign for å finne den tidligste
             if (!empty($course_first_date)) {
                 $coursedatemissing = false;
                 $current_date = new DateTime($course_first_date);
-                if (!$earliest_date || $current_date < $earliest_date) {
-                    $earliest_date = $current_date;
-                    $selected_coursedate = $coursedate_id;
+                
+                if (!$is_full) {
+                    // Prioriter ledige kursdatoer
+                    if (!$earliest_date || $current_date < $earliest_date) {
+                        $earliest_date = $current_date;
+                        $selected_coursedate = $coursedate_id;
+                    }
+                } else {
+                    // Lagre også fulle kursdatoer som fallback
+                    if (!$earliest_full_date || $current_date < $earliest_full_date) {
+                        $earliest_full_date = $current_date;
+                        $selected_full_coursedate = $coursedate_id;
+                    }
                 }
             }
         }
 
+        // Hvis ingen ledige kursdatoer ble funnet, bruk den tidligste fulle kursdatoen
+        if (!$selected_coursedate && $selected_full_coursedate) {
+            $selected_coursedate = $selected_full_coursedate;
+        }
         // Hvis ingen gyldig dato er funnet, velg den første tilgjengelige coursedate
-        if (!$selected_coursedate && !empty($related_coursedate)) {
+        else if (!$selected_coursedate && !empty($related_coursedate)) {
             $selected_coursedate = reset($related_coursedate);
         }
 
@@ -51,12 +67,14 @@ function get_selected_coursedate_data($related_coursedate) {
                 'first_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_first_date', true)),
                 'last_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_last_date', true)),
                 'price' => get_post_meta($selected_coursedate, 'course_price', true),
+                'after_price' => get_post_meta($selected_coursedate, 'course_text_after_price', true),
                 'duration' => get_post_meta($selected_coursedate, 'course_duration', true),
                 'time' => get_post_meta($selected_coursedate, 'course_time', true),
                 'language' => get_post_meta($selected_coursedate, 'course_language', true),
                 'button_text' => get_post_meta($selected_coursedate, 'course_button_text', true),
                 'signup_url' => get_post_meta($selected_coursedate, 'course_signup_url', true),
                 'coursedatemissing' => $coursedatemissing,
+                'is_full' => get_post_meta($selected_coursedate, 'course_isFull', true) || get_post_meta($selected_coursedate, 'course_markedAsFull', true),
             ];
         }
     }
@@ -458,3 +476,69 @@ add_filter('pre_get_posts', function($query) {
     }
     return $query;
 });
+
+/**
+ * Henter kurs (ikke coursedates) for taksonomi-sidene.
+ * For hvert kurs returneres informasjon om kurset sammen med den første tilgjengelige coursedate.
+ *
+ * @param array $args Spørringsargumenter
+ * @return WP_Query Spørring med kurs og relatert coursedate-informasjon
+ */
+function get_courses_for_taxonomy($args = []) {
+    $defaults = [
+        'taxonomy' => '',
+        'term' => '',
+        'posts_per_page' => -1,
+        'paged' => get_query_var('paged') ? get_query_var('paged') : 1
+    ];
+    
+    $args = wp_parse_args($args, $defaults);
+    
+    // Hent antall kurs per side fra innstillinger
+    if ($args['posts_per_page'] === -1) {
+        $args['posts_per_page'] = kursagenten_get_posts_per_page('taxonomy', $args['taxonomy']);
+    }
+    
+    $query_args = [
+        'post_type' => 'course',
+        'posts_per_page' => $args['posts_per_page'],
+        'paged' => $args['paged'],
+        'tax_query' => [
+            [
+                'taxonomy' => $args['taxonomy'],
+                'field' => 'slug',
+                'terms' => $args['term']
+            ]
+        ]
+    ];
+    
+    return new WP_Query($query_args);
+}
+
+/**
+ * Henter kurs for arkivsiden med riktig antall per side
+ *
+ * @param array $args Spørringsargumenter
+ * @return WP_Query WP_Query objekt med kursene
+ */
+function get_courses_for_archive($args = []) {
+    $defaults = [
+        'posts_per_page' => -1,
+        'paged' => get_query_var('paged') ? get_query_var('paged') : 1
+    ];
+    
+    $args = wp_parse_args($args, $defaults);
+    
+    // Hent antall kurs per side fra innstillinger
+    if ($args['posts_per_page'] === -1) {
+        $args['posts_per_page'] = kursagenten_get_posts_per_page('archive');
+    }
+    
+    $query_args = [
+        'post_type' => 'course',
+        'posts_per_page' => $args['posts_per_page'],
+        'paged' => $args['paged']
+    ];
+    
+    return new WP_Query($query_args);
+}

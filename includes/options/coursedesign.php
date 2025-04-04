@@ -6,6 +6,7 @@ class Designmaler {
         add_action('admin_menu', array($this, 'design_add_plugin_page'));
         add_action('admin_init', array($this, 'design_page_init'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
+        add_action('wp_head', array($this, 'add_custom_css'), 999);
     }
 
     public function design_add_plugin_page() {
@@ -24,7 +25,7 @@ class Designmaler {
         
         ?>
 
-        <div class="wrap options-form ka-wrap">
+        <div class="wrap options-form ka-wrap" id="toppen">
             <form method="post" action="options.php">
                 <?php 
                 settings_fields('design_option_group');
@@ -32,6 +33,7 @@ class Designmaler {
                 ?>
                 <?php kursagenten_sticky_admin_menu(); ?>
                 <!-- Single kurs -->
+                 <h2>Kursdesign</h2>
                 <div class="design-section">
                     <h3>Enkeltkurs</h3>
                     
@@ -174,6 +176,75 @@ class Designmaler {
                             </label>
                         </div>
                     </div>
+
+                    <!-- Kolonner -->
+                    <div class="option-row">
+                        <label class="option-label">Antall kolonner:</label>
+                        <div class="option-input">
+                            <div class="column-settings">
+                                <div class="column-setting">
+                                    <label>Desktop:</label>
+                                    <select name="kursagenten_archive_columns_desktop">
+                                        <?php
+                                        $current_columns = get_option('kursagenten_archive_columns_desktop', '3');
+                                        for ($i = 1; $i <= 4; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_columns, $i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="column-setting">
+                                    <label>Tablet:</label>
+                                    <select name="kursagenten_archive_columns_tablet">
+                                        <?php
+                                        $current_columns = get_option('kursagenten_archive_columns_tablet', '2');
+                                        for ($i = 1; $i <= 3; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_columns, $i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="column-setting">
+                                    <label>Mobil:</label>
+                                    <select name="kursagenten_archive_columns_mobile">
+                                        <?php
+                                        $current_columns = get_option('kursagenten_archive_columns_mobile', '1');
+                                        for ($i = 1; $i <= 2; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_columns, $i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Antall kurs -->
+                    <div class="option-row">
+                        <label class="option-label">Antall kurs per side:</label>
+                        <div class="option-input">
+                            <input type="number" 
+                                   name="kursagenten_archive_posts_per_page" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_archive_posts_per_page', '12')); ?>" 
+                                   min="1" 
+                                   max="100">
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Taxonomi -->
@@ -250,6 +321,24 @@ class Designmaler {
                             </select>
                         </div>
                     </div>
+                    
+                    <!-- Vis bilder -->
+                    <div class="option-row">
+                        <label class="option-label">Vis bilder:</label>
+                        <div class="option-input">
+                            <?php
+                            $show_images_taxonomy = get_option('kursagenten_show_images_taxonomy', 'yes');
+                            ?>
+                            <label class="radio-label">
+                                <input type="radio" name="kursagenten_show_images_taxonomy" value="yes" <?php checked($show_images_taxonomy, 'yes'); ?>>
+                                Ja
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="kursagenten_show_images_taxonomy" value="no" <?php checked($show_images_taxonomy, 'no'); ?>>
+                                Nei
+                            </label>
+                        </div>
+                    </div>
 
                     <!-- Spesifikke innstillinger per taksonomi -->
                     <div class="taxonomy-specific-settings">
@@ -317,11 +406,118 @@ class Designmaler {
                                             </select>
                                         </div>
                                     </div>
+                                    
+                                    <!-- Vis bilder -->
+                                    <div class="option-row">
+                                        <label class="option-label">Vis bilder:</label>
+                                        <div class="option-input">
+                                            <?php
+                                            $show_images_taxonomy_specific = get_option("kursagenten_taxonomy_{$tax_name}_show_images", '');
+                                            ?>
+                                            <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_show_images">
+                                                <option value="">Bruk standard innstilling</option>
+                                                <option value="yes" <?php selected($show_images_taxonomy_specific, 'yes'); ?>>Ja</option>
+                                                <option value="no" <?php selected($show_images_taxonomy_specific, 'no'); ?>>Nei</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Kolonner -->
+                                    <div class="option-row">
+                                        <label class="option-label">Antall kolonner:</label>
+                                        <div class="option-input">
+                                            <div class="column-settings">
+                                                <div class="column-setting">
+                                                    <label>Desktop:</label>
+                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_columns_desktop">
+                                                        <option value="">Bruk standard innstilling</option>
+                                                        <?php
+                                                        $current_columns = get_option("kursagenten_taxonomy_{$tax_name}_columns_desktop", '');
+                                                        for ($i = 1; $i <= 4; $i++) {
+                                                            printf(
+                                                                '<option value="%d" %s>%d</option>',
+                                                                $i,
+                                                                selected($current_columns, $i, false),
+                                                                $i
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                                <div class="column-setting">
+                                                    <label>Tablet:</label>
+                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_columns_tablet">
+                                                        <option value="">Bruk standard innstilling</option>
+                                                        <?php
+                                                        $current_columns = get_option("kursagenten_taxonomy_{$tax_name}_columns_tablet", '');
+                                                        for ($i = 1; $i <= 3; $i++) {
+                                                            printf(
+                                                                '<option value="%d" %s>%d</option>',
+                                                                $i,
+                                                                selected($current_columns, $i, false),
+                                                                $i
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                                <div class="column-setting">
+                                                    <label>Mobil:</label>
+                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_columns_mobile">
+                                                        <option value="">Bruk standard innstilling</option>
+                                                        <?php
+                                                        $current_columns = get_option("kursagenten_taxonomy_{$tax_name}_columns_mobile", '');
+                                                        for ($i = 1; $i <= 2; $i++) {
+                                                            printf(
+                                                                '<option value="%d" %s>%d</option>',
+                                                                $i,
+                                                                selected($current_columns, $i, false),
+                                                                $i
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Antall kurs -->
+                                    <div class="option-row">
+                                        <label class="option-label">Antall kurs per side:</label>
+                                        <div class="option-input">
+                                            <input type="number" 
+                                                   name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_posts_per_page" 
+                                                   value="<?php echo esc_attr(get_option("kursagenten_taxonomy_{$tax_name}_posts_per_page", '')); ?>" 
+                                                   min="1" 
+                                                   max="100">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
                     </div>
-                
+                </div>
+
+                <div class="design-setion">
+                    <h3>Egen CSS</h3>
+                    <p>Her kan du legge til egendefinert CSS som vil bli lastet inn på alle sider som hører til utvidelsen. Denne CSS-en vil ha høyest prioritet og vil overstyre utvidelsens standard CSS.</p>
+                    
+                    <div class="options-card">
+                        <textarea name="kursagenten_custom_css" id="kursagenten_custom_css" rows="10" style="width: 100%; font-family: monospace;"><?php echo esc_textarea(get_option('kursagenten_custom_css', '')); ?></textarea>
+                        
+                        <p class="description">
+                            <strong>Nyttige selectorer:</strong><br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka</code> - Den ytterste wrapperen på alle frontend-sider som hører til utvidelsen<br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-single</code> - Enkeltkurs-sider<br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-archive</code> - Kurslister<br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy</code> - Taksonomi-sider<br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-course-card</code> - Kurskort i lister<br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-button</code> - Standard knapper<br>
+                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-section</code> - Seksjoner i kursinnhold
+                        </p>
+                    </div>
+                </div>
 
                 <style>
                     .design-section {
@@ -368,13 +564,34 @@ class Designmaler {
                         margin-bottom: 1em;
                         display: block;
                     }
+                    .column-settings {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 15px;
+                    }
+                    .column-setting {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 5px;
+                    }
+                    .column-setting label {
+                        font-size: 0.9em;
+                        color: #666;
+                    }
+                    .column-setting select {
+                        width: 100%;
+                    }
                 </style>
+
+                <!-- Egen CSS -->
+
 
                 <?php submit_button(); ?>
             
         
         <?php
         kursagenten_admin_footer();
+        
     }
 
     public function design_page_init() {
@@ -383,6 +600,17 @@ class Designmaler {
             'design_option_group',
             'design_option_name',
             array($this, 'design_sanitize')
+        );
+
+        // Registrer egen CSS innstilling
+        register_setting(
+            'design_option_group',
+            'kursagenten_custom_css',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_css'),
+                'default' => ''
+            )
         );
 
         // Definer alle innstillingstyper
@@ -417,6 +645,17 @@ class Designmaler {
                 'default' => 'yes'
             )
         );
+        
+        // Registrer innstilling for bildevisning på taksonomi-sider
+        register_setting(
+            'design_option_group',
+            'kursagenten_show_images_taxonomy',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'yes'
+            )
+        );
 
         // Registrer taksonomi-spesifikke innstillinger
         $taxonomies = ['coursecategory' => 'Kurskategorier', 
@@ -436,7 +675,7 @@ class Designmaler {
             );
 
             // Registrer spesifikke innstillinger for hver taksonomi
-            foreach (['layout', 'design', 'list_type'] as $setting) {
+            foreach (['layout', 'design', 'list_type', 'show_images'] as $setting) {
                 register_setting(
                     'design_option_group',
                     "kursagenten_taxonomy_{$tax_name}_{$setting}",
@@ -447,6 +686,77 @@ class Designmaler {
                     )
                 );
             }
+        }
+
+        // Registrer kolonneinnstillinger for arkiv
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_columns_desktop',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 3
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_columns_tablet',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 2
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_columns_mobile',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 1
+            )
+        );
+
+        // Registrer antall kurs per side for arkiv
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_posts_per_page',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 12
+            )
+        );
+
+        // Registrer taksonomi-spesifikke innstillinger
+        $taxonomies = ['coursecategory' => 'Kurskategorier', 
+                      'course_location' => 'Kurssteder', 
+                      'instructors' => 'Instruktører'];
+
+        foreach ($taxonomies as $tax_name => $tax_label) {
+            // Registrer kolonneinnstillinger for taksonomi
+            foreach (['desktop', 'tablet', 'mobile'] as $device) {
+                register_setting(
+                    'design_option_group',
+                    "kursagenten_taxonomy_{$tax_name}_columns_{$device}",
+                    array(
+                        'type' => 'string',
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'default' => ''
+                    )
+                );
+            }
+
+            // Registrer antall kurs per side for taksonomi
+            register_setting(
+                'design_option_group',
+                "kursagenten_taxonomy_{$tax_name}_posts_per_page",
+                array(
+                    'type' => 'string',
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'default' => ''
+                )
+            );
         }
     }
 
@@ -465,7 +775,9 @@ class Designmaler {
             'taxonomy_layout',
             'taxonomy_design',
             'taxonomy_list_type',
-            'show_images'
+            'show_images',
+            'show_images_taxonomy',
+            'custom_css'
         ];
 
         foreach ($valid_keys as $key) {
@@ -481,7 +793,8 @@ class Designmaler {
                 "taxonomy_{$taxonomy}_override",
                 "taxonomy_{$taxonomy}_layout",
                 "taxonomy_{$taxonomy}_design",
-                "taxonomy_{$taxonomy}_list_type"
+                "taxonomy_{$taxonomy}_list_type",
+                "taxonomy_{$taxonomy}_show_images"
             ];
 
             foreach ($tax_keys as $key) {
@@ -496,6 +809,22 @@ class Designmaler {
         }
         
         return $sanitary_values;
+    }
+
+    /**
+     * Sanitize CSS input
+     * 
+     * @param string $css The CSS to sanitize
+     * @return string The sanitized CSS
+     */
+    public function sanitize_css($css) {
+        // Allow CSS properties and values, but strip potentially dangerous content
+        // This is a basic sanitization - consider using a more robust solution for production
+        $css = wp_strip_all_tags($css);
+        $css = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css);
+        $css = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $css);
+        
+        return $css;
     }
 
     public function enqueue_admin_scripts($hook) {
@@ -529,6 +858,41 @@ class Designmaler {
                 });
             })(jQuery);
         ');
+    }
+
+    /**
+     * Legg til egendefinert CSS på frontend-sider
+     */
+    public function add_custom_css() {
+        $custom_css = get_option('kursagenten_custom_css', '');
+        
+        if (!empty($custom_css)) {
+            // Sjekk om vi er på en side som hører til utvidelsen
+            $is_kursagenten_page = false;
+            
+            // Sjekk om vi er på en enkeltkurs-side
+            if (is_singular('course')) {
+                $is_kursagenten_page = true;
+            }
+            
+            // Sjekk om vi er på en kursarkiv-side
+            if (is_post_type_archive('course')) {
+                $is_kursagenten_page = true;
+            }
+            
+            // Sjekk om vi er på en taksonomi-side
+            if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
+                $is_kursagenten_page = true;
+            }
+            
+            // Hvis vi er på en side som hører til utvidelsen, legg til CSS-en
+            if ($is_kursagenten_page) {
+                echo '<!-- Kursagenten Custom CSS -->' . "\n";
+                echo '<style type="text/css" id="kursagenten-custom-css">' . "\n";
+                echo $custom_css . "\n";
+                echo '</style>' . "\n";
+            }
+        }
     }
 }
 

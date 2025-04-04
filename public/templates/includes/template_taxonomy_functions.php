@@ -103,8 +103,19 @@ function get_instructor_image($term_id) {
 }
 
 function get_taxonomy_courses($term_id, $taxonomy) {
+    // Sjekk om term_id og taxonomy er gyldige
+    if (empty($term_id) || empty($taxonomy)) {
+        return new WP_Query();
+    }
+    
+    // Sjekk om termen eksisterer
+    $term = get_term($term_id, $taxonomy);
+    if (is_wp_error($term) || !$term) {
+        return new WP_Query();
+    }
+    
     $args = array(
-        'post_type' => 'coursedate',
+        'post_type' => 'course',
         'posts_per_page' => -1,
         'tax_query' => array(
             array(
@@ -113,9 +124,11 @@ function get_taxonomy_courses($term_id, $taxonomy) {
                 'terms'    => $term_id
             )
         ),
-        'orderby' => 'course_first_date',
+        'orderby' => 'title',
         'order' => 'ASC'
     );
     
-    return get_course_dates_query($args);
+    $query = get_courses_for_taxonomy($args);
+    
+    return $query;
 }

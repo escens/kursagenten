@@ -438,3 +438,77 @@ function get_ajax_template_path($context = 'archive') {
     $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$style}.php";
     return file_exists($template_path) ? $template_path : KURSAG_PLUGIN_DIR . "public/templates/list-types/standard.php";
 }
+
+/**
+ * Henter kolonneinnstillinger for en gitt kontekst
+ *
+ * @param string $context Kontekst ('archive' eller 'taxonomy')
+ * @param string $tax_name Taksonominavn (kun for taxonomy-kontekst)
+ * @return array Array med kolonneinnstillinger
+ */
+function kursagenten_get_column_settings($context = 'archive', $tax_name = '') {
+    $settings = [
+        'desktop' => 3,
+        'tablet' => 2,
+        'mobile' => 1
+    ];
+
+    if ($context === 'taxonomy' && !empty($tax_name)) {
+        $override_enabled = get_option("kursagenten_taxonomy_{$tax_name}_override", false);
+        
+        if ($override_enabled) {
+            foreach (['desktop', 'tablet', 'mobile'] as $device) {
+                $value = get_option("kursagenten_taxonomy_{$tax_name}_columns_{$device}", '');
+                if (!empty($value)) {
+                    $settings[$device] = (int)$value;
+                }
+            }
+        }
+    } else {
+        $settings['desktop'] = (int)get_option('kursagenten_archive_columns_desktop', 3);
+        $settings['tablet'] = (int)get_option('kursagenten_archive_columns_tablet', 2);
+        $settings['mobile'] = (int)get_option('kursagenten_archive_columns_mobile', 1);
+    }
+
+    return $settings;
+}
+
+/**
+ * Henter antall kurs per side for en gitt kontekst
+ *
+ * @param string $context Kontekst ('archive' eller 'taxonomy')
+ * @param string $tax_name Taksonominavn (kun for taxonomy-kontekst)
+ * @return int Antall kurs per side
+ */
+function kursagenten_get_posts_per_page($context = 'archive', $tax_name = '') {
+    if ($context === 'taxonomy' && !empty($tax_name)) {
+        $override_enabled = get_option("kursagenten_taxonomy_{$tax_name}_override", false);
+        
+        if ($override_enabled) {
+            $value = get_option("kursagenten_taxonomy_{$tax_name}_posts_per_page", '');
+            if (!empty($value)) {
+                return (int)$value;
+            }
+        }
+    }
+    
+    return (int)get_option('kursagenten_archive_posts_per_page', 12);
+}
+
+/**
+ * Legger til kolonneinnstillinger som data-attributter
+ *
+ * @param string $context Kontekst ('archive' eller 'taxonomy')
+ * @param string $tax_name Taksonominavn (kun for taxonomy-kontekst)
+ * @return string Data-attributter for kolonneinnstillinger
+ */
+function kursagenten_get_column_attributes($context = 'archive', $tax_name = '') {
+    $settings = kursagenten_get_column_settings($context, $tax_name);
+    $attributes = '';
+    
+    foreach ($settings as $device => $columns) {
+        $attributes .= sprintf(' data-columns-%s="%d"', $device, $columns);
+    }
+    
+    return $attributes;
+}

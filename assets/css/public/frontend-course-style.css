@@ -273,7 +273,7 @@ border-radius: 8px;
   background: #fff;
   box-shadow: -2px 0 5px rgba(0, 0, 0, 0.2);
   transition: right 0.7s ease-in-out;
-  z-index: 100000;
+  z-index: 999999;
   overflow-y: auto;
 }
 #ka #slidein-panel.active {
@@ -304,15 +304,15 @@ border-radius: 8px;
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
-  z-index: 9999;
+  z-index: 999998;
   opacity: 0;
-  visibility: hidden; /* Sikrer at den er usynlig for interaksjon */
+  visibility: hidden;
   transition: opacity 0.5s ease-in-out, visibility 0.5s ease-in-out;
 }
 
 #ka #slidein-overlay.active {
   opacity: 1;
-  visibility: visible; /* Gjør den synlig */
+  visibility: visible;
 }
 @media screen and (max-width: 768px){
   #ka #slidein-panel iframe {

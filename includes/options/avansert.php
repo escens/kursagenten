@@ -23,7 +23,7 @@ class Avansert {
         $this->kag_avansert_options = get_option('kag_avansert_option_name');
 
         ?>
-        <div class="wrap options-form ka-wrap">
+        <div class="wrap options-form ka-wrap" id="toppen">
         <form method="post" action="options.php">
         <?php kursagenten_sticky_admin_menu(); ?>
         <h2>Avanserte innstillinger</h2>
