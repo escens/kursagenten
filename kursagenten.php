@@ -281,7 +281,7 @@ require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
 
-// Shortcodes
+// Shortcodes content blocks
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-list-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
@@ -292,7 +292,9 @@ require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.p
 // Menus
 //require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-kurstagger-shortcode.php';
+
+// General Kursagenten shortcodes
+require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
 
 // Blocks
 //require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';

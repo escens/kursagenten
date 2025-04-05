@@ -56,7 +56,7 @@ function load_more_if_hidden_items() {
             function hideImagesByAriaLabel() {
                 $('.attachment').each(function() {
                     var ariaLabel = $(this).attr('aria-label');
-                    if (ariaLabel && ariaLabel.startsWith('kursbilde-zrs')) {
+                    if (ariaLabel && ariaLabel.startsWith('kursbilde-')) {
                         $(this).hide();
                     }
                 });
@@ -113,3 +113,32 @@ function load_more_if_hidden_items() {
     <?php
 }
 add_action('admin_footer', 'load_more_if_hidden_items');
+
+// Add CSS to hide course images in grid view
+function hide_course_images_css() {
+    if (!is_admin()) {
+        return;
+    }
+    ?>
+    <style>
+        /* Skjul bilder merket med is_course_image i gridvisning */
+        body.upload-php .media-frame.mode-grid .attachment[data-is-course-image="true"],
+        .media-modal .media-frame.mode-grid .attachment[data-is-course-image="true"] {
+            display: none !important;
+        }
+    </style>
+    <?php
+}
+add_action('admin_head', 'hide_course_images_css');
+
+// Add data attribute to attachments for course images
+function add_course_image_data_attribute($form_fields, $post) {
+    if (get_post_meta($post->ID, 'is_course_image', true)) {
+        $form_fields['is_course_image'] = array(
+            'input' => 'html',
+            'html' => '<input type="hidden" data-is-course-image="true" />'
+        );
+    }
+    return $form_fields;
+}
+add_filter('attachment_fields_to_edit', 'add_course_image_data_attribute', 10, 2);
