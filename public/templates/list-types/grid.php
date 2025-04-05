@@ -93,57 +93,106 @@ if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors
 
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
-// Hent kontekst og taksonominavn
-$context = is_post_type_archive('course') ? 'archive' : 'taxonomy';
-$tax_name = '';
-if ($context === 'taxonomy') {
-    $current_tax = get_queried_object();
-    if ($current_tax && isset($current_tax->taxonomy)) {
-        $tax_name = $current_tax->taxonomy;
-    }
-}
-
-// Hent kolonneinnstillinger
-$column_attributes = kursagenten_get_column_attributes($context, $tax_name);
-
-// Hent antall kurs per side
-$posts_per_page = kursagenten_get_posts_per_page($context, $tax_name);
-
-// Sett opp spørringen
-$args = [
-    'posts_per_page' => $posts_per_page,
-    'paged' => get_query_var('paged') ? get_query_var('paged') : 1
-];
-
-if ($context === 'taxonomy') {
-    $args['taxonomy'] = $tax_name;
-    $args['term'] = $current_tax->slug;
-    $query = get_courses_for_taxonomy($args);
-} else {
-    $query = get_courses_for_archive($args);
-}
-
 ?>
-<div class="courselist-items"<?php echo $column_attributes; ?>>
-    <?php
-    if ($query->have_posts()) :
-        while ($query->have_posts()) : $query->the_post();
-            // ... existing code for å vise kurs ...
-        endwhile;
+<div class="courselist-item grid-item<?php echo $item_class; ?>">
+    <div class="courselist-card<?php echo $with_image_class; ?>">
+        <?php if ($show_images === 'yes') : ?>
+        <!-- Image area -->
+        <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
+            </a>
+            <?php if (!empty($is_full)) : ?>
+                <span class="card-availability course-available full">Fullt</span>
+            <?php else : ?>
+                <span class="card-availability course-available">Ledige plasser</span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
         
-        // Paginering
-        echo '<div class="courselist-pagination">';
-        echo paginate_links([
-            'total' => $query->max_num_pages,
-            'current' => max(1, get_query_var('paged')),
-            'prev_text' => '&laquo; Forrige',
-            'next_text' => 'Neste &raquo;'
-        ]);
-        echo '</div>';
-        
-        wp_reset_postdata();
-    else :
-        echo '<p>Ingen kurs funnet.</p>';
-    endif;
-    ?>
+        <div class="card-content">
+            <div class="card-content-upper">
+                <!-- Title area -->
+                <div class="title-area">
+                    <h3 class="course-title">
+                        <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
+                    </h3>
+                    <?php if ($show_images === 'no') : ?>
+                    <?php if (!empty($is_full)) : ?>
+                        <div class="course-availability tooltip tooltip-left" data-title="Fullt">
+                            <span class="card-availability course-available full"></span>
+                        </div>
+                    <?php else : ?>
+                        <div class="course-availability tooltip tooltip-left" data-title="Ledige plasser">
+                            <span class="card-availability course-available"></span>
+                        </div>
+                    <?php endif; ?>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Location -->
+                <?php if (!empty($location)) : ?>
+                <div class="card-location">
+                    <strong><?php echo esc_html($location); ?></strong>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Excerpt -->
+                <?php if (!empty($excerpt)) : ?>
+                <div class="card-excerpt">
+                    <?php echo wp_trim_words(wp_kses_post($excerpt), 20, '...'); ?>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Course details -->
+                <div class="card-details">
+                    <ul class="card-details-list">
+                        <?php if ($is_taxonomy_page) : ?>
+                            <?php if (!empty($selected_coursedate_data['first_date'])) : ?>
+                            <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($selected_coursedate_data['first_date']); ?></li>
+                            <?php endif; ?>
+                            <?php if (!empty($selected_coursedate_data['time'])) : ?>
+                            <li><i class="ka-icon icon-time"></i><?php echo esc_html($selected_coursedate_data['time']); ?></li>
+                            <?php endif; ?>
+                        <?php else : ?>
+                            <?php if (!empty($first_course_date)) : ?>
+                            <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></li>
+                            <?php endif; ?>
+                            <?php if (!empty($coursetime)) : ?>
+                            <li><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></li>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="card-content-lower">
+                <div class="card-separator"></div>
+                
+                <!-- Footer area -->
+                <div class="card-footer">
+                    <?php if ($is_taxonomy_page) : ?>
+                        <?php if (!empty($selected_coursedate_data['price'])) : ?>
+                        <div class="card-price">
+                            <strong><?php echo esc_html($selected_coursedate_data['price']); ?> <?php echo !empty($selected_coursedate_data['after_price']) ? esc_html($selected_coursedate_data['after_price']) : ''; ?></strong>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                            <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
+                        </button>
+                    <?php else : ?>
+                        <?php if (!empty($price)) : ?>
+                        <div class="card-price">
+                            <strong><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></strong>
+                        </div>
+                        <?php endif; ?>
+                        
+                        <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
+                            <?php echo esc_html($button_text); ?>
+                        </button>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

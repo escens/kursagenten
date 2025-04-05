@@ -47,7 +47,7 @@ register_post_type('course', array(
         'item_link_description' => 'Link til kurs',
     ),
     'public'        => true,
-    'has_archive'   => true,
+    'has_archive'   => false,
     'show_in_rest'  => true,
     'menu_icon'     => 'dashicons-welcome-learn-more',
     'supports'      => array('title', 'editor', 'excerpt', 'thumbnail','custom-fields','page-attributes'),

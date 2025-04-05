@@ -22,6 +22,10 @@ function filter_courses_handler() {
     }
 
     try {
+        // Logg innkommende parametre
+        //error_log('Incoming request parameters: ' . print_r($_REQUEST, true));
+        //error_log('Incoming POST parameters: ' . print_r($_POST, true));
+
         // Håndter datofilteret
         $date_param = $_POST['dato'] ?? $_REQUEST['dato'] ?? null;
         if (!empty($date_param) && is_string($date_param)) {
@@ -40,6 +44,17 @@ function filter_courses_handler() {
         }
 
         $query = get_course_dates_query();
+
+        // Håndter søk
+        $search_param = $_POST['sok'] ?? $_REQUEST['sok'] ?? null;
+        if (!empty($search_param)) {
+            $_REQUEST['s'] = sanitize_text_field($search_param);
+        }
+        
+        // Logg query-parametere
+        //error_log('Query parameters: ' . print_r($query->query_vars, true));
+        //error_log('Current page: ' . $query->get('paged'));
+        //error_log('Max pages: ' . $query->max_num_pages);
 
         if ($query->have_posts()) {
             ob_start();
@@ -67,17 +82,49 @@ function filter_courses_handler() {
             }
             wp_reset_postdata();
 
-            $url_options = get_option('kag_seo_option_name');
-            $kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewrite_kurs'] : 'kurs';
-            $pagination = paginate_links([
-                'base' => get_home_url(null, $kurs) .'?%_%',
+            // Hent gjeldende forespørsels-URL som base for paginering
+            $current_url = '';
+
+            // Prøv først å hente fra HTTP_REFERER
+            if (!empty($_SERVER['HTTP_REFERER'])) {
+                $referer = wp_parse_url($_SERVER['HTTP_REFERER']);
+                if ($referer && isset($referer['path'])) {
+                    $current_url = home_url($referer['path']);
+                }
+            }
+
+            // Fallback til REQUEST_URI hvis HTTP_REFERER ikke er tilgjengelig
+            if (empty($current_url)) {
+                $request_uri = $_SERVER['REQUEST_URI'];
+                // Fjern query-parametre
+                $path = strtok($request_uri, '?');
+                $current_url = home_url($path);
+            }
+
+            //error_log('Original request URL: ' . $_SERVER['HTTP_REFERER']);
+            //error_log('Parsed current URL for pagination: ' . $current_url);
+
+            // Fjern eventuelle eksisterende side-parametre fra URL-en
+            $current_url = remove_query_arg('side', $current_url);
+            
+            //error_log('URL after removing side parameter: ' . $current_url);
+
+            // Bygg pagineringsparametere
+            $pagination_args = [
+                'base' => $current_url . '%_%',
                 'current' => max(1, $query->get('paged')),
-                'format' => 'side=%#%',
+                'format' => '?side=%#%',
                 'total' => $query->max_num_pages,
                 'add_args' => array_map(function ($item) {
                     return is_array($item) ? join(',', $item) : $item;
-                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true])) 
-            ]);
+                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'coursedate' => true, 'course' => true]))
+            ];
+            
+            //error_log('Pagination arguments: ' . print_r($pagination_args, true));
+
+            $pagination = paginate_links($pagination_args);
+            
+            //error_log('Generated pagination HTML: ' . $pagination);
 
             wp_send_json_success([
                 'html' => ob_get_clean(),

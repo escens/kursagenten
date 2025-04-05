@@ -282,6 +282,7 @@ require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
 
 // Shortcodes
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-list-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
@@ -528,29 +529,3 @@ require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-kurstagger-shortcode.p
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
    
 
-
-
-
-
-// Aktiver kortkoder i menylenker
-/*
-add_filter('wp_nav_menu_item_attributes', function($atts, $item, $args) {
-    if (!empty($item->url) && strpos($item->url, '[taxonomy_menu') !== false) {
-        $shortcode = strip_tags($item->url);
-        $atts['href'] = '#';
-        $atts['data-shortcode'] = do_shortcode($shortcode);
-    }
-    return $atts;
-}, 10, 3);
-
-add_filter('wp_nav_menu_items', function($items, $args) {
-    $items = preg_replace_callback(
-        '/<a([^>]*)data-shortcode="([^"]*)"([^>]*)>/',
-        function($matches) {
-            return $matches[2];
-        },
-        $items
-    );
-    return $items;
-}, 20, 2);
-*/

@@ -7,6 +7,11 @@ class Designmaler {
         add_action('admin_init', array($this, 'design_page_init'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_head', array($this, 'add_custom_css'), 999);
+        
+        // Legg til action for å håndtere systemside-operasjoner
+        add_action('admin_post_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
+        // Legg til AJAX action
+        add_action('wp_ajax_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
     }
 
     public function design_add_plugin_page() {
@@ -32,8 +37,16 @@ class Designmaler {
                 do_settings_sections('design-admin');
                 ?>
                 <?php kursagenten_sticky_admin_menu(); ?>
+                <h2>Kursdesign</h2>
+                <!-- System-sider -->
+                <div class="design-section">
+                    <h3>System-sider</h3>
+                    <p>Her kan du administrere de automatisk genererte sidene for kurskategorier, kurssteder og instruktører.</p>
+                    <?php $this->render_system_pages_section(); ?>
+                </div>
+
                 <!-- Single kurs -->
-                 <h2>Kursdesign</h2>
+                
                 <div class="design-section">
                     <h3>Enkeltkurs</h3>
                     
@@ -174,75 +187,6 @@ class Designmaler {
                                 <input type="radio" name="kursagenten_show_images" value="no" <?php checked($show_images, 'no'); ?>>
                                 Nei
                             </label>
-                        </div>
-                    </div>
-
-                    <!-- Kolonner -->
-                    <div class="option-row">
-                        <label class="option-label">Antall kolonner:</label>
-                        <div class="option-input">
-                            <div class="column-settings">
-                                <div class="column-setting">
-                                    <label>Desktop:</label>
-                                    <select name="kursagenten_archive_columns_desktop">
-                                        <?php
-                                        $current_columns = get_option('kursagenten_archive_columns_desktop', '3');
-                                        for ($i = 1; $i <= 4; $i++) {
-                                            printf(
-                                                '<option value="%d" %s>%d</option>',
-                                                $i,
-                                                selected($current_columns, $i, false),
-                                                $i
-                                            );
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                                <div class="column-setting">
-                                    <label>Tablet:</label>
-                                    <select name="kursagenten_archive_columns_tablet">
-                                        <?php
-                                        $current_columns = get_option('kursagenten_archive_columns_tablet', '2');
-                                        for ($i = 1; $i <= 3; $i++) {
-                                            printf(
-                                                '<option value="%d" %s>%d</option>',
-                                                $i,
-                                                selected($current_columns, $i, false),
-                                                $i
-                                            );
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                                <div class="column-setting">
-                                    <label>Mobil:</label>
-                                    <select name="kursagenten_archive_columns_mobile">
-                                        <?php
-                                        $current_columns = get_option('kursagenten_archive_columns_mobile', '1');
-                                        for ($i = 1; $i <= 2; $i++) {
-                                            printf(
-                                                '<option value="%d" %s>%d</option>',
-                                                $i,
-                                                selected($current_columns, $i, false),
-                                                $i
-                                            );
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Antall kurs -->
-                    <div class="option-row">
-                        <label class="option-label">Antall kurs per side:</label>
-                        <div class="option-input">
-                            <input type="number" 
-                                   name="kursagenten_archive_posts_per_page" 
-                                   value="<?php echo esc_attr(get_option('kursagenten_archive_posts_per_page', '12')); ?>" 
-                                   min="1" 
-                                   max="100">
                         </div>
                     </div>
                 </div>
@@ -421,78 +365,6 @@ class Designmaler {
                                             </select>
                                         </div>
                                     </div>
-
-                                    <!-- Kolonner -->
-                                    <div class="option-row">
-                                        <label class="option-label">Antall kolonner:</label>
-                                        <div class="option-input">
-                                            <div class="column-settings">
-                                                <div class="column-setting">
-                                                    <label>Desktop:</label>
-                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_columns_desktop">
-                                                        <option value="">Bruk standard innstilling</option>
-                                                        <?php
-                                                        $current_columns = get_option("kursagenten_taxonomy_{$tax_name}_columns_desktop", '');
-                                                        for ($i = 1; $i <= 4; $i++) {
-                                                            printf(
-                                                                '<option value="%d" %s>%d</option>',
-                                                                $i,
-                                                                selected($current_columns, $i, false),
-                                                                $i
-                                                            );
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                                <div class="column-setting">
-                                                    <label>Tablet:</label>
-                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_columns_tablet">
-                                                        <option value="">Bruk standard innstilling</option>
-                                                        <?php
-                                                        $current_columns = get_option("kursagenten_taxonomy_{$tax_name}_columns_tablet", '');
-                                                        for ($i = 1; $i <= 3; $i++) {
-                                                            printf(
-                                                                '<option value="%d" %s>%d</option>',
-                                                                $i,
-                                                                selected($current_columns, $i, false),
-                                                                $i
-                                                            );
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                                <div class="column-setting">
-                                                    <label>Mobil:</label>
-                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_columns_mobile">
-                                                        <option value="">Bruk standard innstilling</option>
-                                                        <?php
-                                                        $current_columns = get_option("kursagenten_taxonomy_{$tax_name}_columns_mobile", '');
-                                                        for ($i = 1; $i <= 2; $i++) {
-                                                            printf(
-                                                                '<option value="%d" %s>%d</option>',
-                                                                $i,
-                                                                selected($current_columns, $i, false),
-                                                                $i
-                                                            );
-                                                        }
-                                                        ?>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Antall kurs -->
-                                    <div class="option-row">
-                                        <label class="option-label">Antall kurs per side:</label>
-                                        <div class="option-input">
-                                            <input type="number" 
-                                                   name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_posts_per_page" 
-                                                   value="<?php echo esc_attr(get_option("kursagenten_taxonomy_{$tax_name}_posts_per_page", '')); ?>" 
-                                                   min="1" 
-                                                   max="100">
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -563,23 +435,6 @@ class Designmaler {
                         font-weight: 600;
                         margin-bottom: 1em;
                         display: block;
-                    }
-                    .column-settings {
-                        display: grid;
-                        grid-template-columns: repeat(3, 1fr);
-                        gap: 15px;
-                    }
-                    .column-setting {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 5px;
-                    }
-                    .column-setting label {
-                        font-size: 0.9em;
-                        color: #666;
-                    }
-                    .column-setting select {
-                        width: 100%;
                     }
                 </style>
 
@@ -686,77 +541,6 @@ class Designmaler {
                     )
                 );
             }
-        }
-
-        // Registrer kolonneinnstillinger for arkiv
-        register_setting(
-            'design_option_group',
-            'kursagenten_archive_columns_desktop',
-            array(
-                'type' => 'integer',
-                'sanitize_callback' => 'absint',
-                'default' => 3
-            )
-        );
-        register_setting(
-            'design_option_group',
-            'kursagenten_archive_columns_tablet',
-            array(
-                'type' => 'integer',
-                'sanitize_callback' => 'absint',
-                'default' => 2
-            )
-        );
-        register_setting(
-            'design_option_group',
-            'kursagenten_archive_columns_mobile',
-            array(
-                'type' => 'integer',
-                'sanitize_callback' => 'absint',
-                'default' => 1
-            )
-        );
-
-        // Registrer antall kurs per side for arkiv
-        register_setting(
-            'design_option_group',
-            'kursagenten_archive_posts_per_page',
-            array(
-                'type' => 'integer',
-                'sanitize_callback' => 'absint',
-                'default' => 12
-            )
-        );
-
-        // Registrer taksonomi-spesifikke innstillinger
-        $taxonomies = ['coursecategory' => 'Kurskategorier', 
-                      'course_location' => 'Kurssteder', 
-                      'instructors' => 'Instruktører'];
-
-        foreach ($taxonomies as $tax_name => $tax_label) {
-            // Registrer kolonneinnstillinger for taksonomi
-            foreach (['desktop', 'tablet', 'mobile'] as $device) {
-                register_setting(
-                    'design_option_group',
-                    "kursagenten_taxonomy_{$tax_name}_columns_{$device}",
-                    array(
-                        'type' => 'string',
-                        'sanitize_callback' => 'sanitize_text_field',
-                        'default' => ''
-                    )
-                );
-            }
-
-            // Registrer antall kurs per side for taksonomi
-            register_setting(
-                'design_option_group',
-                "kursagenten_taxonomy_{$tax_name}_posts_per_page",
-                array(
-                    'type' => 'string',
-                    'sanitize_callback' => 'sanitize_text_field',
-                    'default' => ''
-                )
-            );
         }
     }
 
@@ -893,6 +677,280 @@ class Designmaler {
                 echo '</style>' . "\n";
             }
         }
+    }
+
+    private static $required_pages = null;
+
+    public static function get_required_pages() {
+        if (self::$required_pages === null) {
+            self::$required_pages = [
+                'kurskategorier' => [
+                    'title' => 'Kurskategorier',
+                    'content' => '  <!-- wp:shortcode -->
+                                    [kurskategorier kilde=ikon layout=stablet grid=5 gridtablet=3 gridmobil=1 radavstand=2em bildestr=130px bildeformat=4/3 fontmin="14" fontmaks="18"]
+                                    <!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside for alle kurskategorier',
+                    'slug' => 'kurskategorier'
+                ],
+                'kurssteder' => [
+                    'title' => 'Kurssteder',
+                    'content' => '  <!-- wp:shortcode -->
+                                    [kurssteder layout=rad stil=kort grid=3 gridtablet=2 gridmobil=1 radavstand=2em bildestr=100px bildeformat=1/1 fontmin="14" fontmaks="18"]
+                                    <!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside for alle kurssteder',
+                    'slug' => 'kurssteder'
+                ],
+                'instruktorer' => [
+                    'title' => 'Instruktører',
+                    'content' => '  <!-- wp:shortcode -->
+                                    [instruktorer kilde=ikon layout=rad stil=kort grid=2 gridtablet=1 gridmobil=1 radavstand=2em bildestr=250px bildeformat=1/1 fontmin="14" fontmaks="18" utdrag=ja]
+                                    <!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside for alle instruktører',
+                    'slug' => 'instruktorer'
+                ]
+            ];
+        }
+        return self::$required_pages;
+    }
+
+    public function render_system_pages_section() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
+        $required_pages = self::get_required_pages();
+        ?>
+        <div class="ka-pages-manager options-card">
+            <table class="widefat light-grey-rows" style="border: 0;">
+                <thead>
+                    <tr>
+                        <th scope="col">Side</th>
+                        <th scope="col">Beskrivelse</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Handlinger</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($required_pages as $key => $page): 
+                        $page_id = get_option('ka_page_' . $key);
+                        $exists = $page_id && get_post($page_id);
+                        $post_status = $exists ? get_post_status($page_id) : '';
+                        ?>
+                        <tr>
+                            <td><?php echo esc_html($page['title']); ?></td>
+                            <td><?php echo esc_html($page['description']); ?></td>
+                            <td>
+                                <?php if ($exists): ?>
+                                    <span class="status-indicator <?php echo $post_status; ?>">
+                                        <?php 
+                                        switch ($post_status) {
+                                            case 'publish':
+                                                echo '✓ Publisert';
+                                                break;
+                                            case 'draft':
+                                                echo '⚠ Kladd';
+                                                break;
+                                            default:
+                                                echo '? ' . ucfirst($post_status);
+                                        }
+                                        ?>
+                                    </span>
+                                    <div class="page-links">
+                                        <a href="<?php echo get_edit_post_link($page_id); ?>" target="_blank">Rediger</a>
+                                        |
+                                        <a href="<?php echo get_permalink($page_id); ?>" target="_blank">Vis</a>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="status-indicator not-created">✗ Ikke opprettet</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="actions">
+                                <div class="system-page-actions">
+                                    <?php if (!$exists): ?>
+                                        <button type="button" class="button button-primary ka-system-page-action" 
+                                                data-action="create" 
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
+                                            Opprett side
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="button" class="button button-secondary ka-system-page-action"
+                                                data-action="reset"
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
+                                            Tilbakestill innhold
+                                        </button>
+                                        <button type="button" class="button button-link-delete ka-system-page-action"
+                                                data-action="delete"
+                                                data-key="<?php echo esc_attr($key); ?>"
+                                                data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
+                                            Slett
+                                        </button>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+
+        <style>
+            .ka-pages-manager { margin-top: 20px; }
+            .ka-pages-manager td { vertical-align: middle; }
+            .status-indicator { display: inline-block; padding: 3px 8px; border-radius: 3px; }
+            .status-indicator.publish { background: #e8f5e9; color: #2e7d32; }
+            .status-indicator.draft { background: #fff3e0; color: #ef6c00; }
+            .status-indicator.not-created { background: #ffebee; color: #c62828; }
+            .page-links { margin-top: 5px; font-size: 0.9em; }
+            .actions form { display: flex; gap: 5px; }
+        </style>
+        <script>
+        jQuery(document).ready(function($) {
+            $('.ka-system-page-action').on('click', function(e) {
+                e.preventDefault();
+                var button = $(this);
+                
+                // Sjekk om dette er en slette-handling
+                if (button.data('action') === 'delete') {
+                    if (!confirm('Er du sikker på at du vil slette denne siden?')) {
+                        return false; // Stopp hvis brukeren klikker Avbryt
+                    }
+                }
+
+                var data = {
+                    action: 'ka_manage_system_pages',
+                    ka_page_key: button.data('key'),
+                    ka_page_action: button.data('action'),
+                    _wpnonce: button.data('nonce')
+                };
+
+                $.post(ajaxurl, data, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Det oppstod en feil. Vennligst prøv igjen.');
+                    }
+                });
+            });
+        });
+        </script>
+        <?php
+    }
+
+    public function handle_system_pages_actions() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Ingen tillatelse');
+            return;
+        }
+
+        // Sjekk om dette er en AJAX-forespørsel
+        $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
+
+        if (!isset($_POST['ka_page_key'])) {
+            if ($is_ajax) {
+                wp_send_json_error('Mangler page_key');
+            }
+            wp_die('Ugyldig forespørsel');
+        }
+
+        // Verifiser nonce
+        $nonce = isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : '';
+        if (!wp_verify_nonce($nonce, 'ka_manage_pages')) {
+            if ($is_ajax) {
+                wp_send_json_error('Ugyldig sikkerhetskode');
+            }
+            wp_die('Ugyldig sikkerhetskode');
+        }
+
+        $page_key = sanitize_key($_POST['ka_page_key']);
+        $action = isset($_POST['ka_page_action']) ? sanitize_key($_POST['ka_page_action']) : '';
+        $result = false;
+
+        switch ($action) {
+            case 'create':
+                $result = self::create_system_page($page_key);
+                break;
+            case 'delete':
+                $result = self::delete_system_page($page_key);
+                break;
+            case 'reset':
+                $result = self::reset_system_page($page_key);
+                break;
+        }
+
+        if ($is_ajax) {
+            if ($result) {
+                wp_send_json_success(['message' => 'Handling fullført']);
+            } else {
+                wp_send_json_error(['message' => 'Kunne ikke utføre handlingen']);
+            }
+        } else {
+            wp_redirect(add_query_arg('settings-updated', 'true', wp_get_referer()));
+            exit;
+        }
+    }
+
+    private static function add_admin_notice($message, $type = 'success') {
+        add_action('admin_notices', function() use ($message, $type) {
+            printf(
+                '<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+                esc_attr($type),
+                esc_html($message)
+            );
+        });
+    }
+
+    public static function create_system_page($page_key) {
+        $pages = self::get_required_pages();
+        if (!isset($pages[$page_key])) {
+            return false;
+        }
+        
+        $page_data = $pages[$page_key];
+        $page_id = wp_insert_post([
+            'post_title' => $page_data['title'],
+            'post_content' => $page_data['content'],
+            'post_status' => 'publish',
+            'post_type' => 'page',
+            'post_name' => $page_data['slug'],
+            'comment_status' => 'closed'
+        ]);
+        
+        if ($page_id) {
+            update_option('ka_page_' . $page_key, $page_id);
+            update_post_meta($page_id, '_ka_system_page', $page_key);
+            self::add_admin_notice('Systemside ble opprettet.');
+        }
+        
+        return $page_id;
+    }
+
+    public static function delete_system_page($page_key) {
+        $page_id = get_option('ka_page_' . $page_key);
+        if ($page_id) {
+            wp_delete_post($page_id, true);
+            delete_option('ka_page_' . $page_key);
+            self::add_admin_notice('Systemside ble slettet.');
+            return true;
+        }
+        return false;
+    }
+
+    public static function reset_system_page($page_key) {
+        $pages = self::get_required_pages();
+        $page_id = get_option('ka_page_' . $page_key);
+        
+        if ($page_id && isset($pages[$page_key])) {
+            wp_update_post([
+                'ID' => $page_id,
+                'post_content' => $pages[$page_key]['content']
+            ]);
+            
+            self::add_admin_notice('Sideinnhold ble tilbakestilt.');
+            return true;
+        }
+        return false;
     }
 }
 

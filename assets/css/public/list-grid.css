@@ -1,63 +1,9 @@
 /* Grid Container */
 #ka .courselist-items {
     display: grid;
+    grid-template-columns: repeat(3, 1fr);
     gap: 30px;
     margin: 10px 0 30px 0;
-}
-
-/* Default kolonner - vil bli overskrevet av innstillinger */
-#ka .courselist-items {
-    grid-template-columns: repeat(3, 1fr);
-}
-
-/* Tablet */
-@media (max-width: 1024px) {
-    #ka .courselist-items {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
-    }
-}
-
-/* Mobil */
-@media (max-width: 768px) {
-    #ka .courselist-items {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Dynamiske kolonner basert på innstillinger */
-#ka .courselist-items[data-columns-desktop="1"] {
-    grid-template-columns: 1fr;
-}
-#ka .courselist-items[data-columns-desktop="2"] {
-    grid-template-columns: repeat(2, 1fr);
-}
-#ka .courselist-items[data-columns-desktop="3"] {
-    grid-template-columns: repeat(3, 1fr);
-}
-#ka .courselist-items[data-columns-desktop="4"] {
-    grid-template-columns: repeat(4, 1fr);
-}
-
-@media (max-width: 1024px) {
-    #ka .courselist-items[data-columns-tablet="1"] {
-        grid-template-columns: 1fr;
-    }
-    #ka .courselist-items[data-columns-tablet="2"] {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    #ka .courselist-items[data-columns-tablet="3"] {
-        grid-template-columns: repeat(3, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    #ka .courselist-items[data-columns-mobile="1"] {
-        grid-template-columns: 1fr;
-    }
-    #ka .courselist-items[data-columns-mobile="2"] {
-        grid-template-columns: repeat(2, 1fr);
-    }
 }
 
 /* Grid Item */
@@ -283,6 +229,19 @@
 }
 
 /* Responsive Adjustments */
+@media (max-width: 1024px) {
+    #ka .courselist-items {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    #ka .courselist-items {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
 @media (max-width: 576px) {
     #ka .courselist-items {
         grid-template-columns: 1fr;

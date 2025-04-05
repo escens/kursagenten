@@ -403,6 +403,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (!empty($data['name'])) {    $meta_input['course_title'] = $data['name'];}
 
         if (!empty($schedule['firstCourseDate'])) {     $meta_input['course_first_date'] = format_date_for_db($schedule['firstCourseDate']);}
+        if (!empty($schedule['firstCourseDate'])) {     $meta_input['course_month'] = format_date_get_month($schedule['firstCourseDate']);}
         if (!empty($schedule['lastCourseDate'])) {      $meta_input['course_last_date'] = format_date_for_db($schedule['lastCourseDate']);}
         if (!empty($schedule['registrationDeadline'])) {$meta_input['course_registration_deadline'] = format_date_for_db($schedule['registrationDeadline']);}
         if (!empty($schedule['duration'])) {            $meta_input['course_duration'] = $schedule['duration'];}
@@ -611,6 +612,16 @@ function format_date_for_db($date_string) {
     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $date_string);
     return $date ? $date->format('Y-m-d H:i:s') : $date_string;
 }
+
+function format_date_get_month($date_string) {
+    if ($date_string === null) {
+        return '';
+    }
+    $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $date_string);
+    return $date ? $date->format('m') : $date_string;
+}
+
+
 
 function update_course_taxonomies($post_id, $location_id, $data) {
     // Koble kurs til course_location taxonomi

@@ -20,7 +20,7 @@ global $query, $top_filters, $left_filters, $filter_types, $available_filters,
             // Last inn riktig design-template basert på kontekst
             kursagenten_get_design_template();
                                 ?>
-                                </div>
+        </div>
     </main>
     <div id="slidein-overlay"></div>
     <div id="slidein-panel">

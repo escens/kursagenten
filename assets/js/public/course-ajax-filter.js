@@ -208,6 +208,8 @@
 	}
 
 	function fetchCourses(data) {
+		//console.log('Fetching courses with data:', data);
+		
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
 		data.nonce = kurskalender_data.filter_nonce;
@@ -220,12 +222,14 @@
 			type: 'POST',
 			data: data,
 			success: function(response) {
+				//console.log('AJAX response:', response);
 				if (response.success) {
 					$('#filter-results').html(response.data.html);
 					$('#course-count').html(response.data['course-count']);
 					initAccordion();
 					initSlideInPanel();
 					updatePagination(response.data.html_pagination);
+					//console.log('Updated pagination HTML:', response.data.html_pagination);
 
 					// Scroll til toppen av resultatene med større offset
 					$('html, body').animate({
@@ -294,37 +298,68 @@
 	}
 
 
-	function updateURLParams(params) {
-		const url = new URL(window.location.href);
-		url.search = new URLSearchParams(clean(params)).toString();
+	function updateURLParams(filters) {
+		//console.log('Updating URL with filters:', filters);
+		
+		// Start med gjeldende URL uten parametre
+		const baseUrl = window.location.pathname;
+		const params = new URLSearchParams();
 
-		window.history.pushState({}, '', url.toString());
+		// Legg til alle filtre som ikke er null/undefined
+		Object.entries(filters).forEach(([key, value]) => {
+			if (value !== null && value !== undefined) {
+				if (Array.isArray(value)) {
+					params.set(key, value.join(','));
+				} else {
+					params.set(key, value);
+				}
+			}
+		});
+
+		// Bygg den nye URL-en
+		const newUrl = `${baseUrl}${params.toString() ? '?' + params.toString() : ''}`;
+		//console.log('New URL:', newUrl);
+
+		// Oppdater URL-en uten å laste siden på nytt
+		window.history.pushState({ path: newUrl }, '', newUrl);
 	}
 
 	function getCurrentFiltersFromURL() {
-		const url = new URL(window.location.href);
-		const params = {};
+		//console.log('Current URL:', window.location.href);
+		const params = new URLSearchParams(window.location.search);
+		const filters = {};
 
 		// Process all URL parameters
-		for (const [key, value] of url.searchParams.entries()) {
+		for (const [key, value] of params.entries()) {
 			// Spesiell håndtering for dato-parameter
 			if (key === 'dato') {
-				params[key] = value;  // Behold dato-stringen som den er
+				filters[key] = value;  // Behold dato-stringen som den er
+			} else if (key === 'mnd') {
+				// Spesiell håndtering for måneder
+				filters[key] = value.includes(',') ? value.split(',') : [value];
 			} else {
 				// Håndter andre parametere som før
-				params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+				filters[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
 			}
 		}
 
-		return params;
+		//console.log('URL parameters found:', params.toString());
+		return filters;
 	}
 
 	function initializeFiltersFromURL() {
+		//console.log('Current URL:', window.location.href);
 		const filters = getCurrentFiltersFromURL();
+		//console.log('Parsed filters:', filters);
 
-		// Initialize each filter based on URL parameters
+		if (Object.keys(filters).length === 0) {
+			//console.log('No filters found in URL - something might be wrong');
+			return;
+		}
+
 		Object.keys(filters).forEach(function (filterKey) {
 			const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
+			//console.log(`Setting filter ${filterKey} with values:`, values);
 
 			// Handle chip-based filters
 			if ($('.chip[data-url-key="' + filterKey + '"]').length) {
@@ -336,12 +371,30 @@
 			// Handle checkbox-based filters
 			if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
 				values.forEach(value => {
-					const lowercaseValue = value.toLowerCase();
-					$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
-						if ($(this).val().toLowerCase() === lowercaseValue) {
-							$(this).prop('checked', true);
-						}
-					});
+					if (filterKey === 'mnd') {
+						//console.log('Checking month checkbox:', {
+						//	value: value,
+						//	checkboxes: $('.filter-checkbox[data-url-key="' + filterKey + '"]').map(function() {
+						//		return $(this).val();
+						//	}).get()
+						//});
+						
+						// Ensure the value is padded with leading zero if needed
+						const paddedValue = value.padStart(2, '0');
+						$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
+							if ($(this).val() === paddedValue) {
+								$(this).prop('checked', true);
+							}
+						});
+					} else {
+						// Lowercase sammenligning for andre filtre
+						const lowercaseValue = value.toLowerCase();
+						$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
+							if ($(this).val().toLowerCase() === lowercaseValue) {
+								$(this).prop('checked', true);
+							}
+						});
+					}
 				});
 			}
 		});
@@ -466,30 +519,34 @@
 
 	$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
 		e.preventDefault();
+		//console.log('Pagination link clicked');
+		
 		const href = $(this).attr('href');
-		const locate = new URL(href);
+		//console.log('Link href:', href);
+		
+		const url = new URL(href);
+		const page = url.searchParams.get('side');
+		//console.log('Page number from URL:', page);
 		
 		// Behold alle eksisterende filtre
 		const currentFilters = getCurrentFiltersFromURL();
+		//console.log('Current filters:', currentFilters);
 		
 		// Konverter datoformat hvis nødvendig
 		if (currentFilters.dato && currentFilters.dato.includes(',')) {
-			// Konverter fra YYYY-MM-DD,YYYY-MM-DD til DD.MM.YYYY-DD.MM.YYYY
 			const [fromDate, toDate] = currentFilters.dato.split(',');
 			const from = moment(fromDate).format('DD.MM.YYYY');
 			const to = moment(toDate).format('DD.MM.YYYY');
 			currentFilters.dato = `${from}-${to}`;
 		}
 		
-		// Legg til side-parameter
-		const newFilters = {
-			...currentFilters,
-			side: locate.searchParams.get('side')
-		};
+		// Oppdater side-parameter
+		currentFilters.side = page;
+		//console.log('Updated filters with new page:', currentFilters);
 
 		// Oppdater URL og hent resultater
-		window.history.pushState({}, '', href);
-		fetchCourses(newFilters);
+		updateURLParams(currentFilters);
+		fetchCourses(currentFilters);
 	});
 
 	function updatePagination(html) {
@@ -497,7 +554,8 @@
 	}
 
 	// Håndter browser back/forward
-	window.addEventListener('popstate', function() {
+	window.addEventListener('popstate', function(event) {
+		//console.log('Navigation occurred');
 		const currentFilters = getCurrentFiltersFromURL();
 		fetchCourses(currentFilters);
 	});
@@ -600,7 +658,7 @@
 	function initializeSorting() {
 		const $sortDropdown = $('.sort-dropdown');
 		if (!$sortDropdown.length) {
-			console.log('Sort dropdown not found');
+			//console.log('Sort dropdown not found');
 			return;
 		}
 
