@@ -35,8 +35,9 @@ class Bedriftsinformasjon {
         ?>
 
         <!-- Fyll ut feltene under -->
+        <div class="options-card">
         <h3>Firmainformasjon</h3>
-        <table class="form-table options-card">
+        <table class="form-table">
             <tr valign="top">
                 <th scope="row">Firmanavn</th>
                 <td>
@@ -52,8 +53,8 @@ class Bedriftsinformasjon {
             <tr valign="top">
                 <th scope="row">Postnr/sted</th>
                 <td>
-                    <input style="width:32%;float:left;" class="regular-text" type="text" name="kag_bedriftsinfo_option_name[ka_postnummer]" value="<?php echo isset($this->bedriftsinfo_options['ka_postnummer']) ? esc_attr($this->bedriftsinfo_options['ka_postnummer']) : ''; ?>">
-                    <input style="width:65%;float:left;" class="regular-text" type="text" name="kag_bedriftsinfo_option_name[ka_sted]" value="<?php echo isset($this->bedriftsinfo_options['ka_sted']) ? esc_attr($this->bedriftsinfo_options['ka_sted']) : ''; ?>">
+                    <input style="width:10em;float:left;" class="regular-text" type="text" name="kag_bedriftsinfo_option_name[ka_postnummer]" value="<?php echo isset($this->bedriftsinfo_options['ka_postnummer']) ? esc_attr($this->bedriftsinfo_options['ka_postnummer']) : ''; ?>">
+                    <input style="width:15em;float:left;" class="regular-text" type="text" name="kag_bedriftsinfo_option_name[ka_sted]" value="<?php echo isset($this->bedriftsinfo_options['ka_sted']) ? esc_attr($this->bedriftsinfo_options['ka_sted']) : ''; ?>">
                 </td>
             </tr>
             <tr valign="top">
@@ -75,11 +76,12 @@ class Bedriftsinformasjon {
                 </td>
             </tr>
         </table>
-
+        </div>
         <!-- Kort info om bedriften -->
+        <div class="options-card">
         <h3>Om bedriften</h3>
         <p>Her kan du skrive inn kort informasjon om bedriften. Denne teksten kan vises på med kortkode.</p>
-        <table class="form-table options-card">
+        <table class="form-table">
             <tr valign="top">
                 <th scope="row">Om firmaet</th>
                 <td>
@@ -87,11 +89,12 @@ class Bedriftsinformasjon {
                 </td>
             </tr>
         </table>
-
+        </div>
         <!-- URL til sosiale profiler -->
+        <div class="options-card">
         <h3>Sosiale profiler</h3>
         <p>Her kan du skrive inn URL til sosiale profiler. Disse kan bli brukt rundt på nettsiden.</p>
-        <table class="form-table options-card">
+        <table class="form-table">
             <tr valign="top">
                 <th scope="row">Facebook</th>
                 <td>
@@ -117,7 +120,7 @@ class Bedriftsinformasjon {
                 </td>
             </tr>
         </table>
-
+        </div>
 
     <?php
     kursagenten_admin_footer();

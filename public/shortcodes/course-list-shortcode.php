@@ -161,7 +161,7 @@ function kursagenten_course_list_shortcode($atts) {
     // Start output buffering
     ob_start();
     ?>
-    <div id="ka" class="kursagenten-wrapper ka-default-width">
+    <div id="ka" class="kursagenten-wrapper">
     <main id="ka-main" class="kursagenten-main" role="main">
         <div class="ka-container">
             <article class="ka-outer-container course-container">

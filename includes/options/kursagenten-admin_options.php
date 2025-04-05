@@ -11,14 +11,16 @@ require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php';
 // Instantiate the classes to add them as submenus
 if (is_admin()) {
     $kursinnstillinger = new Kursinnstillinger();
+}
+// Instansier Designmaler-klassen både i admin og frontend
+$designmaler = new Designmaler();
+
+if (is_admin()) {
     $theme_specific_customizations = new Kursagenten_Theme_Customizations();
     $seo = new SEO();
     $bedriftsinformasjon = new Bedriftsinformasjon();
     $avansert = new Avansert();
 }
-
-// Instansier Designmaler-klassen både i admin og frontend
-$designmaler = new Designmaler();
 
 // Add the main admin menu
 function kursagenten_register_admin_menu() {

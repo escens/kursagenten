@@ -262,7 +262,7 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
                 wp_enqueue_media();// Enqueue media scripts for file uploads
                 wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
                 wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), '1.0.317',  true  );  
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.599' );
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.603' );
             }
         }
     }

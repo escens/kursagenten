@@ -249,11 +249,12 @@ class Kursinnstillinger {
         <?php endif; ?>
 
         <!-- Filter Settings -->
-        <h3 id="filterinnstillinger">Filterinnstillinger</h3>
-        <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.<br>
-        For å fjerne et filter, dra det tilbake til tilgjengelige filtre. Husk å <strong>lagre</strong> endringene dine.
-        </p>
+        
         <div class="options-card">
+            <h3 id="filterinnstillinger">Filterinnstillinger</h3>
+            <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.<br>
+            For å fjerne et filter, dra det tilbake til tilgjengelige filtre. Husk å <strong>lagre</strong> endringene dine.
+            </p>
             <div class="filter-selection">
                 <h4>Tilgjengelige filtre:</h4>
                 <ul id="available-filters" class="sortable-list">
@@ -329,57 +330,60 @@ class Kursinnstillinger {
             </div>
         </div>
 
-        <h3 id="valg-for-bilder">Valg for bilder</h3>
-        <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsikoner om nødvendig.</p>
-        <table class="form-table options-card">
-            <tr>
-                <th scope="row">Generelt plassholderbilde</th>
-                <td><?php $this->plassholderbilde_generelt_callback(); ?></td>
-            </tr>
-            <tr>
-                <th scope="row">Plassholderbilde for kurs</th>
-                <td><?php $this->plassholderbilde_kurs_callback(); ?></td>
-            </tr>
-            <tr>
-                <th scope="row">Plassholderbilde for instruktør</th>
-                <td><?php $this->plassholderbilde_instruktor_callback(); ?></td>
-            </tr>
-            <tr>
-                <th scope="row">Plassholderbilde for sted</th>
-                <td><?php $this->plassholderbilde_sted_callback(); ?></td>
-            </tr>
-        </table>
-
+        <div class="options-card">
+            <h3 id="valg-for-bilder">Valg for bilder</h3>
+            <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsikoner om nødvendig.</p>
+            <table class="form-table">
+                <tr>
+                    <th scope="row">Generelt plassholderbilde</th>
+                    <td><?php $this->plassholderbilde_generelt_callback(); ?></td>
+                </tr>
+                <tr>
+                    <th scope="row">Plassholderbilde for kurs</th>
+                    <td><?php $this->plassholderbilde_kurs_callback(); ?></td>
+                </tr>
+                <tr>
+                    <th scope="row">Plassholderbilde for instruktør</th>
+                    <td><?php $this->plassholderbilde_instruktor_callback(); ?></td>
+                </tr>
+                <tr>
+                    <th scope="row">Plassholderbilde for sted</th>
+                    <td><?php $this->plassholderbilde_sted_callback(); ?></td>
+                </tr>
+            </table>
+        </div>
         <!-- Kursagenten Settings Section -->
-        <h3 id="kursagenten-innstillinger">Innstillinger fra Kursagenten</h3>
-        <p>Du finner innstillingene for <strong><a href="https://kursadmin.kursagenten.no/ProviderInformation" target="_blank">Tilbyder ID og Tilbyder Guid</a></strong> i Kursagenten under <em>Bedriftsinsformasjon-> Innstillinger</em>, og <strong><a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank">Tema for kurslister</a></strong> under <em>Embedded / iframe</em><br><br>
-        I Integrasjonsinnstillinger, under fanen <strong><a href="https://kursadmin.kursagenten.no/IntegrationSettings" target="_blank">Webhooks</a></strong> skal du legge inn <span class="copytext" title="Klikk for å kopiere"><?php echo esc_url(site_url('/wp-json/kursagenten-api/v1/process-webhook')); ?></span> i feltene CourseCreated og CourseUpdated for å automatisk oppdatere kurs når det blir opprettet eller endret på Kursagenten.</p>
-        <table class="form-table options-card">
-            <tr valign="top">
-                <th scope="row">Tilbyder ID:</th>
-                <td>
-                    <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_tilbyderID]" value="<?php echo isset($this->kag_kursinnst_options['ka_tilbyderID']) ? esc_attr($this->kag_kursinnst_options['ka_tilbyderID']) : ''; ?>">
-                </td>
-            </tr>
-            <tr valign="top">
-                <th scope="row">Tilbyder guid:</th>
-                <td>
-                    <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_tilbyderGuid]" value="<?php echo isset($this->kag_kursinnst_options['ka_tilbyderGuid']) ? esc_attr($this->kag_kursinnst_options['ka_tilbyderGuid']) : ''; ?>">
-                </td>
-            </tr>
-            <tr valign="top">
-                <th scope="row">Tema for kurslister</th>
-                <td>
-                    <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_temaKursliste]" value="<?php echo isset($this->kag_kursinnst_options['ka_temaKursliste']) ? esc_attr($this->kag_kursinnst_options['ka_temaKursliste']) : ''; ?>">
-                </td>
-            </tr>
-            <tr valign="top">
-                <th scope="row">Tema for enkeltkurs</th>
-                <td>
-                    <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_temaKurs]" value="<?php echo isset($this->kag_kursinnst_options['ka_temaKurs']) ? esc_attr($this->kag_kursinnst_options['ka_temaKurs']) : ''; ?>">
-                </td>
-            </tr>
-        </table>
+        <div class="options-card">
+            <h3 id="kursagenten-innstillinger">Innstillinger fra Kursagenten</h3>
+            <p>Du finner innstillingene for <strong><a href="https://kursadmin.kursagenten.no/ProviderInformation" target="_blank">Tilbyder ID og Tilbyder Guid</a></strong> i Kursagenten under <em>Bedriftsinsformasjon-> Innstillinger</em>, og <strong><a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank">Tema for kurslister</a></strong> under <em>Embedded / iframe</em><br><br>
+            I Integrasjonsinnstillinger, under fanen <strong><a href="https://kursadmin.kursagenten.no/IntegrationSettings" target="_blank">Webhooks</a></strong> skal du legge inn <span class="copytext" title="Klikk for å kopiere"><?php echo esc_url(site_url('/wp-json/kursagenten-api/v1/process-webhook')); ?></span> i feltene CourseCreated og CourseUpdated for å automatisk oppdatere kurs når det blir opprettet eller endret på Kursagenten.</p>
+            <table class="form-table">
+                <tr valign="top">
+                    <th scope="row">Tilbyder ID:</th>
+                    <td>
+                        <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_tilbyderID]" value="<?php echo isset($this->kag_kursinnst_options['ka_tilbyderID']) ? esc_attr($this->kag_kursinnst_options['ka_tilbyderID']) : ''; ?>">
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Tilbyder guid:</th>
+                    <td>
+                        <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_tilbyderGuid]" value="<?php echo isset($this->kag_kursinnst_options['ka_tilbyderGuid']) ? esc_attr($this->kag_kursinnst_options['ka_tilbyderGuid']) : ''; ?>">
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Tema for kurslister</th>
+                    <td>
+                        <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_temaKursliste]" value="<?php echo isset($this->kag_kursinnst_options['ka_temaKursliste']) ? esc_attr($this->kag_kursinnst_options['ka_temaKursliste']) : ''; ?>">
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <th scope="row">Tema for enkeltkurs</th>
+                    <td>
+                        <input class="regular-text" type="text" name="kag_kursinnst_option_name[ka_temaKurs]" value="<?php echo isset($this->kag_kursinnst_options['ka_temaKurs']) ? esc_attr($this->kag_kursinnst_options['ka_temaKurs']) : ''; ?>">
+                    </td>
+                </tr>
+            </table>
+        </div>
 
         <?php submit_button(); ?>
 

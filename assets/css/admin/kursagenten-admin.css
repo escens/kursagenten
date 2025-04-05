@@ -34,7 +34,11 @@ input[type=textarea] {
     padding: 2vw;
 }
 .options-form h3 {
-    padding-top: 1em!important;
+    margin-top: 0!important;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+    padding-top: 0!important;
+    border-top: none!important;
 }
 .wrap h2 {
     font-weight: 600!important;
@@ -49,17 +53,19 @@ input[type=textarea] {
 .options-card {
     padding: 2em;
     display: block;
+    margin-bottom: 2em;
 }
 .widefat.light-grey-rows tr:not(:last-child) td{
     border-bottom: 1px solid #f3f3f3;
 }
 .options-form .form-table th {
-    width: auto;
     line-height: 2;
     padding: 10px 10px 10px 0;
 }
 .form-table td {
     padding: 5px 10px;
+    max-width: 600px;
+    display: block;
 }
 .options-form input.large-text, textarea.large-text {
     min-width: 30vw;

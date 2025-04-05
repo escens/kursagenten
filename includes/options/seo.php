@@ -31,7 +31,7 @@ class SEO {
         <form method="post" action="options.php">
             <?php kursagenten_sticky_admin_menu(); ?>
             <h2>Endre url-er</h2>
-            <h3 style="margin: 10px 0 5px 0;">Viktig info om url-er</h3><p>Her kan du endre url for kurs, instruktør, kurskategori og kurssted. <span style="color:#b74444;font-weight:bold;">OBS! Ikke rør med mindre du vet hva du gjør.</span> Det kan ødelegge nettstedet, og gjøre disse sidene utilgjengelige. Husk å lagre <a href="/wp-admin/options-permalink.php" target="_blank">permalenkeinnstillingene</a> etter du har gjort en endring.</p>
+            <p><strong>Viktig info om url-er</strong><br>Her kan du endre url for kurs, instruktør, kurskategori og kurssted. <span style="color:#b74444;font-weight:bold;">OBS! Ikke rør med mindre du vet hva du gjør.</span> Det kan ødelegge nettstedet, og gjøre disse sidene utilgjengelige. Husk å lagre <a href="/wp-admin/options-permalink.php" target="_blank">permalenkeinnstillingene</a> etter du har gjort en endring.</p>
 
                 <?php
                 settings_fields('kag_seo_option_group');
@@ -39,35 +39,36 @@ class SEO {
                 ?>
 
                 <!-- Fyll ut feltene under -->
+                <div class="options-card">
                 <h3 id="url">Endre url prefix</h3>
-                <table class="form-table options-card">
+                <table class="form-table">
                     <tr valign="top">
-                        <th scope="row">Url prefix for kurs</th>
+                        <th scope="row">Kurs</th>
                         <td>
                             <input class="regular-text" type="text" name="kag_seo_option_name[ka_url_rewrite_kurs]" value="<?php echo isset($this->kag_seo_options['ka_url_rewrite_kurs']) ? esc_attr($this->kag_seo_options['ka_url_rewrite_kurs']) : ''; ?>">
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Url prefix for instruktør</th>
+                        <th scope="row">Instruktør</th>
                         <td>
                             <input class="regular-text" type="text" name="kag_seo_option_name[ka_url_rewrite_instruktor]" value="<?php echo isset($this->kag_seo_options['ka_url_rewrite_instruktor']) ? esc_attr($this->kag_seo_options['ka_url_rewrite_instruktor']) : ''; ?>">
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Url prefix for kurskategori</th>
+                        <th scope="row">Kurskategori</th>
                         <td>
                             <input class="regular-text" type="text" name="kag_seo_option_name[ka_url_rewrite_kurskategori]" value="<?php echo isset($this->kag_seo_options['ka_url_rewrite_kurskategori']) ? esc_attr($this->kag_seo_options['ka_url_rewrite_kurskategori']) : ''; ?>">
                         </td>
                     </tr>
                     <tr valign="top">
-                        <th scope="row">Url prefix for kurssted</th>
+                        <th scope="row">Kurssted</th>
                         <td>
                             <input class="regular-text" type="text" name="kag_seo_option_name[ka_url_rewrite_kurssted]" value="<?php echo isset($this->kag_seo_options['ka_url_rewrite_kurssted']) ? esc_attr($this->kag_seo_options['ka_url_rewrite_kurssted']) : ''; ?>">
                         </td>
                     </tr>
 
                 </table>
-
+                </div>
 
                 <?php submit_button(); ?>
 

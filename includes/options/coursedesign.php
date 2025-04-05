@@ -39,7 +39,7 @@ class Designmaler {
                 <?php kursagenten_sticky_admin_menu(); ?>
                 <h2>Kursdesign</h2>
                 <!-- System-sider -->
-                <div class="design-section">
+                <div class="options-card">
                     <h3>System-sider</h3>
                     <p>Her kan du administrere de automatisk genererte sidene for kurskategorier, kurssteder og instruktører.</p>
                     <?php $this->render_system_pages_section(); ?>
@@ -47,7 +47,7 @@ class Designmaler {
 
                 <!-- Single kurs -->
                 
-                <div class="design-section">
+                <div class="options-card">
                     <h3>Enkeltkurs</h3>
                     
                     <!-- Layoutbredde -->
@@ -98,55 +98,9 @@ class Designmaler {
                 </div>
 
                 <!-- Arkiv/Kurslister -->
-                <div class="design-section">
-                    <h3>Kurslister</h3>
+                <div class="options-card">
+                    <h3>Kursliste med filter</h3>
                     
-                    <!-- Layoutbredde -->
-                    <div class="option-row">
-                        <label class="option-label">Bredde:</label>
-                        <div class="option-input">
-                            <label class="radio-label">
-                                <input type="radio" 
-                                       name="kursagenten_archive_layout" 
-                                       value="default" 
-                                       <?php checked(get_option('kursagenten_archive_layout'), 'default'); ?>>
-                                Tema-standard
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" 
-                                       name="kursagenten_archive_layout" 
-                                       value="full-width" 
-                                       <?php checked(get_option('kursagenten_archive_layout'), 'full-width'); ?>>
-                                Full bredde
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Design -->
-                    <div class="option-row">
-                        <label class="option-label">Design:</label>
-                        <div class="option-input">
-                            <select name="kursagenten_archive_design">
-                                <?php
-                                $current_design = get_option('kursagenten_archive_design', 'default');
-                                $designs = [
-                                    'default' => 'Standard',
-                                    'modern' => 'Moderne',
-                                    'minimal' => 'Minimal'
-                                ];
-                                foreach ($designs as $value => $label) {
-                                    printf(
-                                        '<option value="%s" %s>%s</option>',
-                                        esc_attr($value),
-                                        selected($current_design, $value, false),
-                                        esc_html($label)
-                                    );
-                                }
-                                ?>
-                            </select>
-                        </div>
-                    </div>
-
                     <!-- Listevisning -->
                     <div class="option-row">
                         <label class="option-label">Listevisning:</label>
@@ -192,9 +146,10 @@ class Designmaler {
                 </div>
 
                 <!-- Taxonomi -->
-                <div class="design-section">
+                <div class="options-card">
                     <h3>Taksonomi-sider</h3>
-                    
+                    <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</p>
+                    <p>&nbsp;</p>
                     <!-- Layoutbredde -->
                     <div class="option-row">
                         <label class="option-label">Bredde:</label>
@@ -392,13 +347,7 @@ class Designmaler {
                 </div>
 
                 <style>
-                    .design-section {
-                        background: #fff;
-                        padding: 20px;
-                        margin: 20px 0;
-                        border: 1px solid #ccd0d4;
-                        border-radius: 4px;
-                    }
+
                     .option-row {
                         display: grid;
                         grid-template-columns: 200px 1fr;
@@ -684,6 +633,14 @@ class Designmaler {
     public static function get_required_pages() {
         if (self::$required_pages === null) {
             self::$required_pages = [
+                'kurs' => [
+                    'title' => 'Kurs',
+                    'content' => '<!-- wp:shortcode -->
+[kursliste]
+<!-- /wp:shortcode -->',
+                    'description' => 'Oversiktsside/kalender for alle kurs',
+                    'slug' => 'kurs'
+                ],
                 'kurskategorier' => [
                     'title' => 'Kurskategorier',
                     'content' => '  <!-- wp:shortcode -->
@@ -720,7 +677,7 @@ class Designmaler {
 
         $required_pages = self::get_required_pages();
         ?>
-        <div class="ka-pages-manager options-card">
+        <div class="ka-pages-manager">
             <table class="widefat light-grey-rows" style="border: 0;">
                 <thead>
                     <tr>

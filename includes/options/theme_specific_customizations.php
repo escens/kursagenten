@@ -44,9 +44,9 @@ class Kursagenten_Theme_Customizations {
             <input type="hidden" name="action" value="save_theme_customizations">
             <?php wp_nonce_field('save_theme_customizations', 'theme_customizations_nonce'); ?>
             <h2>Tilpasninger for <?php echo esc_html($current_theme->get('Name')); ?> tema</h2>
-            <h3>Menytilpasninger</h3>
+            
             <div class="options-card">
-                
+            <h3>Menytilpasninger</h3>
                 <?php
                 // Sjekk om det finnes egendefinerte innstillinger
                 $has_custom_settings = !empty($options) && isset($options['menu_structure']) && 
