@@ -15,65 +15,102 @@ $options_to_delete = array(
     'kursagenten_top_filters',
     'kursagenten_left_filters',
     'kursagenten_filter_types',
-    'kursagenten_available_filters'
+    'kursagenten_available_filters',
+    'kursagenten_archive_layout',
+    'kursagenten_archive_design',
+    'kursagenten_archive_list_type',
+    'kursagenten_taxonomy_layout',
+    'kursagenten_taxonomy_list_type',
+    'kursagenten_single_layout',
+    'kursagenten_taxonomy_course_location_override',
+    'kursagenten_taxonomy_course_location_list_type',
+    'kursagenten_taxonomy_coursecategory_override',
+    'kursagenten_taxonomy_coursecategory_list_type',
+    'kursagenten_taxonomy_instructors_override',
+    'kursagenten_taxonomy_instructors_list_type'
 );
 
 foreach ($options_to_delete as $option) {
     delete_option($option);
 }
 
-// Delete custom database table
 global $wpdb;
+
+// 1. Håndter taxonomier og deres relasjoner først
+$taxonomies = array('coursecategory', 'course_location', 'instructors');
+
+// Hent alle term IDs for våre taxonomier
+$term_ids = $wpdb->get_col("
+    SELECT t.term_id 
+    FROM {$wpdb->terms} t 
+    INNER JOIN {$wpdb->term_taxonomy} tt ON t.term_id = tt.term_id 
+    WHERE tt.taxonomy IN ('" . implode("','", $taxonomies) . "')
+");
+
+if (!empty($term_ids)) {
+    // Slett term meta
+    $wpdb->query("DELETE FROM {$wpdb->termmeta} WHERE term_id IN (" . implode(',', $term_ids) . ")");
+    
+    // Slett term relationships
+    $taxonomy_ids = $wpdb->get_col("
+        SELECT term_taxonomy_id 
+        FROM {$wpdb->term_taxonomy} 
+        WHERE taxonomy IN ('" . implode("','", $taxonomies) . "')
+    ");
+    if (!empty($taxonomy_ids)) {
+        $wpdb->query("DELETE FROM {$wpdb->term_relationships} WHERE term_taxonomy_id IN (" . implode(',', $taxonomy_ids) . ")");
+    }
+    
+    // Slett term taxonomy entries
+    $wpdb->query("DELETE FROM {$wpdb->term_taxonomy} WHERE term_id IN (" . implode(',', $term_ids) . ")");
+    
+    // Slett terms
+    $wpdb->query("DELETE FROM {$wpdb->terms} WHERE term_id IN (" . implode(',', $term_ids) . ")");
+}
+
+// 2. Håndter courses og coursedates
+$post_types = array('course', 'coursedate');
+
+// Hent alle post IDs for courses og coursedates
+$post_ids = $wpdb->get_col("
+    SELECT ID 
+    FROM {$wpdb->posts} 
+    WHERE post_type IN ('" . implode("','", $post_types) . "')
+");
+
+if (!empty($post_ids)) {
+    // Slett all postmeta for disse postene
+    $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE post_id IN (" . implode(',', $post_ids) . ")");
+}
+
+// 3. Håndter tilknyttede bilder
+// Finn og slett alle bilder som er knyttet til kurs
+$course_images = $wpdb->get_col("
+    SELECT ID 
+    FROM {$wpdb->posts} 
+    WHERE post_type = 'attachment' 
+    AND (post_title LIKE 'kursbilde-%' OR post_name LIKE 'kursbilde-%')
+");
+
+if (!empty($course_images)) {
+    // Slett metadata for bilder
+    $wpdb->query("DELETE FROM {$wpdb->postmeta} WHERE post_id IN (" . implode(',', $course_images) . ")");
+    
+    // Slett bildene fra posts-tabellen
+    $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN (" . implode(',', $course_images) . ")");
+}
+
+// 4. Slett selve course og coursedate postene
+if (!empty($post_ids)) {
+    $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN (" . implode(',', $post_ids) . ")");
+}
+
+// 5. Slett custom database table
 $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}kursdato");
 
-// Delete post meta for course images
-$args = array(
-    'post_type' => 'attachment',
-    'meta_key' => 'is_course_image',
-    'posts_per_page' => -1
-);
-
-$attachments = get_posts($args);
-foreach ($attachments as $attachment) {
-    delete_post_meta($attachment->ID, 'is_course_image');
-}
-
-// Delete term meta for taxonomies
-$taxonomies = array('coursecategory', 'course_location');
-foreach ($taxonomies as $taxonomy) {
-    $terms = get_terms(array(
-        'taxonomy' => $taxonomy,
-        'hide_empty' => false
-    ));
-    
-    if (!is_wp_error($terms)) {
-        foreach ($terms as $term) {
-            delete_term_meta($term->term_id, 'rich_description');
-            delete_term_meta($term->term_id, 'image_coursecategory');
-            delete_term_meta($term->term_id, 'icon_coursecategory');
-            delete_term_meta($term->term_id, 'image_course_location');
-        }
-    }
-}
-
-// Clean up relationships meta
-$post_types = array('course', 'coursedate');
-foreach ($post_types as $post_type) {
-    $posts = get_posts(array(
-        'post_type' => $post_type,
-        'posts_per_page' => -1
-    ));
-    
-    foreach ($posts as $post) {
-        foreach ($post_types as $related_type) {
-            delete_post_meta($post->ID, 'course_related_' . $related_type);
-        }
-    }
-}
-
-// Slett systemsider
-require_once dirname(__FILE__) . '/includes/options/kursinnstillinger.php';
-$pages = Kursinnstillinger::get_required_pages();
+// 6. Slett systemsider
+require_once dirname(__FILE__) . '/includes/options/coursedesign.php';
+$pages = Designmaler::get_required_pages();
 foreach (array_keys($pages) as $page_key) {
     $page_id = get_option('ka_page_' . $page_key);
     if ($page_id) {

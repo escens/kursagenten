@@ -106,7 +106,7 @@
             <div class="ka-content-container header-content">
                 <h1><?php the_title(); ?></h1>
                 <div class="header-links iconlist horizontal uppercase small">
-                    <div><a href="<?php echo get_post_type_archive_link('course'); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
+                    <div><a href="<?php echo esc_url(Designmaler::get_system_page_url('kurs')); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
                     <div class="taxonomy-list horizontal">
                         <?php if (!empty($coursecategory_links)) : ?>
                             <i class="ka-icon icon-tag"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>

@@ -909,6 +909,26 @@ class Designmaler {
         }
         return false;
     }
+
+    /**
+     * Hent URL til en systemside
+     * 
+     * @param string $page_key Nøkkelen for systemsiden (f.eks. 'kurs', 'kurskategorier')
+     * @return string URL til siden, eller arkiv-URL hvis siden ikke finnes
+     */
+    public static function get_system_page_url($page_key) {
+        $page_id = get_option('ka_page_' . $page_key);
+        if ($page_id && get_post($page_id)) {
+            return get_permalink($page_id);
+        }
+        
+        // Fallback til arkiv-URL for kurs
+        if ($page_key === 'kurs') {
+            return get_post_type_archive_link('course');
+        }
+        
+        return '';
+    }
 }
 
 ?>

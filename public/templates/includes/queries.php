@@ -357,8 +357,23 @@ function get_course_dates_query($args = []) {
 			break;
 		default:
 		case 'date':
-			$query_args['orderby'] = 'course_first_date';
-			$query_args['order'] = strtoupper($order);
+			// Legg til en meta_query som gir en verdi til poster uten course_first_date
+			$query_args['meta_query'][] = [
+				'relation' => 'OR',
+				[
+					'key' => 'course_first_date',
+					'compare' => 'EXISTS',
+				],
+				[
+					'key' => 'course_first_date',
+					'compare' => 'NOT EXISTS'
+				]
+			];
+			
+			$query_args['orderby'] = [
+				'course_first_date' => 'ASC',
+				'ID' => 'ASC'  // Sekundær sortering på ID for poster uten dato
+			];
 			break;
 	}
 
