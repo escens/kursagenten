@@ -201,6 +201,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
 /* MISC ADMIN FUNCTIONS */
 require_once KURSAG_PLUGIN_DIR . '/includes/misc/hide_course-images_in_mediafolder.php';
@@ -262,7 +263,7 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
                 wp_enqueue_media();// Enqueue media scripts for file uploads
                 wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
                 wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), '1.0.317',  true  );  
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.603' );
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.609' );
             }
         }
     }
@@ -530,4 +531,3 @@ require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
    
-

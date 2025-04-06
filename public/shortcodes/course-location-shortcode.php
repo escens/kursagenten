@@ -5,7 +5,7 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurssteder i grid-format
- * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]
+ * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]
  */
 class CourseLocationGrid {
     private string $placeholder_image;
@@ -36,7 +36,7 @@ class CourseLocationGrid {
             'bildeformat' => '4/3',
             'skygge' => '',
             'utdrag' => '',
-            'fonttype' => 'H3',
+            'overskrift' => 'H3',
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
@@ -130,7 +130,7 @@ class CourseLocationGrid {
         $skygge = $a['skygge'];
         $bildeform = $a['bildeform'];
         $utdrag = $a['utdrag'];
-        $fonttype = $a['fonttype'];
+        $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
 
         $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$utdrag}' id='{$id}'>";
@@ -176,7 +176,7 @@ class CourseLocationGrid {
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['fonttype']} class='tittel'>" . ucfirst($term->name) . "</{$a['fonttype']}>
+                        <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
                     <div class='description'>" . wp_kses_post($description) . "</div>
                 </div>

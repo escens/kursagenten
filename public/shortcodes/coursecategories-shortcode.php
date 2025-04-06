@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurskategorier i grid-format
- * [kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" radavstand="1rem" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" fonttype="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1  vis="hovedkategorier/subkategorier/standard"]
+ * [kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" radavstand="1rem" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1  vis="hovedkategorier/subkategorier/standard"]
  */
 class CourseCategories {
     private string $placeholder_image;
@@ -39,7 +39,7 @@ class CourseCategories {
             'bildeformat' => '4/4',
             'skygge' => '',
             'utdrag' => '',
-            'fonttype' => 'H3',
+            'overskrift' => 'H3',
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
@@ -152,7 +152,7 @@ class CourseCategories {
         $skygge = $a['skygge'];
         $bildeform = $a['bildeform'];
         $utdrag = $a['utdrag'];
-        $fonttype = $a['fonttype'];
+        $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
 
         $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag}' id='{$id}'>";
@@ -213,7 +213,7 @@ class CourseCategories {
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['fonttype']} class='tittel'>" . ucfirst($term->name) . "</{$a['fonttype']}>
+                        <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
                 </div>
             </div>";

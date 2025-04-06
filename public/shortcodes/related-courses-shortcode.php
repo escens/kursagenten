@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__FILE__) . '/includes/grid-styles.php';
 
 if (!defined('ABSPATH')) exit;
 
@@ -17,10 +18,10 @@ class RelatedCourses {
     }
 
     private function set_placeholder_image(): void {
-        $options = get_option('bedriftsinformasjon_option_name');
-        $this->placeholder_image = !empty($options['plassholderbilde_kurs']) 
-            ? $options['plassholderbilde_kurs']
-            : 'https://kursagenten.no/images/cmspluss/placeholder-kurs.jpg';
+        $options = get_option('kag_kursinnst_option_name');
+        $this->placeholder_image = !empty($options['ka_plassholderbilde_kurs']) 
+            ? $options['ka_plassholderbilde_kurs']
+            : KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';
     }
 
     public function render_related_courses($atts): string {
@@ -30,12 +31,13 @@ class RelatedCourses {
             'grid' => '3',
             'gridtablet' => '2',
             'gridmobil' => '1',
+            'radavstand' => '1rem',
             'bildestr' => '100px',
             'bildeform' => 'avrundet',
             'bildeformat' => '4/4',
             'skygge' => '',
             'utdrag' => '',
-            'fonttype' => 'H3',
+            'overskrift' => 'H3',
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
@@ -52,11 +54,15 @@ class RelatedCourses {
         $related_posts = $this->get_related_courses();
         
         if (empty($related_posts)) {
-            return '<p>Ingen relaterte kurs funnet</p>';
+            return '<div class="no-courses">Det er for øyeblikket ingen relaterte kurs å vise.</div>';
         }
 
-        // Generer output
+        // Generer output ved å bruke felles grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
+        
+        // Legg til kurs-spesifikk CSS
+        $output .= $this->get_course_specific_styles($random_id);
+        
         $output .= $this->generate_html($random_id, $related_posts, $a);
         
         return $output;
@@ -108,8 +114,26 @@ class RelatedCourses {
                 'terms' => $current_term->term_id,
             ]],
             'posts_per_page' => -1,
-            'post__not_in' => [$post->ID], // Ekskluder gjeldende innlegg
+            'post__not_in' => [$post->ID],
+            'meta_query'     => [
+            [
+                'key'     => 'is_parent_course',
+                'value'   => 'yes',
+                'compare' => '='
+            ]
+        ], // Ekskluder gjeldende innlegg
         ]);
+    }
+
+    private function get_course_specific_styles(string $id): string {
+        return "<style>
+            #{$id}.skygge:not(.kort) .box img {
+                -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
+                -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
+                box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.15);
+                transition: transform ease 0.3s, box-shadow ease 0.3s;
+            }
+        </style>";
     }
 
     private function generate_html(string $id, array $posts, array $a): string {
@@ -119,14 +143,14 @@ class RelatedCourses {
         $skygge = $a['skygge'];
         $bildeform = $a['bildeform'];
         $utdrag = $a['utdrag'];
-        $fonttype = $a['fonttype'];
+        $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
 
         $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($posts as $related_post) {
-            $thumbnail_data = $this->get_thumbnail_data($related_post, $a);
+            $thumbnail_data = $this->get_thumbnail_data($related_post);
             $output .= $this->generate_course_html($related_post, $thumbnail_data, $a);
         }
 
@@ -134,68 +158,33 @@ class RelatedCourses {
         return $output;
     }
 
-    private function get_thumbnail_data($post, array $a): array {
+    private function get_thumbnail_data($post): string {
         $thumbnail_id = get_post_thumbnail_id($post->ID);
         
         if (empty($thumbnail_id)) {
-            return [
-                'url' => $this->placeholder_image,
-                'srcset' => '',
-                'sizes' => ''
-            ];
+            return $this->placeholder_image;
         }
 
-        return [
-            'url' => wp_get_attachment_image_url($thumbnail_id, 'thumbnail'),
-            'srcset' => wp_get_attachment_image_srcset($thumbnail_id, ['thumbnail', 'medium', 'large']),
-            'sizes' => "(max-width: 530px) 100vw, (max-width: 1024px) calc(100% / {$a['gridtablet']}), calc(100% / {$a['grid']})"
-        ];
+        $thumbnail_url = wp_get_attachment_image_url($thumbnail_id, 'thumbnail');
+        return !empty($thumbnail_url) ? $thumbnail_url : $this->placeholder_image;
     }
 
-    private function generate_course_html($post, array $thumbnail, array $a): string {
+    private function generate_course_html($post, string $thumbnail, array $a): string {
         $title = get_the_title($post->ID);
         return "
             <div class='box term-{$post->ID}'>
                 <a class='image box-inner' href='" . get_permalink($post->ID) . "' title='{$title}'>
                     <picture>
-                        <img src='{$thumbnail['url']}' 
-                             srcset='{$thumbnail['srcset']}'
-                             sizes='{$thumbnail['sizes']}'
-                             alt='Bilde av kurs i {$title}'
-                             class='wp-image-{$post->ID}'
-                             decoding='async'>
+                        <img src='{$thumbnail}' alt='Bilde av kurs i {$title}' class='wp-image-{$post->ID}' decoding='async'>
                     </picture>
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_permalink($post->ID) . "' title='{$title}'>
-                        <{$a['fonttype']} class='tittel'>{$title}</{$a['fonttype']}>
+                        <{$a['overskrift']} class='tittel'>{$title}</{$a['overskrift']}>
                     </a>
                     <div class='description'>" . get_the_excerpt($post->ID) . "</div>
                 </div>
             </div>";
-    }
-
-    private function get_locations(): array 
-    {
-        $locations = get_terms([
-            'taxonomy' => 'course_location',
-            'hide_empty' => false,
-            'meta_query' => [
-                'relation' => 'OR',
-                [
-                    'key' => 'hide_in_list',
-                    'value' => 'Vis',
-                ],
-                [
-                    'key' => 'hide_in_list',
-                    'compare' => 'NOT EXISTS'
-                ]
-            ],
-            'orderby' => 'name',
-            'order' => 'ASC'
-        ]);
-
-        return is_wp_error($locations) ? [] : $locations;
     }
 }
 

@@ -224,6 +224,7 @@
                 <div class="content">
                     
                     <h2>Om kurset</h2>
+                    
                     <p><?php the_excerpt(); ?></p>
                     <!-- WP content -->
                     <?php if (!empty($wp_content)) : ?>
@@ -265,7 +266,8 @@
     </section>
     <section class="ka-section ka-footer">
         <div class="ka-content-container title-section">
-            <h4>Footer</h4>
+            <h3>Kurs i samme kategori</h3>
+        <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" fontmin="13px" fontmaks="15px" avstand="2em .5em"]'); ?>
         </div>
     </section>
 </article>

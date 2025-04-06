@@ -108,6 +108,20 @@ input[type=textarea] {
     border-bottom: 1px dashed #a0a0a0;
 }
 
+/* FONTS */
+/***********************************/
+.small{ font-size: 0.8em !important; }
+.medium{ font-size: 1.2em !important; }
+.large{ font-size: 1.5em !important; }
+.xlarge{ font-size: 2em !important; }
+.ka-wrap a{
+    text-decoration: none;
+    cursor: pointer;
+}
+.ka-wrap h4 {
+    font-size: 1.15em;
+}
+
 /* IKONER */
 /**********/
 .ka-wrap i.ka-icon {
@@ -121,7 +135,9 @@ input[type=textarea] {
     background-repeat: no-repeat;
     }
 
+
 /* Kolonne-layout med CSS Grid */
+/***********************************/
 
 /*
 <!-- 2 kolonner med CSS Grid -->
@@ -265,4 +281,23 @@ pre, code {
     color: #999;
     padding-right: 1em;
     border-right: 1px solid #ddd;
+}
+/* Oversiktside */
+/*****************************/
+.ka-wrap .welcome-panel-content {
+    min-height: 100px;
+}
+.ka-wrap .welcome-panel-column {
+    grid-template-columns: 1fr;
+    gap: 0;
+}
+.ka-wrap .welcome-panel .welcome-panel-column-container {
+    align-items: start;
+}
+h4.welcome-panel-title {
+    margin: 0 0 1em 0;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1em;
+    line-height: 1.4;
+    font-size: 1.3em;
 }
