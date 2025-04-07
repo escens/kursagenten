@@ -213,8 +213,28 @@ function get_course_dates_query($args = []) {
 		'posts_per_page' => 5,
 		'paged'          => $current_page,
 		'tax_query'      => ['relation' => 'AND'],
-		'meta_query'     => ['relation' => 'AND'],
+		'meta_query'     => [
+			'relation' => 'AND',
+			[
+				'relation' => 'OR',
+				[
+					'key' => 'course_first_date',
+					'compare' => 'EXISTS'
+				],
+				[
+					'key' => 'course_first_date',
+					'compare' => 'NOT EXISTS'
+				]
+			]
+		],
+		'orderby' => [
+			'course_first_date' => 'ASC',
+			'title' => 'ASC'
+		]
 	];
+
+	// Log default args
+	error_log('Default args: ' . print_r($default_args, true));
 
 	// Hent alle termer først
 	$all_terms = get_terms([
@@ -246,6 +266,10 @@ function get_course_dates_query($args = []) {
 
 	$query_args = wp_parse_args($args, $default_args);
 
+	// Log query args before filters
+	error_log('Query args before filters: ' . print_r($query_args, true));
+
+	// Behandle alle filtre fra URL-parametere
 	foreach ($param_mapping as $db_field => $param_name) {
 		if (!array_key_exists($param_name, $_REQUEST) || empty($_REQUEST[$param_name])) {
 			continue;
@@ -255,7 +279,7 @@ function get_course_dates_query($args = []) {
 		if (is_string($param)) {
 			$param = explode(',', urldecode($param));
 		}
-        // spesiell håndtering av innkommende parametre direkte fra url
+
 		if (in_array($db_field, ['coursecategory', 'instructors'])) {
 			$query_args['tax_query'][] = [
 				'taxonomy' => $db_field,
@@ -264,17 +288,13 @@ function get_course_dates_query($args = []) {
 			];
 		} else {
 			if ($db_field === 'course_first_date') {
+				// Spesiell håndtering for dato-filter
 				if (!empty($param)) {
-					//error_log('Date filter param received: ' . print_r($param, true));
-					
-					// Hvis param er et array, sjekk begge formater
 					if (is_array($param)) {
 						if (isset($param['from']) && isset($param['to'])) {
-							// Eksisterende format med from/to keys
 							$from = date('Y-m-d H:i:s', strtotime($param['from']));
 							$to = date('Y-m-d H:i:s', strtotime($param['to']));
 						} else if (isset($param[0])) {
-							// Nytt format hvor hele datostrengen er i første element
 							$dates = explode('-', $param[0]);
 							if (count($dates) === 2) {
 								$from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
@@ -286,9 +306,7 @@ function get_course_dates_query($args = []) {
 								}
 							}
 						}
-					} 
-					// Eksisterende string-håndtering
-					else if (is_string($param)) {
+					} else if (is_string($param)) {
 						$dates = explode('-', $param);
 						if (count($dates) === 2) {
 							$from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
@@ -311,10 +329,10 @@ function get_course_dates_query($args = []) {
 					}
 				}
 			} else if ($db_field === 'course_price') {
-				if (! empty($param['from']) && !empty($param['to'])) {
+				if (!empty($param['from']) && !empty($param['to'])) {
 					$query_args['meta_query'][] = [
 						'key'     => $db_field,
-						'value'   => [ $param['from'], $param['to'] ],
+						'value'   => [$param['from'], $param['to']],
 						'compare' => 'BETWEEN',
 						'type'    => 'NUMERIC'
 					];
@@ -329,6 +347,7 @@ function get_course_dates_query($args = []) {
 		}
 	}
 
+	// Spesiell håndtering for månedsfilter
 	if (!empty($_REQUEST['mnd'])) {
 		$months = is_array($_REQUEST['mnd']) ? $_REQUEST['mnd'] : explode(',', $_REQUEST['mnd']);
 		$query_args['meta_query'][] = [
@@ -338,10 +357,12 @@ function get_course_dates_query($args = []) {
 		];
 	}
 
+	// Søkefunksjonalitet
 	if (!empty($_REQUEST[$search_param])) {
 		$query_args['s'] = sanitize_text_field($_REQUEST[$search_param]);
 	}
 
+	// Sortering
 	$sort = sanitize_text_field($_REQUEST['sort'] ?? '');
 	$order = sanitize_text_field($_REQUEST['order'] ?? 'asc');
 
@@ -355,29 +376,31 @@ function get_course_dates_query($args = []) {
 			$query_args['meta_key'] = 'course_price';
 			$query_args['order'] = strtoupper($order);
 			break;
-		default:
 		case 'date':
-			// Legg til en meta_query som gir en verdi til poster uten course_first_date
+			// For date sorting, we only want coursedates with course_first_date
+			$query_args['meta_query']['relation'] = 'AND';
 			$query_args['meta_query'][] = [
-				'relation' => 'OR',
-				[
-					'key' => 'course_first_date',
-					'compare' => 'EXISTS',
-				],
-				[
-					'key' => 'course_first_date',
-					'compare' => 'NOT EXISTS'
-				]
+				'key' => 'course_first_date',
+				'compare' => 'EXISTS'
 			];
-			
-			$query_args['orderby'] = [
-				'course_first_date' => 'ASC',
-				'ID' => 'ASC'  // Sekundær sortering på ID for poster uten dato
-			];
+			$query_args['orderby'] = 'course_first_date';
+			$query_args['order'] = strtoupper($order);
+			break;
+		default:
+			// Ingen sortering valgt - bruk default sortering fra default_args
 			break;
 	}
 
-	return new WP_Query($query_args);
+	// Log final query args
+	error_log('Final query args: ' . print_r($query_args, true));
+
+	$query = new WP_Query($query_args);
+
+	// Log query results
+	error_log('Query found posts: ' . $query->found_posts);
+	error_log('Query SQL: ' . $query->request);
+
+	return $query;
 }
 
 /**

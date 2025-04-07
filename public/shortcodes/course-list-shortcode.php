@@ -52,7 +52,6 @@ function kursagenten_course_list_shortcode($atts) {
     wp_enqueue_script('kursagenten-datepicker-moment', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/moment.min.js', array(), KURSAG_VERSION);
     wp_enqueue_script('kursagenten-datepicker-script', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/caleran.min.js', ['kursagenten-datepicker-moment'], KURSAG_VERSION);
     wp_enqueue_script('kursagenten-accordion_script', KURSAG_PLUGIN_URL . '/assets/js/public/course-accordion.js', array(), KURSAG_VERSION);
-    wp_enqueue_script('kursagenten-filter-mobile', KURSAG_PLUGIN_URL . '/assets/js/public/course-filter-mobile.js', array(), KURSAG_VERSION);
 
     // Localize script with necessary data
     wp_localize_script(
@@ -164,6 +163,25 @@ function kursagenten_course_list_shortcode($atts) {
     <div id="ka" class="kursagenten-wrapper">
     <main id="ka-main" class="kursagenten-main" role="main">
         <div class="ka-container">
+            <!-- Mobile Filter Button & Overlay -->
+            <button class="filter-toggle-button">
+                <i class="ka-icon icon-filter"></i>
+                <span>Filter</span>
+            </button>
+
+            <div class="mobile-filter-overlay">
+                <div class="mobile-filter-header">
+                    <h4>Filter</h4>
+                    <button class="close-filter-button">
+                        <i class="ka-icon icon-close"></i>
+                    </button>
+                </div>
+                <div class="mobile-filter-content">
+                    <!-- Filtre vil bli lagt til her via JavaScript -->
+                </div>
+            </div>
+            <!-- End Mobile Filter -->
+
             <article class="ka-outer-container course-container">
                 <section class="ka-section ka-main-content ka-courselist">
                     <div class="ka-content-container inner-container top-filter-section">
@@ -264,10 +282,14 @@ function kursagenten_course_list_shortcode($atts) {
                                                         <div class="filter-dropdown-content">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <label class="filter-list-item checkbox">
+                                                                    <?php 
+                                                                    $term_value = is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term);
+                                                                    $url_key = $taxonomy_data[$filter]['url_key'];
+                                                                    ?>
                                                                     <input type="checkbox" class="filter-checkbox"
-                                                                        value="<?php echo esc_attr(is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term)); ?>"
+                                                                        value="<?php echo esc_attr($term_value); ?>"
                                                                         data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                                                        data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
+                                                                        data-url-key="<?php echo esc_attr($url_key); ?>">
                                                                     <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
                                                                 </label>
                                                             <?php endforeach; ?>
@@ -346,6 +368,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                         <div id="filter-list-location" class="filter-list expand-content" data-size="100">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <label class="filter-list-item checkbox">
+
                                                                     <input type="checkbox" class="filter-checkbox"
                                                                         value="<?php echo esc_attr(is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term)); ?>"
                                                                         data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
@@ -462,6 +485,135 @@ function kursagenten_course_list_shortcode($atts) {
         ];
         echo json_encode($filter_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
         ?>
+    </script>
+    <!-- Mobile Filter Handling -->
+    <script type="text/javascript">
+    /*
+    jQuery(document).ready(function($) {
+        // Debug logging
+        const DEBUG = true;
+        function log(...args) {
+            if (DEBUG) console.log('[KA Mobile Filter]:', ...args);
+        }
+
+        // Sjekk om elementene eksisterer før vi legger til event listeners
+        const filterToggleBtn = $('.filter-toggle-button');
+        const mobileOverlay = $('.mobile-filter-overlay');
+        const closeFilterBtn = $('.close-filter-button');
+        
+        if (filterToggleBtn.length) {
+            filterToggleBtn.on('click', function() {
+                log('Filter-knapp klikket');
+                if (mobileOverlay.length) {
+                    initializeMobileFilters();
+                    mobileOverlay.css('display', 'flex');
+                    $('body').css('overflow', 'hidden');
+                }
+            });
+        }
+
+        if (closeFilterBtn.length) {
+            closeFilterBtn.on('click', function() {
+                log('Lukk-knapp klikket');
+                if (mobileOverlay.length) {
+                    mobileOverlay.css('display', 'none');
+                    $('body').css('overflow', 'auto');
+                }
+            });
+        }
+
+        // Funksjon for å flytte filtre til mobil container
+        function initializeMobileFilters() {
+            log('Initialiserer mobilfiltre');
+            const mobileContent = $('.mobile-filter-content');
+            if (!mobileContent.length) return;
+            
+            // Tøm mobil container først
+            mobileContent.empty();
+
+            // Samle alle filtre fra både topp og venstre
+            const topFilters = $('.filter-container.filter-top .filter-item');
+            const leftFilters = $('.left-filter-section .filter-item');
+            
+            // Legg til i mobil container
+            if (topFilters.length || leftFilters.length) {
+                // Flytt filtrene til mobil container istedenfor å klone dem
+                const filters = topFilters.add(leftFilters).detach();
+                
+                filters.each(function() {
+                    const section = $('<div>').addClass('mobile-filter-section');
+                    section.append($(this));
+                    mobileContent.append(section);
+                });
+
+                // Legg til footer med knapper
+                const footer = $('<div>').addClass('mobile-filter-footer')
+                    .append('<button class="apply-filters-button">Vis resultater</button>')
+                    .append('<button class="reset-filters-button">Nullstill filter</button>');
+                
+                mobileContent.append(footer);
+            }
+        }
+
+        // Initialiser mobilfiltre ved lasting og ved vindustørrelse-endring
+        let isMobile = window.innerWidth <= 768;
+        let originalFilterContainers = null;
+        
+        function handleResize() {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                filterToggleBtn.show();
+            } else {
+                filterToggleBtn.hide();
+                if (mobileOverlay.length) {
+                    mobileOverlay.hide();
+                    $('body').css('overflow', 'auto');
+                    
+                    // Flytt filtrene tilbake til original plassering
+                    const mobileFilters = $('.mobile-filter-content .filter-item');
+                    if (mobileFilters.length) {
+                        const topFilters = mobileFilters.filter((i, el) => {
+                            return $(el).find('[data-original-container="top"]').length;
+                        });
+                        const leftFilters = mobileFilters.filter((i, el) => {
+                            return $(el).find('[data-original-container="left"]').length;
+                        });
+                        
+                        $('.filter-container.filter-top').append(topFilters);
+                        $('.left-filter-section').append(leftFilters);
+                    }
+                }
+            }
+        }
+
+        // Kjør ved oppstart
+        handleResize();
+        
+        // Lytt på vindustørrelse-endringer
+        $(window).on('resize', handleResize);
+
+        // Håndter filter-knapper på mobil
+        $(document).on('click', '.mobile-filter-overlay .apply-filters-button', function() {
+            log('Vis resultater klikket');
+            if (mobileOverlay.length) {
+                mobileOverlay.hide();
+                $('body').css('overflow', 'auto');
+            }
+        });
+
+        $(document).on('click', '.mobile-filter-overlay .reset-filters-button', function() {
+            log('Reset klikket');
+            // Trigger eksisterende reset-funksjonalitet
+            $('#reset-filters').trigger('click');
+        });
+
+        // Merk filtre med original plassering
+        $('.filter-container.filter-top .filter-item [data-filter-key]').attr('data-original-container', 'top');
+        $('.left-filter-section .filter-item [data-filter-key]').attr('data-original-container', 'left');
+    });
+    */
     </script>
     <?php
 

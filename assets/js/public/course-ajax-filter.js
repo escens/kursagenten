@@ -208,7 +208,7 @@
 	}
 
 	function fetchCourses(data) {
-		//console.log('Fetching courses with data:', data);
+		console.log('AJAX-kall med data:', data);
 		
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
@@ -222,14 +222,13 @@
 			type: 'POST',
 			data: data,
 			success: function(response) {
-				//console.log('AJAX response:', response);
+				console.log('Svar fra server:', response);
 				if (response.success) {
 					$('#filter-results').html(response.data.html);
 					$('#course-count').html(response.data['course-count']);
 					initAccordion();
 					initSlideInPanel();
 					updatePagination(response.data.html_pagination);
-					//console.log('Updated pagination HTML:', response.data.html_pagination);
 
 					// Scroll til toppen av resultatene med større offset
 					$('html, body').animate({
@@ -238,6 +237,7 @@
 
 					// Update dropdown states based on current URL filters
 					const currentFilters = getCurrentFiltersFromURL();
+					console.log('Filtre etter oppdatering:', currentFilters);
 
 					// Handle language filter updates
 					if (currentFilters.sprak) {
@@ -298,68 +298,37 @@
 	}
 
 
-	function updateURLParams(filters) {
-		//console.log('Updating URL with filters:', filters);
-		
-		// Start med gjeldende URL uten parametre
-		const baseUrl = window.location.pathname;
-		const params = new URLSearchParams();
+	function updateURLParams(params) {
+		const url = new URL(window.location.href);
+		url.search = new URLSearchParams(clean(params)).toString();
 
-		// Legg til alle filtre som ikke er null/undefined
-		Object.entries(filters).forEach(([key, value]) => {
-			if (value !== null && value !== undefined) {
-				if (Array.isArray(value)) {
-					params.set(key, value.join(','));
-				} else {
-					params.set(key, value);
-				}
-			}
-		});
-
-		// Bygg den nye URL-en
-		const newUrl = `${baseUrl}${params.toString() ? '?' + params.toString() : ''}`;
-		//console.log('New URL:', newUrl);
-
-		// Oppdater URL-en uten å laste siden på nytt
-		window.history.pushState({ path: newUrl }, '', newUrl);
+		window.history.pushState({}, '', url.toString());
 	}
 
 	function getCurrentFiltersFromURL() {
-		//console.log('Current URL:', window.location.href);
-		const params = new URLSearchParams(window.location.search);
-		const filters = {};
+		const url = new URL(window.location.href);
+		const params = {};
 
 		// Process all URL parameters
-		for (const [key, value] of params.entries()) {
+		for (const [key, value] of url.searchParams.entries()) {
 			// Spesiell håndtering for dato-parameter
 			if (key === 'dato') {
-				filters[key] = value;  // Behold dato-stringen som den er
-			} else if (key === 'mnd') {
-				// Spesiell håndtering for måneder
-				filters[key] = value.includes(',') ? value.split(',') : [value];
+				params[key] = value;  // Behold dato-stringen som den er
 			} else {
 				// Håndter andre parametere som før
-				filters[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+				params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
 			}
 		}
 
-		//console.log('URL parameters found:', params.toString());
-		return filters;
+		return params;
 	}
 
 	function initializeFiltersFromURL() {
-		//console.log('Current URL:', window.location.href);
 		const filters = getCurrentFiltersFromURL();
-		//console.log('Parsed filters:', filters);
 
-		if (Object.keys(filters).length === 0) {
-			//console.log('No filters found in URL - something might be wrong');
-			return;
-		}
-
+		// Initialize each filter based on URL parameters
 		Object.keys(filters).forEach(function (filterKey) {
 			const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
-			//console.log(`Setting filter ${filterKey} with values:`, values);
 
 			// Handle chip-based filters
 			if ($('.chip[data-url-key="' + filterKey + '"]').length) {
@@ -371,30 +340,12 @@
 			// Handle checkbox-based filters
 			if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
 				values.forEach(value => {
-					if (filterKey === 'mnd') {
-						//console.log('Checking month checkbox:', {
-						//	value: value,
-						//	checkboxes: $('.filter-checkbox[data-url-key="' + filterKey + '"]').map(function() {
-						//		return $(this).val();
-						//	}).get()
-						//});
-						
-						// Ensure the value is padded with leading zero if needed
-						const paddedValue = value.padStart(2, '0');
-						$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
-							if ($(this).val() === paddedValue) {
-								$(this).prop('checked', true);
-							}
-						});
-					} else {
-						// Lowercase sammenligning for andre filtre
-						const lowercaseValue = value.toLowerCase();
-						$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
-							if ($(this).val().toLowerCase() === lowercaseValue) {
-								$(this).prop('checked', true);
-							}
-						});
-					}
+					const lowercaseValue = value.toLowerCase();
+					$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
+						if ($(this).val().toLowerCase() === lowercaseValue) {
+							$(this).prop('checked', true);
+						}
+					});
 				});
 			}
 		});
@@ -458,7 +409,7 @@
 						displayText = value.charAt(0).toUpperCase() + value.slice(1);
 					} 
 
-					const filterChip = $(`<span class="active-filter-chip" data-filter-key="${filterKey}" data-filter-value="${value}">
+					const filterChip = $(`<span class="active-filter-chip" data-filter-key="${key}" data-url-key="${filterKey}" data-filter-value="${value}">
 						${displayText} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
 					</span>`);
 
@@ -473,6 +424,9 @@
 						if (filters[urlKey]) {
 							if (Array.isArray(filters[urlKey])) {
 								filters[urlKey] = filters[urlKey].filter(item => item !== filterValue);
+								if (filters[urlKey].length === 0) {
+									filters[urlKey] = null;
+								}
 							} else {
 								filters[urlKey] = null;
 							}
@@ -486,10 +440,17 @@
 						};
 
 						// Uncheck the corresponding checkbox
-						const $checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
+						const $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
+						if (!$checkbox.length) {
+							$checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
+						}
 						if ($checkbox.length) {
 							$checkbox.prop('checked', false);
 						}
+
+						// Update dropdown text using the correct key
+						const dropdownFilterKey = $checkbox.closest('.filter').find('.filter-dropdown-toggle').data('filter');
+						updateDropdownText(dropdownFilterKey, filters[urlKey]);
 
 						// Update filters and fetch new results
 						updateFiltersAndFetch(updatedFilters);
@@ -519,34 +480,30 @@
 
 	$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
 		e.preventDefault();
-		//console.log('Pagination link clicked');
-		
 		const href = $(this).attr('href');
-		//console.log('Link href:', href);
-		
-		const url = new URL(href);
-		const page = url.searchParams.get('side');
-		//console.log('Page number from URL:', page);
+		const locate = new URL(href);
 		
 		// Behold alle eksisterende filtre
 		const currentFilters = getCurrentFiltersFromURL();
-		//console.log('Current filters:', currentFilters);
 		
 		// Konverter datoformat hvis nødvendig
 		if (currentFilters.dato && currentFilters.dato.includes(',')) {
+			// Konverter fra YYYY-MM-DD,YYYY-MM-DD til DD.MM.YYYY-DD.MM.YYYY
 			const [fromDate, toDate] = currentFilters.dato.split(',');
 			const from = moment(fromDate).format('DD.MM.YYYY');
 			const to = moment(toDate).format('DD.MM.YYYY');
 			currentFilters.dato = `${from}-${to}`;
 		}
 		
-		// Oppdater side-parameter
-		currentFilters.side = page;
-		//console.log('Updated filters with new page:', currentFilters);
+		// Legg til side-parameter
+		const newFilters = {
+			...currentFilters,
+			side: locate.searchParams.get('side')
+		};
 
 		// Oppdater URL og hent resultater
-		updateURLParams(currentFilters);
-		fetchCourses(currentFilters);
+		window.history.pushState({}, '', href);
+		fetchCourses(newFilters);
 	});
 
 	function updatePagination(html) {
@@ -554,8 +511,7 @@
 	}
 
 	// Håndter browser back/forward
-	window.addEventListener('popstate', function(event) {
-		//console.log('Navigation occurred');
+	window.addEventListener('popstate', function() {
 		const currentFilters = getCurrentFiltersFromURL();
 		fetchCourses(currentFilters);
 	});
@@ -658,7 +614,7 @@
 	function initializeSorting() {
 		const $sortDropdown = $('.sort-dropdown');
 		if (!$sortDropdown.length) {
-			//console.log('Sort dropdown not found');
+			console.log('Sort dropdown not found');
 			return;
 		}
 
@@ -689,15 +645,17 @@
 			const sortBy = $(this).data('sort');
 			const order = $(this).data('order');
 
+			console.log('Sortering startet:', { sortBy, order });
+
 			// Oppdater selected text
 			$('.sort-dropdown .selected-text').text($(this).text());
 
 			// Hent eksisterende filtre
 			const currentFilters = getCurrentFiltersFromURL();
+			console.log('Eksisterende filtre før sortering:', currentFilters);
 			
 			// Konverter datoformat hvis nødvendig
 			if (currentFilters.dato && currentFilters.dato.includes(',')) {
-				// Konverter fra YYYY-MM-DD,YYYY-MM-DD til DD.MM.YYYY-DD.MM.YYYY
 				const [fromDate, toDate] = currentFilters.dato.split(',');
 				const from = moment(fromDate).format('DD.MM.YYYY');
 				const to = moment(toDate).format('DD.MM.YYYY');
@@ -711,6 +669,8 @@
 				order: order,
 				side: 1  // Reset til side 1 ved ny sortering
 			};
+
+			console.log('Filtre som sendes til server:', updatedFilters);
 
 			// Utfør filtrering med sortering
 			updateFiltersAndFetch(updatedFilters);

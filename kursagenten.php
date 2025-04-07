@@ -522,12 +522,12 @@ require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
         );
 
         
-        wp_enqueue_script(
+       /* wp_enqueue_script(
             'kursagenten-filter-mobile',
             KURSAG_PLUGIN_URL . '/assets/js/public/course-filter-mobile.js',
             array(),
             KURSAG_VERSION
-        );
+        );*/
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
    

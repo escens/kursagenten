@@ -1224,100 +1224,190 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 /* Filter button styling */
 /************************/
 #ka .filter-toggle-button {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  color: white;
-  border-radius: 50px;
-  padding: 12px 24px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  z-index: 100;
-  display: none; /* Vises kun på mobil */
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--ka-color-accent);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    transition: transform 0.2s, background-color 0.2s;
 }
 
-#ka .mobile-filter-overlay button,
-#ka .filter-toggle-button{
-  background: var(--ka-color-accent, #007bff);
-}
-#ka .mobile-filter-overlay button:hover,
 #ka .filter-toggle-button:hover {
-  background: var(--ka-color-accent-dark, #0066d3);
+    background: var(--ka-color-accent-dark);
+    transform: translateY(-2px);
 }
-#ka .mobile-filter-overlay i.ka-icon,
-#ka .filter-toggle-button i.ka-icon{
-  background-color: #fff;
+
+#ka .filter-toggle-button i.ka-icon {
+    background-color: white;
+    width: 16px;
+    height: 16px;
 }
 
 /* Filter overlay */
 /******************/
 #ka .mobile-filter-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: white;
-  z-index: 1000;
-  display: none;
-  flex-direction: column;
-  overflow-y: auto;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 1001;
+    display: none;
+    flex-direction: column;
 }
 
 #ka .mobile-filter-header {
-  position: sticky;
-  top: 0;
-  padding: 1em;
-  background: white;
-  border-bottom: 1px solid #eee;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: 1;
+    position: sticky;
+    top: 0;
+    padding: 1.25em;
+    background: white;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 2;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#ka .mobile-filter-header h4 {
+    margin: 0;
+    font-size: var(--ka-font-md);
+}
+
+#ka .close-filter-button {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#ka .close-filter-button i.ka-icon {
+    width: 20px;
+    height: 20px;
+    background-color: #666;
 }
 
 #ka .mobile-filter-content {
-  padding: 1em;
-  flex: 1;
-  overflow-y: auto;
-}
-/* Filter: mobile: reset button */
-/*****************************/
-#ka .reset-filters-btn.reset-filters-button{
-  display: inline-block;
-
+    padding: 1.5em;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Chip styling for mobile */
-/**************************/
+/* Mobile filter sections */
 #ka .mobile-filter-section {
-  margin-bottom: 1.5em;
+    margin-bottom: 2em;
+    padding-bottom: 1em;
+    border-bottom: 1px solid #eee;
+}
+
+#ka .mobile-filter-section:last-child {
+    border-bottom: none;
 }
 
 #ka .mobile-filter-section h5 {
-  margin-bottom: 0.5em;
+    margin: 0 0 1em 0;
+    font-size: var(--ka-font-sm);
+    color: #333;
 }
 
-/*
-#ka .filter-chip-wrapper {
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  padding-bottom: 0.5em;
-  gap: 0.5em;
-  -webkit-overflow-scrolling: touch;
+/* Mobile filter list styling */
+#ka .mobile-filter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
 }
 
-/* Dropdown styling */
-/*#ka .filter-dropdown {
-  margin-bottom: 1em;
+#ka .mobile-filter-list .filter-list-item {
+    margin: 0;
+    padding: 0;
 }
 
-#ka .filter-dropdown-toggle {
-  width: 100%;
-  padding: 12px;
-  background: #f8f8f8;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}*/
+/* Mobile chips styling */
+#ka .mobile-filter-section .filter-chip-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 0.5em;
+}
+
+#ka .mobile-filter-section .chip {
+    margin: 0;
+    padding: 8px 16px;
+    font-size: var(--ka-font-sm);
+}
+
+/* Footer buttons */
+#ka .mobile-filter-footer {
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1em;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 1em;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+}
+
+#ka .mobile-filter-footer button {
+    flex: 1;
+    padding: 1em;
+    border: none;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#ka .mobile-filter-footer .apply-filters-button {
+    background: var(--ka-color-accent);
+    color: white;
+}
+
+#ka .mobile-filter-footer .apply-filters-button:hover {
+    background: var(--ka-color-accent-dark);
+}
+
+#ka .mobile-filter-footer .reset-filters-button {
+    background: #f5f5f5;
+    color: #666;
+}
+
+#ka .mobile-filter-footer .reset-filters-button:hover {
+    background: #eee;
+}
+
+/* Mobile date picker adjustments */
+#ka .mobile-filter-section .date-range-wrapper {
+    width: 100%;
+}
+
+#ka .mobile-filter-section .date-range-wrapper input {
+    width: 100%;
+    padding: 12px;
+}
+
+/* Hide desktop filters on mobile */
+@media screen and (max-width: 768px) {
+    #ka .filter-container.filter-top,
+    #ka .left-filter-section {
+        display: none;
+    }
+    
+    #ka .filter-toggle-button {
+        display: flex;
+    }
+}
