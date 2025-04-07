@@ -400,6 +400,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                     <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
                                                 </div>
                                                 <div class="sort-dropdown-content">
+                                                    <button class="sort-option" data-sort="standard" data-order="">Standard</button>
                                                     <button class="sort-option" data-sort="title" data-order="asc">Fra A til Å</button>
                                                     <button class="sort-option" data-sort="title" data-order="desc">Fra Å til A</button>
                                                     <button class="sort-option" data-sort="price" data-order="asc">Pris lav til høy</button>

@@ -421,41 +421,36 @@
 						// Konverter tilbake til URL-nøkkel for månedsfilteret
 						const urlKey = filterKey === 'months' ? 'mnd' : filterKey;
 
-						// Hent oppdaterte filtre
-						const currentFilters = getCurrentFiltersFromURL();
-						
-						if (currentFilters[urlKey]) {
-							if (Array.isArray(currentFilters[urlKey])) {
-								currentFilters[urlKey] = currentFilters[urlKey].filter(item => item !== filterValue);
-								if (currentFilters[urlKey].length === 0) {
-									currentFilters[urlKey] = null;
+						if (filters[urlKey]) {
+							if (Array.isArray(filters[urlKey])) {
+								filters[urlKey] = filters[urlKey].filter(item => item !== filterValue);
+								if (filters[urlKey].length === 0) {
+									filters[urlKey] = null;
 								}
 							} else {
-								currentFilters[urlKey] = null;
+								filters[urlKey] = null;
 							}
 						}
 
-						// Behold sorteringsparameterne
+						// Behold sorteringsparameterne når et filter fjernes
 						const updatedFilters = {
-							...currentFilters,
-							sort: currentFilters.sort,
-							order: currentFilters.order
+							...filters,
+							sort: filters.sort,
+							order: filters.order
 						};
 
-						// Uncheck the corresponding checkbox and remove active class from filter chip
-						let $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
+						// Uncheck the corresponding checkbox
+						const $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
 						if (!$checkbox.length) {
 							$checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
 						}
 						if ($checkbox.length) {
 							$checkbox.prop('checked', false);
-							// Update dropdown text using the correct key
-							const dropdownFilterKey = $checkbox.closest('.filter').find('.filter-dropdown-toggle').data('filter');
-							updateDropdownText(dropdownFilterKey, currentFilters[urlKey]);
 						}
 
-						// Remove active class from corresponding filter chip
-						$(`.filter-chip[data-filter="${filterValue}"][data-url-key="${filterKey}"]`).removeClass('active');
+						// Update dropdown text using the correct key
+						const dropdownFilterKey = $checkbox.closest('.filter').find('.filter-dropdown-toggle').data('filter');
+						updateDropdownText(dropdownFilterKey, filters[urlKey]);
 
 						// Update filters and fetch new results
 						updateFiltersAndFetch(updatedFilters);
@@ -924,48 +919,3 @@ document.addEventListener("DOMContentLoaded", function () {
 	});
 });
 
-// Fjern eller kommenter ut alle disse gamle funksjonene og variabler
-/*
-let currentSort = '';
-let currentOrder = '';
-
-document.querySelector('.sort-dropdown').addEventListener('click', function(e) {
-    this.classList.toggle('active');
-});
-
-document.querySelectorAll('.sort-option').forEach(option => {
-    option.addEventListener('click', function() {
-        const sortBy = this.dataset.sort;
-        const order = this.dataset.order;
-
-        document.querySelector('.sort-dropdown .selected-text').textContent = this.textContent;
-
-        currentSort = sortBy;
-        currentOrder = order;
-
-        updateResults();
-    });
-});
-
-function updateResults() {
-    const filters = getActiveFilters();
-    const searchQuery = document.querySelector('.filter-search')?.value || '';
-
-    const data = {
-        action: 'filter_courses',
-        filters: filters,
-        search: searchQuery,
-        sort: currentSort,
-        order: currentOrder,
-        security: kursagentenAjax.nonce
-    };
-}
-*/
-
-// Initialiser sortering når dokumentet er klart
-/*$(document).ready(function() {
-    initializeSorting();
-    // ... existing document.ready code ...
-});*/
-
-// ... rest of existing code ...
