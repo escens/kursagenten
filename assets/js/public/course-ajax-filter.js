@@ -421,36 +421,41 @@
 						// Konverter tilbake til URL-nøkkel for månedsfilteret
 						const urlKey = filterKey === 'months' ? 'mnd' : filterKey;
 
-						if (filters[urlKey]) {
-							if (Array.isArray(filters[urlKey])) {
-								filters[urlKey] = filters[urlKey].filter(item => item !== filterValue);
-								if (filters[urlKey].length === 0) {
-									filters[urlKey] = null;
+						// Hent oppdaterte filtre
+						const currentFilters = getCurrentFiltersFromURL();
+						
+						if (currentFilters[urlKey]) {
+							if (Array.isArray(currentFilters[urlKey])) {
+								currentFilters[urlKey] = currentFilters[urlKey].filter(item => item !== filterValue);
+								if (currentFilters[urlKey].length === 0) {
+									currentFilters[urlKey] = null;
 								}
 							} else {
-								filters[urlKey] = null;
+								currentFilters[urlKey] = null;
 							}
 						}
 
-						// Behold sorteringsparameterne når et filter fjernes
+						// Behold sorteringsparameterne
 						const updatedFilters = {
-							...filters,
-							sort: filters.sort,
-							order: filters.order
+							...currentFilters,
+							sort: currentFilters.sort,
+							order: currentFilters.order
 						};
 
-						// Uncheck the corresponding checkbox
-						const $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
+						// Uncheck the corresponding checkbox and remove active class from filter chip
+						let $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
 						if (!$checkbox.length) {
 							$checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
 						}
 						if ($checkbox.length) {
 							$checkbox.prop('checked', false);
+							// Update dropdown text using the correct key
+							const dropdownFilterKey = $checkbox.closest('.filter').find('.filter-dropdown-toggle').data('filter');
+							updateDropdownText(dropdownFilterKey, currentFilters[urlKey]);
 						}
 
-						// Update dropdown text using the correct key
-						const dropdownFilterKey = $checkbox.closest('.filter').find('.filter-dropdown-toggle').data('filter');
-						updateDropdownText(dropdownFilterKey, filters[urlKey]);
+						// Remove active class from corresponding filter chip
+						$(`.filter-chip[data-filter="${filterValue}"][data-url-key="${filterKey}"]`).removeClass('active');
 
 						// Update filters and fetch new results
 						updateFiltersAndFetch(updatedFilters);
