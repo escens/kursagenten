@@ -128,7 +128,7 @@ function kursagenten_course_list_shortcode($atts) {
     ];
 
     // Get language from meta fields for course dates
-    $args = [
+    /*$args = [
         'post_type'      => 'coursedate',
         'posts_per_page' => -1,
         'fields'         => 'ids',
@@ -145,7 +145,7 @@ function kursagenten_course_list_shortcode($atts) {
     }
     $language_terms = array_unique($language_terms);
     $taxonomy_data['language']['terms'] = $language_terms;
-
+*/
     // Prepare filter-information
     $filter_display_info = [];
     foreach ($available_filters as $filter_key => $filter_info) {
@@ -214,7 +214,7 @@ function kursagenten_course_list_shortcode($atts) {
                                             <div class="date-range-wrapper">
                                                 <input type="text" 
                                                         id="date-range" 
-                                                        class="<?php echo esc_attr($caleran_class); ?>"
+                                                        class="<?php echo esc_attr($caleran_class); ?> ka-caleran"
                                                         data-filter-key="date"
                                                         data-url-key="dato"
                                                         name="calendar-input"
@@ -222,6 +222,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                         value="<?php echo esc_attr($date); ?>"
                                                         aria-label="Velg datoer">
                                                 <i class="ka-icon icon-chevron-down"></i>
+                                                <a href="#" class="reset-date-filter" style="display: <?php echo $date ? 'block' : 'none'; ?>; font-size: var(--ka-font-xs); color: rgb(235, 121, 121); margin-top: 5px; text-decoration: none;">Nullstill dato</a>
                                             </div>
                                         <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                             <?php if ($filter_types[$filter] === 'chips') : ?>
@@ -343,7 +344,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                     <div class="date-range-wrapper">
                                                         <input type="text" 
                                                                 id="date-range" 
-                                                                class="<?php echo esc_attr($caleran_class); ?>"
+                                                                class="<?php echo esc_attr($caleran_class); ?> ka-caleran"
                                                                 data-filter-key="date"
                                                                 data-url-key="dato"
                                                                 name="calendar-input"
@@ -351,6 +352,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                                 value="<?php echo esc_attr($date); ?>"
                                                                 aria-label="Velg datoer">
                                                         <i class="ka-icon icon-chevron-down"></i>
+                                                        <a href="#" class="reset-date-filter" style="display: <?php echo $date ? 'block' : 'none'; ?>; font-size: var(--ka-font-xs); color: rgb(235, 121, 121); margin-top: 5px; text-decoration: none;">Nullstill dato</a>
                                                     </div>
                                                 <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
                                                     <?php if ($filter_types[$filter] === 'chips') : ?>
@@ -489,8 +491,19 @@ function kursagenten_course_list_shortcode($atts) {
     </script>
     <!-- Mobile Filter Handling -->
     <script type="text/javascript">
-    /*
+    
     jQuery(document).ready(function($) {
+        // Overstyr standard scroll-oppførsel for mobilfiltre
+        $(document).ajaxSuccess(function(event, xhr, settings) {
+            if (settings.data && settings.data.includes('action=filter_courses')) {
+                // Forhindre scroll hvis vi er i mobilvisning og filteroverlay er synlig
+                if ($('.mobile-filter-overlay').is(':visible')) {
+                    event.stopImmediatePropagation();
+                    return false;
+                }
+            }
+        });
+
         // Debug logging
         const DEBUG = true;
         function log(...args) {
@@ -502,13 +515,251 @@ function kursagenten_course_list_shortcode($atts) {
         const mobileOverlay = $('.mobile-filter-overlay');
         const closeFilterBtn = $('.close-filter-button');
         
+        // Hold styr på om filtrene er lastet
+        let mobileFiltersLoaded = false;
+        let isLoadingFilters = false;
+        let mobileCaleranInstance = null;  // Ny global variabel for caleran
+
+        // Funksjon for å initialisere datepicker
+        function initializeDatepicker() {
+            log('Initialiserer datepicker');
+            const mobileDatepicker = document.querySelector('.mobile-filter-content .caleran');
+            const dateWrapper = document.querySelector('.mobile-filter-content .date-range-wrapper');
+            const dateInputMobile = document.getElementById('date-range-mobile');
+            
+            if (mobileDatepicker && dateWrapper) {
+                // Initialiser Caleran for mobil
+                mobileCaleranInstance = caleran(dateInputMobile, {
+                    showOnClick: true,
+                    autoCloseOnSelect: false,
+                    format: "DD.MM.YYYY",
+                    rangeOrientation: "vertical",
+                    calendarCount: 1,
+                    showHeader: true,
+                    showFooter: true,
+                    showButtons: true,
+                    applyLabel: "Bruk",
+                    cancelLabel: "Avbryt",
+                    showOn: "bottom",
+                    arrowOn: "center",
+                    autoAlign: true,
+                    enableSwipe: true,
+                    inline: false,
+                    minDate: moment(),
+                    startEmpty: true,
+                    nextMonthIcon: '<i class="ka-icon icon-chevron-right"></i>',
+                    prevMonthIcon: '<i class="ka-icon icon-chevron-left"></i>',
+                    rangeIcon: '<i class="ka-icon icon-calendar"></i>',
+                    headerSeparator: '<i class="ka-icon icon-chevron-right calendar-header-separator"></i>',
+                    rangeLabel: "Velg periode",
+                    ranges: [
+                        {
+                            title: "Neste uke",
+                            startDate: moment(),
+                            endDate: moment().add(1, 'week')
+                        },
+                        {
+                            title: "Neste 3 måneder",
+                            startDate: moment(),
+                            endDate: moment().add(3, 'month')
+                        },
+                        {
+                            title: "Neste 6 måneder",
+                            startDate: moment(),
+                            endDate: moment().add(6, 'month')
+                        },
+                        {
+                            title: "Resten av året",
+                            startDate: moment(),
+                            endDate: moment().endOf('year')
+                        },
+                        {
+                            title: "Neste år",
+                            startDate: moment().add(1, 'year').startOf('year'),
+                            endDate: moment().add(1, 'year').endOf('year')
+                        }
+                    ],
+                    verticalOffset: 10,
+                    locale: 'nb',
+                    onafterselect: function(caleran, startDate, endDate) {
+                        if (startDate && endDate) {
+                            const fromDate = startDate.format("DD.MM.YYYY");
+                            const toDate = endDate.format("DD.MM.YYYY");
+                            // Oppdater URL med nye datoer
+                            const currentFilters = getCurrentFiltersFromURL();
+                            const updatedFilters = {
+                                ...currentFilters,
+                                dato: `${fromDate}-${toDate}`
+                            };
+                            updateURLParams(updatedFilters);
+                            
+                            // Vis nullstill-knappen
+                            const resetBtn = dateWrapper.nextElementSibling;
+                            if (resetBtn && resetBtn.classList.contains('reset-date-filter')) {
+                                resetBtn.style.display = 'block';
+                            }
+                        }
+                    },
+                    oncancel: function() {
+                        // Fjern dato fra URL
+                        const currentFilters = getCurrentFiltersFromURL();
+                        delete currentFilters.dato;
+                        updateURLParams(currentFilters);
+                        
+                        // Skjul nullstill-knappen
+                        const resetBtn = dateWrapper.nextElementSibling;
+                        if (resetBtn && resetBtn.classList.contains('reset-date-filter')) {
+                            resetBtn.style.display = 'none';
+                        }
+                    }
+                });
+
+                // Legg til event listener for nullstill-knappen
+                document.querySelectorAll('.reset-date-filter').forEach(function(resetBtn) {
+                    resetBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        log('Nullstill dato klikket');
+                        
+                        // Finn datoinput og nullstill den
+                        const dateInput = this.parentElement.querySelector('.ka-caleran');
+                        if (dateInput) {
+                            dateInput.value = '';
+                            this.style.display = 'none';
+                        }
+                        
+                        // Nullstill Caleran-instansen hvis den eksisterer
+                        if (mobileCaleranInstance) {
+                            mobileCaleranInstance.clearInput();
+                            mobileCaleranInstance.clear();
+                        }
+                        
+                        // Oppdater URL uten å laste siden på nytt
+                        const currentFilters = getCurrentFiltersFromURL();
+                        delete currentFilters.dato;
+                        const queryString = Object.entries(currentFilters)
+                            .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`)
+                            .join('&');
+                        
+                        const newUrl = `${window.location.pathname}${queryString ? '?' + queryString : ''}`;
+                        window.history.pushState({}, '', newUrl);
+                        
+                        // Trigger AJAX-oppdatering av resultater
+                        $.ajax({
+                            url: kurskalender_data.ajax_url,
+                            type: 'POST',
+                            data: {
+                                action: 'filter_courses',
+                                nonce: kurskalender_data.filter_nonce,
+                                ...currentFilters
+                            },
+                            beforeSend: function() {
+                                $('.course-loading').show();
+                            },
+                            success: function(response) {
+                                if (response.success) {
+                                    $('#filter-results').html(response.data.html);
+                                    $('#course-count').html(response.data.count);
+                                }
+                            },
+                            complete: function() {
+                                $('.course-loading').hide();
+                            }
+                        });
+                    });
+                });
+
+                // Oppdater visning av nullstill-knapp når dato velges
+                if (dateInputMobile) {
+                    const observer = new MutationObserver(function(mutations) {
+                        mutations.forEach(function(mutation) {
+                            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                                const resetBtn = dateWrapper.querySelector('.reset-date-filter');
+                                if (resetBtn) {
+                                    resetBtn.style.display = dateInputMobile.value ? 'block' : 'none';
+                                }
+                            }
+                        });
+                    });
+                    observer.observe(dateInputMobile, { attributes: true });
+                }
+            }
+        }
+
+        // Event listener for "Nullstill filter"
+        $('.mobile-filter-content .reset-filters-button').on('click', function() {
+            log('Reset klikket');
+            $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+            if (mobileCaleranInstance) {
+                mobileCaleranInstance.clearInput();
+            }
+            $('.mobile-filter-content .filter-search').val('');
+            updateFilters();
+        });
+
+        // Funksjon for å hente aktive filtre fra URL
+        function getActiveFiltersFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const activeFilters = {};
+            
+            // Liste over alle mulige filter-parametre
+            const filterParams = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'search'];
+            
+            filterParams.forEach(param => {
+                if (urlParams.has(param)) {
+                    activeFilters[param] = urlParams.get(param).split(',');
+                }
+            });
+            
+            log('Aktive filtre fra URL:', activeFilters);
+            return activeFilters;
+        }
+
+        // Funksjon for å gjenopprette aktive filtre
+        function restoreActiveFilters() {
+            const activeFilters = getActiveFiltersFromUrl();
+            
+            // Gjenopprett søk
+            if (activeFilters.search) {
+                $('.mobile-filter-content .filter-search').val(activeFilters.search);
+            }
+            
+            // Gjenopprett dato
+            if (activeFilters.dato) {
+                $('.mobile-filter-content .caleran').val(activeFilters.dato);
+            }
+            
+            // Gjenopprett chips
+            $('.mobile-filter-content .filter-chip').each(function() {
+                const urlKey = $(this).data('url-key');
+                const filterValue = $(this).data('filter');
+                
+                if (activeFilters[urlKey] && activeFilters[urlKey].includes(filterValue)) {
+                    $(this).addClass('active');
+                }
+            });
+            
+            // Gjenopprett checkboxes
+            $('.mobile-filter-content .filter-checkbox').each(function() {
+                const urlKey = $(this).data('url-key');
+                const filterValue = $(this).val();
+                
+                if (activeFilters[urlKey] && activeFilters[urlKey].includes(filterValue)) {
+                    $(this).prop('checked', true);
+                }
+            });
+            
+            log('Gjenopprettet aktive filtre');
+        }
+        
         if (filterToggleBtn.length) {
             filterToggleBtn.on('click', function() {
                 log('Filter-knapp klikket');
-                if (mobileOverlay.length) {
-                    initializeMobileFilters();
-                    mobileOverlay.css('display', 'flex');
-                    $('body').css('overflow', 'hidden');
+                if (mobileOverlay.length && !isLoadingFilters) {
+                    if (!mobileFiltersLoaded) {
+                        loadMobileFilters();
+                    } else {
+                        showMobileFilters();
+                    }
                 }
             });
         }
@@ -516,49 +767,224 @@ function kursagenten_course_list_shortcode($atts) {
         if (closeFilterBtn.length) {
             closeFilterBtn.on('click', function() {
                 log('Lukk-knapp klikket');
-                if (mobileOverlay.length) {
-                    mobileOverlay.css('display', 'none');
-                    $('body').css('overflow', 'auto');
+                hideMobileFilters();
+            });
+        }
+
+        function showMobileFilters() {
+            mobileOverlay.css('display', 'flex');
+            $('body').css('overflow', 'hidden');
+            // Gjenopprett aktive filtre når overlay vises
+            restoreActiveFilters();
+        }
+
+        function hideMobileFilters() {
+            mobileOverlay.css('display', 'none');
+            $('body').css('overflow', 'auto');
+        }
+
+        // Funksjon for å laste mobilfiltre via AJAX
+        function loadMobileFilters() {
+            if (isLoadingFilters) return;
+            isLoadingFilters = true;
+            
+            log('Laster mobilfiltre via AJAX');
+            
+            // Vis lasteindikatorer
+            const loadingHtml = '<div class="mobile-filter-loading"><div class="loading-spinner"></div></div>';
+            $('.mobile-filter-content').remove(); // Fjern eventuelt eksisterende innhold
+            mobileOverlay.append(loadingHtml);
+            showMobileFilters();
+
+            $.ajax({
+                url: kurskalender_data.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'load_mobile_filters',
+                    nonce: kurskalender_data.filter_nonce
+                },
+                success: function(response) {
+                    log('Mottok AJAX-respons:', response);
+                    
+                    if (response.success && response.data && response.data.html) {
+                        log('Mobilfiltre lastet');
+                        $('.mobile-filter-loading').remove();
+                        mobileOverlay.append(response.data.html);
+                        mobileFiltersLoaded = true;
+                        initializeMobileFilterEvents();
+                        // Gjenopprett aktive filtre etter at innholdet er lastet
+                        restoreActiveFilters();
+                    } else {
+                        log('Feil i AJAX-respons:', response);
+                        showError('Kunne ikke laste filtrene. Vennligst prøv igjen.');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    log('Feil ved lasting av mobilfiltre:', error);
+                    showError('Kunne ikke laste filtrene. Vennligst prøv igjen.');
+                },
+                complete: function() {
+                    isLoadingFilters = false;
                 }
             });
         }
 
-        // Funksjon for å flytte filtre til mobil container
-        function initializeMobileFilters() {
-            log('Initialiserer mobilfiltre');
-            const mobileContent = $('.mobile-filter-content');
-            if (!mobileContent.length) return;
+        function showError(message) {
+            $('.mobile-filter-loading').remove();
+            const errorHtml = `
+                <div class="mobile-filter-error">
+                    <p>${message}</p>
+                    <button class="retry-button">Prøv igjen</button>
+                </div>
+            `;
+            mobileOverlay.append(errorHtml);
             
-            // Tøm mobil container først
-            mobileContent.empty();
+            // Legg til event listener for retry-knappen
+            $('.retry-button').on('click', function() {
+                $('.mobile-filter-error').remove();
+                loadMobileFilters();
+            });
+        }
 
-            // Samle alle filtre fra både topp og venstre
-            const topFilters = $('.filter-container.filter-top .filter-item');
-            const leftFilters = $('.left-filter-section .filter-item');
-            
-            // Legg til i mobil container
-            if (topFilters.length || leftFilters.length) {
-                // Flytt filtrene til mobil container istedenfor å klone dem
-                const filters = topFilters.add(leftFilters).detach();
-                
-                filters.each(function() {
-                    const section = $('<div>').addClass('mobile-filter-section');
-                    section.append($(this));
-                    mobileContent.append(section);
-                });
-
-                // Legg til footer med knapper
-                const footer = $('<div>').addClass('mobile-filter-footer')
-                    .append('<button class="apply-filters-button">Vis resultater</button>')
-                    .append('<button class="reset-filters-button">Nullstill filter</button>');
-                
-                mobileContent.append(footer);
+        // Hjelpefunksjoner for å håndtere URL-parametre
+        function getCurrentFiltersFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filters = {};
+            for (const [key, value] of urlParams.entries()) {
+                filters[key] = value;
             }
+            return filters;
+        }
+
+        function updateURLParams(params) {
+            const url = new URL(window.location);
+            Object.keys(params).forEach(key => {
+                if (params[key] === null || params[key] === undefined) {
+                    url.searchParams.delete(key);
+                } else {
+                    url.searchParams.set(key, params[key]);
+                }
+            });
+            window.history.pushState({}, '', url);
+        }
+
+        // Funksjon for å initialisere event listeners på mobilfiltre
+        function initializeMobileFilterEvents() {
+            // Event listener for checkboxes
+            $('.mobile-filter-content .filter-checkbox').on('change', function() {
+                // Checkbox handling håndteres automatisk av browseren
+            });
+
+            // Sjekk om det finnes en dato i URL-en og vis nullstill-knappen hvis det gjør det
+            const urlParams = new URLSearchParams(window.location.search);
+            const dateParam = urlParams.get('dato');
+            if (dateParam) {
+                document.querySelectorAll('.reset-date-filter').forEach(function(resetBtn) {
+                    resetBtn.style.display = 'block';
+                });
+            }
+
+            // Initialiser datepicker
+            initializeDatepicker();
+
+            // Event listener for søk
+            $('.mobile-filter-content .filter-search').on('input', function() {
+                // Søk håndteres når man klikker "Vis resultater"
+            });
+
+            // Event listener for "Vis resultater"
+            $('.mobile-filter-content .apply-filters-button').on('click', function() {
+                log('Vis resultater klikket');
+                updateFilters();
+                hideMobileFilters();
+            });
+
+            // Event listener for "Nullstill filter"
+            $('.mobile-filter-content .reset-filters-button').on('click', function() {
+                log('Reset klikket');
+                $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+                $('.mobile-filter-content .caleran').val('').trigger('change');
+                $('.mobile-filter-content .filter-search').val('');
+                updateFilters();
+            });
+
+            // Legg til event listener for nullstilling av dato
+            document.querySelectorAll('.reset-date-filter').forEach(function(resetBtn) {
+                resetBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const dateInput = this.parentElement.querySelector('.ka-caleran');
+                    if (dateInput && mobileCaleranInstance) {
+                        dateInput.value = '';
+                        this.style.display = 'none';
+                        
+                        // Fjern dato fra URL og oppdater filtre
+                        const currentFilters = getCurrentFiltersFromURL();
+                        delete currentFilters.dato;
+                        updateURLParams(currentFilters);
+                    }
+                });
+            });
+
+            // Oppdater visning av nullstill-knapp når dato velges
+            const dateInput = document.querySelector('.ka-caleran');
+            if (dateInput) {
+                const resetBtn = dateInput.parentElement.querySelector('.reset-date-filter');
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                            resetBtn.style.display = dateInput.value ? 'block' : 'none';
+                        }
+                    });
+                });
+                observer.observe(dateInput, { attributes: true });
+            }
+        }
+
+        // Funksjon for å oppdatere filtre og URL
+        function updateFilters() {
+            const filters = {};
+            
+            // Samle alle aktive filtre
+            $('.mobile-filter-content .filter-chip.active').each(function() {
+                const filterKey = $(this).data('url-key');
+                const filterValue = $(this).data('filter');
+                if (!filters[filterKey]) {
+                    filters[filterKey] = [];
+                }
+                filters[filterKey].push(filterValue);
+            });
+
+            $('.mobile-filter-content .filter-checkbox:checked').each(function() {
+                const filterKey = $(this).data('url-key');
+                const filterValue = $(this).val();
+                if (!filters[filterKey]) {
+                    filters[filterKey] = [];
+                }
+                filters[filterKey].push(filterValue);
+            });
+
+            // Håndter dato-filter
+            const dateRange = $('.mobile-filter-content .caleran').val();
+            if (dateRange) {
+                filters['dato'] = dateRange;
+            }
+
+            // Håndter søk
+            const searchTerm = $('.mobile-filter-content .filter-search').val();
+            if (searchTerm) {
+                filters['search'] = searchTerm;
+            }
+
+            // Oppdater URL og last inn nye resultater
+            const queryString = Object.entries(filters)
+                .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`)
+                .join('&');
+
+            window.location.href = `${window.location.pathname}?${queryString}`;
         }
 
         // Initialiser mobilfiltre ved lasting og ved vindustørrelse-endring
         let isMobile = window.innerWidth <= 768;
-        let originalFilterContainers = null;
         
         function handleResize() {
             const wasMobile = isMobile;
@@ -568,24 +994,7 @@ function kursagenten_course_list_shortcode($atts) {
                 filterToggleBtn.show();
             } else {
                 filterToggleBtn.hide();
-                if (mobileOverlay.length) {
-                    mobileOverlay.hide();
-                    $('body').css('overflow', 'auto');
-                    
-                    // Flytt filtrene tilbake til original plassering
-                    const mobileFilters = $('.mobile-filter-content .filter-item');
-                    if (mobileFilters.length) {
-                        const topFilters = mobileFilters.filter((i, el) => {
-                            return $(el).find('[data-original-container="top"]').length;
-                        });
-                        const leftFilters = mobileFilters.filter((i, el) => {
-                            return $(el).find('[data-original-container="left"]').length;
-                        });
-                        
-                        $('.filter-container.filter-top').append(topFilters);
-                        $('.left-filter-section').append(leftFilters);
-                    }
-                }
+                hideMobileFilters();
             }
         }
 
@@ -594,28 +1003,19 @@ function kursagenten_course_list_shortcode($atts) {
         
         // Lytt på vindustørrelse-endringer
         $(window).on('resize', handleResize);
-
-        // Håndter filter-knapper på mobil
-        $(document).on('click', '.mobile-filter-overlay .apply-filters-button', function() {
-            log('Vis resultater klikket');
-            if (mobileOverlay.length) {
-                mobileOverlay.hide();
-                $('body').css('overflow', 'auto');
-            }
-        });
-
-        $(document).on('click', '.mobile-filter-overlay .reset-filters-button', function() {
-            log('Reset klikket');
-            // Trigger eksisterende reset-funksjonalitet
-            $('#reset-filters').trigger('click');
-        });
-
-        // Merk filtre med original plassering
-        $('.filter-container.filter-top .filter-item [data-filter-key]').attr('data-original-container', 'top');
-        $('.left-filter-section .filter-item [data-filter-key]').attr('data-original-container', 'left');
     });
-    */
+   
     </script>
+    <style>
+        .kag .mobile-filter-overlay .filter-list {
+            font-size: 17px;
+        }
+        .kag .mobile-filter-overlay .filter-list-item .checkbox-label {
+
+            margin-top: -4px;
+        }
+
+    </style>
     <?php
 
     // Return the buffered content

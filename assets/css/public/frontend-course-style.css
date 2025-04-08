@@ -156,7 +156,7 @@ border-radius: 10px;
 }
 /* --Icons */
 /**********/
-#ka i.ka-icon {
+.kag i.ka-icon {
 display: inline-block;
 width: 30px;
 height: 17px;
@@ -1061,35 +1061,48 @@ font-size: var(--ka-filter-font-size);
 
 /* Filter: date picker */
 /************************/
-#ka i.ka-icon.calendar-header-separator {
+i.ka-icon.calendar-header-separator {
   background-color: #b8d6ed;
   height: 27px;
 }
-#ka .caleran-container .caleran-input .caleran-header .caleran-header-start .caleran-header-start-day, #ka .caleran-container .caleran-input .caleran-header .caleran-header-start .caleran-header-end-day, #ka .caleran-container .caleran-input .caleran-header .caleran-header-end .caleran-header-start-day, #ka .caleran-container .caleran-input .caleran-header .caleran-header-end .caleran-header-end-day, #ka .caleran-container-mobile .caleran-input .caleran-header .caleran-header-start .caleran-header-start-day, #ka .caleran-container-mobile .caleran-input .caleran-header .caleran-header-start .caleran-header-end-day, #ka .caleran-container-mobile .caleran-input .caleran-header .caleran-header-end .caleran-header-start-day, #ka .caleran-container-mobile .caleran-input .caleran-header .caleran-header-end .caleran-header-end-day {
+.kag .caleran-container .caleran-input .caleran-header .caleran-header-start .caleran-header-start-day, .kag .caleran-container .caleran-input .caleran-header .caleran-header-start .caleran-header-end-day, .kag .caleran-container .caleran-input .caleran-header .caleran-header-end .caleran-header-start-day, .kag .caleran-container .caleran-input .caleran-header .caleran-header-end .caleran-header-end-day, .kag .caleran-container-mobile .caleran-input .caleran-header .caleran-header-start .caleran-header-start-day, .kag .caleran-container-mobile .caleran-input .caleran-header .caleran-header-start .caleran-header-end-day, .kag .caleran-container-mobile .caleran-input .caleran-header .caleran-header-end .caleran-header-start-day, .kag .caleran-container-mobile .caleran-input .caleran-header .caleran-header-end .caleran-header-end-day {
 color: #1885fc!important;
 }
-#ka .caleran-container .caleran-input .caleran-ranges .caleran-range, #ka .caleran-container-mobile .caleran-input .caleran-ranges .caleran-range {
+.kag .caleran-container .caleran-input .caleran-ranges .caleran-range, .kag .caleran-container-mobile .caleran-input .caleran-ranges .caleran-range {
 color: #494949!important;
 font-weight: normal!important;
 }
-#ka .caleran-container .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range, 
-#ka .caleran-container-mobile .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range {
+.kag .caleran-container .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range, 
+.kag .caleran-container-mobile .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range,
+.kag .caleran-container-mobile .caleran-input .caleran-ranges .caleran-range {
 background: #f8f8ff59!important;
 }
-#ka .caleran-container .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range:hover, 
-#ka .caleran-container-mobile .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range:hover {
+.kag .caleran-container .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range:hover, 
+.kag .caleran-container-mobile .caleran-input.caleran-input-vertical-range .caleran-right .caleran-ranges .caleran-range:hover,
+.kag .caleran-container-mobile .caleran-input .caleran-ranges .caleran-range:hover {
 background: #f8f8ff!important;
 text-decoration: none!important;
 }
+.kag .caleran-container-mobile .caleran-input .caleran-ranges .caleran-range{
+  border: 1px solid #eee;
+}
+.kag .caleran-container-mobile .caleran-input .caleran-footer button.caleran-apply {
+  background: #1783ff;
+  border: 1px solid #1783ff;
+}
+.kag .caleran-container-mobile .caleran-input .caleran-footer button.caleran-cancel {
+  color: #1783ff;
+  border: 1px solid #1783ff;
+}
 /* Font and Placeholder styling for date picker input */
-#ka .date-range-wrapper input {
+.kag .date-range-wrapper input {
   color: #636363;
   font-size: var(--ka-filter-font-size);
   width: 145px;
   padding-right: 30px; /* Gjør plass til ikonet */
 }
 
-#ka .date-range-wrapper .ka-icon {
+.kag .date-range-wrapper .ka-icon {
   position: absolute;
   right: 13px;
   top: 50%;
@@ -1098,16 +1111,16 @@ text-decoration: none!important;
   height: 14px;
   pointer-events: none; /* Sikrer at ikonet ikke forstyrrer klikk på input */
 }
-#ka .date-range-wrapper input::placeholder {
+.kag .date-range-wrapper input::placeholder {
     color: #333;
     font-size: var(--ka-filter-font-size);
     opacity: 1;
 }
 
 /* For eldre nettlesere */
-#ka .date-range-wrapper input::-webkit-input-placeholder,/* Chrome/Safari/Opera */
-#ka .date-range-wrapper input::-moz-placeholder,/* Firefox */
-#ka .date-range-wrapper input:-ms-input-placeholder /* IE/Edge */ { 
+.kag .date-range-wrapper input::-webkit-input-placeholder,/* Chrome/Safari/Opera */
+.kag .date-range-wrapper input::-moz-placeholder,/* Firefox */
+.kag .date-range-wrapper input:-ms-input-placeholder /* IE/Edge */ { 
     color: #333;
     opacity: 1;
 }
@@ -1220,6 +1233,51 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 
 /* FILTER MOBILE  */
 /******************/
+
+/* Filter loading og error states */
+/********************************/
+#ka .mobile-filter-loading,
+#ka .mobile-filter-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2em;
+    text-align: center;
+    min-height: 200px;
+}
+
+#ka .loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid var(--ka-color-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#ka .mobile-filter-error {
+    color: #666;
+}
+
+#ka .mobile-filter-error .retry-button {
+    margin-top: 1em;
+    padding: 0.5em 1em;
+    background: var(--ka-color-accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#ka .mobile-filter-error .retry-button:hover {
+    background: var(--ka-color-accent-dark);
+}
 
 /* Filter button styling */
 /************************/

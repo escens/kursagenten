@@ -205,3 +205,56 @@ function handle_course_filter() {
     $query = new WP_Query($args);
 
 }
+
+// Legg til AJAX-handler for mobilfiltre
+add_action('wp_ajax_load_mobile_filters', 'ka_load_mobile_filters');
+add_action('wp_ajax_nopriv_load_mobile_filters', 'ka_load_mobile_filters');
+
+function ka_load_mobile_filters() {
+    try {
+        if (!check_ajax_referer('filter_nonce', 'nonce', false)) {
+            wp_send_json_error(['message' => 'Invalid nonce']);
+            return;
+        }
+        
+        // Last inn nødvendige filer
+        if (!function_exists('get_course_languages')) {
+            $queries_path = KURSAG_PLUGIN_DIR . 'public/templates/includes/queries.php';
+            if (!file_exists($queries_path)) {
+                error_log('Could not find queries.php at: ' . $queries_path);
+                wp_send_json_error(['message' => 'Required files not found']);
+                return;
+            }
+            require_once $queries_path;
+        }
+        
+        // Last inn mobilfilter-malen
+        $template_path = KURSAG_PLUGIN_DIR . 'public/templates/mobile-filters.php';
+        
+        error_log('Looking for template at: ' . $template_path);
+        
+        if (!file_exists($template_path)) {
+            error_log('Template file not found at: ' . $template_path);
+            wp_send_json_error(['message' => 'Template file not found: ' . $template_path]);
+            return;
+        }
+        
+        // Start output buffering
+        ob_start();
+        include $template_path;
+        $html = ob_get_clean();
+        
+        if (empty($html)) {
+            error_log('Empty template content from: ' . $template_path);
+            wp_send_json_error(['message' => 'Empty template content']);
+            return;
+        }
+        
+        error_log('Successfully loaded mobile filters template. Content length: ' . strlen($html));
+        wp_send_json_success(['html' => $html]);
+        
+    } catch (Exception $e) {
+        error_log('Error in ka_load_mobile_filters: ' . $e->getMessage());
+        wp_send_json_error(['message' => 'En feil oppstod: ' . $e->getMessage()]);
+    }
+}

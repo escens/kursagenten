@@ -234,7 +234,7 @@ function get_course_dates_query($args = []) {
 	];
 
 	// Log default args
-	error_log('Default args: ' . print_r($default_args, true));
+	//error_log('Default args: ' . print_r($default_args, true));
 
 	// Hent alle termer først
 	$all_terms = get_terms([
@@ -267,7 +267,7 @@ function get_course_dates_query($args = []) {
 	$query_args = wp_parse_args($args, $default_args);
 
 	// Log query args before filters
-	error_log('Query args before filters: ' . print_r($query_args, true));
+	//error_log('Query args before filters: ' . print_r($query_args, true));
 
 	// Behandle alle filtre fra URL-parametere
 	foreach ($param_mapping as $db_field => $param_name) {
@@ -392,13 +392,13 @@ function get_course_dates_query($args = []) {
 	}
 
 	// Log final query args
-	error_log('Final query args: ' . print_r($query_args, true));
+	//error_log('Final query args: ' . print_r($query_args, true));
 
 	$query = new WP_Query($query_args);
 
 	// Log query results
-	error_log('Query found posts: ' . $query->found_posts);
-	error_log('Query SQL: ' . $query->request);
+	//error_log('Query found posts: ' . $query->found_posts);
+	//error_log('Query SQL: ' . $query->request);
 
 	return $query;
 }
@@ -453,7 +453,32 @@ function get_course_info_by_location($related_course_id) {
 }
 
 function get_course_languages() {
-    // ... eksisterende kode ...
+    $args = [
+        'post_type'      => 'coursedate',
+        'posts_per_page' => -1,
+        'fields'         => 'ids',
+    ];
+
+    $coursedates = get_posts($args);
+    $language_terms = [];
+
+    foreach ($coursedates as $post_id) {
+        $meta_language = get_post_meta($post_id, 'course_language', true);
+        if (!empty($meta_language)) {
+            $language_terms[] = (object) [
+                'slug' => strtolower($meta_language),
+                'name' => ucfirst($meta_language),
+                'value' => strtolower($meta_language)
+            ];
+        }
+    }
+
+    // Sorter språkene alfabetisk
+    usort($language_terms, function($a, $b) {
+        return strcmp($a->name, $b->name);
+    });
+
+    return array_unique($language_terms, SORT_REGULAR);
 }
 
 /**

@@ -205,9 +205,9 @@ function kursagenten_add_body_classes($classes) {
     }
     
     if (isset($layout) && $layout === 'full-width') {
-        $classes[] = 'kursagenten-full-width';
+        $classes[] = 'kag kursagenten-full-width';
     } else {
-        $classes[] = 'ka-default-width';
+        $classes[] = 'kag ka-default-width';
     }
     
     return $classes;

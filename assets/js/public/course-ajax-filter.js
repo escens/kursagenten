@@ -440,7 +440,7 @@
 						};
 
 						// Uncheck the corresponding checkbox
-						const $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
+						let $checkbox = $(`.filter-checkbox[data-url-key="${filterKey}"][value="${filterValue}"]`);
 						if (!$checkbox.length) {
 							$checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
 						}
@@ -451,6 +451,9 @@
 						// Update dropdown text using the correct key
 						const dropdownFilterKey = $checkbox.closest('.filter').find('.filter-dropdown-toggle').data('filter');
 						updateDropdownText(dropdownFilterKey, filters[urlKey]);
+						
+						// Remove active class from corresponding filter chip
+						$(`.filter-chip[data-filter="${filterValue}"][data-url-key="${filterKey}"]`).removeClass('active');
 
 						// Update filters and fetch new results
 						updateFiltersAndFetch(updatedFilters);
