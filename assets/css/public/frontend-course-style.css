@@ -834,11 +834,12 @@ text-align: center;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 5px 10px;
+  padding: 5px 10px 7px;
   background: #fff;
   border: 1px solid #e9e9e9;
   border-radius: 5px;
   cursor: pointer;
+  font-size: var(--ka-filter-font-size);
 }
 
 #ka .filter-dropdown-toggle span:first-child {
@@ -1095,11 +1096,12 @@ text-decoration: none!important;
   border: 1px solid #1783ff;
 }
 /* Font and Placeholder styling for date picker input */
-.kag .date-range-wrapper input {
+.kag #ka .date-range-wrapper input {
   color: #636363;
   font-size: var(--ka-filter-font-size);
   width: 145px;
   padding-right: 30px; /* Gjør plass til ikonet */
+  padding: 5px 30px 6px 10px
 }
 
 .kag .date-range-wrapper .ka-icon {

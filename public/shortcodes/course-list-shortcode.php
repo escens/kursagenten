@@ -52,6 +52,7 @@ function kursagenten_course_list_shortcode($atts) {
     wp_enqueue_script('kursagenten-datepicker-moment', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/moment.min.js', array(), KURSAG_VERSION);
     wp_enqueue_script('kursagenten-datepicker-script', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/caleran.min.js', ['kursagenten-datepicker-moment'], KURSAG_VERSION);
     wp_enqueue_script('kursagenten-accordion_script', KURSAG_PLUGIN_URL . '/assets/js/public/course-accordion.js', array(), KURSAG_VERSION);
+    wp_enqueue_script('kursagenten-expand-content', KURSAG_PLUGIN_URL . '/assets/js/public/course-expand-content.js', array(), KURSAG_VERSION);
 
     // Localize script with necessary data
     wp_localize_script(
@@ -367,7 +368,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                             <?php endforeach; ?>
                                                         </div>
                                                     <?php elseif ($filter_types[$filter] === 'list') : ?>
-                                                        <div id="filter-list-location" class="filter-list expand-content" data-size="100">
+                                                        <div id="filter-list-location" class="filter-list expand-content" data-size="130">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <label class="filter-list-item checkbox">
 
