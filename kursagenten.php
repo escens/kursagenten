@@ -434,8 +434,8 @@ class Kursagenten_GitHub_Updater {
         
         $this->plugin = $plugin_file;
         $this->slug = plugin_basename($this->plugin);
-        $this->username = 'Kursagenten'; // Organisasjonsnavn
-        $this->repo = 'WP-Kursagenten-plugin'; // Repository navn
+        $this->username = 'escens'; // GitHub brukernavn
+        $this->repo = 'kursagenten'; // Repository navn
         $this->access_token = ''; // GitHub access token (må settes)
     }
 
