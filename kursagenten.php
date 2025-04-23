@@ -445,7 +445,7 @@ class Kursagenten_GitHub_Updater {
     /**
      * Hent repository informasjon fra GitHub
      */
-    private function get_repository_info() {
+    public function get_repository_info() {
         if (false !== $this->github_response) {
             return $this->github_response;
         }
@@ -515,12 +515,12 @@ class Kursagenten_GitHub_Updater {
             return $transient;
         }
 
-        $this->get_repository_info();
+        $github_response = $this->get_repository_info();
 
-        if (false !== $this->github_response) {
+        if (false !== $github_response && isset($github_response['tag_name'])) {
             $plugin_data = get_plugin_data($this->plugin);
             $current_version = $plugin_data['Version'];
-            $github_version = $this->github_response['tag_name'];
+            $github_version = $github_response['tag_name'];
 
             // Fjern tidsstempel fra nåværende versjon for sammenligning
             $clean_current_version = preg_replace('/-dev-\d+$/', '', $current_version);
@@ -534,13 +534,13 @@ class Kursagenten_GitHub_Updater {
 
             if (version_compare($github_version, $clean_current_version, '>')) {
                 // Sjekk om zipball_url er tilgjengelig
-                if (empty($this->github_response['zipball_url'])) {
+                if (empty($github_response['zipball_url'])) {
                     $this->log_error('Feil: zipball_url er ikke tilgjengelig i GitHub-responsen');
                     return $transient;
                 }
 
                 // Legg til token i zipball_url
-                $package_url = $this->github_response['zipball_url'];
+                $package_url = $github_response['zipball_url'];
                 if (!empty($this->access_token)) {
                     $package_url = add_query_arg('access_token', $this->access_token, $package_url);
                 }
@@ -563,68 +563,10 @@ class Kursagenten_GitHub_Updater {
                 }
 
                 $response_code = wp_remote_retrieve_response_code($test_response);
-                $response_body = wp_remote_retrieve_body($test_response);
-                $response_headers = wp_remote_retrieve_headers($test_response);
-                
-                $this->log_error(sprintf(
-                    'Test respons: Kode: %d, Headers: %s, Body: %s',
-                    $response_code,
-                    print_r($response_headers, true),
-                    $response_body
-                ));
-                
                 if ($response_code !== 200) {
-                    $error_message = sprintf(
-                        'Feil ved testing av nedlastingslenke: Uventet responskode %d. Respons: %s',
-                        $response_code,
-                        $response_body
-                    );
-                    
-                    // Spesifikk håndtering av vanlige feilkoder
-                    switch ($response_code) {
-                        case 401:
-                            $error_message .= ' (Unauthorized - Sjekk at tokenet er gyldig og har riktige rettigheter)';
-                            break;
-                        case 403:
-                            $error_message .= ' (Forbidden - Sjekk at tokenet har tilgang til repository)';
-                            break;
-                        case 404:
-                            $error_message .= ' (Not Found - Sjekk at repository-navnet er korrekt)';
-                            break;
-                    }
-                    
-                    $this->log_error($error_message);
-                    return $transient;
-                }
-
-                // Test om vi kan laste ned filen
-                $download_test = wp_remote_get($package_url, array(
-                    'timeout' => 30,
-                    'headers' => array(
-                        'Accept' => '*/*',
-                        'User-Agent' => 'WordPress/' . get_bloginfo('version'),
-                        'Authorization' => 'token ' . $this->access_token
-                    )
-                ));
-
-                if (is_wp_error($download_test)) {
-                    $this->log_error('Feil ved nedlastingstest: ' . $download_test->get_error_message());
-                    return $transient;
-                }
-
-                $download_code = wp_remote_retrieve_response_code($download_test);
-                $download_headers = wp_remote_retrieve_headers($download_test);
-                
-                $this->log_error(sprintf(
-                    'Nedlastingstest: Kode: %d, Headers: %s',
-                    $download_code,
-                    print_r($download_headers, true)
-                ));
-
-                if ($download_code !== 200) {
                     $this->log_error(sprintf(
-                        'Nedlastingstest feilet: Kode %d',
-                        $download_code
+                        'Feil ved testing av nedlastingslenke: Kode %d',
+                        $response_code
                     ));
                     return $transient;
                 }
@@ -634,7 +576,7 @@ class Kursagenten_GitHub_Updater {
                     'slug' => $this->slug,
                     'plugin' => $this->plugin,
                     'new_version' => $github_version,
-                    'url' => $this->github_response['html_url'],
+                    'url' => $github_response['html_url'],
                     'package' => $package_url,
                     'requires' => '6.0',
                     'tested' => '6.4',
@@ -650,8 +592,8 @@ class Kursagenten_GitHub_Updater {
                         'high' => ''
                     ),
                     'sections' => array(
-                        'description' => $this->github_response['body'],
-                        'changelog' => $this->github_response['body']
+                        'description' => $github_response['body'],
+                        'changelog' => $github_response['body']
                     )
                 );
 
@@ -662,6 +604,8 @@ class Kursagenten_GitHub_Updater {
             } else {
                 $this->log_error('Ingen nyere versjon funnet');
             }
+        } else {
+            $this->log_error('Kunne ikke hente GitHub informasjon');
         }
 
         return $transient;
