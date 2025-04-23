@@ -109,7 +109,7 @@
                     <div><a href="<?php echo esc_url(Designmaler::get_system_page_url('kurs')); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
                     <div class="taxonomy-list horizontal">
                         <?php if (!empty($coursecategory_links)) : ?>
-                            <i class="ka-icon icon-tag"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
+                            <i class="ka-icon icon-vertical-bars"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -119,7 +119,7 @@
                             <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
                         </a>
                     <?php endif; ?>
-                    <a href="#" class="button">Legg til i ønskeliste</a>
+                    <!--<a href="#" class="button">Legg til i ønskeliste</a>-->
                 </div>
             </div>
         </div>

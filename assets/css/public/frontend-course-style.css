@@ -1,5 +1,5 @@
 :root {
-  --ka-max-width: 1300px;
+ /* --ka-max-width: 1300px;
   --ka-color: hsl(32, 96%, 49%);
   --ka-color-dark: hsl(32, 96%, 45%);
   --ka-color-lighter: hsl(32, 96%, 65%);
@@ -7,12 +7,14 @@
   --ka-color-light-hover: hsl(32, 96%, 95%);
   --ka-color-light-active: hsl(32, 96%, 98%);
   --ka-color-accent: hsl(310, 45%, 52%);
-  --ka-color-accent-hover: hsl(310, 45%, 58%);
+  --ka-color-accent-hover: hsl(310, 45%, 58%);*/
   --ka-color-accent-active: hsl(310, 45%, 64%);
   --ka-color-accent-disabled: hsl(310, 45%, 70%);
   --ka-color-accent-light: hsl(310, 45%, 90%);
   --ka-color-accent-dark: hsl(310, 45%, 30%);
   --ka-alt-background: color-mix(in hsl, var(--ka-color), white 90%);
+
+  --ka-color-filter: #494949;
   /* Base sizes - kan justeres etter behov */
   --ka-base-font: 16px;
   --ka-scale-ratio: 1.2;  /* Major Third scale */
@@ -35,7 +37,9 @@
   --ka-font-size-medium: 1rem;
   --ka-font-size-large: 1.25rem;
   --ka-font-size-xlarge: 1.5rem;
-  --ka-shadow-darker: 0px 10px 40px 0px rgba(26, 46, 85, 0.07);
+
+  --ka-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.11);
+  --ka-shadow-darker: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
   --ka-shadow-darker2: 0px 20px 50px 0px rgba(26, 46, 85, 0.1);
   --ka-shadow-dark: 0px 10px 30px 0px rgba(20, 36, 66, 0.15);
   --ka-shadow-darkest: 0px 10px 30px 0px rgba(0, 0, 0, 0.05);
@@ -66,6 +70,9 @@
   #ka-main{
     padding: 1em .8em;
   }
+  #ka-main .ka-section{
+    padding: 2em 6vw 2.5em;
+  }
 }
 
 /* THEME */
@@ -85,6 +92,11 @@
     display: flex;
     flex-direction: column;
 }
+@media screen and (max-width: 768px) {
+  .kursagenten-full-width #ka-main{
+    padding: 0;
+  }
+}
 
 /* COMMON */
 /**********/
@@ -98,6 +110,7 @@
 #ka-main h6 { font-size: var(--ka-font-xs); font-weight: 600;}
 #ka-main .small { font-size: var(--ka-font-xs); line-height: 1.5;}
 #ka-main .medium { font-size: var(--ka-font-sm); line-height: 1.5;}
+#ka-main .medium i.ka-icon { width: var(--ka-font-sm); height: var(--ka-font-sm);}
 #ka-main .uppercase { text-transform: uppercase;}
 #ka-main a:not(.content a) { text-decoration: none;}
 
@@ -112,7 +125,11 @@
 #ka-main p {
 margin-bottom: .5em;
 }
-.course-buttons{}
+button{
+  background: var(--ka-button-background);
+  color: var(--ka-button-color);
+  border: none;
+}
 
 
 /* PAGE GRID LAYOUT */
@@ -158,13 +175,15 @@ border-radius: 10px;
 /**********/
 .kag i.ka-icon {
 display: inline-block;
-width: 30px;
-height: 17px;
+width: var(--ka-font-base);
+    height: var(--ka-font-base);
 background-color: var(--ka-color);
 mask-size: contain;
 -webkit-mask-size: contain;
 background-size: contain;
 background-repeat: no-repeat;
+vertical-align: middle;
+margin-right: 0.5em;
 }
 #ka span.ka-icon-button {
 display: flex;
@@ -187,13 +206,14 @@ height: 23px;
 #ka .iconlist {
 display: flex;
 flex-direction: column;
-row-gap: .2em;
+row-gap: .4em;
 }
 #ka .iconlist.horizontal {
 display: flex;
 flex-direction: row;
 align-items: center;
 column-gap: 1.2em;
+row-gap: .8em;
 }
 #ka .iconlist > div,
 #ka .iconlist.horizontal a {
@@ -204,8 +224,14 @@ padding: 0 8px;
 opacity: .5;
 }
 #ka .iconlist.horizontal i.ka-icon{
-  width: 30px;
+  width: var(--ka-font-base);
   height: var(--ka-font-base);
+}
+@media screen and (max-width: 768px) {
+  #ka .iconlist.horizontal {
+    flex-direction: column;
+    row-gap: 1em;
+  }
 }
 
 
@@ -384,6 +410,7 @@ pointer-events: none; /* Hindrer musen i å trigge tooltip igjen */
     height: 10px;
     margin-left: 5px;
     transition: transform 0.3s ease;
+    vertical-align: middle;
 }
 
 #ka .expand-content.expanded .expand-toggle i.ka-icon {
@@ -442,6 +469,7 @@ z-index: 10000;
 #ka .edit-course span.ka-icon-button .ka-icon{  
   width: 27px;
   height: 27px;
+  margin-right: 0;
 }
 #ka .edit-course:hover .ka-icon{  
   background: white;
@@ -484,7 +512,7 @@ z-index: 10000;
   justify-content: space-between;
   font-size: var(--ka-font-sm);
   align-items: baseline;
-  margin-bottom: .5em;
+  margin-bottom: 1em;
 }
 #ka div#courselist-header-right {
   display: flex;
@@ -530,6 +558,10 @@ z-index: 10000;
   margin-top: 5px;
   font-size: var(--ka-font-xs);
 }
+#ka .courselist-main .iconlist.horizontal i.ka-icon{
+  width: var(--ka-font-sm);
+  height: var(--ka-font-sm);
+}
 #ka .courselist-main .meta-area{
   display: flex;
   flex-wrap: wrap;
@@ -548,6 +580,9 @@ z-index: 10000;
   font-size: .75em;
   cursor: pointer;
 }
+#ka .courselist-main .links-area a {
+  text-decoration: none;
+}
 #ka .ka-courselist.iconlist.horizontal i.ka-icon{
   width: 28px;
   height: 16px;
@@ -555,7 +590,6 @@ z-index: 10000;
 #ka .courselist-main .meta-area.iconlist.horizontal i.ka-icon{
   height: 13px;
   background-color: #666;
-  margin-top: 2px;
 }
 #ka .courselist-content {
   height: 0;
@@ -596,7 +630,8 @@ z-index: 10000;
 
 /* --Pagination Styling */
 /*********************/
-#ka .pagination-wrapper {
+
+/*#ka .pagination-wrapper {
 margin: 2rem 0;
 display: flex;
 justify-content: center;
@@ -662,7 +697,7 @@ font-size: var(--ka-font-sm);
     padding: 0.4rem 0.8rem;
     font-size: var(--ka-font-sm);
 }
-}
+}*/
 
 /* FILTER AND SORT -COURSE LIST */
 /*****************************/
@@ -700,7 +735,7 @@ font-size: var(--ka-font-sm);
   background: var(--ka-color);
   color: white;
   margin-right: 5px;
-  padding: 2px 0 2px 10px;
+  padding: 2px 0 3px 10px;
   border-radius: 3px;
 }
 #ka span.remove-filter {
@@ -801,15 +836,16 @@ text-align: center;
   display: inline-block;
   padding: 0.1em 0.8em;
   margin: 0.2em;
-  background: #f1f1f1;
-  color: var(--ka-color);
+  background: white;
+  border: 1px solid var(--ka-color-light);
+  color: var(--ka-color-filter);
     border-radius: 5px;
     font-size: var(--ka-filter-font-size);
     cursor: pointer;
   }
   #ka .chip:hover {
-    color: var(--ka-color);
-    background: #e1e1e1;
+    color: var(--ka-color-filter);
+    background: var(--ka-alt-background-lighter);
   }
   #ka .chip.active {
     background: var(--ka-color);
@@ -864,8 +900,6 @@ text-align: center;
 }
 
 #ka .dropdown-icon i.ka-icon {
-  position: relative;
-  top: 3px;
   width: 14px;
   height: 14px;
 }
@@ -934,7 +968,7 @@ font-size: var(--ka-filter-font-size);
 #ka .filter-list-item .checkbox-label {
   display: inline-block;
   padding-left: var(--gutter);
-  color: #636363;
+  color: var(--ka-color-filter);
   vertical-align: text-top;
 }
 
@@ -1097,7 +1131,7 @@ text-decoration: none!important;
 }
 /* Font and Placeholder styling for date picker input */
 .kag #ka .date-range-wrapper input {
-  color: #636363;
+  color: var(--ka-color-filter);
   font-size: var(--ka-filter-font-size);
   width: 145px;
   padding-right: 30px; /* Gjør plass til ikonet */
@@ -1253,7 +1287,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
     width: 40px;
     height: 40px;
     border: 3px solid #f3f3f3;
-    border-top: 3px solid var(--ka-color-accent);
+    border-top: 3px solid var(--ka-color);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -1270,7 +1304,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 #ka .mobile-filter-error .retry-button {
     margin-top: 1em;
     padding: 0.5em 1em;
-    background: var(--ka-color-accent);
+    background: var(--ka-color);
     color: white;
     border: none;
     border-radius: 4px;
@@ -1278,7 +1312,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 }
 
 #ka .mobile-filter-error .retry-button:hover {
-    background: var(--ka-color-accent-dark);
+    background: var(--ka-color-darker);
 }
 
 /* Filter button styling */
@@ -1287,7 +1321,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: var(--ka-color-accent);
+    background: var(--ka-color);
     color: white;
     border: none;
     border-radius: 50px;
@@ -1302,7 +1336,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 }
 
 #ka .filter-toggle-button:hover {
-    background: var(--ka-color-accent-dark);
+    background: var(--ka-color-darker);
     transform: translateY(-2px);
 }
 
@@ -1433,12 +1467,12 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 }
 
 #ka .mobile-filter-footer .apply-filters-button {
-    background: var(--ka-color-accent);
+    background: var(--ka-color);
     color: white;
 }
 
 #ka .mobile-filter-footer .apply-filters-button:hover {
-    background: var(--ka-color-accent-dark);
+    background: var(--ka-color-darker);
 }
 
 #ka .mobile-filter-footer .reset-filters-button {

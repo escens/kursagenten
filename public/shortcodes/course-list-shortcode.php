@@ -162,7 +162,7 @@ function kursagenten_course_list_shortcode($atts) {
     ob_start();
     ?>
     <div id="ka" class="kursagenten-wrapper">
-    <main id="ka-main" class="kursagenten-main" role="main">
+    <main id="ka-m" class="kursagenten-main" role="main">
         <div class="ka-container">
             <!-- Mobile Filter Button & Overlay -->
             <button class="filter-toggle-button">

@@ -32,6 +32,7 @@
       "nextcourse"  
       "courselist";
       grid-auto-flow:dense;
+      gap: 2em;
     }
     #ka .course-information .course-grid{
       grid-template-rows: auto;
@@ -40,6 +41,7 @@
         "content"
         "aside"
         "footer";
+        gap: 2em;
     }
     
   }
@@ -50,7 +52,7 @@
 /* Course header*/
 /****************/
     #ka .course-container .ka-header{
-        height: 40vh;
+        min-height: 50vh;
         position: relative;
         display: flex;
         align-items: flex-end;
@@ -86,26 +88,55 @@
     }
     #ka .course-container .header-content *{
         color: white;
+        flex-wrap: wrap;
+    }
+    #ka .iconlist.horizontal {
+        column-gap: 3em;
+    }
+    #ka .course-container .header-content i.ka-icon{
+        background-color: var(--ka-color-lighter);
     }
     #ka .course-container .header-content h1{
-        font-size: 28px;
-        margin: 0;
+        font-size: 32px;
+        margin: 1.5em 0 .5em;
         padding: 0;
     }
     #ka .course-container .header-content .course-buttons {
         display: flex;
-        margin-top: 2em;
+        margin-top: 4em;
     }
     #ka .course-container .header-content .course-buttons .button{
-        padding: 12px 1em;
         margin-right: .5em;
         font-size: var(--ka-font-base);
+    }
+    @media screen and (max-width: 768px) {
+        #ka .course-container .header-content h1{
+            text-align: center;
+        }
+        #ka .course-container .header-content {
+            row-gap: 2em;
+        }
+        .taxonomy-list.horizontal {
+            display: flex;
+            flex-wrap: wrap;
+            row-gap: .3em;
+        }
+        #ka .course-container .header-content .course-buttons {
+            display: flex;
+            justify-content: center;
+            margin-top: .5em;
+            gap: .8em;
+        }
+        
     }
       
 /* Course details */
 /******************/
     #ka .course-container .details {
     background-color: var(--ka-alt-background);
+    }
+    #ka .course-container .details .iconlist > div{
+        align-items: center;
     }
 
 /* -- courselist */
@@ -157,7 +188,7 @@
 /****************/
     #ka .course-container .ka-footer {
     background-color: var(--ka-alt-background);
-    padding: 1em;
+    padding: 2em 4vw;
     }
 
 

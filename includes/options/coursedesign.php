@@ -45,6 +45,162 @@ class Designmaler {
                     <?php $this->render_system_pages_section(); ?>
                 </div>
 
+                <!-- Design Variabler -->
+                <div class="options-card">
+                    <h3>Design Variabler</h3>
+                    <p>Her kan du tilpasse grunnleggende designvariabler for Kursagenten.</p>
+                    
+                    <!-- Maksbredde -->
+                    <div class="option-row">
+                        <label class="option-label">Maksbredde:</label>
+                        <div class="option-input">
+                            <input type="text" 
+                                   name="kursagenten_max_width" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_max_width', '1300px')); ?>"
+                                   placeholder="1300px">
+                            <p class="description">Standard: 1300px</p>
+                        </div>
+                    </div>
+
+                    <!-- Hovedfarge -->
+                    <div class="option-row">
+                        <label class="option-label">Hovedfarge:</label>
+                        <div class="option-input">
+                            <input type="text" 
+                                   name="kursagenten_main_color" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_main_color', 'hsl(32, 96%, 49%)')); ?>"
+                                   class="ka-color-picker"
+                                   data-default-color="hsl(32, 96%, 49%)">
+                        </div>
+                    </div>
+
+                    <!-- Finjuster farger toggle -->
+                    <div class="option-row">
+                        <label class="option-label">Finjuster farger:</label>
+                        <div class="option-input">
+                            <label class="checkbox-label">
+                                <input type="checkbox" 
+                                       name="kursagenten_advanced_colors" 
+                                       value="1" 
+                                       <?php checked(get_option('kursagenten_advanced_colors'), 1); ?>
+                                       class="ka-advanced-colors-toggle">
+                                Vis flere fargevalg
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Avanserte fargevalg -->
+                    <div class="advanced-colors-section" style="display: none;">
+                        <!-- Knappefarge -->
+                        <div class="option-row">
+                            <label class="option-label">Knappefarge:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_button_background" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_button_background', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                            </div>
+                        </div>
+
+                        <!-- Knappefarge tekst -->
+                        <div class="option-row">
+                            <label class="option-label">Knappefarge tekst:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_button_color" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_button_color', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                            </div>
+                        </div>
+
+                        <!-- Linker -->
+                        <div class="option-row">
+                            <label class="option-label">Linker:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_link_color" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_link_color', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                            </div>
+                        </div>
+
+                        <!-- Ikoner -->
+                        <div class="option-row">
+                            <label class="option-label">Ikoner:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_icon_color" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_icon_color', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                            </div>
+                        </div>
+
+                        <!-- Sidebakgrunn -->
+                        <div class="option-row">
+                            <label class="option-label">Sidebakgrunn:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_background_color" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_background_color', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                            </div>
+                        </div>
+
+                        <!-- Bakgrunn fremhevede områder -->
+                        <div class="option-row">
+                            <label class="option-label">Bakgrunn fremhevede områder:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_highlight_background" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_highlight_background', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Base skriftstørrelse -->
+                    <div class="option-row">
+                        <label class="option-label">Base skriftstørrelse:</label>
+                        <div class="option-input">
+                            <input type="text" 
+                                   name="kursagenten_base_font" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_base_font', '16px')); ?>"
+                                   placeholder="16px">
+                            <p class="description">Standard: 16px</p>
+                        </div>
+                    </div>
+
+                    <!-- Hovedoverskrift font -->
+                    <div class="option-row">
+                        <label class="option-label">Font for hovedoverskrifter:</label>
+                        <div class="option-input">
+                            <input type="text" 
+                                   name="kursagenten_heading_font" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_heading_font', 'inherit')); ?>"
+                                   placeholder="inherit">
+                            <p class="description">Standard: inherit</p>
+                        </div>
+                    </div>
+
+                    <!-- Hovedfont -->
+                    <div class="option-row">
+                        <label class="option-label">Hovedfont:</label>
+                        <div class="option-input">
+                            <input type="text" 
+                                   name="kursagenten_main_font" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_main_font', 'inherit')); ?>"
+                                   placeholder="inherit">
+                            <p class="description">Standard: inherit</p>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Single kurs -->
                 
                 <div class="options-card">
@@ -399,23 +555,25 @@ class Designmaler {
     }
 
     public function design_page_init() {
-        // Behold eksisterende basis-registrering
         register_setting(
             'design_option_group',
             'design_option_name',
             array($this, 'design_sanitize')
         );
 
-        // Registrer egen CSS innstilling
-        register_setting(
-            'design_option_group',
-            'kursagenten_custom_css',
-            array(
-                'type' => 'string',
-                'sanitize_callback' => array($this, 'sanitize_css'),
-                'default' => ''
-            )
-        );
+        // Registrer nye innstillinger
+        register_setting('design_option_group', 'kursagenten_max_width');
+        register_setting('design_option_group', 'kursagenten_main_color');
+        register_setting('design_option_group', 'kursagenten_advanced_colors');
+        register_setting('design_option_group', 'kursagenten_button_background');
+        register_setting('design_option_group', 'kursagenten_button_color');
+        register_setting('design_option_group', 'kursagenten_link_color');
+        register_setting('design_option_group', 'kursagenten_icon_color');
+        register_setting('design_option_group', 'kursagenten_background_color');
+        register_setting('design_option_group', 'kursagenten_highlight_background');
+        register_setting('design_option_group', 'kursagenten_base_font');
+        register_setting('design_option_group', 'kursagenten_heading_font');
+        register_setting('design_option_group', 'kursagenten_main_font');
 
         // Definer alle innstillingstyper
         $base_settings = [
@@ -565,31 +723,39 @@ class Designmaler {
             return;
         }
 
-        wp_enqueue_script('jquery');
-        wp_add_inline_script('jquery', '
-            (function($) {
-                $(document).ready(function() {
-                    // Initialiser tilstanden for alle override-innstillinger ved lasting
-                    $("input[name^=\'kursagenten_taxonomy_\'][name$=\'_override\']").each(function() {
-                        var $settings = $(this).closest(".taxonomy-override").find(".taxonomy-override-settings");
-                        if ($(this).is(":checked")) {
-                            $settings.show();
-                        } else {
-                            $settings.hide();
-                        }
-                    });
+        wp_enqueue_style('wp-color-picker');
+        wp_enqueue_script('wp-color-picker');
+        
+        wp_enqueue_script(
+            'ka-admin-script',
+            plugins_url('/assets/js/admin-script.js', dirname(dirname(__FILE__))),
+            array('jquery', 'wp-color-picker'),
+            '1.0.0',
+            true
+        );
 
-                    // Håndter endringer i override-checkboksene
-                    $("input[name^=\'kursagenten_taxonomy_\'][name$=\'_override\']").on("change", function() {
-                        var $settings = $(this).closest(".taxonomy-override").find(".taxonomy-override-settings");
-                        if ($(this).is(":checked")) {
-                            $settings.slideDown(300);
-                        } else {
-                            $settings.slideUp(300);
-                        }
-                    });
-                });
-            })(jQuery);
+        wp_enqueue_style(
+            'ka-admin-style',
+            plugins_url('/assets/css/admin/admin-style.css', dirname(dirname(__FILE__))),
+            array(),
+            '1.0.0'
+        );
+
+        // Legg til inline JavaScript for fargevalg-toggle
+        wp_add_inline_script('ka-admin-script', '
+            jQuery(document).ready(function($) {
+                // Håndter toggle av avanserte fargevalg
+                function toggleAdvancedColors() {
+                    var isChecked = $(".ka-advanced-colors-toggle").is(":checked");
+                    $(".advanced-colors-section").toggle(isChecked);
+                }
+
+                // Initial toggle
+                toggleAdvancedColors();
+
+                // Bind toggle-funksjon til checkbox
+                $(".ka-advanced-colors-toggle").on("change", toggleAdvancedColors);
+            });
         ');
     }
 

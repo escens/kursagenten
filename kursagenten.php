@@ -203,6 +203,13 @@ require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
+// Last inn hovedklassen og CSS output
+require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten-css-output.php';
+
+// Initialiser hovedklassen
+$kursagenten = new Kursagenten();
+
 /* MISC ADMIN FUNCTIONS */
 require_once KURSAG_PLUGIN_DIR . '/includes/misc/hide_course-images_in_mediafolder.php';
 require_once KURSAG_PLUGIN_DIR . '/assets/dynamic-icons.php';
