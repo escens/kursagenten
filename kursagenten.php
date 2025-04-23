@@ -17,10 +17,10 @@
 // Versjonshåndtering
 if (defined('WP_DEBUG') && WP_DEBUG) {
     // Under utvikling - bruk versjonsnummer med tidsstempel
-    define('KURSAG_VERSION', '1.0.3-dev-' . date('YmdHis'));
+    define('KURSAG_VERSION', '1.0.0-dev-' . date('YmdHis'));
 } else {
     // I produksjon - bruk vanlig versjonsnummer
-    define('KURSAG_VERSION', '1.0.3');
+    define('KURSAG_VERSION', '1.0.0');
 }
 // Husk å endre tekst i versjonslogg modalen i funksjonen render_changelog_modal()
 
