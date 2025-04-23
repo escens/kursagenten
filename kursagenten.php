@@ -438,7 +438,7 @@ class Kursagenten_GitHub_Updater {
         $this->slug = plugin_basename($this->plugin);
         $this->username = 'escens'; // GitHub brukernavn
         $this->repo = 'kursagenten'; // Repository navn
-        $this->access_token = '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'; // GitHub access token
+        $this->access_token = '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'; // GitHub access token
         $this->error_log = array();
     }
 
@@ -463,12 +463,26 @@ class Kursagenten_GitHub_Updater {
             ));
 
             if (version_compare($github_version, $current_version, '>')) {
+                // Sjekk om zipball_url er tilgjengelig
+                if (empty($this->github_response['zipball_url'])) {
+                    $this->log_error('Feil: zipball_url er ikke tilgjengelig i GitHub-responsen');
+                    return $transient;
+                }
+
+                // Legg til token i zipball_url hvis det er satt
+                $package_url = $this->github_response['zipball_url'];
+                if (!empty($this->access_token)) {
+                    $package_url = add_query_arg('access_token', $this->access_token, $package_url);
+                }
+
+                $this->log_error('Forsøker å laste ned fra: ' . $package_url);
+
                 $new_files = array(
                     'slug' => $this->slug,
                     'plugin' => $this->plugin,
                     'new_version' => $github_version,
                     'url' => $this->github_response['html_url'],
-                    'package' => $this->github_response['zipball_url']
+                    'package' => $package_url
                 );
                 $transient->response[$this->slug] = (object) $new_files;
                 
