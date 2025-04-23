@@ -41,3 +41,16 @@ jQuery(document).ready(function() {
         }, 1500);
     });
 });
+
+jQuery(document).ready(function($) {
+    // Håndter lukking av versjonsvarsel
+    $('.kursagenten-version-notice').on('click', '.notice-dismiss', function() {
+        // Lagre i localStorage at varselet er lukket
+        localStorage.setItem('kursagenten_version_notice_dismissed', 'true');
+    });
+
+    // Sjekk om varselet skal vises
+    if (localStorage.getItem('kursagenten_version_notice_dismissed') === 'true') {
+        $('.kursagenten-version-notice').hide();
+    }
+}); 

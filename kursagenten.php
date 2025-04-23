@@ -16,12 +16,217 @@
 
 // Versjonshåndtering
 if (defined('WP_DEBUG') && WP_DEBUG) {
-    // Under utvikling - bruk timestamp
-    define('KURSAG_VERSION', date('YmdHis'));
+    // Under utvikling - bruk versjonsnummer med tidsstempel
+    define('KURSAG_VERSION', '1.0.2-dev-' . date('YmdHis'));
 } else {
     // I produksjon - bruk vanlig versjonsnummer
     define('KURSAG_VERSION', '1.0.2');
 }
+
+/**
+ * Versjonshåndtering og rollback funksjonalitet
+ */
+class Kursagenten_Version_Manager {
+    private static $instance = null;
+    private $current_version;
+    private $previous_version;
+    private $backup_dir;
+
+    public function __construct() {
+        $this->current_version = KURSAG_VERSION;
+        $this->previous_version = get_option('kursagenten_previous_version', '');
+        $this->backup_dir = WP_CONTENT_DIR . '/kursagenten-backups/';
+        
+        // Registrer hooks
+        add_action('admin_init', array($this, 'check_version'));
+        add_action('admin_notices', array($this, 'version_notice'));
+        add_filter('plugin_action_links_kursagenten/kursagenten.php', array($this, 'add_rollback_link'));
+        add_action('admin_init', array($this, 'handle_rollback'));
+    }
+
+    public static function get_instance() {
+        if (null === self::$instance) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    /**
+     * Sjekk versjon og lagre backup ved oppdatering
+     */
+    public function check_version() {
+        if ($this->previous_version !== $this->current_version) {
+            // Lag backup før oppdatering
+            $this->create_backup();
+            
+            // Lagre ny versjon
+            update_option('kursagenten_previous_version', $this->current_version);
+            
+            // Kjør oppdateringsrutiner
+            $this->run_update_routines();
+        }
+    }
+
+    /**
+     * Lag backup av plugin-filer
+     */
+    private function create_backup() {
+        if (!file_exists($this->backup_dir)) {
+            wp_mkdir_p($this->backup_dir);
+        }
+
+        $backup_file = $this->backup_dir . 'kursagenten-' . $this->previous_version . '-' . date('Y-m-d-H-i-s') . '.zip';
+        
+        // Lag ZIP av plugin-mappen
+        $zip = new ZipArchive();
+        if ($zip->open($backup_file, ZipArchive::CREATE) === TRUE) {
+            $plugin_dir = plugin_dir_path(__FILE__);
+            $this->add_dir_to_zip($zip, $plugin_dir, basename($plugin_dir));
+            $zip->close();
+        }
+    }
+
+    /**
+     * Legg til mappe i ZIP
+     */
+    private function add_dir_to_zip($zip, $dir, $base_name) {
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
+
+        foreach ($files as $file) {
+            if (!$file->isDir()) {
+                $filePath = $file->getRealPath();
+                $relativePath = $base_name . '/' . substr($filePath, strlen($dir));
+                $zip->addFile($filePath, $relativePath);
+            }
+        }
+    }
+
+    /**
+     * Kjør oppdateringsrutiner
+     */
+    private function run_update_routines() {
+        // Implementer spesifikke oppdateringsrutiner her
+        // For eksempel database-migreringer eller filendringer
+    }
+
+    /**
+     * Rollback til tidligere versjon
+     */
+    public function rollback() {
+        if (empty($this->previous_version)) {
+            return false;
+        }
+
+        // Finn siste backup
+        $backups = glob($this->backup_dir . 'kursagenten-' . $this->previous_version . '*.zip');
+        if (empty($backups)) {
+            return false;
+        }
+
+        $latest_backup = end($backups);
+        
+        // Pakk ut backup
+        $zip = new ZipArchive();
+        if ($zip->open($latest_backup) === TRUE) {
+            $zip->extractTo(WP_PLUGIN_DIR);
+            $zip->close();
+            
+            // Oppdater versjonsnummer
+            update_option('kursagenten_previous_version', $this->previous_version);
+            
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Legg til rollback-link i utvidelseslisten
+     */
+    public function add_rollback_link($links) {
+        // Legg til innstillingslink
+        $settings_url = admin_url('admin.php?page=kursagenten');
+        $links[] = sprintf(
+            '<a href="%s">%s</a>',
+            esc_url($settings_url),
+            __('Innstillinger', 'kursagenten')
+        );
+
+        // Legg til rollback-link hvis det finnes tidligere versjon
+        if (!empty($this->previous_version)) {
+            // Fjern eventuelt tidsstempel fra versjonsnummeret
+            $clean_version = preg_replace('/-dev-\d+$/', '', $this->previous_version);
+            
+            $rollback_url = wp_nonce_url(
+                admin_url('plugins.php?action=kursagenten_rollback'),
+                'kursagenten_rollback_' . get_current_user_id()
+            );
+            $links[] = sprintf(
+                '<a href="%s" class="rollback-link" style="color: #ce5e5e;">%s</a>',
+                esc_url($rollback_url),
+                sprintf(__('Rollback til v%s', 'kursagenten'), $clean_version)
+            );
+        }
+        return $links;
+    }
+
+    /**
+     * Håndter rollback-forespørsel
+     */
+    public function handle_rollback() {
+        if (
+            isset($_GET['action']) && 
+            $_GET['action'] === 'kursagenten_rollback' && 
+            check_admin_referer('kursagenten_rollback_' . get_current_user_id())
+        ) {
+            if ($this->rollback()) {
+                wp_redirect(admin_url('plugins.php?rollback_success=1'));
+                exit;
+            } else {
+                wp_redirect(admin_url('plugins.php?rollback_failed=1'));
+                exit;
+            }
+        }
+    }
+
+    /**
+     * Vis versjonsvarsel i admin
+     */
+    public function version_notice() {
+        if (isset($_GET['rollback_success'])) {
+            ?>
+            <div class="notice notice-success is-dismissible">
+                <p><?php _e('Rollback til tidligere versjon vellykket!', 'kursagenten'); ?></p>
+            </div>
+            <?php
+        } elseif (isset($_GET['rollback_failed'])) {
+            ?>
+            <div class="notice notice-error is-dismissible">
+                <p><?php _e('Rollback feilet. Vennligst prøv igjen eller kontakt support.', 'kursagenten'); ?></p>
+            </div>
+            <?php
+        } elseif ($this->previous_version !== $this->current_version) {
+            // Fjern tidsstempel fra versjonsnummerene for visning
+            $clean_current = preg_replace('/-dev-\d+$/', '', $this->current_version);
+            $clean_previous = preg_replace('/-dev-\d+$/', '', $this->previous_version);
+            ?>
+            <div class="notice notice-info is-dismissible kursagenten-version-notice">
+                <p><?php printf(
+                    __('Kursagenten er oppdatert fra versjon %s til %s.', 'kursagenten'),
+                    $clean_previous,
+                    $clean_current
+                ); ?></p>
+            </div>
+            <?php
+        }
+    }
+}
+
+// Initialiser versjonshåndtering
+Kursagenten_Version_Manager::get_instance();
 
 /**
  * Handles plugin updates from GitHub
