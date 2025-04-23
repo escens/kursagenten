@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Dine kurs hentet og synkronisert fra Kursagenten.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Author:            Tone B. Hagen
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -17,11 +17,12 @@
 // Versjonshåndtering
 if (defined('WP_DEBUG') && WP_DEBUG) {
     // Under utvikling - bruk versjonsnummer med tidsstempel
-    define('KURSAG_VERSION', '1.0.2-dev-' . date('YmdHis'));
+    define('KURSAG_VERSION', '1.0.3-dev-' . date('YmdHis'));
 } else {
     // I produksjon - bruk vanlig versjonsnummer
-    define('KURSAG_VERSION', '1.0.2');
+    define('KURSAG_VERSION', '1.0.3');
 }
+// Husk å endre tekst i versjonslogg modalen i funksjonen render_changelog_modal()
 
 /**
  * Versjonshåndtering og rollback funksjonalitet
@@ -32,6 +33,40 @@ class Kursagenten_Version_Manager {
     private $previous_version;
     private $backup_dir;
 
+        /**
+     * Render versjonslogg modal
+     */
+    public function render_changelog_modal() {
+        ?>
+        <div id="kursagenten-changelog-modal" class="kursagenten-modal" style="display: none;">
+            <div class="kursagenten-modal-content">
+                <span class="kursagenten-modal-close">&times;</span>
+                <h2><?php _e('Kursagenten Versjonslogg', 'kursagenten'); ?></h2>
+                <div class="kursagenten-changelog">
+                    <h3>1.0.3</h3>
+                    <ul>
+                        <li>Små justeringer i oppdateringsstøtte</li>
+                    </ul>    
+                    <h3>1.0.2</h3>
+                    <ul>
+                        <li>Lagt til automatisk oppdateringsstøtte via GitHub</li>
+                        <li>Implementert versjonshåndtering med backup</li>
+                        <li>Lagt til rollback-funksjonalitet</li>
+                        <li>Forbedret admin-grensesnitt med innstillingslink</li>
+                    </ul>
+
+                    <h3>1.0.1</h3>
+                    <ul>
+                        <li>Første offentlige versjon</li>
+                        <li>Grunnleggende kurshåndtering</li>
+                        <li>Integrasjon med Kursagenten API</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <?php
+    }
+
     public function __construct() {
         $this->current_version = KURSAG_VERSION;
         $this->previous_version = get_option('kursagenten_previous_version', '');
@@ -40,8 +75,14 @@ class Kursagenten_Version_Manager {
         // Registrer hooks
         add_action('admin_init', array($this, 'check_version'));
         add_action('admin_notices', array($this, 'version_notice'));
-        add_filter('plugin_action_links_kursagenten/kursagenten.php', array($this, 'add_rollback_link'));
+        
+        // Registrer link-hooks i riktig rekkefølge
+        add_filter('plugin_action_links_kursagenten/kursagenten.php', array($this, 'add_settings_link'), 10);
+        add_filter('plugin_action_links_kursagenten/kursagenten.php', array($this, 'add_rollback_link'), 20);
+        
         add_action('admin_init', array($this, 'handle_rollback'));
+        add_action('admin_footer', array($this, 'render_changelog_modal'));
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
 
     public static function get_instance() {
@@ -144,19 +185,40 @@ class Kursagenten_Version_Manager {
     }
 
     /**
-     * Legg til rollback-link i utvidelseslisten
+     * Legg til innstillingslink i utvidelseslisten
      */
-    public function add_rollback_link($links) {
+    public function add_settings_link($links) {
+        // Lag en ny array med innstillingslink først
+        $new_links = array();
+        
         // Legg til innstillingslink
         $settings_url = admin_url('admin.php?page=kursagenten');
-        $links[] = sprintf(
+        $new_links[] = sprintf(
             '<a href="%s">%s</a>',
             esc_url($settings_url),
             __('Innstillinger', 'kursagenten')
         );
 
+        // Legg til versjonslogg-link
+        $new_links[] = sprintf(
+            '<a href="#" class="kursagenten-changelog-link">%s</a>',
+            __('Versjonslogg', 'kursagenten')
+        );
+        
+        // Legg til alle eksisterende lenker
+        foreach ($links as $link) {
+            $new_links[] = $link;
+        }
+        
+        return $new_links;
+    }
+
+    /**
+     * Legg til rollback-link i utvidelseslisten
+     */
+    public function add_rollback_link($links) {
         // Legg til rollback-link hvis det finnes tidligere versjon
-        if (!empty($this->previous_version)) {
+        if (!empty($this->previous_version) && !strpos($this->previous_version, 'dev')) {
             // Fjern eventuelt tidsstempel fra versjonsnummeret
             $clean_version = preg_replace('/-dev-\d+$/', '', $this->previous_version);
             
@@ -165,9 +227,9 @@ class Kursagenten_Version_Manager {
                 'kursagenten_rollback_' . get_current_user_id()
             );
             $links[] = sprintf(
-                '<a href="%s" class="rollback-link" style="color: #ce5e5e;">%s</a>',
+                '<a href="%s" class="rollback-link" style="color: #dc3232;">%s</a>',
                 esc_url($rollback_url),
-                sprintf(__('Rollback til v%s', 'kursagenten'), $clean_version)
+                sprintf(__('Rollback til %s', 'kursagenten'), $clean_version)
             );
         }
         return $links;
@@ -208,7 +270,7 @@ class Kursagenten_Version_Manager {
                 <p><?php _e('Rollback feilet. Vennligst prøv igjen eller kontakt support.', 'kursagenten'); ?></p>
             </div>
             <?php
-        } elseif ($this->previous_version !== $this->current_version) {
+        } elseif ($this->previous_version !== $this->current_version && !get_option('kursagenten_version_notice_shown')) {
             // Fjern tidsstempel fra versjonsnummerene for visning
             $clean_current = preg_replace('/-dev-\d+$/', '', $this->current_version);
             $clean_previous = preg_replace('/-dev-\d+$/', '', $this->previous_version);
@@ -221,8 +283,32 @@ class Kursagenten_Version_Manager {
                 ); ?></p>
             </div>
             <?php
+            // Marker at varselet er vist
+            update_option('kursagenten_version_notice_shown', true);
         }
     }
+
+    /**
+     * Last inn admin scripts
+     */
+    public function enqueue_admin_scripts() {
+        wp_enqueue_style(
+            'kursagenten-admin-style',
+            KURSAG_PLUGIN_URL . 'assets/css/admin/kursagenten-admin.css',
+            array(),
+            KURSAG_VERSION
+        );
+
+        wp_enqueue_script(
+            'kursagenten-admin-script',
+            KURSAG_PLUGIN_URL . 'assets/js/admin/kursagenten-admin.js',
+            array('jquery'),
+            KURSAG_VERSION,
+            true
+        );
+    }
+
+
 }
 
 // Initialiser versjonshåndtering
