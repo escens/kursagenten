@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Dine kurs hentet og synkronisert fra Kursagenten.
- * Version:           1.0.3
+ * Version:           1.0.0
  * Author:            Tone B. Hagen
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -204,6 +204,13 @@ class Kursagenten_Version_Manager {
             '<a href="#" class="kursagenten-changelog-link">%s</a>',
             __('Versjonslogg', 'kursagenten')
         );
+
+        // Legg til sjekk oppdateringer link
+        $new_links[] = sprintf(
+            '<a href="%s">%s</a>',
+            wp_nonce_url(admin_url('plugins.php?action=kursagenten_check_updates'), 'kursagenten_check_updates'),
+            __('Sjekk oppdateringer', 'kursagenten')
+        );
         
         // Legg til alle eksisterende lenker
         foreach ($links as $link) {
@@ -252,6 +259,71 @@ class Kursagenten_Version_Manager {
                 exit;
             }
         }
+
+        // Håndter sjekk oppdateringer
+        if (
+            isset($_GET['action']) && 
+            $_GET['action'] === 'kursagenten_check_updates' && 
+            check_admin_referer('kursagenten_check_updates')
+        ) {
+            // Tving oppdateringssjekk
+            delete_site_transient('update_plugins');
+            wp_update_plugins();
+            
+            // Hent oppdateringsinformasjon
+            $update_plugins = get_site_transient('update_plugins');
+            $has_update = false;
+            $update_info = '';
+            $debug_info = array();
+            
+            // Sjekk GitHub direkte
+            $github_updater = new Kursagenten_GitHub_Updater(__FILE__);
+            $github_response = $github_updater->get_repository_info();
+            
+            if ($github_response) {
+                $debug_info[] = 'GitHub versjon: ' . $github_response['tag_name'];
+                $debug_info[] = 'Nåværende versjon: ' . $this->current_version;
+                
+                if (version_compare($github_response['tag_name'], $this->current_version, '>')) {
+                    $has_update = true;
+                    $update_info = sprintf(
+                        'Ny versjon %s er tilgjengelig. Du kjører versjon %s.',
+                        $github_response['tag_name'],
+                        $this->current_version
+                    );
+                }
+            } else {
+                $debug_info[] = 'Kunne ikke hente GitHub informasjon';
+            }
+            
+            // Sjekk WordPress oppdateringssystem
+            if (!empty($update_plugins->response)) {
+                foreach ($update_plugins->response as $plugin_file => $plugin_data) {
+                    if ($plugin_file === $this->slug) {
+                        $has_update = true;
+                        $update_info = sprintf(
+                            'Ny versjon %s er tilgjengelig. Du kjører versjon %s.',
+                            $plugin_data->new_version,
+                            $this->current_version
+                        );
+                        $debug_info[] = 'WordPress fant oppdatering: ' . $plugin_data->new_version;
+                        break;
+                    }
+                }
+            } else {
+                $debug_info[] = 'WordPress fant ingen oppdateringer';
+            }
+            
+            // Lagre resultatet i en midlertidig option
+            update_option('kursagenten_update_check_result', array(
+                'has_update' => $has_update,
+                'message' => $update_info ?: 'Ingen nye oppdateringer funnet.',
+                'debug' => $debug_info
+            ));
+            
+            wp_redirect(admin_url('plugins.php?update_check=1'));
+            exit;
+        }
     }
 
     /**
@@ -270,6 +342,35 @@ class Kursagenten_Version_Manager {
                 <p><?php _e('Rollback feilet. Vennligst prøv igjen eller kontakt support.', 'kursagenten'); ?></p>
             </div>
             <?php
+        } elseif (isset($_GET['update_check'])) {
+            $result = get_option('kursagenten_update_check_result', array());
+            delete_option('kursagenten_update_check_result'); // Fjern midlertidig data
+            
+            if (!empty($result)) {
+                $notice_class = $result['has_update'] ? 'notice-warning' : 'notice-info';
+                ?>
+                <div class="notice <?php echo $notice_class; ?> is-dismissible">
+                    <p><?php echo esc_html($result['message']); ?></p>
+                    <?php if ($result['has_update']) : ?>
+                        <p>
+                            <a href="<?php echo admin_url('plugins.php'); ?>" class="button button-primary">
+                                <?php _e('Gå til oppdateringer', 'kursagenten'); ?>
+                            </a>
+                        </p>
+                    <?php endif; ?>
+                    <?php if (defined('WP_DEBUG') && WP_DEBUG && !empty($result['debug'])) : ?>
+                        <div style="margin-top: 10px; padding: 10px; background: #f8f8f8; border: 1px solid #ddd;">
+                            <strong>Debug informasjon:</strong>
+                            <ul style="margin: 5px 0;">
+                                <?php foreach ($result['debug'] as $debug_line) : ?>
+                                    <li><?php echo esc_html($debug_line); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                <?php
+            }
         } elseif ($this->previous_version !== $this->current_version && !get_option('kursagenten_version_notice_shown')) {
             // Fjern tidsstempel fra versjonsnummerene for visning
             $clean_current = preg_replace('/-dev-\d+$/', '', $this->current_version);
@@ -333,9 +434,9 @@ class Kursagenten_GitHub_Updater {
         
         $this->plugin = $plugin_file;
         $this->slug = plugin_basename($this->plugin);
-        $this->username = 'escens'; // GitHub brukernavn
+        $this->username = 'Kursagenten'; // Organisasjonsnavn
         $this->repo = 'WP-Kursagenten-plugin'; // Repository navn
-        $this->access_token = ''; // GitHub access token (valgfritt)
+        $this->access_token = ''; // GitHub access token (må settes)
     }
 
     // Sjekk etter oppdateringer
@@ -367,9 +468,9 @@ class Kursagenten_GitHub_Updater {
     }
 
     // Hent repository informasjon
-    private function get_repository_info() {
+    public function get_repository_info() {
         if (!empty($this->github_response)) {
-            return;
+            return $this->github_response;
         }
 
         $url = sprintf('https://api.github.com/repos/%s/%s/releases/latest', 
@@ -377,11 +478,41 @@ class Kursagenten_GitHub_Updater {
             $this->repo
         );
 
-        $response = json_decode(wp_remote_retrieve_body(wp_remote_get($url)), true);
+        $headers = array(
+            'Accept' => 'application/json',
+            'User-Agent' => 'WordPress/' . get_bloginfo('version')
+        );
 
-        if (is_array($response)) {
-            $this->github_response = $response;
+        // Legg til token hvis det er satt
+        if (!empty($this->access_token)) {
+            $headers['Authorization'] = 'token ' . $this->access_token;
         }
+
+        $response = wp_remote_get($url, array(
+            'timeout' => 15,
+            'headers' => $headers
+        ));
+
+        if (is_wp_error($response)) {
+            error_log('GitHub API Error: ' . $response->get_error_message());
+            return false;
+        }
+
+        $body = wp_remote_retrieve_body($response);
+        $data = json_decode($body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            error_log('GitHub API JSON Error: ' . json_last_error_msg());
+            return false;
+        }
+
+        if (!is_array($data) || empty($data['tag_name'])) {
+            error_log('GitHub API Invalid Response: ' . print_r($data, true));
+            return false;
+        }
+
+        $this->github_response = $data;
+        return $data;
     }
 
     // Vis popup med oppdateringsinformasjon
