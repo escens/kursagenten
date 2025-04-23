@@ -442,6 +442,74 @@ class Kursagenten_GitHub_Updater {
         $this->error_log = array();
     }
 
+    /**
+     * Hent repository informasjon fra GitHub
+     */
+    private function get_repository_info() {
+        if (false !== $this->github_response) {
+            return $this->github_response;
+        }
+
+        $api_url = sprintf(
+            'https://api.github.com/repos/%s/%s/releases/latest',
+            $this->username,
+            $this->repo
+        );
+
+        $this->log_error('Henter repository info fra: ' . $api_url);
+
+        $response = wp_remote_get($api_url, array(
+            'timeout' => 15,
+            'headers' => array(
+                'Accept' => 'application/json',
+                'User-Agent' => 'WordPress/' . get_bloginfo('version'),
+                'Authorization' => 'token ' . $this->access_token
+            )
+        ));
+
+        if (is_wp_error($response)) {
+            $this->log_error('Feil ved henting av repository info: ' . $response->get_error_message());
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        $response_body = wp_remote_retrieve_body($response);
+        $response_headers = wp_remote_retrieve_headers($response);
+
+        $this->log_error(sprintf(
+            'Repository info respons: Kode: %d, Headers: %s, Body: %s',
+            $response_code,
+            print_r($response_headers, true),
+            $response_body
+        ));
+
+        if ($response_code !== 200) {
+            $error_message = sprintf(
+                'Feil ved henting av repository info: Uventet responskode %d. Respons: %s',
+                $response_code,
+                $response_body
+            );
+            
+            switch ($response_code) {
+                case 401:
+                    $error_message .= ' (Unauthorized - Sjekk at tokenet er gyldig og har riktige rettigheter)';
+                    break;
+                case 403:
+                    $error_message .= ' (Forbidden - Sjekk at tokenet har tilgang til repository)';
+                    break;
+                case 404:
+                    $error_message .= ' (Not Found - Sjekk at repository-navnet er korrekt)';
+                    break;
+            }
+            
+            $this->log_error($error_message);
+            return false;
+        }
+
+        $this->github_response = json_decode($response_body, true);
+        return $this->github_response;
+    }
+
     public function check_update($transient) {
         if (empty($transient->checked)) {
             return $transient;
@@ -698,12 +766,14 @@ if (is_admin()) {
     new Kursagenten_GitHub_Updater(__FILE__);
 }
 
+// Flytt cache headers til init hook
 if (defined('WP_DEBUG') && WP_DEBUG) {
-    // Bare sett cache headers under utvikling
     add_action('init', function() {
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
+        if (!headers_sent()) {
+            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+            header("Cache-Control: post-check=0, pre-check=0", false);
+            header("Pragma: no-cache");
+        }
     });
 }
 
