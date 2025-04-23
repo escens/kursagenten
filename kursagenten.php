@@ -409,7 +409,30 @@ class Kursagenten_Version_Manager {
         );
     }
 
+    private function validate_token() {
+        $url = 'https://api.github.com/user';
+        $headers = array(
+            'Authorization' => 'token ' . $this->access_token,
+            'User-Agent' => 'WordPress/' . get_bloginfo('version')
+        );
 
+        $response = wp_remote_get($url, array(
+            'headers' => $headers
+        ));
+
+        if (is_wp_error($response)) {
+            $this->log_error('Token validering feilet: ' . $response->get_error_message());
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            $this->log_error('Token validering feilet: Ugyldig token eller manglende tilganger');
+            return false;
+        }
+
+        return true;
+    }
 }
 
 // Initialiser versjonshåndtering
@@ -508,13 +531,9 @@ class Kursagenten_GitHub_Updater {
 
         $headers = array(
             'Accept' => 'application/json',
-            'User-Agent' => 'WordPress/' . get_bloginfo('version')
+            'User-Agent' => 'WordPress/' . get_bloginfo('version'),
+            'Authorization' => 'token ' . $this->access_token
         );
-
-        // Legg til token hvis det er satt
-        if (!empty($this->access_token)) {
-            $headers['Authorization'] = 'token ' . $this->access_token;
-        }
 
         $this->log_error('Henter repository info fra: ' . $url);
 
