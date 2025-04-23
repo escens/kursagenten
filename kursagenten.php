@@ -438,7 +438,7 @@ class Kursagenten_GitHub_Updater {
         $this->slug = plugin_basename($this->plugin);
         $this->username = 'escens';
         $this->repo = 'kursagenten';
-        $this->access_token = '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';
+        $this->access_token = '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';
         $this->error_log = array();
     }
 
@@ -563,10 +563,68 @@ class Kursagenten_GitHub_Updater {
                 }
 
                 $response_code = wp_remote_retrieve_response_code($test_response);
+                $response_body = wp_remote_retrieve_body($test_response);
+                $response_headers = wp_remote_retrieve_headers($test_response);
+                
+                $this->log_error(sprintf(
+                    'Test respons: Kode: %d, Headers: %s, Body: %s',
+                    $response_code,
+                    print_r($response_headers, true),
+                    $response_body
+                ));
+                
                 if ($response_code !== 200) {
+                    $error_message = sprintf(
+                        'Feil ved testing av nedlastingslenke: Uventet responskode %d. Respons: %s',
+                        $response_code,
+                        $response_body
+                    );
+                    
+                    // Spesifikk håndtering av vanlige feilkoder
+                    switch ($response_code) {
+                        case 401:
+                            $error_message .= ' (Unauthorized - Sjekk at tokenet er gyldig og har riktige rettigheter)';
+                            break;
+                        case 403:
+                            $error_message .= ' (Forbidden - Sjekk at tokenet har tilgang til repository)';
+                            break;
+                        case 404:
+                            $error_message .= ' (Not Found - Sjekk at repository-navnet er korrekt)';
+                            break;
+                    }
+                    
+                    $this->log_error($error_message);
+                    return $transient;
+                }
+
+                // Test om vi kan laste ned filen
+                $download_test = wp_remote_get($package_url, array(
+                    'timeout' => 30,
+                    'headers' => array(
+                        'Accept' => '*/*',
+                        'User-Agent' => 'WordPress/' . get_bloginfo('version'),
+                        'Authorization' => 'token ' . $this->access_token
+                    )
+                ));
+
+                if (is_wp_error($download_test)) {
+                    $this->log_error('Feil ved nedlastingstest: ' . $download_test->get_error_message());
+                    return $transient;
+                }
+
+                $download_code = wp_remote_retrieve_response_code($download_test);
+                $download_headers = wp_remote_retrieve_headers($download_test);
+                
+                $this->log_error(sprintf(
+                    'Nedlastingstest: Kode: %d, Headers: %s',
+                    $download_code,
+                    print_r($download_headers, true)
+                ));
+
+                if ($download_code !== 200) {
                     $this->log_error(sprintf(
-                        'Feil ved testing av nedlastingslenke: Kode %d',
-                        $response_code
+                        'Nedlastingstest feilet: Kode %d',
+                        $download_code
                     ));
                     return $transient;
                 }
