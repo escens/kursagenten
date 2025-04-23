@@ -477,13 +477,17 @@ class Kursagenten_GitHub_Updater {
             $current_version = $plugin_data['Version'];
             $github_version = $this->github_response['tag_name'];
 
+            // Fjern tidsstempel fra nåværende versjon for sammenligning
+            $clean_current_version = preg_replace('/-dev-\d+$/', '', $current_version);
+
             $this->log_error(sprintf(
-                'Versjonssammenligning: Nåværende: %s, GitHub: %s',
+                'Versjonssammenligning: Nåværende: %s (ren: %s), GitHub: %s',
                 $current_version,
+                $clean_current_version,
                 $github_version
             ));
 
-            if (version_compare($github_version, $current_version, '>')) {
+            if (version_compare($github_version, $clean_current_version, '>')) {
                 // Sjekk om zipball_url er tilgjengelig
                 if (empty($this->github_response['zipball_url'])) {
                     $this->log_error('Feil: zipball_url er ikke tilgjengelig i GitHub-responsen');
@@ -515,6 +519,14 @@ class Kursagenten_GitHub_Updater {
 
                 $response_code = wp_remote_retrieve_response_code($test_response);
                 $response_body = wp_remote_retrieve_body($test_response);
+                $response_headers = wp_remote_retrieve_headers($test_response);
+                
+                $this->log_error(sprintf(
+                    'Test respons: Kode: %d, Headers: %s, Body: %s',
+                    $response_code,
+                    print_r($response_headers, true),
+                    $response_body
+                ));
                 
                 if ($response_code !== 200) {
                     $error_message = sprintf(
@@ -537,6 +549,38 @@ class Kursagenten_GitHub_Updater {
                     }
                     
                     $this->log_error($error_message);
+                    return $transient;
+                }
+
+                // Test om vi kan laste ned filen
+                $download_test = wp_remote_get($package_url, array(
+                    'timeout' => 30,
+                    'headers' => array(
+                        'Accept' => '*/*',
+                        'User-Agent' => 'WordPress/' . get_bloginfo('version'),
+                        'Authorization' => 'token ' . $this->access_token
+                    )
+                ));
+
+                if (is_wp_error($download_test)) {
+                    $this->log_error('Feil ved nedlastingstest: ' . $download_test->get_error_message());
+                    return $transient;
+                }
+
+                $download_code = wp_remote_retrieve_response_code($download_test);
+                $download_headers = wp_remote_retrieve_headers($download_test);
+                
+                $this->log_error(sprintf(
+                    'Nedlastingstest: Kode: %d, Headers: %s',
+                    $download_code,
+                    print_r($download_headers, true)
+                ));
+
+                if ($download_code !== 200) {
+                    $this->log_error(sprintf(
+                        'Nedlastingstest feilet: Kode %d',
+                        $download_code
+                    ));
                     return $transient;
                 }
 
