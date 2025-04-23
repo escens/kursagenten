@@ -32,8 +32,9 @@ class Kursagenten_Version_Manager {
     private $current_version;
     private $previous_version;
     private $backup_dir;
+    private $slug;
 
-        /**
+    /**
      * Render versjonslogg modal
      */
     public function render_changelog_modal() {
@@ -71,6 +72,7 @@ class Kursagenten_Version_Manager {
         $this->current_version = KURSAG_VERSION;
         $this->previous_version = get_option('kursagenten_previous_version', '');
         $this->backup_dir = WP_CONTENT_DIR . '/kursagenten-backups/';
+        $this->slug = plugin_basename(__FILE__);
         
         // Registrer hooks
         add_action('admin_init', array($this, 'check_version'));
@@ -584,12 +586,22 @@ class Kursagenten_GitHub_Updater {
                     return $transient;
                 }
 
+                // Legg til oppdateringsinformasjon
                 $new_files = array(
                     'slug' => $this->slug,
                     'plugin' => $this->plugin,
                     'new_version' => $github_version,
                     'url' => $this->github_response['html_url'],
-                    'package' => $package_url
+                    'package' => $package_url,
+                    'requires' => '6.0',
+                    'tested' => '6.4',
+                    'compatibility' => array(
+                        '6.4' => array(
+                            '1.0.1' => array(
+                                '100' => '100'
+                            )
+                        )
+                    )
                 );
                 $transient->response[$this->slug] = (object) $new_files;
                 
