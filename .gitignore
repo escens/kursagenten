@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-node_modules
-=======
 # Wordpress - ignore core, configuration, examples, uploads and logs.
 # https://github.com/github/gitignore/blob/main/WordPress.gitignore
 
@@ -49,4 +46,50 @@ wp-config.php
 # Note: If you wish to whitelist themes,
 # uncomment the next line
 #/wp-content/themes
->>>>>>> ba77f2ae5738054e9baa532eb89ed3888f3a1ad1
+
+# WordPress spesifikke filer
+wp-content/advanced-cache.php
+wp-content/backup-db/
+wp-content/backups/
+wp-content/blogs.dir/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/mu-plugins/
+wp-content/wp-cache-config.php
+
+# System filer
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE/Editor filer
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# Node/Composer filer
+node_modules/
+vendor/
+composer.lock
+package-lock.json
+
+# Backup filer
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.swp
+*.swo
+*~
+
+# Log filer
+*.log
+error_log
+access_log
+
+# Plugin spesifikke filer
+kursagenten-backups/

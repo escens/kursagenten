@@ -1,2 +1,0 @@
-# kursagenten
-Kursagenten WP plugin
