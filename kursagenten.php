@@ -14,6 +14,135 @@
  * Requires at least: 6.0
  */
 
+// Versjonshåndtering
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    // Under utvikling - bruk timestamp
+    define('KURSAG_VERSION', date('YmdHis'));
+} else {
+    // I produksjon - bruk vanlig versjonsnummer
+    define('KURSAG_VERSION', '1.0.1');
+}
+
+/**
+ * Handles plugin updates from GitHub
+ */
+class Kursagenten_GitHub_Updater {
+    private $slug;
+    private $plugin;
+    private $username;
+    private $repo;
+    private $plugin_data;
+    private $access_token;
+    private $github_response;
+
+    public function __construct($plugin_file) {
+        add_filter('pre_set_site_transient_update_plugins', array($this, 'check_update'));
+        add_filter('plugins_api', array($this, 'plugin_popup'), 10, 3);
+        add_filter('upgrader_post_install', array($this, 'after_install'), 10, 3);
+        
+        $this->plugin = $plugin_file;
+        $this->slug = plugin_basename($this->plugin);
+        $this->username = 'escens'; // GitHub brukernavn
+        $this->repo = 'WP-Kursagenten-plugin'; // Repository navn
+        $this->access_token = ''; // GitHub access token (valgfritt)
+    }
+
+    // Sjekk etter oppdateringer
+    public function check_update($transient) {
+        if (empty($transient->checked)) {
+            return $transient;
+        }
+
+        $this->get_repository_info();
+
+        if (false !== $this->github_response) {
+            $plugin_data = get_plugin_data($this->plugin);
+            $current_version = $plugin_data['Version'];
+            $github_version = $this->github_response['tag_name'];
+
+            if (version_compare($github_version, $current_version, '>')) {
+                $new_files = array(
+                    'slug' => $this->slug,
+                    'plugin' => $this->plugin,
+                    'new_version' => $github_version,
+                    'url' => $this->github_response['html_url'],
+                    'package' => $this->github_response['zipball_url']
+                );
+                $transient->response[$this->slug] = (object) $new_files;
+            }
+        }
+
+        return $transient;
+    }
+
+    // Hent repository informasjon
+    private function get_repository_info() {
+        if (!empty($this->github_response)) {
+            return;
+        }
+
+        $url = sprintf('https://api.github.com/repos/%s/%s/releases/latest', 
+            $this->username, 
+            $this->repo
+        );
+
+        $response = json_decode(wp_remote_retrieve_body(wp_remote_get($url)), true);
+
+        if (is_array($response)) {
+            $this->github_response = $response;
+        }
+    }
+
+    // Vis popup med oppdateringsinformasjon
+    public function plugin_popup($result, $action, $args) {
+        if ('plugin_information' !== $action ||
+            $args->slug !== $this->slug) {
+            return $result;
+        }
+
+        $this->get_repository_info();
+
+        if (false !== $this->github_response) {
+            $plugin_data = get_plugin_data($this->plugin);
+            
+            $plugin_info = array(
+                'name' => $plugin_data['Name'],
+                'slug' => $this->slug,
+                'version' => $this->github_response['tag_name'],
+                'author' => $plugin_data['Author'],
+                'homepage' => $plugin_data['PluginURI'],
+                'requires' => '6.0',
+                'tested' => '6.4',
+                'last_updated' => $this->github_response['published_at'],
+                'sections' => array(
+                    'description' => $plugin_data['Description'],
+                    'changelog' => $this->github_response['body']
+                ),
+                'download_link' => $this->github_response['zipball_url']
+            );
+            return (object) $plugin_info;
+        }
+
+        return $result;
+    }
+
+    // Etter installasjon
+    public function after_install($response, $hook_extra, $result) {
+        global $wp_filesystem;
+
+        $plugin_folder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . dirname($this->slug);
+        $wp_filesystem->move($result['destination'], $plugin_folder);
+        $result['destination'] = $plugin_folder;
+
+        return $result;
+    }
+}
+
+// Initialiser oppdateringsklassen hvis vi er i admin
+if (is_admin()) {
+    new Kursagenten_GitHub_Updater(__FILE__);
+}
+
 if (defined('WP_DEBUG') && WP_DEBUG) {
     // Bare sett cache headers under utvikling
     add_action('init', function() {
@@ -44,13 +173,6 @@ function kursagenten_check_dependencies() {
 
 
 // Gruppér relaterte konstanter
-if (defined('WP_DEBUG') && WP_DEBUG) {
-    // Under utvikling - bruk timestamp
-    define('KURSAG_VERSION', date('YmdHis'));
-} else {
-    // I produksjon - bruk vanlig versjonsnummer
-    define('KURSAG_VERSION', '1.0.1');
-}
 define('KURSAG_MIN_PHP',     '7.4');
 define('KURSAG_MIN_WP',      '6.0');
 
