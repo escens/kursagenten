@@ -601,8 +601,18 @@ class Kursagenten_GitHub_Updater {
                                 '100' => '100'
                             )
                         )
+                    ),
+                    'banners' => array(
+                        'low' => '',
+                        'high' => ''
+                    ),
+                    'sections' => array(
+                        'description' => $this->github_response['body'],
+                        'changelog' => $this->github_response['body']
                     )
                 );
+
+                // Legg til oppdateringen i transient
                 $transient->response[$this->slug] = (object) $new_files;
                 
                 $this->log_error('Oppdatering funnet og lagt til i transient');
@@ -724,7 +734,11 @@ class Kursagenten_GitHub_Updater {
                     'description' => $plugin_data['Description'],
                     'changelog' => $this->github_response['body']
                 ),
-                'download_link' => $this->github_response['zipball_url']
+                'download_link' => $this->github_response['zipball_url'] . '?access_token=' . $this->access_token,
+                'banners' => array(
+                    'low' => '',
+                    'high' => ''
+                )
             );
             return (object) $plugin_info;
         }
@@ -736,10 +750,21 @@ class Kursagenten_GitHub_Updater {
     public function after_install($response, $hook_extra, $result) {
         global $wp_filesystem;
 
-        $plugin_folder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . dirname($this->slug);
-        $wp_filesystem->move($result['destination'], $plugin_folder);
-        $result['destination'] = $plugin_folder;
+        $this->log_error('Starter installasjon...');
+        $this->log_error('Response: ' . print_r($response, true));
+        $this->log_error('Hook extra: ' . print_r($hook_extra, true));
+        $this->log_error('Result: ' . print_r($result, true));
 
+        $plugin_folder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . dirname($this->slug);
+        $this->log_error('Plugin folder: ' . $plugin_folder);
+
+        if (!$wp_filesystem->move($result['destination'], $plugin_folder)) {
+            $this->log_error('Feil ved flytting av filer');
+            return $result;
+        }
+
+        $result['destination'] = $plugin_folder;
+        $this->log_error('Installasjon fullført');
         return $result;
     }
 
