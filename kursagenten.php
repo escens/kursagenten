@@ -705,7 +705,7 @@ class Kursagenten_GitHub_Updater {
         $this->log_error('Result: ' . print_r($result, true));
 
         // Finn riktig plugin-mappe
-        $plugin_folder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . dirname($this->slug);
+        $plugin_folder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'kursagenten';
         $this->log_error('Plugin folder: ' . $plugin_folder);
 
         // Sjekk om kilde-mappen eksisterer
@@ -714,15 +714,61 @@ class Kursagenten_GitHub_Updater {
             return $result;
         }
 
-        // Sjekk om destinasjons-mappen eksisterer
-        if (!is_dir($plugin_folder)) {
-            $this->log_error('Destinasjons-mappe eksisterer ikke: ' . $plugin_folder);
+        // Finn hovedfilen i kilde-mappen
+        $source_files = $wp_filesystem->dirlist($result['source']);
+        $main_file_found = false;
+        $main_file_path = '';
+
+        // Sjekk først i rot-mappen
+        foreach ($source_files as $file) {
+            if ($file['name'] === 'kursagenten.php') {
+                $main_file_found = true;
+                $main_file_path = $result['source'] . DIRECTORY_SEPARATOR . $file['name'];
+                break;
+            }
+        }
+
+        // Hvis ikke funnet i rot, sjekk i undermapper
+        if (!$main_file_found) {
+            foreach ($source_files as $file) {
+                if ($file['type'] === 'd') { // Sjekk om det er en mappe
+                    $subdir = $result['source'] . DIRECTORY_SEPARATOR . $file['name'];
+                    $subdir_files = $wp_filesystem->dirlist($subdir);
+                    if ($subdir_files) {
+                        foreach ($subdir_files as $subfile) {
+                            if ($subfile['name'] === 'kursagenten.php') {
+                                $main_file_found = true;
+                                $main_file_path = $subdir . DIRECTORY_SEPARATOR . $subfile['name'];
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$main_file_found) {
+            $this->log_error('Hovedfilen (kursagenten.php) ble ikke funnet i kilde-mappen');
             return $result;
         }
 
-        // Kopier filer fra kilde til destinasjon
+        // Sjekk om destinasjons-mappen eksisterer, hvis ikke, opprett den
+        if (!is_dir($plugin_folder)) {
+            if (!$wp_filesystem->mkdir($plugin_folder)) {
+                $this->log_error('Kunne ikke opprette destinasjons-mappe: ' . $plugin_folder);
+                return $result;
+            }
+        }
+
+        // Kopier alle filer fra kilde til destinasjon
         if (!$wp_filesystem->move($result['source'], $plugin_folder, true)) {
             $this->log_error('Feil ved flytting av filer');
+            return $result;
+        }
+
+        // Verifiser at hovedfilen er på plass
+        if (!$wp_filesystem->exists($plugin_folder . DIRECTORY_SEPARATOR . 'kursagenten.php')) {
+            $this->log_error('Hovedfilen ble ikke kopiert til destinasjons-mappen');
             return $result;
         }
 
