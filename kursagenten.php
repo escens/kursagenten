@@ -32,8 +32,9 @@ class Kursagenten_Version_Manager {
     private $current_version;
     private $previous_version;
     private $backup_dir;
+    private $slug;
 
-        /**
+    /**
      * Render versjonslogg modal
      */
     public function render_changelog_modal() {
@@ -71,6 +72,7 @@ class Kursagenten_Version_Manager {
         $this->current_version = KURSAG_VERSION;
         $this->previous_version = get_option('kursagenten_previous_version', '');
         $this->backup_dir = WP_CONTENT_DIR . '/kursagenten-backups/';
+        $this->slug = plugin_basename(__FILE__);
         
         // Registrer hooks
         add_action('admin_init', array($this, 'check_version'));
@@ -409,7 +411,30 @@ class Kursagenten_Version_Manager {
         );
     }
 
+    private function validate_token() {
+        $url = 'https://api.github.com/user';
+        $headers = array(
+            'Authorization' => 'token ' . $this->access_token,
+            'User-Agent' => 'WordPress/' . get_bloginfo('version')
+        );
 
+        $response = wp_remote_get($url, array(
+            'headers' => $headers
+        ));
+
+        if (is_wp_error($response)) {
+            $this->log_error('Token validering feilet: ' . $response->get_error_message());
+            return false;
+        }
+
+        $response_code = wp_remote_retrieve_response_code($response);
+        if ($response_code !== 200) {
+            $this->log_error('Token validering feilet: Ugyldig token eller manglende tilganger');
+            return false;
+        }
+
+        return true;
+    }
 }
 
 // Initialiser versjonshåndtering
@@ -438,76 +463,65 @@ class Kursagenten_GitHub_Updater {
         $this->slug = plugin_basename($this->plugin);
         $this->username = 'escens';
         $this->repo = 'kursagenten';
-        $this->access_token = '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';
         $this->error_log = array();
     }
 
-    /**
-     * Hent repository informasjon fra GitHub
-     */
     public function get_repository_info() {
-        if (false !== $this->github_response) {
+        if (!empty($this->github_response)) {
             return $this->github_response;
         }
 
-        $api_url = sprintf(
-            'https://api.github.com/repos/%s/%s/releases/latest',
-            $this->username,
+        $url = sprintf('https://api.github.com/repos/%s/%s/releases/latest', 
+            $this->username, 
             $this->repo
         );
 
-        $this->log_error('Henter repository info fra: ' . $api_url);
+        $headers = array(
+            'Accept' => 'application/json',
+            'User-Agent' => 'WordPress/' . get_bloginfo('version')
+        );
 
-        $response = wp_remote_get($api_url, array(
+        $this->log_error('Henter repository info fra: ' . $url);
+
+        $response = wp_remote_get($url, array(
             'timeout' => 15,
-            'headers' => array(
-                'Accept' => 'application/json',
-                'User-Agent' => 'WordPress/' . get_bloginfo('version'),
-                'Authorization' => 'token ' . $this->access_token
-            )
+            'headers' => $headers
         ));
 
         if (is_wp_error($response)) {
-            $this->log_error('Feil ved henting av repository info: ' . $response->get_error_message());
+            $this->log_error('GitHub API Error: ' . $response->get_error_message());
             return false;
         }
 
         $response_code = wp_remote_retrieve_response_code($response);
         $response_body = wp_remote_retrieve_body($response);
-        $response_headers = wp_remote_retrieve_headers($response);
-
-        $this->log_error(sprintf(
-            'Repository info respons: Kode: %d, Headers: %s, Body: %s',
-            $response_code,
-            print_r($response_headers, true),
-            $response_body
-        ));
-
+        
         if ($response_code !== 200) {
             $error_message = sprintf(
-                'Feil ved henting av repository info: Uventet responskode %d. Respons: %s',
+                'GitHub API Error: Uventet responskode %d. Respons: %s',
                 $response_code,
                 $response_body
             );
-            
-            switch ($response_code) {
-                case 401:
-                    $error_message .= ' (Unauthorized - Sjekk at tokenet er gyldig og har riktige rettigheter)';
-                    break;
-                case 403:
-                    $error_message .= ' (Forbidden - Sjekk at tokenet har tilgang til repository)';
-                    break;
-                case 404:
-                    $error_message .= ' (Not Found - Sjekk at repository-navnet er korrekt)';
-                    break;
-            }
             
             $this->log_error($error_message);
             return false;
         }
 
-        $this->github_response = json_decode($response_body, true);
-        return $this->github_response;
+        $data = json_decode($response_body, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            $this->log_error('GitHub API JSON Error: ' . json_last_error_msg());
+            return false;
+        }
+
+        if (!is_array($data) || empty($data['tag_name'])) {
+            $this->log_error('GitHub API Invalid Response: ' . print_r($data, true));
+            return false;
+        }
+
+        $this->github_response = $data;
+        $this->log_error('Repository info hentet suksessfullt');
+        return $data;
     }
 
     public function check_update($transient) {
@@ -515,12 +529,12 @@ class Kursagenten_GitHub_Updater {
             return $transient;
         }
 
-        $github_response = $this->get_repository_info();
+        $this->get_repository_info();
 
-        if (false !== $github_response && isset($github_response['tag_name'])) {
+        if (false !== $this->github_response) {
             $plugin_data = get_plugin_data($this->plugin);
             $current_version = $plugin_data['Version'];
-            $github_version = $github_response['tag_name'];
+            $github_version = $this->github_response['tag_name'];
 
             // Fjern tidsstempel fra nåværende versjon for sammenligning
             $clean_current_version = preg_replace('/-dev-\d+$/', '', $current_version);
@@ -533,17 +547,8 @@ class Kursagenten_GitHub_Updater {
             ));
 
             if (version_compare($github_version, $clean_current_version, '>')) {
-                // Sjekk om zipball_url er tilgjengelig
-                if (empty($github_response['zipball_url'])) {
-                    $this->log_error('Feil: zipball_url er ikke tilgjengelig i GitHub-responsen');
-                    return $transient;
-                }
-
-                // Legg til token i zipball_url
-                $package_url = $github_response['zipball_url'];
-                if (!empty($this->access_token)) {
-                    $package_url = add_query_arg('access_token', $this->access_token, $package_url);
-                }
+                // Bruk zipball_url direkte fra GitHub-responsen
+                $package_url = $this->github_response['zipball_url'];
 
                 $this->log_error('Forsøker å laste ned fra: ' . $package_url);
 
@@ -552,8 +557,7 @@ class Kursagenten_GitHub_Updater {
                     'timeout' => 15,
                     'headers' => array(
                         'Accept' => 'application/json',
-                        'User-Agent' => 'WordPress/' . get_bloginfo('version'),
-                        'Authorization' => 'token ' . $this->access_token
+                        'User-Agent' => 'WordPress/' . get_bloginfo('version')
                     )
                 ));
 
@@ -580,52 +584,7 @@ class Kursagenten_GitHub_Updater {
                         $response_body
                     );
                     
-                    // Spesifikk håndtering av vanlige feilkoder
-                    switch ($response_code) {
-                        case 401:
-                            $error_message .= ' (Unauthorized - Sjekk at tokenet er gyldig og har riktige rettigheter)';
-                            break;
-                        case 403:
-                            $error_message .= ' (Forbidden - Sjekk at tokenet har tilgang til repository)';
-                            break;
-                        case 404:
-                            $error_message .= ' (Not Found - Sjekk at repository-navnet er korrekt)';
-                            break;
-                    }
-                    
                     $this->log_error($error_message);
-                    return $transient;
-                }
-
-                // Test om vi kan laste ned filen
-                $download_test = wp_remote_get($package_url, array(
-                    'timeout' => 30,
-                    'headers' => array(
-                        'Accept' => '*/*',
-                        'User-Agent' => 'WordPress/' . get_bloginfo('version'),
-                        'Authorization' => 'token ' . $this->access_token
-                    )
-                ));
-
-                if (is_wp_error($download_test)) {
-                    $this->log_error('Feil ved nedlastingstest: ' . $download_test->get_error_message());
-                    return $transient;
-                }
-
-                $download_code = wp_remote_retrieve_response_code($download_test);
-                $download_headers = wp_remote_retrieve_headers($download_test);
-                
-                $this->log_error(sprintf(
-                    'Nedlastingstest: Kode: %d, Headers: %s',
-                    $download_code,
-                    print_r($download_headers, true)
-                ));
-
-                if ($download_code !== 200) {
-                    $this->log_error(sprintf(
-                        'Nedlastingstest feilet: Kode %d',
-                        $download_code
-                    ));
                     return $transient;
                 }
 
@@ -634,7 +593,7 @@ class Kursagenten_GitHub_Updater {
                     'slug' => $this->slug,
                     'plugin' => $this->plugin,
                     'new_version' => $github_version,
-                    'url' => $github_response['html_url'],
+                    'url' => $this->github_response['html_url'],
                     'package' => $package_url,
                     'requires' => '6.0',
                     'tested' => '6.4',
@@ -650,8 +609,8 @@ class Kursagenten_GitHub_Updater {
                         'high' => ''
                     ),
                     'sections' => array(
-                        'description' => $github_response['body'],
-                        'changelog' => $github_response['body']
+                        'description' => $this->github_response['body'],
+                        'changelog' => $this->github_response['body']
                     )
                 );
 
@@ -662,13 +621,25 @@ class Kursagenten_GitHub_Updater {
             } else {
                 $this->log_error('Ingen nyere versjon funnet');
             }
-        } else {
-            $this->log_error('Kunne ikke hente GitHub informasjon');
         }
 
         return $transient;
     }
 
+    // Hjelpefunksjon for logging
+    private function log_error($message) {
+        $this->error_log[] = date('[Y-m-d H:i:s] ') . $message;
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Kursagenten GitHub Updater: ' . $message);
+        }
+    }
+
+    // Hent feillogg
+    public function get_error_log() {
+        return $this->error_log;
+    }
+
+    // Vis popup med oppdateringsinformasjon
     public function plugin_popup($result, $action, $args) {
         if ('plugin_information' !== $action ||
             $args->slug !== $this->slug) {
@@ -693,7 +664,7 @@ class Kursagenten_GitHub_Updater {
                     'description' => $plugin_data['Description'],
                     'changelog' => $this->github_response['body']
                 ),
-                'download_link' => $this->github_response['zipball_url'] . '?access_token=' . $this->access_token,
+                'download_link' => $this->github_response['zipball_url'],
                 'banners' => array(
                     'low' => '',
                     'high' => ''
@@ -705,6 +676,7 @@ class Kursagenten_GitHub_Updater {
         return $result;
     }
 
+    // Etter installasjon
     public function after_install($response, $hook_extra, $result) {
         global $wp_filesystem;
 
@@ -726,20 +698,7 @@ class Kursagenten_GitHub_Updater {
         return $result;
     }
 
-    // Hjelpefunksjon for logging
-    private function log_error($message) {
-        $this->error_log[] = date('[Y-m-d H:i:s] ') . $message;
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Kursagenten GitHub Updater: ' . $message);
-        }
-    }
-
-    // Hent feillogg
-    public function get_error_log() {
-        return $this->error_log;
-    }
-
-    // Vis popup med oppdateringsinformasjon
+    // Vis feillogg i admin-panelet
     public function display_error_log() {
         if (!current_user_can('manage_options')) {
             return;
@@ -768,14 +727,12 @@ if (is_admin()) {
     new Kursagenten_GitHub_Updater(__FILE__);
 }
 
-// Flytt cache headers til init hook
 if (defined('WP_DEBUG') && WP_DEBUG) {
+    // Bare sett cache headers under utvikling
     add_action('init', function() {
-        if (!headers_sent()) {
-            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-            header("Cache-Control: post-check=0, pre-check=0", false);
-            header("Pragma: no-cache");
-        }
+        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+        header("Cache-Control: post-check=0, pre-check=0", false);
+        header("Pragma: no-cache");
     });
 }
 
