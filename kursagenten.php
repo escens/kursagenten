@@ -618,7 +618,7 @@ class Kursagenten_GitHub_Updater {
                     'tested' => '6.4',
                     'compatibility' => array(
                         '6.4' => array(
-                            '1.0.1' => array(
+                            '1.0.2' => array(
                                 '100' => '100'
                             )
                         )
@@ -704,10 +704,24 @@ class Kursagenten_GitHub_Updater {
         $this->log_error('Hook extra: ' . print_r($hook_extra, true));
         $this->log_error('Result: ' . print_r($result, true));
 
+        // Finn riktig plugin-mappe
         $plugin_folder = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . dirname($this->slug);
         $this->log_error('Plugin folder: ' . $plugin_folder);
 
-        if (!$wp_filesystem->move($result['destination'], $plugin_folder)) {
+        // Sjekk om kilde-mappen eksisterer
+        if (!is_dir($result['source'])) {
+            $this->log_error('Kilde-mappe eksisterer ikke: ' . $result['source']);
+            return $result;
+        }
+
+        // Sjekk om destinasjons-mappen eksisterer
+        if (!is_dir($plugin_folder)) {
+            $this->log_error('Destinasjons-mappe eksisterer ikke: ' . $plugin_folder);
+            return $result;
+        }
+
+        // Kopier filer fra kilde til destinasjon
+        if (!$wp_filesystem->move($result['source'], $plugin_folder, true)) {
             $this->log_error('Feil ved flytting av filer');
             return $result;
         }
