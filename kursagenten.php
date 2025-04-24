@@ -23,7 +23,7 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.2');
 }
 // Husk å endre tekst i versjonslogg modalen i funksjonen render_changelog_modal()
-
+// Husk å lage release på GitHub
 /**
  * Versjonshåndtering og rollback funksjonalitet
  */
