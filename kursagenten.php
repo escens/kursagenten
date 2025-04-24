@@ -78,9 +78,10 @@ class Kursagenten_Version_Manager {
         add_action('admin_init', array($this, 'check_version'));
         add_action('admin_notices', array($this, 'version_notice'));
         
-        // Registrer link-hooks i riktig rekkefølge
-        add_filter('plugin_action_links_kursagenten/kursagenten.php', array($this, 'add_settings_link'), 10);
-        add_filter('plugin_action_links_kursagenten/kursagenten.php', array($this, 'add_rollback_link'), 20);
+        // Registrer link-hooks
+        add_filter('plugin_action_links_' . $this->slug, array($this, 'add_settings_link'), 10);
+        add_filter('plugin_action_links_' . $this->slug, array($this, 'add_rollback_link'), 20);
+        add_filter('plugin_row_meta', array($this, 'add_plugin_meta_links'), 10, 2);
         
         add_action('admin_init', array($this, 'handle_rollback'));
         add_action('admin_footer', array($this, 'render_changelog_modal'));
@@ -190,42 +191,30 @@ class Kursagenten_Version_Manager {
      * Legg til innstillingslink i utvidelseslisten
      */
     public function add_settings_link($links) {
-        // Lag en ny array med innstillingslink først
-        $new_links = array();
+        if (!is_array($links)) {
+            $links = array();
+        }
         
         // Legg til innstillingslink
         $settings_url = admin_url('admin.php?page=kursagenten');
-        $new_links[] = sprintf(
+        $settings_link = sprintf(
             '<a href="%s">%s</a>',
             esc_url($settings_url),
             __('Innstillinger', 'kursagenten')
         );
-
-        // Legg til versjonslogg-link
-        $new_links[] = sprintf(
-            '<a href="#" class="kursagenten-changelog-link">%s</a>',
-            __('Versjonslogg', 'kursagenten')
-        );
-
-        // Legg til sjekk oppdateringer link
-        $new_links[] = sprintf(
-            '<a href="%s">%s</a>',
-            wp_nonce_url(admin_url('plugins.php?action=kursagenten_check_updates'), 'kursagenten_check_updates'),
-            __('Sjekk oppdateringer', 'kursagenten')
-        );
         
-        // Legg til alle eksisterende lenker
-        foreach ($links as $link) {
-            $new_links[] = $link;
-        }
-        
-        return $new_links;
+        array_unshift($links, $settings_link);
+        return $links;
     }
 
     /**
      * Legg til rollback-link i utvidelseslisten
      */
     public function add_rollback_link($links) {
+        if (!is_array($links)) {
+            $links = array();
+        }
+        
         // Legg til rollback-link hvis det finnes tidligere versjon
         if (!empty($this->previous_version) && !strpos($this->previous_version, 'dev')) {
             // Fjern eventuelt tidsstempel fra versjonsnummeret
@@ -235,12 +224,42 @@ class Kursagenten_Version_Manager {
                 admin_url('plugins.php?action=kursagenten_rollback'),
                 'kursagenten_rollback_' . get_current_user_id()
             );
-            $links[] = sprintf(
+            
+            $rollback_link = sprintf(
                 '<a href="%s" class="rollback-link" style="color: #dc3232;">%s</a>',
                 esc_url($rollback_url),
                 sprintf(__('Rollback til %s', 'kursagenten'), $clean_version)
             );
+            
+            $links[] = $rollback_link;
         }
+        
+        return $links;
+    }
+
+    /**
+     * Legg til meta-lenker i plugin-raden
+     */
+    public function add_plugin_meta_links($links, $file) {
+        if ($file === $this->slug) {
+            // Legg til versjonslogg-link
+            $changelog_link = sprintf(
+                '<a href="#" class="kursagenten-changelog-link">%s</a>',
+                __('Versjonslogg', 'kursagenten')
+            );
+            
+            // Legg til sjekk oppdateringer link
+            $update_link = sprintf(
+                '<a href="%s">%s</a>',
+                wp_nonce_url(admin_url('plugins.php?action=kursagenten_check_updates'), 'kursagenten_check_updates'),
+                __('Se etter oppdateringer', 'kursagenten')
+            );
+            
+            // Legg til nye lenker
+            $links[] = $changelog_link;
+            $links[] = $update_link;
+        }
+        
         return $links;
     }
 
