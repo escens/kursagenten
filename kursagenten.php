@@ -718,6 +718,7 @@ class Kursagenten_GitHub_Updater {
         $source_files = $wp_filesystem->dirlist($result['source']);
         $main_file_found = false;
         $main_file_path = '';
+        $source_subdir = '';
 
         // Sjekk først i rot-mappen
         foreach ($source_files as $file) {
@@ -739,6 +740,7 @@ class Kursagenten_GitHub_Updater {
                             if ($subfile['name'] === 'kursagenten.php') {
                                 $main_file_found = true;
                                 $main_file_path = $subdir . DIRECTORY_SEPARATOR . $subfile['name'];
+                                $source_subdir = $subdir;
                                 break 2;
                             }
                         }
@@ -760,10 +762,36 @@ class Kursagenten_GitHub_Updater {
             }
         }
 
+        // Kopier filer fra kilde til destinasjon
+        if (!empty($source_subdir)) {
+            // Hvis vi fant filen i en undermappe, kopier fra den mappen
+            $source_dir = $source_subdir;
+        } else {
+            // Ellers bruk rot-mappen
+            $source_dir = $result['source'];
+        }
+
         // Kopier alle filer fra kilde til destinasjon
-        if (!$wp_filesystem->move($result['source'], $plugin_folder, true)) {
-            $this->log_error('Feil ved flytting av filer');
-            return $result;
+        $files = $wp_filesystem->dirlist($source_dir);
+        if ($files) {
+            foreach ($files as $file) {
+                $source_file = $source_dir . DIRECTORY_SEPARATOR . $file['name'];
+                $dest_file = $plugin_folder . DIRECTORY_SEPARATOR . $file['name'];
+                
+                if ($file['type'] === 'd') {
+                    // Hvis det er en mappe, kopier rekursivt
+                    if (!$wp_filesystem->mkdir($dest_file)) {
+                        $this->log_error('Kunne ikke opprette mappe: ' . $dest_file);
+                        continue;
+                    }
+                    $this->copy_directory($wp_filesystem, $source_file, $dest_file);
+                } else {
+                    // Hvis det er en fil, kopier direkte
+                    if (!$wp_filesystem->copy($source_file, $dest_file, true)) {
+                        $this->log_error('Kunne ikke kopiere fil: ' . $source_file);
+                    }
+                }
+            }
         }
 
         // Verifiser at hovedfilen er på plass
@@ -772,9 +800,53 @@ class Kursagenten_GitHub_Updater {
             return $result;
         }
 
+        // Oppdater plugin-filens sti i WordPress
+        $plugin_file = $plugin_folder . DIRECTORY_SEPARATOR . 'kursagenten.php';
+        if (file_exists($plugin_file)) {
+            $plugin_data = get_plugin_data($plugin_file);
+            if ($plugin_data) {
+                // Finn alle aktive plugins som starter med 'kursagenten'
+                $active_plugins = get_option('active_plugins', array());
+                $active_plugins = array_filter($active_plugins, function($plugin) {
+                    return strpos($plugin, 'kursagenten') === false;
+                });
+                
+                // Legg til den nye plugin-stien
+                $active_plugins[] = 'kursagenten/kursagenten.php';
+                
+                // Oppdater active_plugins
+                update_option('active_plugins', $active_plugins);
+            }
+        }
+
         $result['destination'] = $plugin_folder;
         $this->log_error('Installasjon fullført');
         return $result;
+    }
+
+    /**
+     * Kopier en mappe rekursivt
+     */
+    private function copy_directory($wp_filesystem, $source, $destination) {
+        $files = $wp_filesystem->dirlist($source);
+        if ($files) {
+            foreach ($files as $file) {
+                $source_file = $source . DIRECTORY_SEPARATOR . $file['name'];
+                $dest_file = $destination . DIRECTORY_SEPARATOR . $file['name'];
+                
+                if ($file['type'] === 'd') {
+                    if (!$wp_filesystem->mkdir($dest_file)) {
+                        $this->log_error('Kunne ikke opprette mappe: ' . $dest_file);
+                        continue;
+                    }
+                    $this->copy_directory($wp_filesystem, $source_file, $dest_file);
+                } else {
+                    if (!$wp_filesystem->copy($source_file, $dest_file, true)) {
+                        $this->log_error('Kunne ikke kopiere fil: ' . $source_file);
+                    }
+                }
+            }
+        }
     }
 
     // Vis feillogg i admin-panelet
