@@ -150,3 +150,87 @@ function kursagenten_enqueue_admin_scripts($hook) {
 }
 add_action( 'admin_enqueue_scripts', 'kursagenten_enqueue_admin_scripts' );
 
+/**
+ * Function to handle nightly course synchronization
+ * This function is called by WordPress cron
+ */
+function kursagenten_nightly_sync() {
+    error_log("=== START: Nattlig synkronisering av kurs ===");
+    
+    // Get course data
+    $courses = kursagenten_get_course_list();
+    if (empty($courses)) {
+        error_log("FEIL: Kunne ikke hente kursliste fra API under nattlig synkronisering");
+        return;
+    }
+
+    $success_count = 0;
+    $error_count = 0;
+
+    foreach ($courses as $course) {
+        foreach ($course['locations'] as $location) {
+            $is_active = false;
+            if (isset($location['active'])) {
+                $is_active = filter_var($location['active'], FILTER_VALIDATE_BOOLEAN);
+            } elseif (isset($course['active'])) {
+                $is_active = filter_var($course['active'], FILTER_VALIDATE_BOOLEAN);
+            } else {
+                $is_active = true;
+            }
+
+            $course_data = [
+                'location_id' => $location['courseId'],
+                'main_course_id' => $course['id'],
+                'course_name' => $location['courseName'],
+                'municipality' => $location['municipality'],
+                'county' => $location['county'],
+                'language' => $course['language'],
+                'is_active' => $is_active,
+                'image_url_cms' => $location['cmsLogo'] ?? null,
+            ];
+
+            try {
+                if (create_or_update_course_and_schedule($course_data)) {
+                    $success_count++;
+                } else {
+                    $error_count++;
+                    error_log("FEIL: Kunne ikke synkronisere kurs: " . $course_data['course_name']);
+                }
+            } catch (Exception $e) {
+                $error_count++;
+                error_log("FEIL under nattlig synkronisering: " . $e->getMessage());
+            }
+        }
+    }
+
+    error_log("Nattlig synkronisering fullført. Suksess: $success_count, Feil: $error_count");
+    error_log("=== SLUTT: Nattlig synkronisering av kurs ===");
+
+    // Update main course statuses
+    kursagenten_update_main_course_status();
+}
+
+/**
+ * Register the nightly sync schedule
+ */
+function kursagenten_register_nightly_sync() {
+    if (!wp_next_scheduled('kursagenten_nightly_sync_event')) {
+        // Schedule the event to run at 2 AM every day
+        wp_schedule_event(strtotime('tomorrow 2:00:00'), 'daily', 'kursagenten_nightly_sync_event');
+    }
+}
+add_action('wp', 'kursagenten_register_nightly_sync');
+
+/**
+ * Hook the sync function to the scheduled event
+ */
+add_action('kursagenten_nightly_sync_event', 'kursagenten_nightly_sync');
+
+/**
+ * Clean up the scheduled event when plugin is deactivated
+ */
+function kursagenten_deactivate_nightly_sync() {
+    wp_clear_scheduled_hook('kursagenten_nightly_sync_event');
+}
+register_deactivation_hook(KURSAG_PLUGIN_FILE, 'kursagenten_deactivate_nightly_sync');
+
