@@ -905,13 +905,23 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     }
 
     // Legg til ekstra validering av bilde-URL
-    if (!filter_var($image_url, FILTER_VALIDATE_URL)) {
+    $image_url = urldecode($image_url); // Dekod URL for å håndtere spesialtegn
+    
+    // Valider URL-format med en mer robust metode
+    $parsed_url = parse_url($image_url);
+    if ($parsed_url === false || !isset($parsed_url['scheme']) || !isset($parsed_url['host'])) {
         error_log("FEIL: Ugyldig bilde-URL format: $image_url");
         return false;
     }
 
-    $filename = basename($image_url);
-    $filename_original = basename($image_url);
+    // Sjekk at URL-en starter med http eller https
+    if (!in_array($parsed_url['scheme'], ['http', 'https'])) {
+        error_log("FEIL: URL må starte med http eller https: $image_url");
+        return false;
+    }
+
+    $filename = basename($parsed_url['path']);
+    $filename_original = $filename;
     
     // Standardiser kjente bildeformater
     $allowed_types = array(
