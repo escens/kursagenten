@@ -142,6 +142,12 @@ button{
   padding: 0;
   margin: 0 auto;
 }
+#ka .course-grid.col-1-1{
+  grid-template-columns: 1fr 1fr;
+}
+#ka .course-grid.col-1-2{
+  grid-template-columns: 1fr 2fr;
+}
 #ka .course-grid.col-1-3{
   grid-template-columns: 1fr 3fr;
 }
@@ -153,6 +159,12 @@ button{
 }
 
 @media screen and (max-width: 768px) {
+  #ka .course-grid.col-1-1{
+    grid-template-columns: 1fr;
+  }
+  #ka .course-grid.col-1-2{
+    grid-template-columns: 1fr;
+  }
   #ka .course-grid.col-1-3{
     grid-template-columns: 1fr;
   }
@@ -600,7 +612,8 @@ z-index: 10000;
   font-size: var(--ka-font-sm);
   }
 #ka .courselist-content.open {
-  padding: .5em;
+  padding: .5em 1em 1em;
+  margin-bottom: 1.5em;
   background: rgba(255, 255, 255, 0.568);
   border-top: 1px dashed #eee;
   }

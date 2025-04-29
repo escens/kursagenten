@@ -172,6 +172,53 @@
         background: transparent;
         box-shadow: none;
       }
+      #ka span.course-available {
+        width: 10px;
+        display: inline-block;
+        overflow: hidden;
+        height: 13px;
+    }
+    #ka .full .courselist-main .content-area  {
+        color: #989898;
+    }
+
+    #ka .course-locations-list {
+        margin: 20px 0;
+    }
+    
+    #ka .location-tabs {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    #ka .location-tabs li {
+        margin: 0;
+    }
+    
+    #ka .location-tabs li a {
+        padding: 0.1em 0.8em;
+        margin: 0.2em;
+        color: var(--ka-color-filter);
+        border-radius: 5px;
+        font-size: var(--ka-filter-font-size);
+        cursor: pointer;
+    }
+    
+    #ka .location-tabs li.active a {
+        background: var(--ka-color);
+        color: white;
+    }
+    
+    #ka .location-tabs li a:hover {
+        color: var(--ka-color);
+    }
+    #ka .location-tabs li.active a:hover {
+        color: white;
+    }
 
   
 /* Course information */

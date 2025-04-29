@@ -145,6 +145,7 @@ function get_all_sorted_coursedates($related_coursedate) {
                 'title' => get_the_title($coursedate_id),
                 'course_title' => get_post_meta($coursedate_id, 'course_title', true),
                 'first_date' => $course_first_date,
+                'last_date' => ka_format_date(get_post_meta($coursedate_id, 'course_last_date', true)),
                 'price' => get_post_meta($coursedate_id, 'course_price', true),
                 'location' => get_post_meta($coursedate_id, 'course_location', true),
                 'duration' => get_post_meta($coursedate_id, 'course_duration', true),
@@ -152,6 +153,12 @@ function get_all_sorted_coursedates($related_coursedate) {
                 'button_text' => get_post_meta($coursedate_id, 'course_button_text', true),
                 'signup_url' => get_post_meta($coursedate_id, 'course_signup_url', true),
                 'missing_first_date' => empty($course_first_date),
+                'is_full' => get_post_meta($coursedate_id, 'course_isFull', true) || get_post_meta($coursedate_id, 'course_markedAsFull', true),
+                'address_street' => get_post_meta($coursedate_id, 'course_address_street', true),
+                'address_number' => get_post_meta($coursedate_id, 'course_address_street_number', true),
+                'postal_code' => get_post_meta($coursedate_id, 'course_address_zipcode', true),
+                'city' => get_post_meta($coursedate_id, 'course_address_place', true),
+                'language' => get_post_meta($coursedate_id, 'course_language', true),
             ];
 
             if (empty($course_first_date)) {
@@ -568,4 +575,128 @@ function get_courses_for_taxonomy($args = []) {
     $query = new WP_Query($query_args);
     
     return $query;
+}
+
+/**
+ * Henter alle tilgjengelige lokasjoner for et kurs
+ * Brukes i single-course templates
+ * 
+ * @param int $post_id ID for kurset
+ * @return array Array med lokasjoner som inneholder navn og slug
+ */
+function get_course_locations($post_id) {
+    $locations = array();
+    
+    // Sjekk om dette er et foreldrekurs
+    $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
+    
+    if ($is_parent_course === 'yes') {
+        // For foreldrekurs, hent alle lokasjoner fra taxonomien
+        $location_terms = wp_get_object_terms($post_id, 'course_location');
+        if (!is_wp_error($location_terms)) {
+            foreach ($location_terms as $term) {
+                $locations[] = array(
+                    'name' => $term->name,
+                    'slug' => $term->slug
+                );
+            }
+        }
+    } else {
+        // For underkurs, hent hovedkurset og alle dets lokasjoner
+        $main_course_id = get_post_meta($post_id, 'main_course_id', true);
+        $main_course = get_posts(array(
+            'post_type' => 'course',
+            'meta_query' => array(
+                array(
+                    'key' => 'main_course_id',
+                    'value' => $main_course_id,
+                    'compare' => '='
+                ),
+                array(
+                    'key' => 'is_parent_course',
+                    'value' => 'yes',
+                    'compare' => '='
+                )
+            ),
+            'posts_per_page' => 1
+        ));
+        
+        if (!empty($main_course)) {
+            $location_terms = wp_get_object_terms($main_course[0]->ID, 'course_location');
+            if (!is_wp_error($location_terms)) {
+                foreach ($location_terms as $term) {
+                    $locations[] = array(
+                        'name' => $term->name,
+                        'slug' => $term->slug
+                    );
+                }
+            }
+        }
+    }
+    
+    return $locations;
+}
+
+/**
+ * Genererer HTML for lokasjonslisten
+ * Brukes i single-course templates
+ * 
+ * @param int $post_id ID for kurset
+ * @return string HTML for lokasjonslisten
+ */
+function display_course_locations($post_id) {
+    $locations = get_course_locations($post_id);
+    $current_location = get_post_meta($post_id, 'sub_course_location', true);
+    $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
+    
+    // Hent hovedkursets permalink
+    $main_course_url = '';
+    if ($is_parent_course !== 'yes') {
+        $main_course_id = get_post_meta($post_id, 'main_course_id', true);
+        $main_course = get_posts(array(
+            'post_type' => 'course',
+            'meta_query' => array(
+                array(
+                    'key' => 'main_course_id',
+                    'value' => $main_course_id,
+                    'compare' => '='
+                ),
+                array(
+                    'key' => 'is_parent_course',
+                    'value' => 'yes',
+                    'compare' => '='
+                )
+            ),
+            'posts_per_page' => 1
+        ));
+        if (!empty($main_course)) {
+            $main_course_url = get_permalink($main_course[0]->ID);
+        }
+    } else {
+        $main_course_url = get_permalink($post_id);
+    }
+    
+    // Start HTML output
+    $output = '<div class="course-locations-list">';
+    $output .= '<ul class="location-tabs">';
+    
+    // Legg til "Alle" link
+    $output .= '<li class="' . ($is_parent_course === 'yes' ? 'active' : '') . '">';
+    $output .= '<a href="' . esc_url($main_course_url) . '">Alle</a>';
+    $output .= '</li>';
+    
+    // Legg til alle lokasjoner
+    foreach ($locations as $location) {
+        $is_active = ($current_location === $location['name']);
+        $location_url = $main_course_url . $location['slug'] . '/';
+        
+        $output .= '<li class="' . ($is_active ? 'active' : '') . '">';
+        $output .= '<a href="' . esc_url($location_url) . '">' . esc_html($location['name']) . '</a>';
+        $output .= '</li>';
+    }
+    
+    $output .= '</ul>';
+    $output .= '</div>';
+    
+    return $output;
 }

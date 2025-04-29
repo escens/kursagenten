@@ -43,6 +43,10 @@
     if (empty($related_coursedate) || !is_array($related_coursedate)) {
         $related_coursedate = [];
     }
+    $is_parent_course = get_post_meta(get_the_ID(), 'is_parent_course', true);
+    $main_course_title = get_post_meta(get_the_ID(), 'main_course_title', true);
+    $sub_course_location = get_post_meta(get_the_ID(), 'sub_course_location', true);
+    $is_full = get_post_meta(get_the_ID(), 'course_isFull', true);
     $contact_name = get_post_meta(get_the_ID(), 'course_contactperson_name', true);
     $contact_phone = get_post_meta(get_the_ID(), 'course_contactperson_phone', true);
     $contact_email = get_post_meta(get_the_ID(), 'course_contactperson_email', true);
@@ -104,7 +108,12 @@
             <div class="background-blur"></div>
             <div class="overlay"></div>
             <div class="ka-content-container header-content">
-                <h1><?php the_title(); ?></h1>
+                <?php if ($is_parent_course === 'yes') : ?>
+                    <h1><?php the_title(); ?></h1>
+                <?php else : ?>
+                    <h1><?php echo esc_html($main_course_title); ?></h1>
+                    <h2 style="margin-top: -.6em;"><?php echo esc_html($sub_course_location); ?></h2>
+                <?php endif; ?>
                 <div class="header-links iconlist horizontal uppercase small">
                     <div><a href="<?php echo esc_url(Designmaler::get_system_page_url('kurs')); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
                     <div class="taxonomy-list horizontal">
@@ -133,20 +142,37 @@
                     <?php if (!empty($all_coursedates)) : ?>
                     <div class="all-coursedates">
                         <h2 class="small">Kurstider og steder</h2>
-                        <div class="accordion courselist-items-wrapper expand-content" data-size="180px">
+                        <p><?php echo display_course_locations(get_the_ID()); ?></p>
+                        <div class="accordion courselist-items-wrapper expand-content" data-size="220px">
                             <?php 
                             $totalCourses = count($all_coursedates);
                             foreach ($all_coursedates as $index => $coursedate) : 
                                 $item_class = $totalCourses === 1 ? 'courselist-item single-item' : 'courselist-item';
+                                if (!empty($coursedate['is_full'])) {
+                                    $item_class .= ' full';
+                                    $available_text = 'Kurset er fullt';
+                                    $available_class = 'full';  
+                                }else{
+                                    $item_class .= ' available';
+                                    $available_text = 'Ledige plasser';
+                                    $available_class = 'available';
+                                }
                             ?>
                                 <div class="<?php echo $item_class; ?>">
                                     <div class="courselist-main" onclick="toggleAccordion(this)">
                                         <div class="text-area">
                                             <div class="title-area">
-                                                <span class="accordion-icon">+</span>
-                                                <span class="courselist-title">
-                                                    <strong><?php echo esc_html($coursedate['location']) ?></strong>
+                                                
+                                                <?php if (!empty($coursedate['is_full'])) : ?>
+                                                    <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
+                                                    <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
                                                 </span>
+                                                <?php else : ?>
+                                                    <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
+                                                    <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
+                                                </span>
+                                                <?php endif; ?>
+                                                <strong class="<?php echo $available_class; ?> tooltip tooltip-left" data-title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
                                             </div>
                                             <div class="content-area">
                                                 <span class="courselist-details">
@@ -166,14 +192,45 @@
                                     </div>
                                     <div class="accordion-content courselist-content">
                                         <?php if ($coursedate['missing_first_date']) : ?>
-                                            <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>   
+                                            <?php 
+                                            $is_online = has_term('nettbasert', 'course_location', $coursedate['id']);
+                                            if ($is_online) : ?>
+                                                <p>Etter påmelding vil du få en e-post med mer informasjon om kurset.</p>
+                                            <?php else : ?>
+                                                <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
+                                            <?php endif; ?>
                                         <?php endif; ?>
-                                        <ul>
-                                            <li>Starts: <?php echo esc_html($coursedate['first_date']) ?></li>
-                                            <li>Price: <?php echo esc_html($coursedate['price']) ?> <?php echo esc_html($price_posttext); ?></li>
-                                            <li>Location: <?php echo esc_html($coursedate['location'] ?? 'N/A') ?></li>
-                                            <li>Duration: <?php echo esc_html($coursedate['duration']) ?></li>
-                                        </ul>
+                                        <?php if (!empty($coursedate['is_full'])) : ?>
+                                            <p>Kurset er fullt. Du kan melde din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
+                                        <?php endif ?>
+                                        <div class="course-grid col-1-1" style="padding-left: 2vw; padding-right: 2vw;">
+                                            <div class="content">
+                                                <p>
+                                                        <span style="font-weight: bold;">Starter:</span>
+                                                        <span><?php echo esc_html($coursedate['first_date']) ?></span><br>
+                                                        <span style="font-weight: bold;">Slutter:</span>
+                                                        <span><?php echo esc_html($coursedate['last_date']) ?></span><br>
+                                                        <span style="font-weight: bold;">Pris:</span>
+                                                        <span><?php echo esc_html($coursedate['price']) ?> <?php echo esc_html($price_posttext); ?></span><br>
+                                                        <span style="font-weight: bold;">Sted:</span>
+                                                        <span><?php echo esc_html($coursedate['location'] ?? 'N/A') ?></span><br>
+                                                        <span style="font-weight: bold;">Varighet:</span>
+                                                        <span><?php echo esc_html($coursedate['duration']) ?></span><br>
+                                                        <span style="font-weight: bold;">Språk:</span>
+                                                        <span><?php echo esc_html($coursedate['language']) ?></span>
+                                        </p>
+                                            </div>
+                                            <div class="aside">
+                                                <?php if (!empty($coursedate['address_street'])) : ?>
+                                                <p><strong>Adresse</strong></p>
+                                                <p>
+                                                    <?php echo esc_html($coursedate['address_street']) ?><br>
+                                                    <?php echo esc_html($coursedate['postal_code']) ?> <?php echo esc_html($coursedate['city']) ?><br>
+                                                    <a style="display: block; padding-top: .4em;" href="https://www.google.com/maps/search/?api=1&query=<?php echo esc_attr($coursedate['address_street']) ?>,+<?php echo esc_attr($coursedate['postal_code']) ?>+<?php echo esc_attr($coursedate['city']) ?>" target="_blank">Vis i Google Maps</a>
+                                                </p>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -271,8 +328,6 @@
         </div>
     </section>
 </article>
-
-
 
 
 

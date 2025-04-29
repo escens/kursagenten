@@ -262,6 +262,8 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
             update_post_meta($post_id, $key, $value);
         }
         update_post_meta($post_id, 'main_course_id', (int) $main_course_id);
+        update_post_meta($post_id, 'main_course_title', sanitize_text_field($data['name']));
+        update_post_meta($post_id, 'sub_course_location', sanitize_text_field(get_course_location($data)));
         update_post_meta($post_id, 'meta_description', sanitize_text_field($data['introText']));
 
         update_course_taxonomies($post_id, $data['id'], $data);
@@ -312,6 +314,10 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
         $common_meta_fields = get_common_meta_fields($data, $language);
         foreach ($common_meta_fields as $key => $value) {
             update_post_meta($post_id, $key, $value);
+        }
+        if ($is_parent_course !== 'yes') {
+            update_post_meta($post_id, 'main_course_title', sanitize_text_field($data['name']));
+            update_post_meta($post_id, 'sub_course_location', sanitize_text_field(get_course_location($data)));
         }
 
         update_course_taxonomies($post_id, $location_id, $data);
