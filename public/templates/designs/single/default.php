@@ -206,18 +206,35 @@
                                         <div class="course-grid col-1-1" style="padding-left: 2vw; padding-right: 2vw;">
                                             <div class="content">
                                                 <p>
+                                                <?php if (!empty($coursedate['first_date'])): ?>
                                                         <span style="font-weight: bold;">Starter:</span>
                                                         <span><?php echo esc_html($coursedate['first_date']) ?></span><br>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!empty($coursedate['last_date'])): ?>
                                                         <span style="font-weight: bold;">Slutter:</span>
                                                         <span><?php echo esc_html($coursedate['last_date']) ?></span><br>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!empty($coursedate['price'])): ?>
                                                         <span style="font-weight: bold;">Pris:</span>
                                                         <span><?php echo esc_html($coursedate['price']) ?> <?php echo esc_html($price_posttext); ?></span><br>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!empty($coursedate['location'])): ?>
                                                         <span style="font-weight: bold;">Sted:</span>
-                                                        <span><?php echo esc_html($coursedate['location'] ?? 'N/A') ?></span><br>
+                                                        <span><?php echo esc_html($coursedate['location']) ?></span><br>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!empty($coursedate['duration'])): ?>
                                                         <span style="font-weight: bold;">Varighet:</span>
                                                         <span><?php echo esc_html($coursedate['duration']) ?></span><br>
+                                                    <?php endif; ?>
+                                                    
+                                                    <?php if (!empty($coursedate['language'])): ?>
                                                         <span style="font-weight: bold;">Språk:</span>
                                                         <span><?php echo esc_html($coursedate['language']) ?></span>
+                                                    <?php endif; ?>
                                         </p>
                                             </div>
                                             <div class="aside">
