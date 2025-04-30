@@ -87,11 +87,12 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
                     'relation' => 'OR',
                     [
                         'key' => 'hide_in_list',
-                        'value' => 'Vis',
+                        'compare' => 'NOT EXISTS'
                     ],
                     [
                         'key' => 'hide_in_list',
-                        'compare' => 'NOT EXISTS'
+                        'value' => 'Skjul',
+                        'compare' => '!='
                     ]
                 ]
             ]);
@@ -558,11 +559,12 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                     'relation' => 'OR',
                     [
                         'key' => 'hide_in_list',
-                        'value' => 'Vis',
+                        'compare' => 'NOT EXISTS'
                     ],
                     [
                         'key' => 'hide_in_list',
-                        'compare' => 'NOT EXISTS'
+                        'value' => 'Skjul',
+                        'compare' => '!='
                     ]
                 ],
                 'parent' => !empty($parent_term_id) ? $parent_term_id : 0,
@@ -609,11 +611,12 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                             'relation' => 'OR',
                             [
                                 'key' => 'hide_in_list',
-                                'value' => 'Vis',
+                                'compare' => 'NOT EXISTS'
                             ],
                             [
                                 'key' => 'hide_in_list',
-                                'compare' => 'NOT EXISTS'
+                                'value' => 'Skjul',
+                                'compare' => '!='
                             ]
                         ]
                     ]);

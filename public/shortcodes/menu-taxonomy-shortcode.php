@@ -76,11 +76,11 @@ function kurstagger($atts){
             'meta_query' => [
                 'relation' => 'OR',
                 [
-                    'key' => 'hide_in_list',
+                    'key' => 'hide_in_menu',
                     'value' => 'Vis',
                 ],
                 [
-                    'key' => 'hide_in_list',
+                    'key' => 'hide_in_menu',
                     'compare' => 'NOT EXISTS'
                 ]
             ]
@@ -94,11 +94,11 @@ function kurstagger($atts){
             'meta_query' => [
             'relation' => 'OR',
             [
-                'key' => 'hide_in_list',
+                'key' => 'hide_in_menu',
                 'value' => 'Vis',
             ],
             [
-                'key' => 'hide_in_list',
+                'key' => 'hide_in_menu',
                 'compare' => 'NOT EXISTS'
             ]
             ]

@@ -240,41 +240,53 @@ function get_course_dates_query($args = []) {
 		]
 	];
 
-	// Log default args
-	//error_log('Default args: ' . print_r($default_args, true));
-
 	// Hent alle termer først
 	$all_terms = get_terms([
 		'taxonomy' => 'coursecategory',
 		'fields' => 'slugs',
-		'hide_empty' => false
+		'hide_empty' => false,
+		'meta_query' => [
+			'relation' => 'OR',
+			[
+				'key' => 'hide_in_course_list',
+				'compare' => 'NOT EXISTS'
+			],
+			[
+				'key' => 'hide_in_course_list',
+				'value' => 'Skjul',
+				'compare' => '!='
+			]
+		]
 	]);
 
-	if (!is_wp_error($all_terms)) {
-		$hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
-		$visible_terms = array_diff($all_terms, $hidden_terms);
+	// fjernet HIDDEN_TERMS (skjult, inaktiv)
+	if (!is_wp_error($all_terms) && !empty($all_terms)) {
+		// Først, hent alle termer som er markert som skjult
+		$hidden_terms = get_terms([
+			'taxonomy' => 'coursecategory',
+			'fields' => 'slugs',
+			'hide_empty' => false,
+			'meta_query' => [
+				[
+					'key' => 'hide_in_course_list',
+					'value' => 'Skjul',
+					'compare' => '='
+				]
+			]
+		]);
 
-		if (!empty($visible_terms)) {
+		if (!is_wp_error($hidden_terms) && !empty($hidden_terms)) {
+			// Legg til en tax_query som ekskluderer kurs med skjulte kategorier
 			$default_args['tax_query'][] = array(
-				'relation' => 'OR',
-				array(
-					'taxonomy' => 'coursecategory',
-					'operator' => 'NOT EXISTS'
-				),
-				array(
-					'taxonomy' => 'coursecategory',
-					'field'    => 'slug',
-					'terms'    => $visible_terms,
-					'operator' => 'IN'
-				)
+				'taxonomy' => 'coursecategory',
+				'field'    => 'slug',
+				'terms'    => $hidden_terms,
+				'operator' => 'NOT IN'
 			);
 		}
 	}
 
 	$query_args = wp_parse_args($args, $default_args);
-
-	// Log query args before filters
-	//error_log('Query args before filters: ' . print_r($query_args, true));
 
 	// Behandle alle filtre fra URL-parametere
 	foreach ($param_mapping as $db_field => $param_name) {
@@ -398,14 +410,7 @@ function get_course_dates_query($args = []) {
 			break;
 	}
 
-	// Log final query args
-	//error_log('Final query args: ' . print_r($query_args, true));
-
 	$query = new WP_Query($query_args);
-
-	// Log query results
-	//error_log('Query found posts: ' . $query->found_posts);
-	//error_log('Query SQL: ' . $query->request);
 
 	return $query;
 }

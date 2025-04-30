@@ -88,30 +88,78 @@ function add_taxonomy_visibility_field($term) {
         return;
     }
     
-    $value = get_term_meta($term->term_id, 'hide_in_list', true);
-    if (empty($value)) {
-        $value = 'Vis'; // Standard verdi
+    $taxonomy = $term->taxonomy;
+    $visibility = get_term_meta($term->term_id, 'hide_in_list', true);
+    $menu_visibility = get_term_meta($term->term_id, 'hide_in_menu', true);
+    $course_list_visibility = get_term_meta($term->term_id, 'hide_in_course_list', true);
+    
+    if (empty($visibility)) {
+        $visibility = 'Vis'; // Standard verdi
+    }
+    if (empty($menu_visibility)) {
+        $menu_visibility = 'Vis'; // Standard verdi
+    }
+    if (empty($course_list_visibility)) {
+        $course_list_visibility = 'Vis'; // Standard verdi
     }
     ?>
     <tr class="form-field">
         <th scope="row"><label for="hide_in_list">Synlighet</label></th>
         <td>
             <label style="margin-right: 15px;">
-                <input type="radio" name="hide_in_list" value="Vis" <?php checked($value, 'Vis'); ?>>
-                Vis i lister
+                <input type="radio" name="hide_in_list" value="Vis" <?php checked($visibility, 'Vis'); ?>>
+                Vis
             </label>
             <label>
-                <input type="radio" name="hide_in_list" value="Skjul" <?php checked($value, 'Skjul'); ?>>
-                Skjul i lister
+                <input type="radio" name="hide_in_list" value="Skjul" <?php checked($visibility, 'Skjul'); ?>>
+                Skjul i oversiktslister
             </label>
-            <p class="description">Velg om denne skal vises i lister og oversikter.</p>
+            <p class="description">Velg om denne skal vises i kategorilister og oversikter.</p>
         </td>
     </tr>
+    <tr class="form-field">
+        <th scope="row"><label for="hide_in_menu">Menyer</label></th>
+        <td>
+            <label style="margin-right: 15px;">
+                <input type="radio" name="hide_in_menu" value="Vis" <?php checked($menu_visibility, 'Vis'); ?>>
+                Vis
+            </label>
+            <label>
+                <input type="radio" name="hide_in_menu" value="Skjul" <?php checked($menu_visibility, 'Skjul'); ?>>
+                Skjul i automenyer
+            </label>
+            <p class="description">Velg om denne skal vises i autogenererte menyer.</p>
+        </td>
+    </tr>
+    <?php if ($taxonomy === 'coursecategory'): ?>
+    <tr class="form-field">
+        <th scope="row"><label for="hide_in_course_list">Kursliste</label></th>
+        <td>
+            <label style="margin-right: 15px;">
+                <input type="radio" name="hide_in_course_list" value="Vis" <?php checked($course_list_visibility, 'Vis'); ?>>
+                Vis
+            </label>
+            <label>
+                <input type="radio" name="hide_in_course_list" value="Skjul" <?php checked($course_list_visibility, 'Skjul'); ?>>
+                Skjul tilhørende kurs, og i kategorifilter
+            </label>
+            <p class="description">Velg om denne kategorien og tilhørende kurs skal vises i kurslisten.</p>
+        </td>
+    </tr>
+    <?php endif; ?>
     <?php
 }
 
 // Legg til feltet i hurtigredigering
-function add_quick_edit_visibility_field() {
+function add_quick_edit_visibility_field($column_name, $taxonomy) {
+    // Only add the field once per taxonomy
+    static $added_fields = array();
+    
+    if (isset($added_fields[$taxonomy])) {
+        return;
+    }
+    
+    $added_fields[$taxonomy] = true;
     ?>
     <fieldset>
         <div class="inline-edit-col">
@@ -119,12 +167,46 @@ function add_quick_edit_visibility_field() {
                 <span class="title">Synlighet</span>
                 <span class="input-text-wrap">
                     <label class="alignleft" style="margin-right: 15px;">
-                        <input type="radio" name="hide_in_list" value="Vis">
-                        <span class="checkbox-title">Vis i lister</span>
+                        <input type="radio" name="quick_edit_hide_in_list" value="Vis">
+                        <span class="checkbox-title">Vis</span>
                     </label>
                     <label class="alignleft">
-                        <input type="radio" name="hide_in_list" value="Skjul">
-                        <span class="checkbox-title">Skjul i lister</span>
+                        <input type="radio" name="quick_edit_hide_in_list" value="Skjul">
+                        <span class="checkbox-title">Skjul i oversiktslister</span>
+                    </label>
+                </span>
+            </label>
+        </div>
+    </fieldset>
+    <fieldset>
+        <div class="inline-edit-col">
+            <label>
+                <span class="title">Menyer</span>
+                <span class="input-text-wrap">
+                    <label class="alignleft" style="margin-right: 15px;">
+                        <input type="radio" name="quick_edit_hide_in_menu" value="Vis">
+                        <span class="checkbox-title">Vis</span>
+                    </label>
+                    <label class="alignleft">
+                        <input type="radio" name="quick_edit_hide_in_menu" value="Skjul">
+                        <span class="checkbox-title">Skjul i automenyer</span>
+                    </label>
+                </span>
+            </label>
+        </div>
+    </fieldset>
+    <fieldset class="course-list-visibility" style="display:none">
+        <div class="inline-edit-col">
+            <label>
+                <span class="title">Kursliste</span>
+                <span class="input-text-wrap">
+                    <label class="alignleft" style="margin-right: 15px;">
+                        <input type="radio" name="quick_edit_hide_in_course_list" value="Vis">
+                        <span class="checkbox-title">Vis</span>
+                    </label>
+                    <label class="alignleft">
+                        <input type="radio" name="quick_edit_hide_in_course_list" value="Skjul">
+                        <span class="checkbox-title">Skjul tilhørende kurs, og i kategorifilter</span>
                     </label>
                 </span>
             </label>
@@ -142,10 +224,23 @@ function add_taxonomy_visibility_column($columns) {
 // Vis innhold i kolonnen
 function manage_taxonomy_visibility_column($content, $column_name, $term_id) {
     if ($column_name === 'visibility') {
-        $value = get_term_meta($term_id, 'hide_in_list', true);
-        if ($value === 'Skjul') {
-            return '<span class="visibility-tag" style="background: #e5737d; color: white; padding: 3px 8px; border-radius: 3px;">Skjult</span>';
+        $visibility = get_term_meta($term_id, 'hide_in_list', true);
+        $menu_visibility = get_term_meta($term_id, 'hide_in_menu', true);
+        $course_list_visibility = get_term_meta($term_id, 'hide_in_course_list', true);
+        
+        $output = '';
+        
+        if ($visibility === 'Skjul') {
+            $output .= '<span class="visibility-tag" style="color: rgb(226, 91, 102);">Skjult i lister</span>';
         }
+        if ($menu_visibility === 'Skjul') {
+            $output .= '<span class="visibility-tag" style="color: rgb(226, 91, 102);">Skjult i menyer</span>';
+        }
+        if ($course_list_visibility === 'Skjul') {
+            $output .= '<span class="visibility-tag" style="color: rgb(226, 91, 102);">Skjult i kursliste</span>';
+        }
+        
+        return $output;
     }
     return $content;
 }
@@ -166,7 +261,9 @@ function save_taxonomy_field($term_id) {
         'rich_description' => 'wp_kses_post',
         'instructor_email' => 'sanitize_email',
         'instructor_phone' => 'sanitize_text_field',
-        'hide_in_list' => 'sanitize_text_field'
+        'hide_in_list' => 'sanitize_text_field',
+        'hide_in_menu' => 'sanitize_text_field',
+        'hide_in_course_list' => 'sanitize_text_field'
     ];
     
     foreach ($fields as $field => $sanitize_callback) {
@@ -206,6 +303,9 @@ foreach ($taxonomies as $taxonomy) {
     
     // Håndter kolonneinnhold
     add_filter("manage_{$taxonomy}_custom_column", 'manage_taxonomy_visibility_column', 10, 3);
+    
+    // Lagre hurtigredigering
+    add_action("edited_{$taxonomy}", 'save_quick_edit_visibility');
 }
 
 // Legg til quick edit
@@ -226,8 +326,28 @@ function add_quick_edit_javascript() {
                 }
                 
                 if (tag_id > 0) {
-                    var visibility = $('#tag-' + tag_id).find('.visibility-tag').length ? 'Skjul' : 'Vis';
-                    $('input[name="hide_in_list"][value="' + visibility + '"]').prop('checked', true);
+                    var $row = $('#tag-' + tag_id);
+                    var $visibilityCell = $row.find('td.column-visibility');
+                    var visibilityText = $visibilityCell.text();
+                    var $table = $row.closest('table');
+                    var isCourseCategory = $table.length > 0 && $table.attr('id') && $table.attr('id').indexOf('coursecategory') !== -1;
+                    
+                    // Hent verdiene fra meta-feltene
+                    var list_visibility = visibilityText.includes('Skjult i lister') ? 'Skjul' : 'Vis';
+                    var menu_visibility = visibilityText.includes('Skjult i menyer') ? 'Skjul' : 'Vis';
+                    var course_list_visibility = visibilityText.includes('Skjult i kursliste') ? 'Skjul' : 'Vis';
+                    
+                    // Sett radio-knappene
+                    $('input[name="quick_edit_hide_in_list"][value="' + list_visibility + '"]').prop('checked', true);
+                    $('input[name="quick_edit_hide_in_menu"][value="' + menu_visibility + '"]').prop('checked', true);
+                    $('input[name="quick_edit_hide_in_course_list"][value="' + course_list_visibility + '"]').prop('checked', true);
+                    
+                    // Vis/skjul kursliste-feltet basert på taksonomi
+                    if (isCourseCategory) {
+                        $('.course-list-visibility').show();
+                    } else {
+                        $('.course-list-visibility').hide();
+                    }
                 }
             };
         });
@@ -351,6 +471,32 @@ function kursagenten_add_instructor_styles() {
             font-size: .9em;
             font-style: italic;
         }
+        
+        /* Synlighetstagger */
+        #visibility{
+            width: 110px;
+        }
+        .visibility-tag {
+            display: block;
+            font-size: 12px;
+        }
+        
+        .visibility-tag[data-visibility="Skjul"] {
+            color: rgb(226, 91, 102);
+        }
+        
+        .visibility-tag[data-visibility="Vis"] {
+            color: #4CAF50;
+        }
+
+        /* Hurtigredigering synlighet */
+        .course-list-visibility {
+            display: none;
+        }
+        
+        body.taxonomy-coursecategory .course-list-visibility {
+            display: block !important;
+        }
     </style>
     <?php
 }
@@ -415,5 +561,40 @@ function kursagenten_make_fields_readonly($term) {
     <?php
 }
 add_action('instructors_pre_edit_form', 'kursagenten_make_fields_readonly', 10);
+
+// Legg til AJAX-håndtering for lagring av synlighet
+function save_taxonomy_visibility_ajax() {
+    check_ajax_referer('save_taxonomy_visibility', 'nonce');
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    $tag_id = intval($_POST['tag_id']);
+    $hide_in_list = sanitize_text_field($_POST['hide_in_list']);
+    $hide_in_menu = sanitize_text_field($_POST['hide_in_menu']);
+    $hide_in_course_list = sanitize_text_field($_POST['hide_in_course_list']);
+    
+    update_term_meta($tag_id, 'hide_in_list', $hide_in_list);
+    update_term_meta($tag_id, 'hide_in_menu', $hide_in_menu);
+    update_term_meta($tag_id, 'hide_in_course_list', $hide_in_course_list);
+    
+    wp_send_json_success();
+}
+add_action('wp_ajax_save_taxonomy_visibility', 'save_taxonomy_visibility_ajax');
+
+// Lagre hurtigredigering
+function save_quick_edit_visibility($term_id) {
+    if (isset($_POST['quick_edit_hide_in_list'])) {
+        update_term_meta($term_id, 'hide_in_list', sanitize_text_field($_POST['quick_edit_hide_in_list']));
+    }
+    if (isset($_POST['quick_edit_hide_in_menu'])) {
+        update_term_meta($term_id, 'hide_in_menu', sanitize_text_field($_POST['quick_edit_hide_in_menu']));
+    }
+    if (isset($_POST['quick_edit_hide_in_course_list'])) {
+        update_term_meta($term_id, 'hide_in_course_list', sanitize_text_field($_POST['quick_edit_hide_in_course_list']));
+    }
+}
 
 
