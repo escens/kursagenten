@@ -172,7 +172,7 @@
                                                     <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
                                                 </span>
                                                 <?php endif; ?>
-                                                <strong class="<?php echo $available_class; ?> tooltip tooltip-left" data-title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
+                                                <strong class="<?php echo $available_class; ?>" title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
                                             </div>
                                             <div class="content-area">
                                                 <span class="courselist-details">

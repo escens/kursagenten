@@ -71,6 +71,41 @@ jQuery(document).ready(function ($) {
         $button.removeClass("processing");
         $("#sync-status-message").text("En feil oppstod under synkronisering.");
     }
+
+    // Oppdatert kode for opprydding
+    $('#cleanup-courses').on('click', function(e) {
+        console.log("Opprydding kurs");
+        e.preventDefault();
+        const button = $(this);
+        const statusDiv = $('#cleanup-status-message');
+        
+        // Deaktiver knappen og vis status
+        button.prop('disabled', true).addClass('processing');
+        statusDiv.html('<div class="notice notice-info"><p>Starter opprydding av kurs...</p></div>');
+        
+        $.ajax({
+            url: sync_kurs.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'cleanup_courses',
+                nonce: sync_kurs.nonce
+            },
+            success: function(response) {
+                if (response.success) {
+                    statusDiv.html('<div class="notice notice-success"><p>' + response.data.message + '</p></div>');
+                } else {
+                    statusDiv.html('<div class="notice notice-error"><p>Feil: ' + response.data.message + '</p></div>');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('AJAX Error:', status, error);
+                statusDiv.html('<div class="notice notice-error"><p>En feil oppstod under opprydding. Vennligst prøv igjen.</p></div>');
+            },
+            complete: function() {
+                button.prop('disabled', false).removeClass('processing');
+            }
+        });
+    });
 });
 
 

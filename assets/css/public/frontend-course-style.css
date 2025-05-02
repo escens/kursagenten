@@ -556,8 +556,11 @@ z-index: 10000;
   color: #444;
 }
 #ka .courselist-main .content-area{
+  display: flex;
+  flex-direction: row;
+  gap: .8em;
   margin: 0 0 0 1em;
-  font-size: var(--ka-font-size-small);
+  font-size: var(--ka-font-xs);
   color: #444;
 }
 #ka .courselist-items .title-area{
@@ -969,6 +972,7 @@ font-size: var(--ka-filter-font-size);
 }
 
 #ka .filter-list-item {
+  display: flex;
   cursor: pointer;
   position: relative;
 }

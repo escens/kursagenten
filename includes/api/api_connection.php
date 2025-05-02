@@ -47,14 +47,39 @@ function kursagenten_get_course_list() {
 }
 
 function kursagenten_get_course_details($enkeltkurs_id) {
+    error_log("=== START: Henter kursdetaljer for ID: $enkeltkurs_id ===");
+    
     $endpoint = 'https://developer.kursagenten.no/api/Course/WP/' . $enkeltkurs_id . '?includeFullSchedules=true&includeDeactivedCourses=true';
-    $course_details = kursagenten_api_request($endpoint);
-
-    if (!$course_details) {
-        error_log('Failed to fetch course details for ID: ' . $enkeltkurs_id);
-        return [];
+    
+    // Legg til timeout og retry-logikk
+    $max_retries = 3;
+    $retry_count = 0;
+    $course_details = null;
+    
+    while ($retry_count < $max_retries) {
+        $course_details = kursagenten_api_request($endpoint);
+        
+        if ($course_details !== false) {
+            break;
+        }
+        
+        $retry_count++;
+        error_log("Forsøk $retry_count feilet for kurs ID: $enkeltkurs_id");
+        sleep(1); // Vent 1 sekund mellom forsøk
     }
-
+    
+    if (!$course_details) {
+        error_log("FEIL: Kunne ikke hente kursdetaljer etter $max_retries forsøk for ID: $enkeltkurs_id");
+        return false; // Returner false i stedet for tom array
+    }
+    
+    // Sjekk om kurset faktisk finnes i responsen
+    if (empty($course_details['id'])) {
+        error_log("ADVARSEL: Kurset med ID $enkeltkurs_id finnes ikke i API-responsen");
+        return false;
+    }
+    
+    error_log("=== SLUTT: Kursdetaljer hentet for ID: $enkeltkurs_id ===");
     return $course_details;
 }
 

@@ -241,6 +241,7 @@ class Kursinnstillinger {
         $tilbyder_guid = isset($this->kag_kursinnst_options['ka_tilbyderGuid']) ? $this->kag_kursinnst_options['ka_tilbyderGuid'] : '';
 
         echo kursagenten_sync_courses_button(); 
+        echo kursagenten_cleanup_courses_button();
 
         if (empty($tilbyder_id) || empty($tilbyder_guid)) : ?>
             <div class="" style="margin: 10px 0;padding: 1px 10px; background: #d63638; border-radius: 5px; color:white; width: fit-content;">
