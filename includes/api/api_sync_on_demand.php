@@ -320,14 +320,19 @@ function cleanup_courses_on_demand() {
             error_log("Tittel: " . $wp_course->post_title);
             error_log("Status: " . $wp_course->post_status);
             
-            // Finn og slett tilknyttede kursdatoer
-            $related_dates = get_post_meta($wp_course->ID, 'course_related_coursedate', true);
-            if (!empty($related_dates) && is_array($related_dates)) {
-                foreach ($related_dates as $date_id) {
-                    wp_delete_post($date_id, true);
-                    $deleted_dates++;
-                    error_log("Slettet kursdato ID: $date_id");
-                }
+            // Finn og slett tilknyttede kursdatoer basert på location_id
+            $related_dates = get_posts([
+                'post_type' => 'coursedate',
+                'posts_per_page' => -1,
+                'meta_query' => [
+                    ['key' => 'location_id', 'value' => $location_id],
+                ],
+            ]);
+            
+            foreach ($related_dates as $date) {
+                wp_delete_post($date->ID, true);
+                $deleted_dates++;
+                error_log("Slettet kursdato ID: $date->ID");
             }
             
             // Slett selve kurset
@@ -336,7 +341,7 @@ function cleanup_courses_on_demand() {
                 error_log("Slettet kurs ID: {$wp_course->ID}");
             }
         } else {
-            // Sjekk kursdatoer for dette kurset
+            // Sjekk kursdatoer for dette kurset basert på location_id
             $related_dates = get_posts([
                 'post_type' => 'coursedate',
                 'posts_per_page' => -1,

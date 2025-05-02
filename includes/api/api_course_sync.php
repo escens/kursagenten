@@ -351,7 +351,6 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         ]);
 
         foreach ($existing_dates as $date) {
-            remove_coursedate_from_related_course($date->ID, $post_id);
             wp_delete_post($date->ID, true);
         }
         return;
@@ -373,7 +372,6 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
     }
 
     $location = reset($location);
-    //error_log("Found location. Number of schedules: " . count($location['schedules'] ?? []));
 
     // Loop through all schedules and create/update course dates
     foreach ($location['schedules'] as $schedule) {
@@ -398,7 +396,6 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         $provider_id = !empty($courseprovider['ka_tilbyderID']) ? $courseprovider['ka_tilbyderID'] : '';
         $provider_theme = !empty($courseprovider['ka_temaKurs']) ? $courseprovider['ka_temaKurs'] : 'standard';
         $course_signup_url = "https://embed.kursagenten.no/$provider_id/skjema/$location_id/$schedule_id?theme=$provider_theme&gtmevent=add_to_cart";
-
 
         // Set up meta fields for course date
         $meta_input = [];
@@ -437,90 +434,26 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (!empty($location['address']['zipCode'])) {              $meta_input['course_address_zipcode'] = $location['address']['zipCode'];}
         if (!empty($location['address']['place'])) {                $meta_input['course_address_place'] = $location['address']['place'];}
 
-
         // Create or update course date
-        $post_data = [
-            'ID' => $coursedate_id,
-            'post_type' => 'coursedate',
-            'post_status' => $is_active ? 'publish' : 'draft',
-            'post_title' => $data['name'] . ' - ' . get_course_location($data) . ' ' . 
-                (isset($schedule['firstCourseDate']) ? format_date($schedule['firstCourseDate']) : "-uten kursdato"),
-            'meta_input'  => $meta_input,
-        ];
-        
-
-        $coursedate_post_id = wp_insert_post($post_data);
-
-        if (!is_wp_error($coursedate_post_id)) {
-            update_course_taxonomies($coursedate_post_id, $location_id, $data);
-            
-            // Bruk samme metode som for course
-            $schedule_data = [
-                'locations' => [
-                    [
-                        'courseId' => $location_id,
-                        'schedules' => [$schedule]
-                    ]
-                ]
-            ];
-            
-            $instructors = get_instructors_in_courselist($schedule_data, $location_id);
-            $location_instructors = $instructors['instructors_location'];
-            update_instructor_taxonomies($coursedate_post_id, $location_instructors);
+        if ($coursedate_id) {
+            // Update existing course date
+            wp_update_post([
+                'ID' => $coursedate_id,
+                'post_title' => $data['name'] . ' - ' . $location['county'],
+                'post_status' => 'publish',
+                'meta_input' => $meta_input
+            ]);
+        } else {
+            // Create new course date
+            $coursedate_id = wp_insert_post([
+                'post_title' => $data['name'] . ' - ' . $location['county'],
+                'post_type' => 'coursedate',
+                'post_status' => 'publish',
+                'meta_input' => $meta_input
+            ]);
         }
-        
-
-        // Oppdater relasjonen til kurs (post_id)
-        if (!empty($post_id)) {
-            $current_related_course = get_post_meta($coursedate_post_id, 'course_related_course', true) ?: [];
-            if (!is_array($current_related_course)) {
-                $current_related_course = (array) $current_related_course; // Sikre array-format
-            }
-
-            if (!in_array($post_id, $current_related_course)) {
-                $current_related_course[] = $post_id;
-                update_post_meta($coursedate_post_id, 'course_related_course', array_unique($current_related_course));
-            }
-        }
-
-        // Oppdater relasjonen fra kurs til kursdato
-        if (!empty($coursedate_post_id)) {
-            $related_coursedates = get_post_meta($post_id, 'course_related_coursedate', true);
-            
-            // Håndter tom eller ugyldig verdi
-            if (empty($related_coursedates) || !is_array($related_coursedates)) {
-                $related_coursedates = [];
-            }
-            
-            // Legg til ny kursdato hvis den ikke allerede finnes
-            if (!in_array($coursedate_post_id, $related_coursedates)) {
-                $related_coursedates[] = $coursedate_post_id;
-                update_post_meta($post_id, 'course_related_coursedate', array_values(array_unique($related_coursedates)));
-            }
-            
-            // Oppdater også relasjonen fra kursdato til kurs
-            $current_related_course = get_post_meta($coursedate_post_id, 'course_related_course', true);
-            if (empty($current_related_course) || !is_array($current_related_course)) {
-                $current_related_course = [];
-            }
-            
-            if (!in_array($post_id, $current_related_course)) {
-                $current_related_course[] = $post_id;
-                update_post_meta($coursedate_post_id, 'course_related_course', array_values(array_unique($current_related_course)));
-            }
-        }
-
-
-        //error_log("DEBUG: Sjekker etter eksisterende kursdato for schedule ID: " . ($schedule['id'] ?? 'ukjent') . " og lokasjon ID: $location_id");
-        //error_log("DEBUG: Forespørsel returnerte: " . print_r($existing_post, true));
-
     }
-    // Kall opprydningsfunksjonen etter at alle kursdatoer er opprettet/oppdatert
-    cleanup_coursedates($location_id, $location['schedules']);
 }
-
-
-
 
 function cleanup_coursedates($location_id, $schedules_from_api) {
     error_log("=== START: cleanup_coursedates for location_id: $location_id ===");
@@ -550,23 +483,32 @@ function cleanup_coursedates($location_id, $schedules_from_api) {
             if (!in_array(0, $valid_schedule_ids)) {
                 // Slett kursdatoen hvis 0 ikke er en gyldig schedule_id
                 wp_delete_post($coursedate->ID, true);
-                remove_coursedate_from_related_course($coursedate->ID, $related_post_id);
             }
         } else if (!in_array($schedule_id, $valid_schedule_ids)) {
             // Slett kursdatoen hvis schedule_id ikke lenger er gyldig
             wp_delete_post($coursedate->ID, true);
-            remove_coursedate_from_related_course($coursedate->ID, $related_post_id);
         }
     }
 }
 
 function remove_coursedate_from_related_course($coursedate_id, $post_id) {
+    // Fjern kursdato fra kursets relasjoner
     if (!empty($post_id)) {
         $related_coursedates = get_post_meta($post_id, 'course_related_coursedate', true);
         
         if (!empty($related_coursedates) && is_array($related_coursedates)) {
             $related_coursedates = array_diff($related_coursedates, [$coursedate_id]);
             update_post_meta($post_id, 'course_related_coursedate', array_values($related_coursedates));
+        }
+    }
+
+    // Fjern kurs fra kursdatos relasjoner
+    if (!empty($coursedate_id)) {
+        $related_courses = get_post_meta($coursedate_id, 'course_related_course', true);
+        
+        if (!empty($related_courses) && is_array($related_courses)) {
+            $related_courses = array_diff($related_courses, [$post_id]);
+            update_post_meta($coursedate_id, 'course_related_course', array_values($related_courses));
         }
     }
 }
@@ -626,8 +568,6 @@ function format_date_get_month($date_string) {
     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $date_string);
     return $date ? $date->format('m') : $date_string;
 }
-
-
 
 function update_course_taxonomies($post_id, $location_id, $data) {
     // Koble kurs til course_location taxonomi
@@ -784,8 +724,6 @@ function sync_main_course_data($main_course_id) {
     }
 }
 
-
-
 function update_instructor_taxonomies($post_id, $data_instructors) {
     if (!empty($data_instructors) && is_array($data_instructors)) {
         $instructors = [];
@@ -834,8 +772,6 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
     }
 }
 
-
-
 function get_instructors_in_courselist($data, $location_id) {
     $instructors_location = [];
 
@@ -877,12 +813,6 @@ function get_instructors_in_courselist($data, $location_id) {
     //error_log("DEBUG: Behandlet instruktørdata: " . print_r($instructors_location, true));
     return ['instructors_location' => array_values($instructors_location)];
 }
-
-
-
-
-
-
 
 function set_featured_image_from_url($data, $post_id, $main_course_id, $location_id, $location_name) {
     error_log("** START: set_featured_image_from_url, post_id: $post_id, location_id: $location_id");

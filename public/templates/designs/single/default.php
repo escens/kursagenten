@@ -39,11 +39,35 @@
     $price_posttext = get_post_meta(get_the_ID(), 'course_text_after_price', true);
     $difficulty = get_post_meta(get_the_ID(), 'course_difficulty_level', true);
     $button_text = get_post_meta(get_the_ID(), 'button-text', true);
-    $related_coursedate = get_post_meta(get_the_ID(), 'course_related_coursedate', true);
+    
+    // Hent kursdatoer basert på om det er et foreldrekurs eller underkurs
+    $is_parent_course = get_post_meta(get_the_ID(), 'is_parent_course', true);
+    
+    if ($is_parent_course === 'yes') {
+        // For foreldrekurs: Hent alle kursdatoer som har main_course_id lik dette kursets location_id
+        $related_coursedate = get_posts([
+            'post_type' => 'coursedate',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                ['key' => 'main_course_id', 'value' => $course_id],
+            ],
+            'fields' => 'ids'
+        ]);
+    } else {
+        // For underkurs: Hent kursdatoer basert på location_id
+        $related_coursedate = get_posts([
+            'post_type' => 'coursedate',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                ['key' => 'location_id', 'value' => $course_id],
+            ],
+            'fields' => 'ids'
+        ]);
+    }
+    
     if (empty($related_coursedate) || !is_array($related_coursedate)) {
         $related_coursedate = [];
     }
-    $is_parent_course = get_post_meta(get_the_ID(), 'is_parent_course', true);
     $main_course_title = get_post_meta(get_the_ID(), 'main_course_title', true);
     $sub_course_location = get_post_meta(get_the_ID(), 'sub_course_location', true);
     $is_full = get_post_meta(get_the_ID(), 'course_isFull', true);

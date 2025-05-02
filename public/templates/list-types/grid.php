@@ -9,18 +9,25 @@ if ($is_taxonomy_page) {
     $course_title = get_the_title();
     $excerpt = get_the_excerpt();
     
-    // Hent coursedate-informasjon fra post-objektet
-    $coursedate_info = $post->coursedate_info ?? [];
+    // Hent location_id for å finne relaterte kursdatoer
+    $location_id = get_post_meta($course_id, 'location_id', true);
     
-    $first_course_date = $coursedate_info['first_date'] ?? '';
-    $last_course_date = $coursedate_info['last_date'] ?? '';
-    $price = $coursedate_info['price'] ?? '';
-    $after_price = $coursedate_info['after_price'] ?? '';
-    $duration = $coursedate_info['duration'] ?? '';
-    $coursetime = $coursedate_info['time'] ?? '';
-    $button_text = $coursedate_info['button_text'] ?? '';
-    $signup_url = $coursedate_info['signup_url'] ?? '';
-    $is_full = $coursedate_info['is_full'] ?? '';
+    // Hent kursdatoer basert på location_id
+    $related_coursedates = get_posts([
+        'post_type' => 'coursedate',
+        'posts_per_page' => -1,
+        'meta_query' => [
+            ['key' => 'location_id', 'value' => $location_id],
+        ],
+    ]);
+    
+    // Konverter til array av IDer
+    $related_coursedate_ids = array_map(function($post) {
+        return $post->ID;
+    }, $related_coursedates);
+    
+    // Hent data fra første tilgjengelige kursdato
+    $selected_coursedate_data = get_selected_coursedate_data($related_coursedate_ids);
     
     // Hent lokasjonsinformasjon
     $location = get_post_meta($course_id, 'course_location', true);
@@ -32,10 +39,17 @@ if ($is_taxonomy_page) {
     
     // Sett opp link til kurset
     $course_link = get_permalink($course_id);
-
-    // Hent informasjon om førstkommende kurs
-    $related_coursedate = get_post_meta($course_id, 'course_related_coursedate', true);
-    $selected_coursedate_data = get_selected_coursedate_data($related_coursedate);
+    
+    // Hent data fra første tilgjengelige kursdato
+    $first_course_date = $selected_coursedate_data['first_date'] ?? '';
+    $last_course_date = $selected_coursedate_data['last_date'] ?? '';
+    $price = $selected_coursedate_data['price'] ?? '';
+    $after_price = $selected_coursedate_data['after_price'] ?? '';
+    $duration = $selected_coursedate_data['duration'] ?? '';
+    $coursetime = $selected_coursedate_data['time'] ?? '';
+    $button_text = $selected_coursedate_data['button_text'] ?? '';
+    $signup_url = $selected_coursedate_data['signup_url'] ?? '';
+    $is_full = $selected_coursedate_data['is_full'] ?? false;
 } else {
     // Original kode for coursedates
     $course_id = get_the_ID();
@@ -147,11 +161,11 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                 <div class="card-details">
                     <ul class="card-details-list">
                         <?php if ($is_taxonomy_page) : ?>
-                            <?php if (!empty($selected_coursedate_data['first_date'])) : ?>
-                            <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($selected_coursedate_data['first_date']); ?></li>
+                            <?php if (!empty($first_course_date)) : ?>
+                            <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></li>
                             <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['time'])) : ?>
-                            <li><i class="ka-icon icon-time"></i><?php echo esc_html($selected_coursedate_data['time']); ?></li>
+                            <?php if (!empty($coursetime)) : ?>
+                            <li><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></li>
                             <?php endif; ?>
                         <?php else : ?>
                             <?php if (!empty($first_course_date)) : ?>
@@ -171,14 +185,14 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                 <!-- Footer area -->
                 <div class="card-footer">
                     <?php if ($is_taxonomy_page) : ?>
-                        <?php if (!empty($selected_coursedate_data['price'])) : ?>
+                        <?php if (!empty($price)) : ?>
                         <div class="card-price">
-                            <strong><?php echo esc_html($selected_coursedate_data['price']); ?> <?php echo !empty($selected_coursedate_data['after_price']) ? esc_html($selected_coursedate_data['after_price']) : ''; ?></strong>
+                            <strong><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></strong>
                         </div>
                         <?php endif; ?>
                         
-                        <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
-                            <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
+                        <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
+                            <?php echo esc_html($button_text ?: 'Påmelding'); ?>
                         </button>
                     <?php else : ?>
                         <?php if (!empty($price)) : ?>
@@ -188,7 +202,7 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                         <?php endif; ?>
                         
                         <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
-                            <?php echo esc_html($button_text); ?>
+                            <?php echo esc_html($button_text ?: 'Påmelding'); ?>
                         </button>
                     <?php endif; ?>
                 </div>
