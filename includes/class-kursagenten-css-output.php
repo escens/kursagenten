@@ -116,6 +116,11 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-button-background: ' . esc_attr($button_background) . ';';
                 $css .= '--ka-button-background-lighter: ' . $this->adjust_lightness($button_background, 10) . ';';
                 $css .= '--ka-button-background-darker: ' . $this->adjust_lightness($button_background, -10) . ';';
+                
+                // Endre farger på knapper
+                $css .= '#ka .pagination .current {border-color: var(--ka-button-background); background: var(--ka-button-background); color: var(--ka-button-color);}';
+                $css .= '#ka .pagination a:hover, #ka .pagination a:focus, #ka .pagination a:active { border-color: var(--ka-button-background);}';
+                $css .= 'button{  background: var(--ka-button-background);  color: var(--ka-button-color);  border: none;}';
             }
             if ($button_color) {
                 $css .= '--ka-button-color: ' . esc_attr($button_color) . ';';
@@ -155,15 +160,6 @@ class Kursagenten_CSS_Output {
         }
         
         $css .= '}';
-
-        // Endre farger på knapper
-        if ($button_background && $button_background !== '') {
-        $css .= '#ka .pagination .current {border-color: var(--ka-button-background); background: var(--ka-button-background); color: var(--ka-button-color);}';
-        $css .= '#ka .pagination a:hover, #ka .pagination a:focus, #ka .pagination a:active { border-color: var(--ka-button-background);}';
-        $css .= 'button{  background: var(--ka-button-background);  color: var(--ka-button-color);  border: none;}';
-        $css .= '';
-        $css .= '';
-        }
 
         // Output CSS
         echo '<style type="text/css" id="kursagenten-custom-css">' . $css . '</style>';

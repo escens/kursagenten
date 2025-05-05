@@ -16,10 +16,12 @@
 
 if (defined('WP_DEBUG') && WP_DEBUG) {
     // Bare sett cache headers under utvikling
-    add_action('init', function() {
-        header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-        header("Cache-Control: post-check=0, pre-check=0", false);
-        header("Pragma: no-cache");
+    add_action('send_headers', function() {
+        if (!headers_sent()) {
+            header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+            header("Cache-Control: post-check=0, pre-check=0", false);
+            header("Pragma: no-cache");
+        }
     });
 }
 

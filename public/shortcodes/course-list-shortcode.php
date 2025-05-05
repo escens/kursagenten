@@ -94,12 +94,11 @@ function kursagenten_course_list_shortcode($atts) {
     $is_search_only = is_array($top_filters) && count($top_filters) === 1 && in_array('search', $top_filters);
     $search_class = $is_search_only ? 'wide-search' : '';
 
-    // Define taxonomy and meta field data structure for filters
     $taxonomy_data = [
         'categories' => [
             'taxonomy' => 'coursecategory',
             'terms' => get_terms([
-                'taxonomy' => 'coursecategory', 
+                'taxonomy' => 'coursecategory',
                 'hide_empty' => true,
                 'meta_query' => [
                     'relation' => 'OR',
@@ -118,77 +117,30 @@ function kursagenten_course_list_shortcode($atts) {
         ],
         'locations' => [
             'taxonomy' => 'course_location',
-            'terms' => get_terms([
-                'taxonomy' => 'course_location', 
-                'hide_empty' => true,
-                'meta_query' => [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'hide_in_course_list',
-                        'value' => 'Vis',
-                    ],
-                    [
-                        'key' => 'hide_in_course_list',
-                        'compare' => 'NOT EXISTS'
-                    ]
-                ]
-            ]),
+            'terms' => get_filtered_terms('course_location'),
             'url_key' => 'sted',
             'filter_key' => 'locations',
         ],
         'instructors' => [
             'taxonomy' => 'instructors',
-            'terms' => get_terms([
-                'taxonomy' => 'instructors', 
-                'hide_empty' => true,
-                'meta_query' => [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'hide_in_course_list',
-                        'value' => 'Vis',
-                    ],
-                    [
-                        'key' => 'hide_in_course_list',
-                        'compare' => 'NOT EXISTS'
-                    ]
-                ]
-            ]),
+            'terms' => get_filtered_terms('instructors'),
             'url_key' => 'i',
             'filter_key' => 'instructors',
         ],
         'language' => [
             'taxonomy' => '',
-            'terms' => get_course_languages(),
+            'terms' => get_filtered_languages(),
             'url_key' => 'sprak',
             'filter_key' => 'language',
         ],
         'months' => [
             'taxonomy' => '',
-            'terms' => get_course_months(),
+            'terms' => get_filtered_months(),
             'url_key' => 'mnd',
             'filter_key' => 'months',
         ]
     ];
 
-    // Get language from meta fields for course dates
-    /*$args = [
-        'post_type'      => 'coursedate',
-        'posts_per_page' => -1,
-        'fields'         => 'ids',
-    ];
-
-    $coursedates = get_posts($args);
-    $language_terms = [];
-
-    foreach ($coursedates as $post_id) {
-        $meta_language = get_post_meta($post_id, 'course_language', true);
-        if (!empty($meta_language)) {
-            $language_terms[] = $meta_language;
-        }
-    }
-    $language_terms = array_unique($language_terms);
-    $taxonomy_data['language']['terms'] = $language_terms;
-*/
     // Prepare filter-information
     $filter_display_info = [];
     foreach ($available_filters as $filter_key => $filter_info) {
@@ -275,8 +227,8 @@ function kursagenten_course_list_shortcode($atts) {
                                                         <button class="chip filter-chip"
                                                             data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                             data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                                            data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
-                                                            <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
+                                                            data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '')); ?>">
+                                                            <?php echo esc_html(is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '')); ?>
                                                         </button>
                                                     <?php endforeach; ?>
                                                 </div>
@@ -327,14 +279,20 @@ function kursagenten_course_list_shortcode($atts) {
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <label class="filter-list-item checkbox">
                                                                     <?php 
-                                                                    $term_value = is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term);
+                                                                    if ($filter === 'months') {
+                                                                        $term_value = $term['value'];
+                                                                        $term_name = $term['name'];
+                                                                    } else {
+                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    }
                                                                     $url_key = $taxonomy_data[$filter]['url_key'];
                                                                     ?>
                                                                     <input type="checkbox" class="filter-checkbox"
                                                                         value="<?php echo esc_attr($term_value); ?>"
                                                                         data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                         data-url-key="<?php echo esc_attr($url_key); ?>">
-                                                                    <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
+                                                                    <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
                                                                 </label>
                                                             <?php endforeach; ?>
                                                         </div>
@@ -404,8 +362,8 @@ function kursagenten_course_list_shortcode($atts) {
                                                                 <button class="chip filter-chip"
                                                                     data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                     data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                                                    data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : strtolower($term)); ?>">
-                                                                    <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
+                                                                    data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '')); ?>">
+                                                                    <?php echo esc_html(is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '')); ?>
                                                                 </button>
                                                             <?php endforeach; ?>
                                                         </div>
@@ -413,12 +371,21 @@ function kursagenten_course_list_shortcode($atts) {
                                                         <div id="filter-list-location" class="filter-list expand-content" data-size="130">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <label class="filter-list-item checkbox">
-
+                                                                    <?php 
+                                                                    if ($filter === 'months') {
+                                                                        $term_value = $term['value'];
+                                                                        $term_name = $term['name'];
+                                                                    } else {
+                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    }
+                                                                    $url_key = $taxonomy_data[$filter]['url_key'];
+                                                                    ?>
                                                                     <input type="checkbox" class="filter-checkbox"
-                                                                        value="<?php echo esc_attr(is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term)); ?>"
+                                                                        value="<?php echo esc_attr($term_value); ?>"
                                                                         data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                                                        data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>">
-                                                                    <span class="checkbox-label"><?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?></span>
+                                                                        data-url-key="<?php echo esc_attr($url_key); ?>">
+                                                                    <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
                                                                 </label>
                                                             <?php endforeach; ?>
                                                         </div>

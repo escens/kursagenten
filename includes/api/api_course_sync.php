@@ -452,6 +452,40 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
                 'meta_input' => $meta_input
             ]);
         }
+
+        if (!is_wp_error($coursedate_id)) {
+            // Oppdater location_id
+            update_post_meta($coursedate_id, 'location_id', $location_id);
+            
+            // Oppdater course_related_course relasjonen
+            if (!empty($post_id)) {
+                $current_related_course = get_post_meta($coursedate_id, 'course_related_course', true) ?: [];
+                if (!is_array($current_related_course)) {
+                    $current_related_course = (array) $current_related_course;
+                }
+                if (!in_array($post_id, $current_related_course)) {
+                    $current_related_course[] = $post_id;
+                    update_post_meta($coursedate_id, 'course_related_course', array_unique($current_related_course));
+                }
+            }
+
+            // Oppdater taxonomier basert på kurset
+            update_course_taxonomies($coursedate_id, $location_id, $data);
+            
+            // Oppdater instruktører
+            $schedule_data = [
+                'locations' => [
+                    [
+                        'courseId' => $location_id,
+                        'schedules' => [$schedule]
+                    ]
+                ]
+            ];
+            
+            $instructors = get_instructors_in_courselist($schedule_data, $location_id);
+            $location_instructors = $instructors['instructors_location'];
+            update_instructor_taxonomies($coursedate_id, $location_instructors);
+        }
     }
 }
 

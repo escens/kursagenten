@@ -9,6 +9,182 @@ if (!function_exists('get_course_template_part')) {
     }
 }
 
+// Funksjon for å hente filtrerte taksonomier
+function get_filtered_terms($taxonomy) {
+    error_log("=== START: get_filtered_terms for taxonomy: $taxonomy ===");
+    
+    // Hent alle synlige kurs
+    $visible_courses = get_posts([
+        'post_type' => 'course',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ]);
+    
+    error_log("Antall synlige kurs funnet: " . count($visible_courses));
+
+    // Hent alle taksonomier
+    $all_terms = get_terms([
+        'taxonomy' => $taxonomy,
+        'hide_empty' => true,
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ]);
+    
+    error_log("Antall taksonomier funnet før filtrering: " . count($all_terms));
+    error_log("Taksonomier før filtrering: " . print_r($all_terms, true));
+
+    // Hent skjulte kategorier
+    $hidden_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Skjul',
+            ]
+        ]
+    ]);
+    
+    error_log("Skjulte kategorier: " . print_r($hidden_categories, true));
+
+    // Filtrer ut taksonomier som bare er knyttet til skjulte kurs eller kurs med skjulte kategorier
+    $filtered_terms = array_filter($all_terms, function($term) use ($visible_courses, $hidden_categories) {
+        foreach ($visible_courses as $course) {
+            // Sjekk om kurset er knyttet til termen
+            if (has_term($term->term_id, $term->taxonomy, $course->ID)) {
+                // Sjekk om kurset er knyttet til noen skjulte kategorier
+                $has_hidden_category = false;
+                foreach ($hidden_categories as $hidden_category) {
+                    if (has_term($hidden_category->term_id, 'coursecategory', $course->ID)) {
+                        error_log("Kurs {$course->ID} er knyttet til skjult kategori {$hidden_category->name} (ID: {$hidden_category->term_id})");
+                        $has_hidden_category = true;
+                        break;
+                    }
+                }
+                
+                if (!$has_hidden_category) {
+                    error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til synlig kurs {$course->ID} uten skjulte kategorier");
+                    return true;
+                } else {
+                    error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til kurs {$course->ID} med skjulte kategorier - filtrerer ut");
+                }
+            }
+        }
+        error_log("Term {$term->name} (ID: {$term->term_id}) er IKKE knyttet til noen synlige kurs uten skjulte kategorier");
+        return false;
+    });
+
+    error_log("Antall taksonomier etter filtrering: " . count($filtered_terms));
+    error_log("Taksonomier etter filtrering: " . print_r($filtered_terms, true));
+    
+    error_log("=== SLUTT: get_filtered_terms for taxonomy: $taxonomy ===");
+    return $filtered_terms;
+}
+
+// Funksjon for å hente filtrerte språk
+function get_filtered_languages() {
+    $visible_courses = get_posts([
+        'post_type' => 'course',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ]);
+
+    $languages = [];
+    foreach ($visible_courses as $course) {
+        $language = get_post_meta($course->ID, 'course_language', true);
+        if (!empty($language)) {
+            $languages[$language] = $language;
+        }
+    }
+
+    return array_values($languages);
+}
+
+// Funksjon for å hente filtrerte måneder
+function get_filtered_months() {
+    error_log("=== START: get_filtered_months ===");
+    
+    // Hent kun coursedates siden månedene er lagret der
+    $visible_coursedates = get_posts([
+        'post_type' => 'coursedate',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ]);
+    
+    error_log("Antall synlige coursedates funnet: " . count($visible_coursedates));
+
+    $months = [];
+    foreach ($visible_coursedates as $coursedate) {
+        $month = get_post_meta($coursedate->ID, 'course_month', true);
+        if (!empty($month)) {
+            error_log("Fant måned {$month} for coursedate {$coursedate->ID}");
+            $months[$month] = [
+                'value' => $month,
+                'name' => mb_ucfirst(date_i18n('F', mktime(0, 0, 0, $month, 1)))
+            ];
+        }
+    }
+
+    // Sorter månedene i stigende rekkefølge basert på månedsnummeret
+    ksort($months, SORT_NUMERIC);
+
+    error_log("Måneder funnet: " . print_r($months, true));
+    error_log("=== SLUTT: get_filtered_months ===");
+    
+    return array_values($months);
+}
+
+// Hjelpefunksjon for å gjøre første bokstav stor med støtte for UTF-8
+if (!function_exists('mb_ucfirst')) {
+    function mb_ucfirst($string) {
+        $first = mb_substr($string, 0, 1, 'UTF-8');
+        $rest = mb_substr($string, 1, null, 'UTF-8');
+        return mb_strtoupper($first, 'UTF-8') . $rest;
+    }
+}
+
 add_action('wp_ajax_filter_courses', 'filter_courses_handler');
 add_action('wp_ajax_nopriv_filter_courses', 'filter_courses_handler');
 

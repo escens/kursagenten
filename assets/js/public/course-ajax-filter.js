@@ -214,6 +214,15 @@
 		data.action = 'filter_courses';
 		data.nonce = kurskalender_data.filter_nonce;
 
+		// Behold side-parameteren fra URL hvis den finnes og ingen ny side er spesifisert
+		if (!data.side) {
+			const urlParams = new URLSearchParams(window.location.search);
+			const urlSide = urlParams.get('side');
+			if (urlSide) {
+				data.side = urlSide;
+			}
+		}
+
 		// Vis loading indikator
 		$('.course-loading').show();
 
@@ -231,9 +240,12 @@
 					updatePagination(response.data.html_pagination);
 
 					// Scroll til toppen av resultatene med større offset
-					$('html, body').animate({
-						scrollTop: $('#filter-results').offset().top - 170
-					}, 500);
+					const $filterResults = $('#filter-results');
+					if ($filterResults.length) {
+						$('html, body').animate({
+							scrollTop: $filterResults.offset().top - 170
+						}, 500);
+					}
 
 					// Update dropdown states based on current URL filters
 					const currentFilters = getCurrentFiltersFromURL();
@@ -267,8 +279,17 @@
 					if (currentFilters.mnd) {
 						const months = Array.isArray(currentFilters.mnd) ?
 							currentFilters.mnd :
-							[currentFilters.mnd];
-						updateDropdownText('months', months);
+							currentFilters.mnd.split(',').map(m => m.trim());
+						
+						// Konverter måneder til to-sifret format
+						const formattedMonths = months.map(month => {
+							const numMonth = parseInt(month, 10);
+							return numMonth >= 1 && numMonth <= 12 ? 
+								numMonth.toString().padStart(2, '0') : 
+								month;
+						});
+						
+						updateDropdownText('months', formattedMonths);
 					}
 				} else {
 					console.error('Filter Error:', response.data);
@@ -314,6 +335,8 @@
 			// Spesiell håndtering for dato-parameter
 			if (key === 'dato') {
 				params[key] = value;  // Behold dato-stringen som den er
+			} else if (key === 'side') {
+				params[key] = parseInt(value, 10);  // Konverter side til tall
 			} else {
 				// Håndter andre parametere som før
 				params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
@@ -423,7 +446,12 @@
 
 						if (filters[urlKey]) {
 							if (Array.isArray(filters[urlKey])) {
-								filters[urlKey] = filters[urlKey].filter(item => item !== filterValue);
+								// For måneder, sørg for at vi sammenligner med samme format
+								const formattedValue = String(filterValue).padStart(2, '0');
+								filters[urlKey] = filters[urlKey].filter(item => {
+									const formattedItem = String(item).padStart(2, '0');
+									return formattedItem !== formattedValue;
+								});
 								if (filters[urlKey].length === 0) {
 									filters[urlKey] = null;
 								}
@@ -479,7 +507,18 @@
 	// Initialize filters on page load
 	initializeFiltersFromURL();
 
-
+	// Sjekk om vi har en side-parameter i URL-en ved sidelasting
+	$(document).ready(function() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const sideParam = urlParams.get('side');
+		
+		if (sideParam) {
+			const currentFilters = getCurrentFiltersFromURL();
+			console.log('Direkte tilgang til side:', sideParam);
+			console.log('Nåværende filtre:', currentFilters);
+			fetchCourses(currentFilters);
+		}
+	});
 
 	$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
 		e.preventDefault();
