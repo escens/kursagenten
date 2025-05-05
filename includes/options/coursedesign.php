@@ -299,6 +299,19 @@ class Designmaler {
                             </label>
                         </div>
                     </div>
+
+                    <!-- Antall kurs per side -->
+                    <div class="option-row">
+                        <label class="option-label">Antall kurs per side:</label>
+                        <div class="option-input">
+                            <input type="number" 
+                                   name="kursagenten_courses_per_page" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_courses_per_page', 5)); ?>"
+                                   min="1" 
+                                   max="50">
+                            <p class="description">Velg standard antall kurs som skal vises per side (1-50)</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Taxonomi -->
@@ -616,6 +629,17 @@ class Designmaler {
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => 'yes'
+            )
+        );
+
+        // Registrer innstilling for antall kurs per side
+        register_setting(
+            'design_option_group',
+            'kursagenten_courses_per_page',
+            array(
+                'type' => 'integer',
+                'sanitize_callback' => 'absint',
+                'default' => 5
             )
         );
 

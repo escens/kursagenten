@@ -406,19 +406,40 @@ function kursagenten_course_list_shortcode($atts) {
                                         </div>
 
                                         <div id="courselist-header-right">
-                                            <div class="sort-dropdown">
+                                            <!-- Antall kurs per side dropdown -->
+                                            <div class="per-page-dropdown select-dropdown">
+                                                <div class="per-page-dropdown-toggle">
+                                                    <span class="selected-text">Vis antall kurs</span>
+                                                    <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
+                                                </div>
+                                                <div class="per-page-dropdown-content select-dropdown-content">
+                                                    <?php
+                                                    $current_per_page = isset($_REQUEST['per_page']) ? absint($_REQUEST['per_page']) : get_option('kursagenten_courses_per_page', 5);
+                                                    $options = array(5, 10, 20, 30, 50);
+                                                    foreach ($options as $option) :
+                                                        $selected = $current_per_page == $option ? 'selected' : '';
+                                                    ?>
+                                                        <button class="per-page-option select-option <?php echo $selected; ?>" 
+                                                                data-per-page="<?php echo $option; ?>">
+                                                            <?php echo $option; ?> kurs
+                                                        </button>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            </div>
+
+                                            <div class="sort-dropdown select-dropdown">
                                                 <div class="sort-dropdown-toggle">
                                                     <span class="selected-text">Sorter etter</span>
                                                     <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
                                                 </div>
-                                                <div class="sort-dropdown-content">
-                                                    <button class="sort-option" data-sort="standard" data-order="">Standard</button>
-                                                    <button class="sort-option" data-sort="title" data-order="asc">Fra A til Å</button>
-                                                    <button class="sort-option" data-sort="title" data-order="desc">Fra Å til A</button>
-                                                    <button class="sort-option" data-sort="price" data-order="asc">Pris lav til høy</button>
-                                                    <button class="sort-option" data-sort="price" data-order="desc">Pris høy til lav</button>
-                                                    <button class="sort-option" data-sort="date" data-order="asc">Tidligste dato</button>
-                                                    <button class="sort-option" data-sort="date" data-order="desc">Seneste dato</button>
+                                                <div class="sort-dropdown-content select-dropdown-content">
+                                                    <button class="sort-option select-option" data-sort="standard" data-order="">Standard</button>
+                                                    <button class="sort-option select-option" data-sort="title" data-order="asc">Fra A til Å</button>
+                                                    <button class="sort-option select-option" data-sort="title" data-order="desc">Fra Å til A</button>
+                                                    <button class="sort-option select-option" data-sort="price" data-order="asc">Pris lav til høy</button>
+                                                    <button class="sort-option select-option" data-sort="price" data-order="desc">Pris høy til lav</button>
+                                                    <button class="sort-option select-option" data-sort="date" data-order="asc">Tidligste dato</button>
+                                                    <button class="sort-option select-option" data-sort="date" data-order="desc">Seneste dato</button>
                                                 </div>
                                             </div>
                                         </div>
@@ -503,6 +524,29 @@ function kursagenten_course_list_shortcode($atts) {
     <script type="text/javascript">
     
     jQuery(document).ready(function($) {
+        // Håndter per-page dropdown
+        $('.per-page-dropdown-toggle').on('click', function() {
+            $(this).parent().toggleClass('active');
+        });
+
+        $('.per-page-option').on('click', function() {
+            const perPage = $(this).data('per-page');
+            const currentUrl = new URL(window.location.href);
+            currentUrl.searchParams.set('per_page', perPage);
+            
+            // Fjern per_page fra aktive filtre før vi oppdaterer URL
+            $('#active-filters .filter-tag[data-param="per_page"]').remove();
+            
+            window.location.href = currentUrl.toString();
+        });
+
+        // Lukk dropdown når man klikker utenfor
+        $(document).on('click', function(e) {
+            if (!$(e.target).closest('.per-page-dropdown').length) {
+                $('.per-page-dropdown').removeClass('active');
+            }
+        });
+
         // Overstyr standard scroll-oppførsel for mobilfiltre
         $(document).ajaxSuccess(function(event, xhr, settings) {
             if (settings.data && settings.data.includes('action=filter_courses')) {
@@ -985,11 +1029,21 @@ function kursagenten_course_list_shortcode($atts) {
                 filters['search'] = searchTerm;
             }
 
+            // Behold eksisterende per_page parameter hvis den finnes
+            const urlParams = new URLSearchParams(window.location.search);
+            const perPage = urlParams.get('per_page');
+            if (perPage) {
+                filters['per_page'] = perPage;
+            }
+
             // Oppdater URL og last inn nye resultater
             const queryString = Object.entries(filters)
                 .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`)
                 .join('&');
 
+            // Fjern per_page fra aktive filtre før vi oppdaterer URL
+            $('#active-filters .filter-tag[data-param="per_page"]').remove();
+            
             window.location.href = `${window.location.pathname}?${queryString}`;
         }
 

@@ -384,7 +384,7 @@
 		// Create chips for each active filter
 		Object.keys(filters).forEach(key => {
 			// Ekskluder sorteringsparametere og andre systemparametere
-			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'side' &&
+			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'per_page' && key !== 'order' && key !== 'side' &&
 				filters[key] && filters[key].length > 0) {
 				
 				// Spesiell håndtering for datofilteret

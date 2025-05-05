@@ -788,12 +788,12 @@ border-radius: 10px;
 
 /* Filter: sort */
 /****************/
-#ka .sort-dropdown {
+#ka .sort-dropdown, #ka .per-page-dropdown {
 position: relative;
 cursor: pointer;
 }
 
-#ka .sort-dropdown-content {
+#ka .sort-dropdown-content, #ka .per-page-dropdown-content {
 display: none;
 position: absolute;
 right: 0;
@@ -804,11 +804,11 @@ z-index: 1000;
 min-width: 200px;
 }
 
-#ka .sort-dropdown.active .sort-dropdown-content {
+#ka .sort-dropdown.active .sort-dropdown-content, #ka .per-page-dropdown.active .per-page-dropdown-content {
 display: block;
 }
 
-#ka .sort-option {
+#ka .sort-option, #ka .per-page-option {
 display: block;
 width: 100%;
 padding: 8px 16px;
@@ -820,7 +820,7 @@ background: none;
 cursor: pointer;
 }
 
-#ka .sort-option:hover {
+#ka .sort-option:hover, #ka .per-page-option:hover {
 color: var(--ka-color);
 background-color: #f5f5f5;
 box-shadow: none;

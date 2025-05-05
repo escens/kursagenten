@@ -560,7 +560,10 @@ function get_course_dates_query($args = []) {
 	}
 	
 	// Håndter paginering
-	$posts_per_page = 5;
+	$default_posts_per_page = get_option('kursagenten_courses_per_page', 5);
+	$user_selected_posts_per_page = isset($_REQUEST['per_page']) ? absint($_REQUEST['per_page']) : $default_posts_per_page;
+	$posts_per_page = min(max(1, $user_selected_posts_per_page), 50); // Begrens til 1-50
+	
 	$total_posts = count($query->posts);
 	$total_pages = ceil($total_posts / $posts_per_page);
 	
@@ -873,4 +876,40 @@ function display_course_locations($post_id) {
     $output .= '</div>';
     
     return $output;
+}
+
+/**
+ * Registrer innstillinger for kursvisning
+ */
+function register_course_display_settings() {
+    register_setting('general', 'ka_courses_per_page', array(
+        'type' => 'integer',
+        'default' => 5,
+        'sanitize_callback' => 'absint'
+    ));
+
+    add_settings_section(
+        'ka_course_display_section',
+        'Kursvisning',
+        null,
+        'general'
+    );
+
+    add_settings_field(
+        'ka_courses_per_page',
+        'Antall kurs per side',
+        'ka_courses_per_page_callback',
+        'general',
+        'ka_course_display_section'
+    );
+}
+add_action('admin_init', 'register_course_display_settings');
+
+/**
+ * Callback for innstillingsfeltet
+ */
+function ka_courses_per_page_callback() {
+    $value = get_option('ka_courses_per_page', 5);
+    echo '<input type="number" name="ka_courses_per_page" value="' . esc_attr($value) . '" min="1" max="50" />';
+    echo '<p class="description">Velg standard antall kurs som skal vises per side (1-50)</p>';
 }
