@@ -351,6 +351,8 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         ]);
 
         foreach ($existing_dates as $date) {
+            // Bruk den nye remove_course_coursedate_relationship funksjonen
+            remove_course_coursedate_relationship($post_id, $date->ID);
             wp_delete_post($date->ID, true);
         }
         return;
@@ -457,16 +459,9 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
             // Oppdater location_id
             update_post_meta($coursedate_id, 'location_id', $location_id);
             
-            // Oppdater course_related_course relasjonen
+            // Bruk den nye create_or_update_course_coursedate_relationship funksjonen
             if (!empty($post_id)) {
-                $current_related_course = get_post_meta($coursedate_id, 'course_related_course', true) ?: [];
-                if (!is_array($current_related_course)) {
-                    $current_related_course = (array) $current_related_course;
-                }
-                if (!in_array($post_id, $current_related_course)) {
-                    $current_related_course[] = $post_id;
-                    update_post_meta($coursedate_id, 'course_related_course', array_unique($current_related_course));
-                }
+                create_or_update_course_coursedate_relationship($post_id, $coursedate_id);
             }
 
             // Oppdater taxonomier basert på kurset
@@ -782,9 +777,11 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
                 }
 
                 if (isset($instructor['image'])) {
+                    error_log("DEBUG: Original image URL: " . $instructor['image']);
                     $image_url = esc_url_raw($instructor['image']);
+                    error_log("DEBUG: Sanitized image URL: " . $image_url);
                     update_term_meta($term_id, 'image_instructor_ka', $image_url);
-                    //error_log("DEBUG: Oppdatert image_instructor for {$instructor['fullname']}: {$image_url}");
+                    error_log("DEBUG: Updated image_instructor_ka for {$instructor['fullname']} with URL: " . $image_url);
                 }
 
                 if (isset($instructor['email'])) {
@@ -793,6 +790,12 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
 
                 if (isset($instructor['phone'])) {
                     update_term_meta($term_id, 'instructor_phone', sanitize_text_field($instructor['phone']));
+                }
+                if (isset($instructor['firstname'])) {
+                    update_term_meta($term_id, 'instructor_firstname', sanitize_text_field($instructor['firstname']));
+                }
+                if (isset($instructor['lastname'])) {
+                    update_term_meta($term_id, 'instructor_lastname', sanitize_text_field($instructor['lastname']));
                 }
             }
         }
@@ -826,7 +829,7 @@ function get_instructors_in_courselist($data, $location_id) {
                 if (isset($instructor['id'], $instructor['fullname'])) {
                     // Konstruer full bilde-URL hvis image eksisterer
                     $image_url = !empty($instructor['image']) ? 
-                    KURSAGENTEN_IMAGE_BASE_URL_INSTRUCTOR . ltrim($instructor['image'], '/') : '';
+                    ltrim($instructor['image'], '/') : '';
 
                     $instructors_location[$instructor['id']] = [
                         'id' => $instructor['id'],

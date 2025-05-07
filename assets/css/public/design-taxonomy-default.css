@@ -55,6 +55,9 @@
     line-height: 1.7;
     color: #333;
 }
+#ka .taxonomy-rich-description h3{
+    margin-top: 1rem;
+}
 
 /* Course Dates Grid */
 #ka .taxonomy-coursedates {

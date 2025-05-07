@@ -50,8 +50,8 @@ function get_filtered_terms($taxonomy) {
         ]
     ]);
     
-    error_log("Antall taksonomier funnet før filtrering: " . count($all_terms));
-    error_log("Taksonomier før filtrering: " . print_r($all_terms, true));
+    //error_log("Antall taksonomier funnet før filtrering: " . count($all_terms));
+    //error_log("Taksonomier før filtrering: " . print_r($all_terms, true));
 
     // Hent skjulte kategorier
     $hidden_categories = get_terms([
@@ -65,7 +65,7 @@ function get_filtered_terms($taxonomy) {
         ]
     ]);
     
-    error_log("Skjulte kategorier: " . print_r($hidden_categories, true));
+    //error_log("Skjulte kategorier: " . print_r($hidden_categories, true));
 
     // Filtrer ut taksonomier som bare er knyttet til skjulte kurs eller kurs med skjulte kategorier
     $filtered_terms = array_filter($all_terms, function($term) use ($visible_courses, $hidden_categories) {
@@ -76,28 +76,28 @@ function get_filtered_terms($taxonomy) {
                 $has_hidden_category = false;
                 foreach ($hidden_categories as $hidden_category) {
                     if (has_term($hidden_category->term_id, 'coursecategory', $course->ID)) {
-                        error_log("Kurs {$course->ID} er knyttet til skjult kategori {$hidden_category->name} (ID: {$hidden_category->term_id})");
+                        //error_log("Kurs {$course->ID} er knyttet til skjult kategori {$hidden_category->name} (ID: {$hidden_category->term_id})");
                         $has_hidden_category = true;
                         break;
                     }
                 }
                 
                 if (!$has_hidden_category) {
-                    error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til synlig kurs {$course->ID} uten skjulte kategorier");
+                    //error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til synlig kurs {$course->ID} uten skjulte kategorier");
                     return true;
                 } else {
-                    error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til kurs {$course->ID} med skjulte kategorier - filtrerer ut");
+                    //error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til kurs {$course->ID} med skjulte kategorier - filtrerer ut");
                 }
             }
         }
-        error_log("Term {$term->name} (ID: {$term->term_id}) er IKKE knyttet til noen synlige kurs uten skjulte kategorier");
+        //error_log("Term {$term->name} (ID: {$term->term_id}) er IKKE knyttet til noen synlige kurs uten skjulte kategorier");
         return false;
     });
 
-    error_log("Antall taksonomier etter filtrering: " . count($filtered_terms));
-    error_log("Taksonomier etter filtrering: " . print_r($filtered_terms, true));
+    //error_log("Antall taksonomier etter filtrering: " . count($filtered_terms));
+    //error_log("Taksonomier etter filtrering: " . print_r($filtered_terms, true));
     
-    error_log("=== SLUTT: get_filtered_terms for taxonomy: $taxonomy ===");
+    //error_log("=== SLUTT: get_filtered_terms for taxonomy: $taxonomy ===");
     return $filtered_terms;
 }
 
@@ -133,7 +133,7 @@ function get_filtered_languages() {
 
 // Funksjon for å hente filtrerte måneder
 function get_filtered_months() {
-    error_log("=== START: get_filtered_months ===");
+    //error_log("=== START: get_filtered_months ===");
     
     // Hent kun coursedates siden månedene er lagret der
     $visible_coursedates = get_posts([
@@ -153,13 +153,13 @@ function get_filtered_months() {
         ]
     ]);
     
-    error_log("Antall synlige coursedates funnet: " . count($visible_coursedates));
+    //error_log("Antall synlige coursedates funnet: " . count($visible_coursedates));
 
     $months = [];
     foreach ($visible_coursedates as $coursedate) {
         $month = get_post_meta($coursedate->ID, 'course_month', true);
         if (!empty($month)) {
-            error_log("Fant måned {$month} for coursedate {$coursedate->ID}");
+            //error_log("Fant måned {$month} for coursedate {$coursedate->ID}");
             $months[$month] = [
                 'value' => $month,
                 'name' => mb_ucfirst(date_i18n('F', mktime(0, 0, 0, $month, 1)))
@@ -170,8 +170,8 @@ function get_filtered_months() {
     // Sorter månedene i stigende rekkefølge basert på månedsnummeret
     ksort($months, SORT_NUMERIC);
 
-    error_log("Måneder funnet: " . print_r($months, true));
-    error_log("=== SLUTT: get_filtered_months ===");
+    //error_log("Måneder funnet: " . print_r($months, true));
+    //error_log("=== SLUTT: get_filtered_months ===");
     
     return array_values($months);
 }
@@ -191,7 +191,7 @@ add_action('wp_ajax_nopriv_filter_courses', 'filter_courses_handler');
 function filter_courses_handler() {
     // Verifiser nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'filter_nonce')) {
-        error_log('Nonce verification failed in filter_courses_handler');
+        //error_log('Nonce verification failed in filter_courses_handler');
         wp_send_json_error([
             'message' => 'Sikkerhetssjekk feilet. Vennligst oppdater siden og prøv igjen.'
         ], 403);

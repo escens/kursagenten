@@ -55,7 +55,10 @@ error_log('Taxonomy template: Using term slug: ' . $term->slug);
 
                 <?php if (!empty($rich_description)): ?>
                     <div class="taxonomy-rich-description">
-                        <?php echo wp_kses_post($rich_description); ?>
+                        <?php 
+                        // Bruk apply_filters for å tillate mer HTML-innhold
+                        echo apply_filters('the_content', $rich_description); 
+                        ?>
                     </div>
                 <?php endif; ?>
             </div>

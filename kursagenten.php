@@ -61,7 +61,7 @@ define('KURSAG_PLUGIN_FILE', __FILE__);
 define('KURSAG_PLUGIN_BASE', plugin_basename(KURSAG_PLUGIN_FILE));
 define('KURSAG_PLUGIN_DIR',  plugin_dir_path(KURSAG_PLUGIN_FILE));
 define('KURSAG_PLUGIN_URL',  plugin_dir_url(KURSAG_PLUGIN_FILE));
-define('KURSAGENTEN_IMAGE_BASE_URL_INSTRUCTOR', 'https://www.kursagenten.no/UserImages/');
+//define('KURSAGENTEN_IMAGE_BASE_URL_INSTRUCTOR', '');
 
 
 register_activation_hook(__FILE__, 'kursagenten_activate');
@@ -180,6 +180,7 @@ function kursagenten_register_post_types() {
     require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_custom_taxonomy_fields.php';
     require_once KURSAG_PLUGIN_DIR . '/includes/post_types/register_image_fields.php';
     require_once KURSAG_PLUGIN_DIR . '/includes/post_types/visibility_management.php';
+    require_once KURSAG_PLUGIN_DIR . '/includes/post_types/course_relationships.php';
 }
 
 /**

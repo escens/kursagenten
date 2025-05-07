@@ -258,7 +258,37 @@ function save_taxonomy_field($term_id) {
         'icon_coursecategory' => 'esc_url',
         'image_course_location' => 'esc_url',
         'image_instructor' => 'esc_url',
-        'rich_description' => 'wp_kses_post',
+        'rich_description' => function($content) {
+            // Tillat mer HTML-innhold enn standard wp_kses_post
+            $allowed_html = wp_kses_allowed_html('post');
+            // Legg til ekstra tillatte tagger og attributter
+            $allowed_html['iframe'] = array(
+                'src' => true,
+                'width' => true,
+                'height' => true,
+                'frameborder' => true,
+                'allowfullscreen' => true,
+                'style' => true,
+                'class' => true
+            );
+            $allowed_html['video'] = array(
+                'src' => true,
+                'width' => true,
+                'height' => true,
+                'controls' => true,
+                'autoplay' => true,
+                'loop' => true,
+                'muted' => true,
+                'poster' => true,
+                'style' => true,
+                'class' => true
+            );
+            $allowed_html['source'] = array(
+                'src' => true,
+                'type' => true
+            );
+            return wp_kses($content, $allowed_html);
+        },
         'instructor_email' => 'sanitize_email',
         'instructor_phone' => 'sanitize_text_field',
         'hide_in_list' => 'sanitize_text_field',
@@ -510,6 +540,8 @@ function kursagenten_make_fields_readonly($term) {
     
     $email = get_term_meta($term->term_id, 'instructor_email', true);
     $phone = get_term_meta($term->term_id, 'instructor_phone', true);
+    $firstname = get_term_meta($term->term_id, 'instructor_firstname', true);
+    $lastname = get_term_meta($term->term_id, 'instructor_lastname', true);
     $id = get_term_meta($term->term_id, 'instructor_id', true);
     $image_ka = get_term_meta($term->term_id, 'image_instructor_ka', true); // image_instructor_ka is the image from Kursagenten. Override is the image_instructor field.
     error_log("DEBUG: Instructor ID: " . $id);
@@ -543,6 +575,9 @@ function kursagenten_make_fields_readonly($term) {
                             '<p><strong>Slug:</strong> /<?php echo esc_js(esc_attr($term->slug)); ?></p>' +
                             '<p><strong>Telefon:</strong> <?php echo esc_js(esc_html($phone)); ?></p>' +
                             '<p><strong>E-post:</strong> <?php echo esc_js(esc_html($email)); ?></p>' +
+                            '<p><strong>Fornavn:</strong> <?php echo esc_js(esc_html($firstname)); ?></p>' +
+                            '<p><strong>Etternavn:</strong> <?php echo esc_js(esc_html($lastname)); ?></p>' +
+                            '<p><strong>Bildeurl:</strong> <?php echo esc_js(esc_html($image_ka)); ?></p>' +
                             '<a href="https://kursadmin.kursagenten.no/Profile/<?php echo esc_js(esc_html($id)); ?>" target="_blank">' +
                                 'Rediger i Kursadmin' +
                             '</a>' +

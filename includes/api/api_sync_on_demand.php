@@ -314,11 +314,11 @@ function cleanup_courses_on_demand() {
         $location_id = get_post_meta($wp_course->ID, 'location_id', true);
         
         if (!in_array($location_id, $valid_location_ids)) {
-            error_log("=== SLETTING AV KURS ===");
-            error_log("Kurs med location_id $location_id finnes ikke lenger i API");
-            error_log("Post ID: " . $wp_course->ID);
-            error_log("Tittel: " . $wp_course->post_title);
-            error_log("Status: " . $wp_course->post_status);
+            //error_log("=== SLETTING AV KURS ===");
+            //error_log("Kurs med location_id $location_id finnes ikke lenger i API");
+            //error_log("Post ID: " . $wp_course->ID);
+            //error_log("Tittel: " . $wp_course->post_title);
+            //error_log("Status: " . $wp_course->post_status);
             
             // Finn og slett tilknyttede kursdatoer basert på location_id
             $related_dates = get_posts([

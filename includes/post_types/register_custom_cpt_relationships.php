@@ -38,40 +38,29 @@ function related_save_relationships($post_id) {
             continue;
         }
 
-        // Oppdater relasjoner for denne posten
-        update_post_meta($post_id, $meta_key, $related_ids);
+        // Hent eksisterende relasjoner
+        $existing_relations = get_post_meta($post_id, $meta_key, true) ?: [];
+        if (!is_array($existing_relations)) {
+            $existing_relations = (array) $existing_relations;
+        }
 
-        // Håndter reverse relasjoner
-        $reverse_meta_key = 'course_related_' . $post_type;
-        
-        // Fjern denne posten fra alle tidligere relasjoner
-        $existing_relations = get_posts([
-            'post_type' => $related_post_type,
-            'posts_per_page' => -1,
-            'fields' => 'ids',
-            'meta_query' => [
-                [
-                    'key' => $reverse_meta_key,
-                    'value' => $post_id,
-                    'compare' => 'LIKE'
-                ]
-            ]
-        ]);
-
-        foreach ($existing_relations as $related_id) {
-            $current_relations = get_post_meta($related_id, $reverse_meta_key, true);
-            if (is_array($current_relations)) {
-                $current_relations = array_diff($current_relations, [$post_id]);
-                update_post_meta($related_id, $reverse_meta_key, array_values($current_relations));
+        // Finn relasjoner som skal fjernes
+        $relations_to_remove = array_diff($existing_relations, $related_ids);
+        foreach ($relations_to_remove as $relation_id) {
+            if ($post_type === 'course') {
+                remove_course_coursedate_relationship($post_id, $relation_id);
+            } else {
+                remove_course_coursedate_relationship($relation_id, $post_id);
             }
         }
 
-        // Legg til denne posten i nye relasjoner
-        foreach ($related_ids as $related_id) {
-            $current_relations = get_post_meta($related_id, $reverse_meta_key, true) ?: [];
-            if (!in_array($post_id, $current_relations)) {
-                $current_relations[] = $post_id;
-                update_post_meta($related_id, $reverse_meta_key, array_values($current_relations));
+        // Finn relasjoner som skal legges til
+        $relations_to_add = array_diff($related_ids, $existing_relations);
+        foreach ($relations_to_add as $relation_id) {
+            if ($post_type === 'course') {
+                create_or_update_course_coursedate_relationship($post_id, $relation_id);
+            } else {
+                create_or_update_course_coursedate_relationship($relation_id, $post_id);
             }
         }
     }

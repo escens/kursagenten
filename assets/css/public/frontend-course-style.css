@@ -123,7 +123,7 @@
 .ka-text-xl { font-size: var(--ka-font-xl); }
 
 #ka-main p {
-margin-bottom: .5em;
+  margin: .5em 0 1em;
 }
 button{
   background: var(--ka-button-background);

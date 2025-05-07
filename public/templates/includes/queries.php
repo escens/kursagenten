@@ -301,7 +301,7 @@ function get_course_dates_query($args = []) {
 			'terms'    => $hidden_terms,
 			'operator' => 'NOT IN'
 		);
-		error_log('Tax query for skjulte kategorier lagt til: ' . print_r($default_args['tax_query'], true));
+		//error_log('Tax query for skjulte kategorier lagt til: ' . print_r($default_args['tax_query'], true));
 	}
 
 	$query_args = wp_parse_args($args, $default_args);
@@ -449,9 +449,9 @@ function get_course_dates_query($args = []) {
 	}
 
 	$query = new WP_Query($query_args);
-	error_log('SQL spørring: ' . $query->request);
-	error_log('Antall poster funnet: ' . $query->found_posts);
-	error_log('Antall poster returnert: ' . count($query->posts));
+	//error_log('SQL spørring: ' . $query->request);
+	//error_log('Antall poster funnet: ' . $query->found_posts);
+	//error_log('Antall poster returnert: ' . count($query->posts));
 
 	// Sorter resultatene manuelt
 	$posts_with_date = [];
@@ -462,7 +462,7 @@ function get_course_dates_query($args = []) {
 		// Logg kategoriene for hver post
 		$categories = wp_get_post_terms($post->ID, 'coursecategory', array('fields' => 'slugs'));
 		$locations = wp_get_post_terms($post->ID, 'course_location', array('fields' => 'slugs'));
-		error_log('Post ID: ' . $post->ID . ', Tittel: ' . $post->post_title . ', Kategorier: ' . print_r($categories, true) . ', Lokasjoner: ' . print_r($locations, true));
+		//error_log('Post ID: ' . $post->ID . ', Tittel: ' . $post->post_title . ', Kategorier: ' . print_r($categories, true) . ', Lokasjoner: ' . print_r($locations, true));
 		
 		if (!empty($first_date)) {
 			$posts_with_date[] = $post;
