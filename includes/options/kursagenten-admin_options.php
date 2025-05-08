@@ -120,7 +120,7 @@ function kursagenten_admin_landing_page() {
 
             <div class="options-card">
                 
-            <h3>Innholdsblokker</h3>
+                <h3>Innholdsblokker</h3>
                 <p>Kortkode med lister av enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, og så en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den.</p>
                 <div class="kort" id="lister" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
                     <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/standard"]</span></p>
@@ -130,8 +130,8 @@ function kursagenten_admin_landing_page() {
                 <p>&nbsp;</p>
                 
                 <div class="">
-                <h3>Valg for lister og grid</h3>
-                <p>Skriver du kun kortkodene <span class="copytext">[kurskategorier]</span> eller <span class="copytext">[kurssted]</span> brukes standardvalgene.<br>Bruk eventuelt de fulle kodene over, og fjern de valgene du ikke trenger.</p>
+                    <h3>Valg for lister og grid</h3>
+                    <p>Skriver du kun kortkodene <span class="copytext">[kurskategorier]</span> eller <span class="copytext">[kurssted]</span> brukes standardvalgene.<br>Bruk eventuelt de fulle kodene over, og fjern de valgene du ikke trenger.</p>
                 
                     <table class="widefat light-grey-rows" style="border: 0; background: #fbfbfb; padding: 1em; border-radius: 10px;">
                         <colgroup>
@@ -272,6 +272,28 @@ function kursagenten_admin_landing_page() {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+            <div id="hooks" class="options-card">
+                <h3>Hooks</h3>
+                <div class="ka-grid ka-grid-3">
+                    <div class="kort">
+                            <h4>Taksonomi-sider</h4>
+                            <p><strong>Instruktører</strong><br><span class="copytext">ka_instructors_left_column</span></p>
+                            <p><strong>Kurskategorier</strong><br><span class="copytext">ka_coursecategory_left_column</span></p>
+                            <p><strong>Kurssted</strong><br><span class="copytext">ka_courselocation_left_column</span></p>
+                    </div>
+                    <div class="kort">
+                        <h4>Enkeltkurs</h4>
+                        <p>Hooks kommer...<br><span class="copytext"></span></p>
+                    </div>
+
+                    <div class="kort">
+                        <h4>Annet</h4>
+                        <p>Hooks kommer...<br><span class="copytext"></span></p>
+                     </div>
+                    
+                    
                 </div>
             </div>
         

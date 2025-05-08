@@ -34,12 +34,28 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
     <header class="ka-section ka-taxonomy-header">
         <div class="ka-content-container">
             <div class="taxonomy-header-content">
-                <h1><?php echo esc_html($term->name); ?></h1>
-                <?php if (!empty($term->description)): ?>
-                    <div class="taxonomy-description">
-                        <?php echo wp_kses_post($term->description); ?>
+                <?php 
+                // Hent Kursagenten-bilde eller placeholder
+                $ka_image_url = get_term_meta($term_id, 'image_instructor_ka', true);
+                if (empty($ka_image_url)) {
+                    $options = get_option('kag_kursinnst_option_name');
+                    $ka_image_url = isset($options['ka_plassholderbilde_instruktor']) ? 
+                        $options['ka_plassholderbilde_instruktor'] : '';
+                }
+                ?>
+                <?php if (!empty($ka_image_url)): ?>
+                    <div class="taxonomy-header-image">
+                        <img src="<?php echo esc_url($ka_image_url); ?>" alt="<?php echo esc_attr($term->name); ?>">
                     </div>
                 <?php endif; ?>
+                <div class="taxonomy-header-text">
+                    <h1><?php echo esc_html($term->name); ?></h1>
+                    <?php if (!empty($term->description)): ?>
+                        <div class="taxonomy-description">
+                            <?php echo wp_kses_post($term->description); ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </header>
@@ -47,28 +63,17 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
             <div class="taxonomy-content-grid">
-                <div class="left-column">
-                    <?php if (!empty($image_url)): ?>
-                        <div class="taxonomy-image">
-                            <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($term->name); ?>">
-                        </div>
-                    <?php endif; ?>
+                <?php 
+                // Sjekk etter alternativt bilde (image_instructor)
+                $alt_image_url = get_term_meta($term_id, 'image_instructor', true);
+                
+                if (!empty($alt_image_url)): 
+                ?>
+                    <div class="taxonomy-image">
+                        <img src="<?php echo esc_url($alt_image_url); ?>" alt="<?php echo esc_attr($term->name); ?>">
+                    </div>
+                <?php endif; ?>
 
-                    <?php
-                    // Hook for venstre kolonne basert på taksonomitype
-                    switch ($taxonomy) {
-                        case 'instructors':
-                            do_action('ka_instructors_left_column', $term);
-                            break;
-                        case 'coursecategory':
-                            do_action('ka_coursecategory_left_column', $term);
-                            break;
-                        case 'course_location':
-                            do_action('ka_courselocation_left_column', $term);
-                            break;
-                    }
-                    ?>
-                </div>
                 <?php if (!empty($rich_description)): ?>
                     <div class="taxonomy-rich-description">
                         <?php 

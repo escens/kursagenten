@@ -383,7 +383,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
             if ($design !== 'default') {
                 wp_enqueue_style(
                     'kursagenten-taxonomy-design-' . $design,
-                    KURSAG_PLUGIN_URL . '/assets/css/public/design-' . $design . '.css',
+                    KURSAG_PLUGIN_URL . '/assets/css/public/design-taxonomy-' . $design . '.css',
                     array('kursagenten-taxonomy-base'),
                     KURSAG_VERSION
                 );

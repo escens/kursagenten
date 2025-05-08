@@ -349,8 +349,8 @@ class Designmaler {
                                 $current_design = get_option('kursagenten_taxonomy_design', 'default');
                                 $designs = [
                                     'default' => 'Standard',
-                                    'modern' => 'Moderne',
-                                    'minimal' => 'Minimal'
+                                    'default-2' => 'Standard 2',
+                                    'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {
                                     printf(

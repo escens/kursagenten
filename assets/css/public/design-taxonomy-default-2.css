@@ -59,6 +59,71 @@
     margin-top: 1rem;
 }
 
+/* Ny css for bilder og oppsett*/
+
+.taxonomy-header-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 2rem;
+}
+
+.taxonomy-header-image {
+    flex-shrink: 0;
+}
+
+.taxonomy-header-image img {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+.taxonomy-header-text {
+    flex-grow: 1;
+}
+
+.taxonomy-header-text h1 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+}
+
+.taxonomy-description {
+    margin-bottom: 1rem;
+}
+
+/* Eksisterende grid-layout for hovedinnholdet */
+.taxonomy-content-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.taxonomy-image img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+}
+
+/* Responsivt design */
+@media (max-width: 768px) {
+    .taxonomy-header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .taxonomy-content-grid {
+        grid-template-columns: 1fr;
+    }
+} 
+
+
+
+
+
+
+
 
 
 /* Course Dates Grid */
