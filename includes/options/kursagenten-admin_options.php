@@ -152,11 +152,18 @@ function kursagenten_admin_landing_page() {
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Kilde</td>
+                                <td>Kilde (k)</td>
                                 <td>Du kan velge om du vil bruke hovedbilde, eller laste opp egne ikoner for lister. Velg kilde=ikon hvis du vil bruke disse.</td>
                                 <td>bilde, ikon<br><strong>Standard:</strong> bilde</td>
                                 <td>Kurskategorier</td>
                                 <td><span class="copytext">[kurskategorier kilde=ikon]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Kilde (i)</td>
+                                <td>Du kan velge om du vil bruke et bildet du laster opp selv, eller bruke bildet hentet fra Kursagenten. Velg kilde=ka-bilde hvis du vil bruke dette.</td>
+                                <td>bilde, ka-bilde<br><strong>Standard:</strong> bilde</td>
+                                <td>Instruktører</td>
+                                <td><span class="copytext">[instruktorer kilde=ka-bilde]</span></td>
                             </tr>
                             <tr>
                                 <td>Layout</td>

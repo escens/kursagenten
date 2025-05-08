@@ -24,7 +24,7 @@ class InstructorGrid {
 
     public function render_instructors($atts): string {
         $defaults = [
-            'kilde' => 'bilde_instruktor',
+            'kilde' => 'bilde',
             'layout' => 'stablet',
             'stil' => 'standard',
             'grid' => '3',
@@ -141,13 +141,17 @@ class InstructorGrid {
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
-            // Hent thumbnail
-            $thumbnail = get_term_meta($term->term_id, 'image_instructor', true);
-            if (empty($thumbnail)) {
+            $thumbnail = '';
+            
+            if ($a['kilde'] === 'ka-bilde') {
+                // Hent bilde fra KA API
                 $thumbnail = get_term_meta($term->term_id, 'image_instructor_ka', true);
+            } else {
+                // Hent opplastet bilde
+                $thumbnail = get_term_meta($term->term_id, 'image_instructor', true);
             }
             
-            // Hvis fortsatt ingen bilde, bruk placeholder
+            // Hvis ingen bilde funnet, bruk placeholder
             if (empty($thumbnail)) {
                 $options = get_option('kag_kursinnst_option_name');
                 $thumbnail = isset($options['ka_plassholderbilde_instruktor']) ? 

@@ -202,9 +202,11 @@
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['first_date']) ?>
                                                 </span>
+                                                <?php if (!empty($coursedate['time'])) : ?>
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['time']) ?> 
                                                 </span>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
                                         <div class="links-area">
@@ -218,8 +220,11 @@
                                         <?php if ($coursedate['missing_first_date']) : ?>
                                             <?php 
                                             $is_online = has_term('nettbasert', 'course_location', $coursedate['id']);
+                                            $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
                                             if ($is_online) : ?>
                                                 <p>Etter påmelding vil du få en e-post med mer informasjon om kurset.</p>
+                                            <?php elseif ($show_registration === 'yes') : ?>
+                                                <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
                                             <?php else : ?>
                                                 <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                             <?php endif; ?>
@@ -264,7 +269,7 @@
                                             <div class="aside">
                                                 <?php if (!empty($coursedate['address_street'])) : ?>
                                                 <p><strong>Adresse</strong></p>
-                                                <p>
+                                                <p> <?php echo esc_html($coursedate['course_location_freetext']) ?><br>
                                                     <?php echo esc_html($coursedate['address_street']) ?><br>
                                                     <?php echo esc_html($coursedate['postal_code']) ?> <?php echo esc_html($coursedate['city']) ?><br>
                                                     <a style="display: block; padding-top: .4em;" href="https://www.google.com/maps/search/?api=1&query=<?php echo esc_attr($coursedate['address_street']) ?>,+<?php echo esc_attr($coursedate['postal_code']) ?>+<?php echo esc_attr($coursedate['city']) ?>" target="_blank">Vis i Google Maps</a>

@@ -121,6 +121,22 @@
 #ka .courselist-main .meta-area {
     margin-top: 1em;
 }
+#ka .courselist-main .meta-area .accordion-icon {
+    display: flex;
+    align-content: flex-start;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--ka-font-base);
+    top: -1px;
+    width: var(--ka-font-base);
+    height: var(--ka-font-base);
+    border-radius: 50%;
+    /*color: white;
+    background: var(--ka-color-lighter);*/
+    color: var(--ka-color);
+    font-weight: bold;
+}
+
 /* Courselist Content Panel */
 #ka .courselist-content {
     background: transparent;

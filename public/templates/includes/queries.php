@@ -75,6 +75,7 @@ function get_selected_coursedate_data($related_coursedate) {
                 'signup_url' => get_post_meta($selected_coursedate, 'course_signup_url', true),
                 'coursedatemissing' => $coursedatemissing,
                 'is_full' => get_post_meta($selected_coursedate, 'course_isFull', true) || get_post_meta($selected_coursedate, 'course_markedAsFull', true),
+                'show_registration' => get_post_meta($selected_coursedate, 'course_showRegistrationForm', true),
             ];
         }
     }
@@ -154,6 +155,7 @@ function get_all_sorted_coursedates($related_coursedate) {
                 'signup_url' => get_post_meta($coursedate_id, 'course_signup_url', true),
                 'missing_first_date' => empty($course_first_date),
                 'is_full' => get_post_meta($coursedate_id, 'course_isFull', true) || get_post_meta($coursedate_id, 'course_markedAsFull', true),
+                'course_location_freetext' => get_post_meta($coursedate_id, 'course_location_freetext', true),
                 'address_street' => get_post_meta($coursedate_id, 'course_address_street', true),
                 'address_number' => get_post_meta($coursedate_id, 'course_address_street_number', true),
                 'postal_code' => get_post_meta($coursedate_id, 'course_address_zipcode', true),

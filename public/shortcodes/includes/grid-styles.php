@@ -64,7 +64,7 @@ class GridStyles {
             {$class_id} .text:has(.tittel) a { text-decoration: none; }
             
             /* Picture and Image */
-            {$class_id} picture {aspect-ratio: {$a['bildeformat']}; display: block;  width:100%; max-width:{$a['bildestr']}; overflow: hidden; }
+            {$class_id} picture {aspect-ratio: {$a['bildeformat']}; border-radius: {$a['bildeform']}; display: block;  width:100%; max-width:{$a['bildestr']}; overflow: hidden; }
             {$class_id}.rund picture { aspect-ratio: 1/1; }
             {$class_id}.stablet.kort picture { padding: 0; width: 100%; max-width: {$a['bildestr']};}
             {$class_id}.rad.kort picture { max-width: calc({$a['bildestr']} * 0.85); padding: 0; }
@@ -75,8 +75,9 @@ class GridStyles {
                 max-width: 100%;
                 object-fit: cover;
                 object-position: center;
-                border-radius: {$a['bildeform']};
+                transition: transform 0.5s ease;
             }
+            {$class_id} .box:hover img { transform: scale(1.05); }
             {$class_id}.skygge:not(.kort) picture { max-width: calc({$a['bildestr']} + 8px); padding: 8px; }
             {$class_id}.skygge:not(.kort) .box:hover img { -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.45); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.45); box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.45); transition: transform ease 0.3s, box-shadow ease 0.3s; }
             {$class_id}.stablet.kort img { border-radius: 5px 5px 0 0; }

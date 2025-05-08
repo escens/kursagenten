@@ -50,6 +50,7 @@ if ($is_taxonomy_page) {
     $button_text = $selected_coursedate_data['button_text'] ?? '';
     $signup_url = $selected_coursedate_data['signup_url'] ?? '';
     $is_full = $selected_coursedate_data['is_full'] ?? false;
+    $show_registration = $selected_coursedate_data['show_registration'] ?? false;
 } else {
     // Original kode for coursedates
     $course_id = get_the_ID();
@@ -66,6 +67,7 @@ if ($is_taxonomy_page) {
     $location_freetext =        get_post_meta($course_id, 'course_location_freetext', true);
     $location_room =            get_post_meta($course_id, 'course_location_room', true);
     $is_full =                  get_post_meta($course_id, 'course_isFull', true);
+    $show_registration =        get_post_meta($course_id, 'course_showRegistrationForm', true);
 
     $button_text =              get_post_meta($course_id, 'course_button_text', true);
     $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
@@ -180,7 +182,20 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                     <?php if (!empty($excerpt)) : ?>
                         <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
                     <?php endif; ?>
-                    <p><?php echo esc_html($first_course_date ? 'Kurset varer fra ' . $first_course_date . ' til ' . $last_course_date : 'Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.'); ?></p>
+                    <?php if (!empty($first_course_date)) : ?>
+                        <p>Kurset varer fra <?php echo esc_html($first_course_date); ?> til <?php echo esc_html($last_course_date); ?></p>
+                    <?php else : ?>
+                        <?php 
+                        $is_online = has_term('nettbasert', 'course_location', $course_id);
+                        //$show_registration = get_post_meta($course_id, 'course_showRegistrationForm', true);
+                        if ($is_online) : ?>
+                            <p>Etter påmelding vil du få en e-post med mer informasjon om kurset, og hvordan det skal gjennomføres.</p>
+                        <?php elseif ($show_registration === '1') : ?>
+                            <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
+                        <?php else : ?>
+                            <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
+                        <?php endif; ?>
+                    <?php endif; ?>
                     <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>
                 </div>
             </div>
