@@ -137,7 +137,11 @@ class InstructorGrid {
         $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag}' id='{$id}'>";
+        if ($bildeform == '50%') {
+            $bildeformen = 'rund';
+        }
+
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {

@@ -109,7 +109,43 @@ class CourseLocationGrid {
         ];
 
         $terms = get_terms($args);
-        return is_wp_error($terms) ? [] : $terms;
+        
+        // Hvis vi ikke har noen terms, returner tom array
+        if (is_wp_error($terms) || empty($terms)) {
+            return [];
+        }
+
+        // For hvert kurssted, hent alle spesifikke lokasjoner
+        foreach ($terms as &$term) {
+            $term->specific_locations = $this->get_specific_locations_for_term($term->term_id);
+        }
+
+        return $terms;
+    }
+
+    private function get_specific_locations_for_term(int $term_id): array 
+    {
+        // Hent alle coursedates som er knyttet til dette kursstedet
+        $coursedates = get_posts([
+            'post_type' => 'coursedate',
+            'posts_per_page' => -1,
+            'meta_query' => [
+                [
+                    'key' => 'location_id',
+                    'value' => $term_id,
+                ]
+            ]
+        ]);
+
+        $locations = [];
+        foreach ($coursedates as $coursedate) {
+            $location_freetext = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+            if (!empty($location_freetext) && !in_array($location_freetext, $locations)) {
+                $locations[] = $location_freetext;
+            }
+        }
+
+        return $locations;
     }
 
     private function get_location_specific_styles(string $id): string {
@@ -119,6 +155,19 @@ class CourseLocationGrid {
                 -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
                 box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.15);
                 transition: transform ease 0.3s, box-shadow ease 0.3s;
+            }
+            #{$id}.rad .text {
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: flex-start;
+            
+
+
+            
+            #{$id} .specific-locations .address {
+                font-size: 0.9em;
+                color: #666;
+                margin: 0.3em 0;
             }
         </style>";
     }
@@ -133,7 +182,11 @@ class CourseLocationGrid {
         $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
 
-        $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$utdrag}' id='{$id}'>";
+        if ($bildeform == '50%') {
+            $bildeformen = 'rund';
+        }
+
+        $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
@@ -167,7 +220,7 @@ class CourseLocationGrid {
     }
 
     private function generate_location_html($term, string $thumbnail, string $description, array $a): string {
-        return "
+        $output = "
             <div class='box term-{$term->term_id}'>
                 <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
                     <picture>
@@ -178,9 +231,56 @@ class CourseLocationGrid {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
-                    <div class='description'>" . wp_kses_post($description) . "</div>
-                </div>
-            </div>";
+                    <a class='info' href='" . get_term_link($term) . "'>
+                        <div class='description'>" . wp_kses_post($description) . "</div>";
+
+                        // Hent spesifikke lokasjoner
+                        $specific_locations = get_term_meta($term->term_id, 'specific_locations', true);
+                        
+                        if (!empty($specific_locations) && is_array($specific_locations)) {
+                            $output .= "<div class='specific-locations'>";
+                            //output .= "<h4>Spesifikke lokasjoner:</h4>";
+                            $output .= "<ul>";
+                            
+                            foreach ($specific_locations as $location) {
+                                $output .= "<li class='location-item'>";
+                                $output .= "" . esc_html($location['description']) . "";
+                                
+                                // Vis adresse hvis tilgjengelig
+                                /*if (!empty($location['address']['street'])) {
+                                    $output .= "<div class='address'>";
+                                    $output .= esc_html($location['address']['street']);
+
+                                    $output .= "<br>";
+                                    if (!empty($location['address']['zipcode'])) {
+                                        $output .= esc_html($location['address']['zipcode']);
+                                    }
+                                    if (!empty($location['address']['place'])) {
+                                        $output .= " " . esc_html($location['address']['place']);
+                                    }
+                                    $output .= "</div>";
+                                }*/
+                                
+                                // Vis maks antall deltakere hvis tilgjengelig
+                                /*if (!empty($location['maxParticipants'])) {
+                                    $output .= "<div class='max-participants'>";
+                                    $output .= "Maks antall deltakere: " . esc_html($location['maxParticipants']);
+                                    $output .= "</div>";
+                                }*/
+                                
+                                $output .= "</li>";
+                            }
+                            
+                            $output .= "</ul>";
+                        $output .= "</div>";//slutt specific-locations
+                    }
+                    $output .= "</a>";//slutt info
+                    //$output .= "</div>";//slutt box-inner
+                    //$output .= "</div>";//slutt box
+        
+
+        $output .= "</div></div>";
+        return $output;
     }
 }
 

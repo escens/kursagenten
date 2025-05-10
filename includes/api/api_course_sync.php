@@ -613,6 +613,9 @@ function update_course_taxonomies($post_id, $location_id, $data) {
         if (!is_wp_error($course_location_term)) {
             // Sett course_location taxonomien for kurset
             wp_set_object_terms($post_id, (int)$course_location_term['term_id'], 'course_location', false);
+            
+            // Oppdater spesifikke lokasjoner for dette kursstedet
+            update_specific_locations($course_location_term['term_id'], $data);
         }
     }
 
@@ -643,6 +646,68 @@ function update_course_taxonomies($post_id, $location_id, $data) {
         }
     }
 
+}
+
+function update_specific_locations($term_id, $data) {
+    error_log("=== START: update_specific_locations for term_id: $term_id ===");
+    
+    if (empty($data['locations'])) {
+        error_log("Ingen locations data funnet");
+        return;
+    }
+
+    // Hent eksisterende spesifikke lokasjoner
+    $existing_locations = get_term_meta($term_id, 'specific_locations', true) ?: [];
+    error_log("Eksisterende lokasjoner: " . print_r($existing_locations, true));
+    
+    foreach ($data['locations'] as $location) {
+        error_log("Prosesserer location: " . print_r($location, true));
+        
+        if (empty($location['description'])) {
+            error_log("Ingen description for denne lokasjonen, hopper over");
+            continue;
+        }
+
+        $location_data = [
+            'description' => $location['description'],
+            'address' => [
+                'street' => $location['address']['streetAddress'] ?? '',
+                'number' => $location['address']['streetAddressNumber'] ?? '',
+                'zipcode' => $location['address']['zipCode'] ?? '',
+                'place' => $location['address']['place'] ?? ''
+            ]
+        ];
+
+        error_log("Opprettet location_data: " . print_r($location_data, true));
+
+        // Sjekk om denne lokasjonen allerede eksisterer
+        $exists = false;
+        foreach ($existing_locations as $existing) {
+            if ($existing['description'] === $location_data['description']) {
+                $exists = true;
+                error_log("Lokasjon eksisterer allerede: " . $location_data['description']);
+                break;
+            }
+        }
+
+        if (!$exists) {
+            $existing_locations[] = $location_data;
+            error_log("La til ny lokasjon: " . $location_data['description']);
+        }
+    }
+
+    error_log("Ferdig med å prosessere lokasjoner. Totalt antall: " . count($existing_locations));
+    error_log("Data som skal lagres: " . print_r($existing_locations, true));
+
+    // Lagre oppdaterte spesifikke lokasjoner
+    $result = update_term_meta($term_id, 'specific_locations', $existing_locations);
+    error_log("Resultat av update_term_meta: " . ($result ? 'true' : 'false'));
+    
+    // Verifiser at dataene ble lagret
+    $saved_data = get_term_meta($term_id, 'specific_locations', true);
+    error_log("Verifisert lagret data: " . print_r($saved_data, true));
+    
+    error_log("=== SLUTT: update_specific_locations ===");
 }
 
 function sync_main_course_data($main_course_id) {
@@ -1081,4 +1146,76 @@ function kursagenten_update_main_course_status($main_course_id = null) {
     }
 
     error_log("=== SLUTT: Oppdaterer hovedkurs status ===");
+}
+
+function update_all_course_locations() {
+    error_log("=== START: update_all_course_locations ===");
+    
+    // Hent alle kurssteder
+    $terms = get_terms([
+        'taxonomy' => 'course_location',
+        'hide_empty' => false,
+    ]);
+
+    if (is_wp_error($terms)) {
+        error_log("Feil ved henting av kurssteder: " . $terms->get_error_message());
+        return;
+    }
+
+    error_log("Fant " . count($terms) . " kurssteder");
+
+    foreach ($terms as $term) {
+        error_log("Prosesserer kurssted: " . $term->name);
+        
+        // Hent alle kurs for dette stedet
+        $courses = get_posts([
+            'post_type' => 'course',
+            'posts_per_page' => -1,
+            'tax_query' => [
+                [
+                    'taxonomy' => 'course_location',
+                    'field' => 'term_id',
+                    'terms' => $term->term_id,
+                ]
+            ]
+        ]);
+
+        if (empty($courses)) {
+            error_log("Ingen kurs funnet for " . $term->name);
+            continue;
+        }
+
+        error_log("Fant " . count($courses) . " kurs for " . $term->name);
+
+        // Samle all lokasjonsdata fra kursene
+        $locations_data = [];
+        foreach ($courses as $course) {
+            $location_id = get_post_meta($course->ID, 'location_id', true);
+            if ($location_id) {
+                $course_data = kursagenten_get_course_details($location_id);
+                if (!empty($course_data) && !empty($course_data['locations'])) {
+                    $locations_data = array_merge($locations_data, $course_data['locations']);
+                }
+            }
+        }
+
+        if (!empty($locations_data)) {
+            error_log("Oppdaterer spesifikke lokasjoner for " . $term->name);
+            update_specific_locations($term->term_id, ['locations' => $locations_data]);
+        }
+    }
+
+    error_log("=== SLUTT: update_all_course_locations ===");
+}
+
+if (defined('WP_CLI') && WP_CLI) {
+    class Kursagenten_CLI {
+        public function update_locations() {
+            WP_CLI::log('Starter oppdatering av kurssteder...');
+            update_all_course_locations();
+            WP_CLI::success('Oppdatering av kurssteder fullført!');
+        }
+    }
+
+    WP_CLI::add_command('kursagenten', 'Kursagenten_CLI');
 }
