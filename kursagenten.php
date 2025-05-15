@@ -116,16 +116,16 @@ function kursagenten_fix_all_taxonomy_queries() {
             $term = get_term_by('slug', $term_slug, $taxonomy);
             
             if ($term) {
-                error_log('Taxonomy fix: Found term: ' . $term->name . ' (ID: ' . $term->term_id . ')');
+                //error_log('Taxonomy fix: Found term: ' . $term->name . ' (ID: ' . $term->term_id . ')');
                 
                 // Oppdater globale variabler
                 global $wp_query;
                 $wp_query->queried_object = $term;
                 $wp_query->queried_object_id = $term->term_id;
                 
-                error_log('Taxonomy fix: Updated queried object to: ' . $wp_query->queried_object->name);
+                //error_log('Taxonomy fix: Updated queried object to: ' . $wp_query->queried_object->name);
             } else {
-                error_log('Taxonomy fix: Term not found with slug: ' . $term_slug . ' in taxonomy: ' . $taxonomy);
+                //error_log('Taxonomy fix: Term not found with slug: ' . $term_slug . ' in taxonomy: ' . $taxonomy);
             }
         }
     }

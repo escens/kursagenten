@@ -113,19 +113,82 @@ function get_main_course_id_by_location_id($location_id) {
         return false;
     }
 
+    $main_course_id = null;
+    $course_data = null;
+    $all_locations = [];
+    $target_municipality = null;
+    $target_county = null;
+
+    // Finn først hovedkurset og target location
     foreach ($courses as $course) {
         foreach ($course['locations'] as $location) {
             if ((int) $location['courseId'] === (int) $location_id) {
-                return [
+                $main_course_id = $course['id'];
+                $target_municipality = $location['municipality'] ?? null;
+                $target_county = $location['county'] ?? null;
+                $course_data = [
                     'main_course_id' => $course['id'],
                     'course_name' => $location['courseName'],
-                    'municipality' => $location['municipality'],
-                    'county' => $location['county'],
+                    'municipality' => $target_municipality,
+                    'county' => $target_county,
                     'language' => $course['language'],
                     'is_active' => $location['active'] ?? true,
+                    'all_locations' => []
                 ];
+                break 2; // Bryt ut av begge løkkene
             }
         }
+    }
+
+    // Hvis vi fant kurset, samle lokasjoner fra samme område
+    if ($course_data && ($target_municipality || $target_county)) {
+        foreach ($courses as $course) {
+            foreach ($course['locations'] as $location) {
+                // Sjekk om lokasjonen er i samme område
+                $location_matches = false;
+                
+                if ($target_municipality && !empty($location['municipality'])) {
+                    $location_matches = ($location['municipality'] === $target_municipality);
+                } elseif ($target_county && !empty($location['county'])) {
+                    $location_matches = ($location['county'] === $target_county);
+                }
+
+                if ($location_matches) {
+                    $description = $location['placeFreeText'] ?? '';
+                    if (!empty($description)) {
+                        // Behold original adressestruktur
+                        $location_info = [
+                            'description' => $description,
+                            'address' => [
+                                'streetAddress' => $location['address']['streetAddress'] ?? '',
+                                'streetAddressNumber' => $location['address']['streetAddressNumber'] ?? '',
+                                'zipCode' => $location['address']['zipCode'] ?? '',
+                                'place' => $location['address']['place'] ?? ''
+                            ]
+                        ];
+                        
+                        // Unngå duplikater
+                        $exists = false;
+                        foreach ($all_locations as $existing) {
+                            if ($existing['description'] === $description) {
+                                $exists = true;
+                                break;
+                            }
+                        }
+                        
+                        if (!$exists) {
+                            $all_locations[] = $location_info;
+                        }
+                    }
+                }
+            }
+        }
+        
+        $course_data['all_locations'] = $all_locations;
+        $area_type = $target_municipality ? 'kommune' : 'fylke';
+        $area_name = $target_municipality ?: $target_county;
+        //error_log("Fant " . count($all_locations) . " lokasjoner for " . $area_type . ": " . $area_name);
+        return $course_data;
     }
 
     return false;

@@ -1,6 +1,10 @@
 <?php
 // Function to display "Sync All Courses" button in admin options page
 function kursagenten_sync_courses_button() {
+    if (!current_user_can('manage_options')) {
+        wp_die(__('Du har ikke tilgang til denne funksjonen.', 'kursagenten'));
+    }
+
     ob_start();
     ?>
     <a href="#" class="button sync-api-to-posts" id="sync-all-courses">Synkroniser alle kurs</a>
@@ -27,6 +31,8 @@ function kursagenten_get_course_ids() {
         error_log("FEIL: Kunne ikke hente kursliste fra API");
         wp_send_json_error(['message' => 'Failed to fetch course data.']);
     }
+        // Først rydd opp i alle specific_locations
+        cleanup_all_specific_locations();
 
     error_log("=== START: Prosessering av kursliste ===");
     $course_data = [];
@@ -34,41 +40,25 @@ function kursagenten_get_course_ids() {
         error_log("Prosesserer kurs: " . $course['name']);
         
         foreach ($course['locations'] as $location) {
-            error_log("Prosesserer lokasjon: " . $location['municipality'] . " - " . $location['courseId']);
+            //error_log("Prosesserer lokasjon: " . $location['municipality'] . " - " . $location['courseId']);
             $is_active = false;
             if (isset($location['active'])) {
-                $raw_value = $location['active'];
-                //error_log("--Raw active verdi før konvertering for: " . print_r($raw_value, true));
-                $is_active = filter_var($raw_value, FILTER_VALIDATE_BOOLEAN);
-                //error_log("--Konvertert active verdi: " . ($is_active ? 'true' : 'false'));
+                $is_active = filter_var($location['active'], FILTER_VALIDATE_BOOLEAN);
             } elseif (isset($course['active'])) {
                 $is_active = filter_var($course['active'], FILTER_VALIDATE_BOOLEAN);
-                //error_log("--Fant active status i hovedkurs for kurs {$location['courseName']}: " . ($is_active ? 'true' : 'false'));
             } else {
-                $is_active = true; // Default til true hvis ingen verdi er satt
-                //error_log("--Ingen active status funnet for kurs {$location['courseName']}, setter default: true");
+                $is_active = true;
             }
             
-            // Logg bildedata fra kursliste API
-            if (!empty($location['cmsLogo'])) {
-                //error_log("--Kursliste API - Fant cmsLogo for kurs '{$location['courseName']}': " . $location['cmsLogo']);
-            }
-            
-            // Hent enkeltkursdata for å sjekke bannerImage
+            // Hent enkeltkursdata for denne lokasjonen
             $single_course = kursagenten_get_course_details($location['courseId']);
-            if (!empty($single_course)) {
-                if (!empty($single_course['bannerImage'])) {
-                    //error_log("--Enkeltkurs API - Fant bannerImage for kurs '{$location['courseName']}': " . $single_course['bannerImage']);
-                }
-                
-                // Sjekk også etter bilder i locations array fra enkeltkurs API
-                foreach ($single_course['locations'] as $loc) {
-                    if ($loc['courseId'] == $location['courseId'] && !empty($loc['bannerImage'])) {
-                        //error_log("--Enkeltkurs API - Fant lokasjonsspesifikt bannerImage for kurs '{$location['courseName']}': " . $loc['bannerImage']);
-                    }
-                }
+            
+            if (empty($single_course)) {
+                error_log("ADVARSEL: Kunne ikke hente enkeltkursdata for location_id: " . $location['courseId']);
+                continue;
             }
             
+            // Bruk single_course data direkte
             $course_data[] = [
                 'location_id' => $location['courseId'],
                 'main_course_id' => $course['id'],
@@ -77,13 +67,13 @@ function kursagenten_get_course_ids() {
                 'county' => $location['county'],
                 'language' => $course['language'],
                 'is_active' => $is_active,
-                'image_url_cms' => $location['cmsLogo'] ?? null,  // Legg til cmsLogo
+                'image_url_cms' => $location['cmsLogo'] ?? null,
+                'single_course_data' => $single_course // Send med hele single_course data
             ];
         }
     }
     error_log("=== SLUTT: Prosessering av kursliste ===");
 
-    //error_log("Oppdaterer hovedkurs statuser etter fullført synkronisering");
     kursagenten_update_main_course_status();
 
     wp_send_json_success(['courses' => $course_data]);
@@ -92,7 +82,10 @@ add_action('wp_ajax_get_course_ids', 'kursagenten_get_course_ids');
 
 function kursagenten_run_sync_kurs() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
+    error_log("================================================");
     error_log("=== START: Synkronisering av kurs ===");
+
+
 
     if (!isset($_POST['courses']) || !is_array($_POST['courses'])) {
         error_log("FEIL: Ugyldig kursdata mottatt");
@@ -206,11 +199,26 @@ function kursagenten_nightly_sync() {
         }
     }
 
-    error_log("Nattlig synkronisering fullført. Suksess: $success_count, Feil: $error_count");
-    error_log("=== SLUTT: Nattlig synkronisering av kurs ===");
+    error_log("Nattlig synkronisering av kurs fullført. Suksess: $success_count, Feil: $error_count");
+
+    // Synkroniser lokasjoner for alle kurssteder
+    error_log("Starter synkronisering av lokasjoner");
+    $terms = get_terms([
+        'taxonomy' => 'course_location',
+        'hide_empty' => false,
+    ]);
+
+    if (!is_wp_error($terms)) {
+        foreach ($terms as $term) {
+            sync_term_locations($term->term_id);
+        }
+    }
 
     // Update main course statuses
+    error_log("Oppdaterer hovedkurs statuser");
     kursagenten_update_main_course_status();
+
+    error_log("=== SLUTT: Nattlig synkronisering av kurs ===");
 }
 
 /**
@@ -400,7 +408,34 @@ function cleanup_courses_on_demand() {
     ];
 }
 
-// AJAX handler for opprydding
+// Legg til denne nye funksjonen først
+function cleanup_all_specific_locations() {
+    error_log("=== START: Rydder opp i alle specific_locations ===");
+    
+    $terms = get_terms([
+        'taxonomy' => 'course_location',
+        'hide_empty' => false,
+    ]);
+
+    if (is_wp_error($terms)) {
+        error_log("Feil ved henting av kurssteder: " . $terms->get_error_message());
+        return false;
+    }
+
+    $cleaned_count = 0;
+    foreach ($terms as $term) {
+        if (delete_term_meta($term->term_id, 'specific_locations')) {
+            $cleaned_count++;
+            error_log("Slettet specific_locations for term_id: " . $term->term_id);
+        }
+    }
+
+    error_log("Slettet specific_locations for $cleaned_count kurssteder");
+    error_log("=== SLUTT: Rydder opp i alle specific_locations ===");
+    return true;
+}
+
+// Oppdater AJAX handler for å inkludere cleanup
 function kursagenten_ajax_cleanup_courses() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
     

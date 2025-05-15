@@ -46,6 +46,7 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
 
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
+        
             <div class="taxonomy-content-grid">
                 <div class="left-column">
                     <?php if (!empty($image_url)): ?>
@@ -69,21 +70,89 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                     }
                     ?>
                 </div>
-                <?php if (!empty($rich_description)): ?>
-                    <div class="taxonomy-rich-description">
-                        <?php 
-                        // Bruk apply_filters for å tillate mer HTML-innhold
-                        echo apply_filters('the_content', $rich_description); 
-                        ?>
-                    </div>
-                <?php endif; ?>
+
+                <div class="right-column">
+                    <?php if (!empty($rich_description)): ?>
+                        <div class="taxonomy-rich-description">
+                            <?php 
+                            // Bruk apply_filters for å tillate mer HTML-innhold
+                            echo apply_filters('the_content', $rich_description); 
+                            ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
+
+            <?php if ($taxonomy === 'course_location'): ?>
+                    <?php 
+                    $specific_locations = get_term_meta($term_id, 'specific_locations', true);
+                    if (!empty($specific_locations) && is_array($specific_locations)): 
+                    ?>
+                        <div class="specific-locations-section">
+                            <h3>Spesifikke lokasjoner</h3>
+                            <div class="specific-locations-grid">
+                                <?php foreach ($specific_locations as $location): ?>
+                                    <div class="location-card" title="Vis kurs i <?php echo esc_attr($location['description']); ?>" data-location="<?php echo esc_attr($location['description']); ?>">
+                                        <div class="location-content">
+                                            <h4><?php echo esc_html($location['description']); ?></h4>
+                                            <?php if (!empty($location['address'])): ?>
+                                                <div class="location-address">
+                                                    <?php if (!empty($location['address']['street'])): ?>
+                                                        <p class="street">
+                                                            <?php echo esc_html($location['address']['street']); ?> 
+                                                            <?php if (!empty($location['address']['number'])): ?>
+                                                                <?php echo esc_html($location['address']['number']); ?>
+                                                            <?php endif; ?>
+                                                            <?php 
+                                                            // Bygg Google Maps-lenke
+                                                            $address_parts = array_filter([
+                                                                $location['address']['street'],
+                                                                $location['address']['number'],
+                                                                $location['address']['zipcode'],
+                                                                $location['address']['place']
+                                                            ]);
+                                                            $full_address = implode(' ', $address_parts);
+                                                            if (!empty($full_address)): 
+                                                                $maps_link = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($full_address);
+                                                            ?>
+                                                                <a href="<?php echo esc_url($maps_link); ?>" 
+                                                                   target="_blank" 
+                                                                   rel="noopener noreferrer" 
+                                                                   class="maps-link" 
+                                                                   title="Åpne i Google Maps">
+                                                                    <i class="ka-icon icon-map-marker"></i>
+                                                                    <span class="screen-reader-text">Åpne adresse i Google Maps</span>
+                                                                </a>
+                                                            <?php endif; ?>
+                                                        </p>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($location['address']['zipcode']) || !empty($location['address']['place'])): ?>
+                                                        <p class="postal">
+                                                            <?php 
+                                                            if (!empty($location['address']['zipcode'])) {
+                                                                echo esc_html($location['address']['zipcode']);
+                                                            }
+                                                            if (!empty($location['address']['place'])) {
+                                                                echo ' ' . esc_html($location['address']['place']);
+                                                            }
+                                                            ?>
+                                                        </p>
+                                                    <?php endif; ?>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                <?php endif; ?>
+
 
             <?php if ($query->have_posts()): ?>
                 <div class="taxonomy-coursedates">
                     <h2>Tilgjengelige kurs</h2>
                     
-                    <!-- Bruk samme system som i archive/default.php -->
                     <div class="courselist-items" id="filter-results">
                         <?php
                         $args = [
@@ -92,6 +161,10 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                         ];
 
                         while ($query->have_posts()) : $query->the_post();
+                            // Hent course_location_freetext for kurset
+                            $location_freetext = get_post_meta(get_the_ID(), 'course_location_freetext', true);
+                            // Legg til data-location attributt i args
+                            $args['data_location'] = $location_freetext;
                             get_course_template_part($args);
                         endwhile;
                         ?>
@@ -129,3 +202,67 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
     </section>
 </article>
 
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const locationCards = document.querySelectorAll('.location-card');
+    const courseList = document.getElementById('filter-results');
+    let currentLocation = null;
+
+    locationCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Ikke trigger hvis man klikker på kart-ikonet
+            if (e.target.closest('.maps-link')) {
+                return;
+            }
+
+            const location = this.dataset.location;
+            
+            // Toggle active state
+            if (currentLocation === location) {
+                // Fjern filtrering
+                currentLocation = null;
+                this.classList.remove('active');
+                locationCards.forEach(c => c.classList.remove('active'));
+            } else {
+                // Aktiver ny lokasjon
+                currentLocation = location;
+                locationCards.forEach(c => c.classList.remove('active'));
+                this.classList.add('active');
+            }
+
+            // Filtrer kurs
+            const courses = courseList.querySelectorAll('.courselist-item');
+            courses.forEach(course => {
+                const courseLocation = course.dataset.location;
+                if (!currentLocation || courseLocation === currentLocation) {
+                    course.style.display = '';
+                } else {
+                    course.style.display = 'none';
+                }
+            });
+
+            // Oppdater URL med valgt lokasjon
+            const url = new URL(window.location.href);
+            if (currentLocation) {
+                url.searchParams.set('location', encodeURIComponent(currentLocation));
+            } else {
+                url.searchParams.delete('location');
+            }
+            window.history.pushState({}, '', url);
+        });
+    });
+
+    // Sjekk om det er en valgt lokasjon i URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectedLocation = urlParams.get('location');
+    if (selectedLocation) {
+        const decodedLocation = decodeURIComponent(selectedLocation);
+        const card = document.querySelector(`.location-card[data-location="${decodedLocation}"]`);
+        if (card) {
+            card.click();
+        }
+    }
+});
+</script>

@@ -172,7 +172,7 @@
                             $totalCourses = count($all_coursedates);
                             foreach ($all_coursedates as $index => $coursedate) : 
                                 $item_class = $totalCourses === 1 ? 'courselist-item single-item' : 'courselist-item';
-                                if (!empty($coursedate['is_full'])) {
+                                if ($coursedate['course_isFull'] === 'true') {
                                     $item_class .= ' full';
                                     $available_text = 'Kurset er fullt';
                                     $available_class = 'full';  
@@ -187,7 +187,7 @@
                                         <div class="text-area">
                                             <div class="title-area">
                                                 
-                                                <?php if (!empty($coursedate['is_full'])) : ?>
+                                                <?php if ($coursedate['course_isFull'] === 'true') : ?>
                                                     <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
                                                     <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
                                                 </span>
@@ -223,13 +223,13 @@
                                             $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
                                             if ($is_online) : ?>
                                                 <p>Etter påmelding vil du få en e-post med mer informasjon om kurset.</p>
-                                            <?php elseif ($show_registration === 'yes') : ?>
+                                            <?php elseif ($show_registration == '1' || $show_registration === 1) : ?>
                                                 <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
                                             <?php else : ?>
                                                 <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                        <?php if (!empty($coursedate['is_full'])) : ?>
+                                        <?php if ($coursedate['course_isFull'] === 'true') : ?>
                                             <p>Kurset er fullt. Du kan melde din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                         <?php endif ?>
                                         <div class="course-grid col-1-1" style="padding-left: 2vw; padding-right: 2vw;">
@@ -370,7 +370,7 @@
     <section class="ka-section ka-footer">
         <div class="ka-content-container title-section">
             <h3>Kurs i samme kategori</h3>
-        <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" fontmin="13px" fontmaks="15px" avstand="2em .5em"]'); ?>
+        <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" bildeform=firkantet fontmin="13px" fontmaks="15px" avstand="2em .5em"]'); ?>
         </div>
     </section>
 </article>

@@ -29,9 +29,22 @@ if ($is_taxonomy_page) {
     // Hent data fra første tilgjengelige kursdato
     $selected_coursedate_data = get_selected_coursedate_data($related_coursedate_ids);
     
-    // Hent lokasjonsinformasjon
-    $location = get_post_meta($course_id, 'course_location', true);
+    // Hent lokasjonsinformasjon fra coursedates
     $location_freetext = get_post_meta($course_id, 'course_location_freetext', true);
+    
+    // Hvis location_freetext ikke er satt direkte på kurset, prøv å hente fra coursedates
+    if (empty($location_freetext)) {
+        foreach ($related_coursedates as $coursedate) {
+            $coursedate_location = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+            if (!empty($coursedate_location)) {
+                $location_freetext = $coursedate_location;
+                break;
+            }
+        }
+    }
+    
+    // Hent resten av lokasjonsinformasjonen
+    $location = get_post_meta($course_id, 'course_location', true);
     $location_room = get_post_meta($course_id, 'course_location_room', true);
     
     // Hent bilde
@@ -110,7 +123,7 @@ if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
 ?>
-<div class="courselist-item<?php echo $item_class; ?>">
+<div class="courselist-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>">
     <div class="courselist-main<?php echo $with_image_class; ?>">
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
@@ -126,7 +139,7 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                 <div class="title-area">
                     <h3 class="course-title">
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
-                        <?php if (!empty($is_full)) : ?>
+                        <?php if ($is_full === 'true') : ?>
                             <span class="course-available full">Fullt</span>
                         <?php else : ?>
                             <span class="course-available">Ledige plasser</span>

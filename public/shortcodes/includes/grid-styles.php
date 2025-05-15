@@ -64,7 +64,7 @@ class GridStyles {
             {$class_id}.rad.utdrag .text p { padding: 0px 2em; margin-bottom: 1em; }
             {$class_id}.kort .text a { padding: 1em; }
             {$class_id}.rad.kort .text a { padding: 1em; }
-            {$class_id}.kort .text a.info { margin-top: -.8em; padding-top: 0;  }
+            {$class_id}.kort .text a.info { margin-top: -.8em; padding-top: 0; align-items: flex-start; }
             {$class_id}.kort.stablet .text a, {$class_id}.kort.stablet .text p { padding: .5em; line-height: 1.4;}
             {$class_id}.liste .description { display: none; }
             {$class_id}:not(.utdrag) .description { display: none; }

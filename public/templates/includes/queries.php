@@ -220,10 +220,6 @@ function get_course_dates_query($args = []) {
 	];
 	$search_param = 'sok';
 
-	error_log("=== START: get_course_dates_query ===");
-	error_log("Incoming REQUEST: " . print_r($_REQUEST, true));
-	error_log("Incoming args: " . print_r($args, true));
-
 	$default_args = [
 		'post_type'      => 'coursedate',
 		'posts_per_page' => -1, // Hent alle for å kunne sortere manuelt
@@ -247,9 +243,7 @@ function get_course_dates_query($args = []) {
 
 	// Håndter sted-filter
 	if (!empty($_REQUEST['sted'])) {
-		error_log("Sted filter funnet: " . print_r($_REQUEST['sted'], true));
 		$locations = is_array($_REQUEST['sted']) ? $_REQUEST['sted'] : [$_REQUEST['sted']];
-		error_log("Behandler lokasjoner: " . print_r($locations, true));
 		
 		$default_args['tax_query'][] = [
 			'taxonomy' => 'course_location',
@@ -257,7 +251,6 @@ function get_course_dates_query($args = []) {
 			'terms' => $locations,
 			'operator' => 'IN'
 		];
-		error_log("Lagt til location tax_query: " . print_r($default_args['tax_query'], true));
 	}
 
 	// Hent alle termer først
@@ -293,8 +286,6 @@ function get_course_dates_query($args = []) {
 		]
 	]);
 
-	//error_log('Skjulte kategorier funnet: ' . print_r($hidden_terms, true));
-
 	if (!is_wp_error($hidden_terms) && !empty($hidden_terms)) {
 		// Oppdater tax_query for å ekskludere skjulte kategorier
 		$default_args['tax_query'][] = array(
@@ -303,7 +294,6 @@ function get_course_dates_query($args = []) {
 			'terms'    => $hidden_terms,
 			'operator' => 'NOT IN'
 		);
-		//error_log('Tax query for skjulte kategorier lagt til: ' . print_r($default_args['tax_query'], true));
 	}
 
 	$query_args = wp_parse_args($args, $default_args);
@@ -313,8 +303,6 @@ function get_course_dates_query($args = []) {
 	remove_all_filters('posts_where');
 	remove_all_filters('posts_join_paged');
 	remove_all_filters('posts_where_paged');
-
-	//error_log('Full query args før WP_Query: ' . print_r($query_args, true));
 
 	// Behandle alle filtre fra URL-parametere
 	foreach ($param_mapping as $db_field => $param_name) {
@@ -451,9 +439,6 @@ function get_course_dates_query($args = []) {
 	}
 
 	$query = new WP_Query($query_args);
-	//error_log('SQL spørring: ' . $query->request);
-	//error_log('Antall poster funnet: ' . $query->found_posts);
-	//error_log('Antall poster returnert: ' . count($query->posts));
 
 	// Sorter resultatene manuelt
 	$posts_with_date = [];
@@ -461,10 +446,8 @@ function get_course_dates_query($args = []) {
 	
 	foreach ($query->posts as $post) {
 		$first_date = get_post_meta($post->ID, 'course_first_date', true);
-		// Logg kategoriene for hver post
 		$categories = wp_get_post_terms($post->ID, 'coursecategory', array('fields' => 'slugs'));
 		$locations = wp_get_post_terms($post->ID, 'course_location', array('fields' => 'slugs'));
-		//error_log('Post ID: ' . $post->ID . ', Tittel: ' . $post->post_title . ', Kategorier: ' . print_r($categories, true) . ', Lokasjoner: ' . print_r($locations, true));
 		
 		if (!empty($first_date)) {
 			$posts_with_date[] = $post;
@@ -712,18 +695,56 @@ function get_course_languages() {
 function get_courses_for_taxonomy($args = []) {
     $current_page = isset($args['paged']) ? max(1, intval($args['paged'])) : (isset($_REQUEST['side']) ? max(1, intval($_REQUEST['side'])) : max(1, get_query_var('paged')));
 
-    // Parameter mapping - database_field => incoming_parameter
-    $param_mapping = [
-        'course_location' => 'sted',
-        'course_first_date' => 'dato',
-        'coursecategory' => 'k',
-        'instructors' => 'i',
-        'course_language' => 'sprak',
-        'course_price' => 'pris',
-        'course_month' => 'mnd',
-    ];
-    $search_param = 'sok';
+    // Sjekk om vi har en taksonomi-spørring i args
+    $taxonomy = '';
+    if (isset($args['tax_query']) && is_array($args['tax_query'])) {
+        foreach ($args['tax_query'] as $tax_query) {
+            if (isset($tax_query['taxonomy'])) {
+                $taxonomy = $tax_query['taxonomy'];
+                break;
+            }
+        }
+    }
 
+    // Spesiell håndtering for course_location taksonomi
+    if ($taxonomy === 'course_location') {
+        $default_args = [
+            'post_type'      => 'course',
+            'posts_per_page' => -1,
+            'paged'          => $current_page,
+            'tax_query'      => $args['tax_query'] ?? ['relation' => 'AND'],
+            'meta_query'     => [
+                'relation' => 'AND',
+                [
+                    'relation' => 'OR',
+                    [
+                        'key'     => 'is_parent_course',
+                        'compare' => 'NOT EXISTS'
+                    ],
+                    [
+                        'key'     => 'is_parent_course',
+                        'value'   => 'yes',
+                        'compare' => '!='
+                    ]
+                ],
+                [
+                    'key'     => 'course_location_freetext',
+                    'compare' => 'EXISTS'
+                ]
+            ]
+        ];
+
+        $query_args = wp_parse_args($args, $default_args);
+        $query = new WP_Query($query_args);
+
+        // Logg for debugging
+        //error_log('Course Location Query Args: ' . print_r($query_args, true));
+        //error_log('Found Posts: ' . $query->found_posts);
+
+        return $query;
+    }
+
+    // Standard håndtering for andre taksonomier (coursecategory og instructors)
     $default_args = [
         'post_type'      => 'course',
         'posts_per_page' => -1,
@@ -738,21 +759,22 @@ function get_courses_for_taxonomy($args = []) {
         ],
     ];
 
-    // Sjekk om vi har en taksonomi-spørring i args
+    // Legg til taksonomi-spørringen for andre taksonomier
     if (isset($args['tax_query']) && is_array($args['tax_query'])) {
-        // Legg til taksonomi-spørringen direkte i default_args
         foreach ($args['tax_query'] as $tax_query) {
-            if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] === 'course_location') {
+            if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] !== 'course_location') {
                 $default_args['tax_query'][] = $tax_query;
             }
         }
     }
 
     $query_args = wp_parse_args($args, $default_args);
-
-    // Utfør spørringen
     $query = new WP_Query($query_args);
-    
+
+    // Logg for debugging
+    //error_log('Standard Taxonomy Query Args: ' . print_r($query_args, true));
+    //error_log('Found Posts: ' . $query->found_posts);
+
     return $query;
 }
 

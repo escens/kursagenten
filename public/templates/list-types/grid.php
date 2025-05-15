@@ -34,6 +34,17 @@ if ($is_taxonomy_page) {
     $location_freetext = get_post_meta($course_id, 'course_location_freetext', true);
     $location_room = get_post_meta($course_id, 'course_location_room', true);
     
+    // Hvis location_freetext ikke er satt direkte på kurset, prøv å hente fra coursedates
+    if (empty($location_freetext)) {
+        foreach ($related_coursedates as $coursedate) {
+            $coursedate_location = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+            if (!empty($coursedate_location)) {
+                $location_freetext = $coursedate_location;
+                break;
+            }
+        }
+    }
+    
     // Hent bilde
     $featured_image_thumb = get_the_post_thumbnail_url($course_id, 'medium') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg';
     
@@ -108,14 +119,14 @@ if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
 ?>
-<div class="courselist-item grid-item<?php echo $item_class; ?>">
+<div class="courselist-item grid-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>">
     <div class="courselist-card<?php echo $with_image_class; ?>">
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
         <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
-            <?php if (!empty($is_full)) : ?>
+            <?php if ($is_full === 'true') : ?>
                 <span class="card-availability course-available full">Fullt</span>
             <?php else : ?>
                 <span class="card-availability course-available">Ledige plasser</span>
@@ -131,7 +142,7 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
                     </h3>
                     <?php if ($show_images === 'no') : ?>
-                    <?php if (!empty($is_full)) : ?>
+                    <?php if ($is_full === 'true') : ?>
                         <div class="course-availability tooltip tooltip-left" data-title="Fullt">
                             <span class="card-availability course-available full"></span>
                         </div>

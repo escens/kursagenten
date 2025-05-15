@@ -220,10 +220,49 @@
 }
 
 /* Custom Properties */
-:root {
+/*:root {
     --heading-color: #333;
     --text-color: #666;
     --border-color: #eee;
     --card-bg: #fff;
     --light-bg: #f9f9f9;
-} 
+}
+
+.location-address {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.maps-link {
+    display: inline-flex;
+    align-items: center;
+    color: #007bff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.maps-link:hover {
+    color: #0056b3;
+}
+
+.maps-link .ka-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.screen-reader-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+} */

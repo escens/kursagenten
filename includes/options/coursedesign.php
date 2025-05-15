@@ -574,6 +574,17 @@ class Designmaler {
             array($this, 'design_sanitize')
         );
 
+        // Registrer custom CSS innstilling
+        register_setting(
+            'design_option_group',
+            'kursagenten_custom_css',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => array($this, 'sanitize_css'),
+                'default' => ''
+            )
+        );
+
         // Registrer nye innstillinger
         register_setting('design_option_group', 'kursagenten_max_width');
         register_setting('design_option_group', 'kursagenten_main_color');
