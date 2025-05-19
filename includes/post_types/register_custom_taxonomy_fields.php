@@ -773,7 +773,7 @@ function kursagenten_make_fields_readonly($term) {
                             '<p class="instructor-email"><strong>E-post:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($email)); ?></span></p>' +
                             '<p class="instructor-firstname"><strong>Fornavn:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($firstname)); ?></span></p>' +
                             '<p class="instructor-lastname"><strong>Etternavn:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($lastname)); ?></span></p>' +
-                            '<p class="instructor-image-url"><strong>Bildeurl:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($image_ka)); ?></span></p>' +
+                            //'<p class="instructor-image-url"><strong>Bildeurl:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($image_ka)); ?></span></p>' +
                             <?php if (!$is_manual_instructor): ?>
                             '<a href="https://kursadmin.kursagenten.no/Profile/<?php echo esc_js(esc_html($id)); ?>" target="_blank">' +
                                 'Rediger i Kursadmin' +
