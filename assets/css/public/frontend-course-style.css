@@ -513,6 +513,20 @@ z-index: 10000;
   padding: .3em;
 }
 
+/* --Page back link */
+/************************/
+#ka .page-back-link{
+  width: 45px;
+  height: 45px;
+  background: #eee;
+  margin-right: 3px;
+  margin-top: -6px;
+}
+#ka .page-back-link:hover{
+  background: var(--ka-color);
+}
+
+
 
 
 /* COURSELIST ELEMENTS */

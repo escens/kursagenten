@@ -126,7 +126,7 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
         <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
-            <?php if ($is_full === 'true') : ?>
+            <?php if ($is_full === 'true' || $is_full === 1) : ?>
                 <span class="card-availability course-available full">Fullt</span>
             <?php else : ?>
                 <span class="card-availability course-available">Ledige plasser</span>

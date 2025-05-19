@@ -928,39 +928,106 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
                 continue;
             }
 
-            $instructor_term = term_exists($instructor['fullname'], 'instructors');
-            if (!$instructor_term) {
-                $instructor_term = wp_insert_term($instructor['fullname'], 'instructors');
+            error_log("Prosesserer instruktør: {$instructor['fullname']} (ID: {$instructor['userId']})");
+            $term_id = null;
+
+            // 1. Søk etter eksisterende instruktør med samme ID
+            if (!empty($instructor['userId'])) {
+                $existing_terms = get_terms([
+                    'taxonomy' => 'instructors',
+                    'meta_key' => 'instructor_id',
+                    'meta_value' => $instructor['userId'],
+                    'hide_empty' => false,
+                    'number' => 1
+                ]);
+
+                if (!empty($existing_terms) && !is_wp_error($existing_terms)) {
+                    $term_id = $existing_terms[0]->term_id;
+                    error_log("Fant eksisterende instruktør på ID: {$instructor['userId']} (term_id: $term_id)");
+                    
+                    // Oppdater navn hvis det er endret
+                    if ($existing_terms[0]->name !== $instructor['fullname']) {
+                        wp_update_term($term_id, 'instructors', [
+                            'name' => $instructor['fullname']
+                        ]);
+                        error_log("Oppdaterte navn på instruktør {$instructor['userId']} fra '{$existing_terms[0]->name}' til '{$instructor['fullname']}'");
+                    }
+                }
             }
 
-            if (!is_wp_error($instructor_term)) {
-                $term_id = (int)$instructor_term['term_id'];
+            // 2. Hvis vi ikke fant på ID, søk på navn
+            if (!$term_id) {
+                // Bruk get_terms i stedet for term_exists for mer presis søking
+                $name_search = get_terms([
+                    'taxonomy' => 'instructors',
+                    'name' => $instructor['fullname'],
+                    'hide_empty' => false,
+                    'number' => 1
+                ]);
+
+                if (!empty($name_search) && !is_wp_error($name_search)) {
+                    $term_id = $name_search[0]->term_id;
+                    $existing_id = get_term_meta($term_id, 'instructor_id', true);
+                    
+                    if (!empty($existing_id)) {
+                        // Hvis vi fant på navn og denne har en annen ID, oppdater ID-en
+                        update_term_meta($term_id, 'instructor_id', sanitize_text_field($instructor['userId']));
+                        error_log("Oppdaterte instructor_id på instruktør '{$instructor['fullname']}' fra {$existing_id} til {$instructor['userId']}");
+                    } else {
+                        // Hvis ingen ID er satt, oppdater med ny ID
+                        update_term_meta($term_id, 'instructor_id', sanitize_text_field($instructor['userId']));
+                        error_log("Satte instructor_id på instruktør '{$instructor['fullname']}' til {$instructor['userId']}");
+                    }
+                }
+            }
+
+            // 3. Opprett ny instruktør KUN hvis vi ikke fant noen eksisterende
+            if (!$term_id) {
+                error_log("Ingen eksisterende instruktør funnet, oppretter ny for: {$instructor['fullname']}");
+                $new_term = wp_insert_term($instructor['fullname'], 'instructors');
+                
+                if (!is_wp_error($new_term)) {
+                    $term_id = $new_term['term_id'];
+                    if (!empty($instructor['userId'])) {
+                        update_term_meta($term_id, 'instructor_id', sanitize_text_field($instructor['userId']));
+                    }
+                    error_log("Opprettet ny instruktør: {$instructor['fullname']} (ID: {$instructor['userId']}, term_id: $term_id)");
+                } else {
+                    error_log("FEIL ved opprettelse av ny instruktør: " . $new_term->get_error_message());
+                }
+            }
+
+            if ($term_id) {
                 $instructors[] = $term_id;
 
-                if (isset($instructor['userId'])) {
-                    update_term_meta($term_id, 'instructor_id', sanitize_text_field($instructor['userId']));
-                    //error_log("DEBUG: Oppdatert instructor_id for {$instructor['fullname']}: {$instructor['userId']}");
-                }
+                // Sjekk om feltene er manuelt redigert før oppdatering
+                $manually_edited = [
+                    'email' => get_term_meta($term_id, 'instructor_email_edited', true) === 'yes',
+                    'phone' => get_term_meta($term_id, 'instructor_phone_edited', true) === 'yes',
+                    'firstname' => get_term_meta($term_id, 'instructor_firstname_edited', true) === 'yes',
+                    'lastname' => get_term_meta($term_id, 'instructor_lastname_edited', true) === 'yes',
+                    'image' => get_term_meta($term_id, 'instructor_image_edited', true) === 'yes'
+                ];
 
-                if (isset($instructor['image'])) {
-                    error_log("DEBUG: Original image URL: " . $instructor['image']);
+                // Oppdater kun felt som ikke er manuelt redigert
+                if (isset($instructor['image']) && !$manually_edited['image']) {
                     $image_url = esc_url_raw($instructor['image']);
-                    error_log("DEBUG: Sanitized image URL: " . $image_url);
                     update_term_meta($term_id, 'image_instructor_ka', $image_url);
-                    error_log("DEBUG: Updated image_instructor_ka for {$instructor['fullname']} with URL: " . $image_url);
                 }
 
-                if (isset($instructor['email'])) {
+                if (isset($instructor['email']) && !$manually_edited['email']) {
                     update_term_meta($term_id, 'instructor_email', sanitize_email($instructor['email']));
                 }
 
-                if (isset($instructor['phone'])) {
+                if (isset($instructor['phone']) && !$manually_edited['phone']) {
                     update_term_meta($term_id, 'instructor_phone', sanitize_text_field($instructor['phone']));
                 }
-                if (isset($instructor['firstname'])) {
+
+                if (isset($instructor['firstname']) && !$manually_edited['firstname']) {
                     update_term_meta($term_id, 'instructor_firstname', sanitize_text_field($instructor['firstname']));
                 }
-                if (isset($instructor['lastname'])) {
+
+                if (isset($instructor['lastname']) && !$manually_edited['lastname']) {
                     update_term_meta($term_id, 'instructor_lastname', sanitize_text_field($instructor['lastname']));
                 }
             }
@@ -968,10 +1035,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
 
         if (!empty($instructors)) {
             wp_set_object_terms($post_id, $instructors, 'instructors', false);
-            //error_log("DEBUG: Oppdatert taxonomi 'instructors' på post ID $post_id med term IDs: " . implode(', ', $instructors));
         }
-    } else {
-        //error_log("DEBUG: Ingen instruktørdata funnet for post ID $post_id.");
     }
 }
 

@@ -20,55 +20,55 @@ function process_webhook_data($request) {
     $location_id = (int) $body['CourseId'];
     $count_key = 'webhook_count_' . $location_id;
     $webhook_data_key = 'webhook_data_' . $location_id;
+    $last_webhook_time_key = 'last_webhook_time_' . $location_id;
+    
+    // Sjekk om vi har mottatt en webhook for dette kurset nylig
+    $last_webhook_time = get_transient($last_webhook_time_key);
+    $current_time = time();
+    
+    if ($last_webhook_time && ($current_time - $last_webhook_time) < 3) {
+        // Hvis vi har mottatt en webhook for dette kurset innen 3 sekunder,
+        // og denne webhooken ikke har Enabled parameter, ignorer den
+        if (!isset($body['Enabled'])) {
+            error_log("Ignoring duplicate webhook for CourseId: $location_id (within 3 seconds)");
+            return new WP_REST_Response('Duplicate webhook ignored.', 200);
+        }
+    }
+    
+    // Oppdater siste webhook tid
+    set_transient($last_webhook_time_key, $current_time, 3);
     
     // Hent eller initialiser teller
     $count = (int)get_transient($count_key) ?: 0;
     $count++;
     
     error_log("Webhook received for CourseId: $location_id (Count: $count)");
-    //error_log("Webhook data: " . json_encode($body));
     
     // Lagre webhook data og øk telleren
-    set_transient($count_key, $count, 3); // Hold telleren i 3 sekunder
+    set_transient($count_key, $count, 3);
     
     // Lagre webhook data
     $stored_webhooks = get_transient($webhook_data_key) ?: [];
     $stored_webhooks[] = [
         'body' => $body,
-        'time' => time()
+        'time' => $current_time
     ];
     set_transient($webhook_data_key, $stored_webhooks, 3);
-    error_log("Stored webhooks count: " . count($stored_webhooks));
     
-    // Vent med prosessering hvis dette er første webhook og den ikke har Enabled
-    if ($count === 1 && !isset($body['Enabled'])) {
-        //error_log("First webhook received without Enabled parameter - waiting for potential second webhook");
-        return new WP_REST_Response('Waiting for additional webhooks.', 200);
-    }
-    
-    // Hvis dette er andre webhook, eller hvis det er første OG har Enabled
-    if ($count === 2 || isset($body['Enabled'])) {
-        //error_log("Processing webhook(s) for CourseId: $location_id");
+    // Prosesser webhook hvis:
+    // 1. Den har Enabled parameter (kurs-oppdatering)
+    // 2. Det er første webhook for dette kurset (instruktør-oppdatering)
+    if (isset($body['Enabled']) || $count === 1) {
+        error_log("Processing webhook for CourseId: $location_id" . (isset($body['Enabled']) ? " (with Enabled)" : " (first webhook)"));
         
         // Bruk webhook med Enabled hvis den finnes
         $webhook_to_process = $body;
-        if ($count === 2) {
-            $stored_webhooks = get_transient($webhook_data_key) ?: [];
-            foreach ($stored_webhooks as $stored_webhook) {
-                if (isset($stored_webhook['body']['Enabled'])) {
-                    $webhook_to_process = $stored_webhook['body'];
-                    //error_log("Found webhook with Enabled parameter - using this for processing");
-                    break;
-                }
-            }
+        if (isset($body['Enabled'])) {
+            // Slett transients siden vi prosesserer nå
+            delete_transient($count_key);
+            delete_transient($webhook_data_key);
+            delete_transient($last_webhook_time_key);
         }
-        
-        //error_log("Final webhook being processed: " . json_encode($webhook_to_process));
-        
-        // Slett transients
-        delete_transient($count_key);
-        delete_transient($webhook_data_key);
-        //error_log("Cleared temporary webhook data");
         
         // Fortsett med prosessering
         $course_data = get_main_course_id_by_location_id($location_id);

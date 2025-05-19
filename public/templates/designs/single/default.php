@@ -75,11 +75,16 @@
     $contact_phone = get_post_meta(get_the_ID(), 'course_contactperson_phone', true);
     $contact_email = get_post_meta(get_the_ID(), 'course_contactperson_email', true);
 
-    // Get WP data
-    $featured_image_full = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: 'path/to/default-image.jpg';
-    $featured_image_thumb = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail') ?: 'path/to/default-image.jpg';
-    $featured_image_medium = get_the_post_thumbnail_url(get_the_ID(), 'medium') ?: 'path/to/default-image.jpg';
-    $featured_image_large = get_the_post_thumbnail_url(get_the_ID(), 'large') ?: 'path/to/default-image.jpg';
+    // Get placeholder image from settings
+    $kursinnst_options = get_option('kag_kursinnst_option_name');
+    $placeholder_image = !empty($kursinnst_options['ka_plassholderbilde_kurs'])
+        ? $kursinnst_options['ka_plassholderbilde_kurs']
+        : KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';
+
+    $featured_image_full = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: $placeholder_image;
+    $featured_image_thumb = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail') ?: $placeholder_image;
+    $featured_image_medium = get_the_post_thumbnail_url(get_the_ID(), 'medium') ?: $placeholder_image;
+    $featured_image_large = get_the_post_thumbnail_url(get_the_ID(), 'large') ?: $placeholder_image;
 
     $wp_content = get_the_content();
 
@@ -223,13 +228,13 @@
                                             $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
                                             if ($is_online) : ?>
                                                 <p>Etter påmelding vil du få en e-post med mer informasjon om kurset.</p>
-                                            <?php elseif ($show_registration == '1' || $show_registration === 1) : ?>
+                                            <?php elseif ($show_registration == '1' || $show_registration === 1 || $show_registration === "true" || $show_registration === true) : ?>
                                                 <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
                                             <?php else : ?>
                                                 <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                        <?php if ($coursedate['course_isFull'] === 'true') : ?>
+                                        <?php if ($coursedate['course_isFull'] === 'true' || $coursedate['course_isFull'] === 1) : ?>
                                             <p>Kurset er fullt. Du kan melde din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                         <?php endif ?>
                                         <div class="course-grid col-1-1" style="padding-left: 2vw; padding-right: 2vw;">
@@ -344,9 +349,11 @@
                     <p><?php echo wpautop(wp_kses_post($content)); ?></p>
                 </div>
                 <!-- Course image -->
+                <?php if (has_post_thumbnail()): ?>
                 <picture class="course-image">
-                        <img src="<?php echo esc_url($featured_image_large); ?>" alt="Bilde for kurs i <?php the_title(); ?>" decoding="async">
+                    <img src="<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'large')); ?>" alt="Bilde for kurs i <?php the_title(); ?>" decoding="async">
                 </picture>
+                <?php endif; ?>
                 <!-- Sidebar -->
                 <div class="aside">
                     

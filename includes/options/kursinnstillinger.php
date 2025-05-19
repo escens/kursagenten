@@ -214,11 +214,11 @@ class Kursinnstillinger {
                 'placeholder' => 'Velg pris'
             ],
             'date' => [
-                'label' => 'Dato',
+                'label' => 'Startdato',
                 'placeholder' => 'Velg dato'
             ],
             'months' => [
-                'label' => 'Måned',
+                'label' => 'Startmåned',
                 'placeholder' => 'Velg måned'
             ]
         ];
@@ -333,7 +333,7 @@ class Kursinnstillinger {
 
         <div class="options-card">
             <h3 id="valg-for-bilder">Valg for bilder</h3>
-            <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsikoner om nødvendig.</p>
+            <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsbilder om nødvendig.</p>
             <table class="form-table">
                 <tr>
                     <th scope="row">Generelt plassholderbilde</th>
@@ -394,9 +394,10 @@ class Kursinnstillinger {
 
     public function plassholderbilde_generelt_callback() {
         $image_url = isset($this->kag_kursinnst_options['ka_plassholderbilde_generelt']) ? $this->kag_kursinnst_options['ka_plassholderbilde_generelt'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-generell.jpg';
         ?>
         <div class="image-upload-wrapper">
-            <img id="ka_plassholderbilde_generelt_preview" src="<?php echo esc_url($image_url); ?>" style="max-width: 150px; <?php echo $image_url ? '' : 'display: none;'; ?>" />
+            <img id="ka_plassholderbilde_generelt_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
             <input type="hidden" id="ka_plassholderbilde_generelt" name="kag_kursinnst_option_name[ka_plassholderbilde_generelt]" value="<?php echo esc_attr($image_url); ?>" />
             <button type="button" class="button upload_image_button_ka_plassholderbilde_generelt">Velg bilde</button>
             <button type="button" class="button remove_image_button_ka_plassholderbilde_generelt" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
@@ -406,9 +407,10 @@ class Kursinnstillinger {
 
     public function plassholderbilde_kurs_callback() {
         $image_url = isset($this->kag_kursinnst_options['ka_plassholderbilde_kurs']) ? $this->kag_kursinnst_options['ka_plassholderbilde_kurs'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';
         ?>
         <div class="image-upload-wrapper">
-            <img id="ka_plassholderbilde_kurs_preview" src="<?php echo esc_url($image_url); ?>" style="max-width: 150px; <?php echo $image_url ? '' : 'display: none;'; ?>" />
+            <img id="ka_plassholderbilde_kurs_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
             <input type="hidden" id="ka_plassholderbilde_kurs" name="kag_kursinnst_option_name[ka_plassholderbilde_kurs]" value="<?php echo esc_attr($image_url); ?>" />
             <button type="button" class="button upload_image_button_ka_plassholderbilde_kurs">Velg bilde</button>
             <button type="button" class="button remove_image_button_ka_plassholderbilde_kurs" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
@@ -418,9 +420,10 @@ class Kursinnstillinger {
 
     public function plassholderbilde_instruktor_callback() {
         $image_url = isset($this->kag_kursinnst_options['ka_plassholderbilde_instruktor']) ? $this->kag_kursinnst_options['ka_plassholderbilde_instruktor'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-instruktor.jpg';
         ?>
         <div class="image-upload-wrapper">
-            <img id="ka_plassholderbilde_instruktor_preview" src="<?php echo esc_url($image_url); ?>" style="max-width: 150px; <?php echo $image_url ? '' : 'display: none;'; ?>" />
+            <img id="ka_plassholderbilde_instruktor_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
             <input type="hidden" id="ka_plassholderbilde_instruktor" name="kag_kursinnst_option_name[ka_plassholderbilde_instruktor]" value="<?php echo esc_attr($image_url); ?>" />
             <button type="button" class="button upload_image_button_ka_plassholderbilde_instruktor">Velg bilde</button>
             <button type="button" class="button remove_image_button_ka_plassholderbilde_instruktor" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
@@ -430,9 +433,10 @@ class Kursinnstillinger {
 
     public function plassholderbilde_sted_callback() {
         $image_url = isset($this->kag_kursinnst_options['ka_plassholderbilde_sted']) ? $this->kag_kursinnst_options['ka_plassholderbilde_sted'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-location.jpg';
         ?>
         <div class="image-upload-wrapper">
-            <img id="ka_plassholderbilde_sted_preview" src="<?php echo esc_url($image_url); ?>" style="max-width: 150px; <?php echo $image_url ? '' : 'display: none;'; ?>" />
+            <img id="ka_plassholderbilde_sted_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
             <input type="hidden" id="ka_plassholderbilde_sted" name="kag_kursinnst_option_name[ka_plassholderbilde_sted]" value="<?php echo esc_attr($image_url); ?>" />
             <button type="button" class="button upload_image_button_ka_plassholderbilde_sted">Velg bilde</button>
             <button type="button" class="button remove_image_button_ka_plassholderbilde_sted" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>

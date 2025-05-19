@@ -76,9 +76,18 @@ add_action('course_location_edit_form_fields', 'add_course_location_image_field'
 
 // Legg til instruktør-felt
 function add_instructor_image_field($term) {
-    add_taxonomy_image_field($term, 'instructors', 'image_instructor', 'Instruktørbilde', 'bilde', 'Bruk et annet bilde enn det som er lagt inn i Kursagenten. Dette bilde blir synlig på instruktørprofilen her på nettsiden.');
+    add_taxonomy_image_field($term, 'instructors', 'image_instructor', 'Alternativt bilde', 'bilde', 
+        'Dette bildet kan brukes som et alternativt bilde på instruktørprofilen.');
 }
 add_action('instructors_edit_form_fields', 'add_instructor_image_field');
+
+// Legg til instruktør-felt
+function add_instructor_profile_image_field($term) {
+    add_taxonomy_image_field($term, 'instructors', 'image_instructor_ka', 'Profilbilde', 'bilde', 
+        'Dette bildet brukes som hovedbilde på instruktørprofilen.');
+}
+add_action('instructors_edit_form_fields', 'add_instructor_profile_image_field');
+
 
 
 // Taxonomy Visibility field
@@ -248,7 +257,6 @@ function manage_taxonomy_visibility_column($content, $column_name, $term_id) {
 // Taxonomy save function med forbedret sikkerhet
 // -----------------------------
 function save_taxonomy_field($term_id) {
-    // Verify nonce would be good to add here
     if (!current_user_can('manage_categories')) {
         return;
     }
@@ -259,9 +267,7 @@ function save_taxonomy_field($term_id) {
         'image_course_location' => 'esc_url',
         'image_instructor' => 'esc_url',
         'rich_description' => function($content) {
-            // Tillat mer HTML-innhold enn standard wp_kses_post
             $allowed_html = wp_kses_allowed_html('post');
-            // Legg til ekstra tillatte tagger og attributter
             $allowed_html['iframe'] = array(
                 'src' => true,
                 'width' => true,
@@ -291,11 +297,75 @@ function save_taxonomy_field($term_id) {
         },
         'instructor_email' => 'sanitize_email',
         'instructor_phone' => 'sanitize_text_field',
+        'instructor_firstname' => 'sanitize_text_field',
+        'instructor_lastname' => 'sanitize_text_field',
         'hide_in_list' => 'sanitize_text_field',
         'hide_in_menu' => 'sanitize_text_field',
-        'hide_in_course_list' => 'sanitize_text_field'
+        'hide_in_course_list' => 'sanitize_text_field',
     ];
     
+    // Sjekk om dette er en hurtigredigering
+    $is_quick_edit = isset($_POST['action']) && $_POST['action'] === 'inline-save-tax';
+    
+    // Sjekk om dette er en manuell instruktør (uten instructor_id)
+    $is_manual_instructor = empty(get_term_meta($term_id, 'instructor_id', true));
+    
+    // Hvis dette er en hurtigredigering, ikke sett edited-flaggene
+    if (!$is_quick_edit) {
+        if ($is_manual_instructor) {
+            // For manuelle instruktører, sett alltid edited-flaggene
+            if (isset($_POST['instructor_email'])) {
+                update_term_meta($term_id, 'instructor_email_edited', 'yes');
+            }
+            if (isset($_POST['instructor_phone'])) {
+                update_term_meta($term_id, 'instructor_phone_edited', 'yes');
+            }
+            if (isset($_POST['instructor_firstname'])) {
+                update_term_meta($term_id, 'instructor_firstname_edited', 'yes');
+            }
+            if (isset($_POST['instructor_lastname'])) {
+                update_term_meta($term_id, 'instructor_lastname_edited', 'yes');
+            }
+            if (isset($_POST['image_instructor_ka'])) {
+                update_term_meta($term_id, 'instructor_image_edited', 'yes');
+            }
+        } else {
+            // For Kursagenten-instruktører, sett flaggene basert på toggle-status
+            $image_override = isset($_POST['instructor_image_override_toggle']) && $_POST['instructor_image_override_toggle'] === 'on';
+            $profile_override = isset($_POST['instructor_override_toggle']) && $_POST['instructor_override_toggle'] === 'on';
+            
+            // Sett edited-flaggene basert på toggle-status og om feltene er endret
+            if ($image_override) {
+                if (isset($_POST['image_instructor_ka'])) {
+                    update_term_meta($term_id, 'instructor_image_edited', 'yes');
+                }
+            } else {
+                delete_term_meta($term_id, 'instructor_image_edited');
+            }
+            
+            if ($profile_override) {
+                if (isset($_POST['instructor_email'])) {
+                    update_term_meta($term_id, 'instructor_email_edited', 'yes');
+                }
+                if (isset($_POST['instructor_phone'])) {
+                    update_term_meta($term_id, 'instructor_phone_edited', 'yes');
+                }
+                if (isset($_POST['instructor_firstname'])) {
+                    update_term_meta($term_id, 'instructor_firstname_edited', 'yes');
+                }
+                if (isset($_POST['instructor_lastname'])) {
+                    update_term_meta($term_id, 'instructor_lastname_edited', 'yes');
+                }
+            } else {
+                delete_term_meta($term_id, 'instructor_email_edited');
+                delete_term_meta($term_id, 'instructor_phone_edited');
+                delete_term_meta($term_id, 'instructor_firstname_edited');
+                delete_term_meta($term_id, 'instructor_lastname_edited');
+            }
+        }
+    }
+    
+    // Oppdater feltene
     foreach ($fields as $field => $sanitize_callback) {
         if (isset($_POST[$field])) {
             $value = $_POST[$field];
@@ -303,6 +373,23 @@ function save_taxonomy_field($term_id) {
                 $value = call_user_func($sanitize_callback, $value);
             }
             update_term_meta($term_id, $field, $value);
+        }
+    }
+    
+    // Håndter image_instructor_ka separat siden det er spesialtilfelle
+    if (isset($_POST['image_instructor_ka'])) {
+        $image_edited = get_term_meta($term_id, 'instructor_image_edited', true) === 'yes';
+        if ($image_edited || $is_manual_instructor) {
+            $value = esc_url_raw($_POST['image_instructor_ka']);
+            update_term_meta($term_id, 'image_instructor_ka', $value);
+        }
+    }
+    
+    // Oppdater term name hvis det er endret
+    if (isset($_POST['instructor_name'])) {
+        $new_name = sanitize_text_field($_POST['instructor_name']);
+        if ($new_name !== get_term($term_id)->name) {
+            wp_update_term($term_id, 'instructors', array('name' => $new_name));
         }
     }
 }
@@ -316,6 +403,7 @@ add_action('coursecategory_edit_form_fields', 'add_coursecategory_image_field');
 add_action('coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
 add_action('course_location_edit_form_fields', 'add_course_location_image_field');
 add_action('instructors_edit_form_fields', 'add_instructor_image_field');
+add_action('instructors_edit_form_fields', 'add_instructor_profile_image_field');
 add_action('coursecategory_edit_form_fields', 'add_taxonomy_visibility_field');
 add_action('course_location_edit_form_fields', 'add_taxonomy_visibility_field');
 add_action('instructors_edit_form_fields', 'add_taxonomy_visibility_field');
@@ -399,6 +487,23 @@ add_filter('gettext', 'kursagenten_change_description_label', 10, 3);
 function kursagenten_add_instructor_styles() {
     ?>
     <style type="text/css">
+        @media (min-width: 950px) {
+            .taxonomy-coursecategory .edit-tag-actions,
+            .taxonomy-instructors .edit-tag-actions,
+            .taxonomy-course_location .edit-tag-actions {
+                position: fixed;
+                bottom: 40px;
+                left: 900px;
+                background: white;
+                padding: 1em;
+                border-radius: 6px;
+                box-shadow: rgba(0, 0, 0, 0.15) 0px 4px 12px;
+                z-index: 10000;
+            }
+        }
+        #delete-link {
+            margin-left: 20px;
+        }
         /* Skjul originale felter med en gang */
         .taxonomy-instructors:has(.instructor-contact-card) .term-name-wrap,
         .taxonomy-instructors:has(.instructor-contact-card) .term-slug-wrap {
@@ -543,9 +648,22 @@ function kursagenten_make_fields_readonly($term) {
     $firstname = get_term_meta($term->term_id, 'instructor_firstname', true);
     $lastname = get_term_meta($term->term_id, 'instructor_lastname', true);
     $id = get_term_meta($term->term_id, 'instructor_id', true);
-    $image_ka = get_term_meta($term->term_id, 'image_instructor_ka', true); // image_instructor_ka is the image from Kursagenten. Override is the image_instructor field.
-    error_log("DEBUG: Instructor ID: " . $id);
-    error_log("DEBUG: Instructor image_ka: " . $image_ka);
+    $image_ka = get_term_meta($term->term_id, 'image_instructor_ka', true);
+    
+    // Sjekk om dette er en manuelt opprettet instruktør
+    $is_manual_instructor = empty($id);
+    
+    // Sjekk om feltene er manuelt redigert
+    $email_edited = get_term_meta($term->term_id, 'instructor_email_edited', true) === 'yes';
+    $phone_edited = get_term_meta($term->term_id, 'instructor_phone_edited', true) === 'yes';
+    $firstname_edited = get_term_meta($term->term_id, 'instructor_firstname_edited', true) === 'yes';
+    $lastname_edited = get_term_meta($term->term_id, 'instructor_lastname_edited', true) === 'yes';
+    
+    // Sjekk om noen felter er overskrevet
+    $has_edited_fields = $email_edited || $phone_edited || $firstname_edited || $lastname_edited;
+    
+    // I kursagenten_make_fields_readonly funksjonen, etter den eksisterende toggle-knappen
+    $image_edited = get_term_meta($term->term_id, 'instructor_image_edited', true) === 'yes';
     ?>
     <script type="text/javascript">
         jQuery(document).ready(function($) {
@@ -553,13 +671,91 @@ function kursagenten_make_fields_readonly($term) {
             
             // Finn feltene vi vil beholde
             var $imageField = $form.find('tr:has(#image_instructor)');
+            var $profileImageField = $form.find('tr:has(#image_instructor_ka)');
             var $descriptionField = $form.find('tr:has(#description)');
             var $richDescriptionField = $form.find('tr:has(#rich_description)');
             
+            // Legg til klassen for å kontrollere visning
+            $profileImageField.addClass('instructor-image-override-fields');
+            
             // Fjern feltene fra sin nåværende posisjon
             $imageField.remove();
+            $profileImageField.remove();
             $descriptionField.remove();
             $richDescriptionField.remove();
+            
+            // Opprett HTML for redigerbare felter
+            var editableFieldsHtml = `
+                <tr class="form-field instructor-override-fields" style="display:none;">
+                    <th scope="row"><label for="instructor_name">Navn</label></th>
+                    <td>
+                        <input type="text" name="instructor_name" id="instructor_name" value="<?php echo esc_attr($term->name); ?>" class="regular-text" />
+                        <p class="description">Endre navnet på instruktøren</p>
+                    </td>
+                </tr>
+                <tr class="form-field instructor-override-fields" style="display:none;">
+                    <th scope="row"><label for="instructor_phone">Telefon</label></th>
+                    <td>
+                        <input type="text" name="instructor_phone" id="instructor_phone" value="<?php echo esc_attr($phone); ?>" class="regular-text" />
+                        <?php if (!$is_manual_instructor): ?>
+                        <p class="description"><?php echo $phone_edited ? '<span style="color:#d63638;">Dette feltet er overskrevet fra Kursagenten</span>' : ''; ?></p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr class="form-field instructor-override-fields" style="display:none;">
+                    <th scope="row"><label for="instructor_email">E-post</label></th>
+                    <td>
+                        <input type="email" name="instructor_email" id="instructor_email" value="<?php echo esc_attr($email); ?>" class="regular-text" />
+                        <?php if (!$is_manual_instructor): ?>
+                        <p class="description"><?php echo $email_edited ? '<span style="color:#d63638;">Dette feltet er overskrevet fra Kursagenten</span>' : ''; ?></p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr class="form-field instructor-override-fields" style="display:none;">
+                    <th scope="row"><label for="instructor_firstname">Fornavn</label></th>
+                    <td>
+                        <input type="text" name="instructor_firstname" id="instructor_firstname" value="<?php echo esc_attr($firstname); ?>" class="regular-text" />
+                        <?php if (!$is_manual_instructor): ?>
+                        <p class="description"><?php echo $firstname_edited ? '<span style="color:#d63638;">Dette feltet er overskrevet fra Kursagenten</span>' : ''; ?></p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+                <tr class="form-field instructor-override-fields" style="display:none;">
+                    <th scope="row"><label for="instructor_lastname">Etternavn</label></th>
+                    <td>
+                        <input type="text" name="instructor_lastname" id="instructor_lastname" value="<?php echo esc_attr($lastname); ?>" class="regular-text" />
+                        <?php if (!$is_manual_instructor): ?>
+                        <p class="description"><?php echo $lastname_edited ? '<span style="color:#d63638;">Dette feltet er overskrevet fra Kursagenten</span>' : ''; ?></p>
+                        <?php endif; ?>
+                    </td>
+                </tr>
+            `;
+            
+            // Opprett HTML for informasjonsboks
+            var infoBoxHtml = `
+                <tr class="form-field instructor-override-fields" style="display:none;">
+                    <td colspan="2">
+                        <div class="revert-to-ka-data">
+                            <?php if ($is_manual_instructor): ?>
+                            <p><strong>Bruk Kursagenten instruktørprofil i stedet:</strong></p>
+                            <ol>
+                                <li>Slett denne instruktøren</li>
+                                <li>Lagre et kurs i Kursagenten hvor instruktøren er lagt inn</li>
+                            </ol>
+                            <?php else: ?>
+                            <p><strong>Gå tilbake til Kursagenten-data:</strong></p>
+                            <ol>
+                                <li>Deaktiver "Overstyr profil fra Kursagenten" knappen</li>
+                                <li>Oppdater instruktørprofilen i Kursagenten</li>
+                                <li>Profilen oppdateres her. Merk: instruktøren må være knyttet til et kurs for at dataene skal bli hentet over.</li>
+                            </ol>
+                            <p>- Bruker du data fra Kursagenten, slipper du å holde dem oppdatert to steder.<br>
+                            - En instruktør som er opprettet i Kursagenten med det samme navnet, vil automatisk bli slått sammen med denne instruktøren.</p>
+                            <?php endif; ?>
+                        </div>
+                    </td>
+                </tr>
+            `;
             
             // Legg til feltene i ny rekkefølge
             $form.prepend(
@@ -573,63 +769,609 @@ function kursagenten_make_fields_readonly($term) {
                         '<div class="instructor-name"><?php echo esc_js(esc_html($term->name)); ?></div>' +
                         '<div class="instructor-details">' +
                             '<p><strong>Slug:</strong> /<?php echo esc_js(esc_attr($term->slug)); ?></p>' +
-                            '<p><strong>Telefon:</strong> <?php echo esc_js(esc_html($phone)); ?></p>' +
-                            '<p><strong>E-post:</strong> <?php echo esc_js(esc_html($email)); ?></p>' +
-                            '<p><strong>Fornavn:</strong> <?php echo esc_js(esc_html($firstname)); ?></p>' +
-                            '<p><strong>Etternavn:</strong> <?php echo esc_js(esc_html($lastname)); ?></p>' +
-                            '<p><strong>Bildeurl:</strong> <?php echo esc_js(esc_html($image_ka)); ?></p>' +
+                            '<p class="instructor-phone"><strong>Telefon:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($phone)); ?></span></p>' +
+                            '<p class="instructor-email"><strong>E-post:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($email)); ?></span></p>' +
+                            '<p class="instructor-firstname"><strong>Fornavn:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($firstname)); ?></span></p>' +
+                            '<p class="instructor-lastname"><strong>Etternavn:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($lastname)); ?></span></p>' +
+                            '<p class="instructor-image-url"><strong>Bildeurl:</strong> <span class="instructor-value"><?php echo esc_js(esc_html($image_ka)); ?></span></p>' +
+                            <?php if (!$is_manual_instructor): ?>
                             '<a href="https://kursadmin.kursagenten.no/Profile/<?php echo esc_js(esc_html($id)); ?>" target="_blank">' +
                                 'Rediger i Kursadmin' +
                             '</a>' +
+                            <?php endif; ?>
                         '</div>' +
                     '</div>' +
                 '</div></td></tr>'),
+
+                // Profilbilde seksjon
+                $('<tr><td colspan="2"><div class="content-section"><h3>Profilbilde</h3></div></td></tr>'),
+                
+                // Toggle-knapp for profilbilde
+                $('<tr><td colspan="2"><div class="instructor-override-toggle">' +
+                    '<label class="switch">' +
+                        '<input type="checkbox" id="instructor_image_override_toggle" ' +
+                        '<?php echo ($image_edited || $is_manual_instructor) ? "checked" : ""; ?> ' +
+                        '<?php echo $is_manual_instructor ? "disabled" : ""; ?> />' +
+                        '<span class="slider round"></span>' +
+                    '</label>' +
+                    '<span class="toggle-label"><?php echo $is_manual_instructor ? "Profilbilde" : "Overstyr profilbilde"; ?></span>' +
+                '</div></td></tr>'),
+                
+                // Profilbilde felt
+                $profileImageField,
                 
                 // Innhold seksjon
-                $('<tr><td colspan="2"><div class="content-section"><h3>Legg til innhold</h3></div></td></tr>'),
+                $('<tr><td colspan="2"><div class="content-section"><h3>Innhold</h3></div></td></tr>'),
+                
+                // Toggle-knapp for andre felter
+                $('<tr><td colspan="2"><div class="instructor-override-toggle">' +
+                    '<label class="switch">' +
+                        '<input type="checkbox" id="instructor_override_toggle" ' +
+                        '<?php echo ($has_edited_fields || $is_manual_instructor) ? "checked" : ""; ?> ' +
+                        '<?php echo $is_manual_instructor ? "disabled" : ""; ?> />' +
+                        '<span class="slider round"></span>' +
+                    '</label>' +
+                    '<span class="toggle-label"><?php echo $is_manual_instructor ? "Lagt inn direkte via WordPress" : "Overstyr profil fra Kursagenten"; ?></span>' +
+                '</div></td></tr>'),
+                
+                // Redigerbare felter
+                $(editableFieldsHtml),
+                
+                // Informasjonsboks
+                $(infoBoxHtml),
+                
+                // Alternativt bilde
                 $imageField,
+                
+                // Beskrivelser
                 $descriptionField,
                 $richDescriptionField
             );
+            
+            // Legg til skjulte felt for å lagre toggle-status
+            $form.append(
+                '<input type="hidden" name="instructor_image_override_toggle" id="instructor_image_override_toggle_hidden" value="<?php echo ($image_edited || $is_manual_instructor) ? "on" : ""; ?>" />',
+                '<input type="hidden" name="instructor_override_toggle" id="instructor_override_toggle_hidden" value="<?php echo ($has_edited_fields || $is_manual_instructor) ? "on" : ""; ?>" />'
+            );
+            
+            // Håndter toggle for profilbilde
+            $('#instructor_image_override_toggle').on('change', function() {
+                var isChecked = this.checked;
+                $('.instructor-image-override-fields').toggle(isChecked);
+                $('#instructor_image_override_toggle_hidden').val(isChecked ? 'on' : '');
+                
+                if (!isChecked && !<?php echo $is_manual_instructor ? 'true' : 'false'; ?>) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'remove_instructor_image_edited',
+                            term_id: <?php echo $term->term_id; ?>,
+                            nonce: '<?php echo wp_create_nonce("remove_instructor_image_edited"); ?>'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $('.instructor-image-override-fields .description span').remove();
+                                $.ajax({
+                                    url: ajaxurl,
+                                    type: 'POST',
+                                    data: {
+                                        action: 'get_instructor_image_ajax',
+                                        term_id: <?php echo $term->term_id; ?>,
+                                        nonce: '<?php echo wp_create_nonce("get_instructor_image_ajax"); ?>'
+                                    },
+                                    success: function(data) {
+                                        if (data.success) {
+                                            var $image = $('.instructor-image');
+                                            if (data.data.image_url) {
+                                                $image.attr('src', data.data.image_url).show();
+                                            } else {
+                                                $image.hide();
+                                            }
+                                            $('.instructor-details p:nth-child(6) strong').next().text(data.data.image_url || '');
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Håndter toggle for andre felter
+            $('#instructor_override_toggle').on('change', function() {
+                var isChecked = this.checked;
+                $('.instructor-override-fields').toggle(isChecked);
+                $('#instructor_override_toggle_hidden').val(isChecked ? 'on' : '');
+                
+                if (!isChecked && !<?php echo $is_manual_instructor ? 'true' : 'false'; ?>) {
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'remove_instructor_profile_edited',
+                            term_id: <?php echo $term->term_id; ?>,
+                            nonce: '<?php echo wp_create_nonce("remove_instructor_profile_edited"); ?>'
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $.ajax({
+                                    url: ajaxurl,
+                                    type: 'POST',
+                                    data: {
+                                        action: 'get_instructor_data',
+                                        term_id: <?php echo $term->term_id; ?>,
+                                        nonce: '<?php echo wp_create_nonce("get_instructor_data"); ?>'
+                                    },
+                                    success: function(data) {
+                                        if (data.success) {
+                                            $('.instructor-phone .instructor-value').text(data.data.phone || '');
+                                            $('.instructor-email .instructor-value').text(data.data.email || '');
+                                            $('.instructor-firstname .instructor-value').text(data.data.firstname || '');
+                                            $('.instructor-lastname .instructor-value').text(data.data.lastname || '');
+                                            
+                                            if ($('.instructor-override-fields').is(':visible')) {
+                                                $('#instructor_phone').val(data.data.phone || '');
+                                                $('#instructor_email').val(data.data.email || '');
+                                                $('#instructor_firstname').val(data.data.firstname || '');
+                                                $('#instructor_lastname').val(data.data.lastname || '');
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            
+            // Oppdater skjulte felt når siden lastes
+            $('#instructor_image_override_toggle_hidden').val($('#instructor_image_override_toggle').prop('checked') ? 'on' : '');
+            $('#instructor_override_toggle_hidden').val($('#instructor_override_toggle').prop('checked') ? 'on' : '');
+            
+            // Vis feltene basert på deres respektive tilstander
+            if (<?php echo ($image_edited || $is_manual_instructor) ? 'true' : 'false'; ?>) {
+                $('.instructor-image-override-fields').show();
+            } else {
+                $('.instructor-image-override-fields').hide();
+            }
+            
+            if (<?php echo ($has_edited_fields || $is_manual_instructor) ? 'true' : 'false'; ?>) {
+                $('.instructor-override-fields').show();
+            } else {
+                $('.instructor-override-fields').hide();
+            }
         });
     </script>
+    <style>
+        /* Stil for toggle-knappen */
+        .instructor-override-toggle {
+            margin: 1em 0;
+            padding: 1em;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 1em;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+        }
+        
+        input:checked + .slider {
+            background-color: #2271b1;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+        
+        .slider.round {
+            border-radius: 34px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        
+        .toggle-label {
+            font-weight: 600;
+            color: #1d2327;
+        }
+        
+        /* Stil for redigerbare felter */
+        .instructor-override-fields td {
+            padding: 1em 0;
+        }
+        
+        .instructor-override-fields input[type="text"],
+        .instructor-override-fields input[type="email"] {
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .instructor-override-fields .description {
+            margin-top: 0.5em;
+            font-style: italic;
+        }
+        
+        /* Stil for notice */
+        .revert-to-ka-data {
+            margin: 1em 0;
+            padding: 1em;
+            background: rgb(247, 247, 247);
+            border-radius: 7px;
+        }
+        
+        .revert-to-ka-data ol {
+            margin: 0.5em 0 0.5em 1.5em;
+        }
+        
+        .revert-to-ka-data li {
+            margin-bottom: 2px;
+        }
+        
+        .revert-to-ka-data strong {
+            color: #1d2327;
+        }
+        
+        /* Forbedret stil for inaktiv toggle */
+        .switch input:disabled + .slider {
+            background-color: #c3c8cb;
+            cursor: not-allowed;
+        }
+        
+        .switch input:disabled:checked + .slider {
+            background-color: #c3c8cb;
+        }
+        
+        .switch input:disabled + .slider:before {
+            cursor: not-allowed;
+            background-color: #f0f0f0;
+        }
+
+    </style>
     <?php
 }
 add_action('instructors_pre_edit_form', 'kursagenten_make_fields_readonly', 10);
 
-// Legg til AJAX-håndtering for lagring av synlighet
-function save_taxonomy_visibility_ajax() {
-    check_ajax_referer('save_taxonomy_visibility', 'nonce');
+// Legg til denne nye funksjonen
+function sync_instructor_data_from_ka($term_id, $sync_image = true) {
+    // Hent instructor_id fra term meta
+    $instructor_id = get_term_meta($term_id, 'instructor_id', true);
+    if (empty($instructor_id)) {
+        return false;
+    }
+    
+    // Sjekk edited-flagg
+    $image_edited = get_term_meta($term_id, 'instructor_image_edited', true) === 'yes';
+    $email_edited = get_term_meta($term_id, 'instructor_email_edited', true) === 'yes';
+    $phone_edited = get_term_meta($term_id, 'instructor_phone_edited', true) === 'yes';
+    $firstname_edited = get_term_meta($term_id, 'instructor_firstname_edited', true) === 'yes';
+    $lastname_edited = get_term_meta($term_id, 'instructor_lastname_edited', true) === 'yes';
+    
+    // Hent kursliste for å finne instruktøren
+    $courses = kursagenten_get_course_list();
+    if (empty($courses)) {
+        return false;
+    }
+    
+    // Finn instruktøren i kurslisten
+    $instructor_data = null;
+    foreach ($courses as $course) {
+        foreach ($course['locations'] as $location) {
+            foreach ($location['schedules'] as $schedule) {
+                if (!empty($schedule['instructors'])) {
+                    foreach ($schedule['instructors'] as $instructor) {
+                        if ($instructor['userId'] == $instructor_id) {
+                            $instructor_data = $instructor;
+                            break 3; // Bryt ut av alle løkker
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if (empty($instructor_data)) {
+        return false;
+    }
+    
+    // Oppdater metadata med data fra Kursagenten, men respekter edited-flagg
+    if (!$email_edited && isset($instructor_data['email'])) {
+        update_term_meta($term_id, 'instructor_email', sanitize_email($instructor_data['email']));
+    }
+    if (!$phone_edited && isset($instructor_data['phone'])) {
+        update_term_meta($term_id, 'instructor_phone', sanitize_text_field($instructor_data['phone']));
+    }
+    if (!$firstname_edited && isset($instructor_data['firstname'])) {
+        update_term_meta($term_id, 'instructor_firstname', sanitize_text_field($instructor_data['firstname']));
+    }
+    if (!$lastname_edited && isset($instructor_data['lastname'])) {
+        update_term_meta($term_id, 'instructor_lastname', sanitize_text_field($instructor_data['lastname']));
+    }
+    if ($sync_image && !$image_edited && isset($instructor_data['image'])) {
+        $image_url = ltrim($instructor_data['image'], '/');
+        update_term_meta($term_id, 'image_instructor_ka', esc_url_raw($image_url));
+    }
+    
+    return true;
+}
+
+// Registrer AJAX-handlere
+add_action('wp_ajax_remove_instructor_edited_fields', 'remove_instructor_edited_fields');
+add_action('wp_ajax_remove_instructor_image_edited', 'remove_instructor_image_edited');
+
+// Oppdater remove_instructor_edited_fields funksjonen
+function remove_instructor_edited_fields() {
+    // Verifiser nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'remove_instructor_edited_fields')) {
+        wp_send_json_error('Sikkerhetsverifisering feilet');
+        return;
+    }
     
     if (!current_user_can('manage_categories')) {
         wp_send_json_error('Ingen tilgang');
         return;
     }
     
-    $tag_id = intval($_POST['tag_id']);
-    $hide_in_list = sanitize_text_field($_POST['hide_in_list']);
-    $hide_in_menu = sanitize_text_field($_POST['hide_in_menu']);
-    $hide_in_course_list = sanitize_text_field($_POST['hide_in_course_list']);
+    if (!isset($_POST['term_id'])) {
+        wp_send_json_error('Manglende term_id');
+        return;
+    }
     
-    update_term_meta($tag_id, 'hide_in_list', $hide_in_list);
-    update_term_meta($tag_id, 'hide_in_menu', $hide_in_menu);
-    update_term_meta($tag_id, 'hide_in_course_list', $hide_in_course_list);
+    $term_id = intval($_POST['term_id']);
+    
+    // Fjern alle edited-felter
+    delete_term_meta($term_id, 'instructor_email_edited');
+    delete_term_meta($term_id, 'instructor_phone_edited');
+    delete_term_meta($term_id, 'instructor_firstname_edited');
+    delete_term_meta($term_id, 'instructor_lastname_edited');
+    
+    // Synkroniser data fra Kursagenten
+    sync_instructor_data_from_ka($term_id);
     
     wp_send_json_success();
 }
-add_action('wp_ajax_save_taxonomy_visibility', 'save_taxonomy_visibility_ajax');
 
-// Lagre hurtigredigering
+// Oppdater remove_instructor_image_edited for å kun synkronisere bilde
+function remove_instructor_image_edited() {
+    // Verifiser nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'remove_instructor_image_edited')) {
+        wp_send_json_error('Sikkerhetsverifisering feilet');
+        return;
+    }
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    if (!isset($_POST['term_id'])) {
+        wp_send_json_error('Manglende term_id');
+        return;
+    }
+    
+    $term_id = intval($_POST['term_id']);
+    
+    delete_term_meta($term_id, 'instructor_image_edited');
+    
+    // Synkroniser kun bilde fra Kursagenten
+    sync_instructor_data_from_ka($term_id, true);
+    
+    wp_send_json_success();
+}
+
+// Legg til AJAX-håndtering for å hente instruktørdata
+function get_instructor_data() {
+    check_ajax_referer('get_instructor_data', 'nonce');
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    $term_id = intval($_POST['term_id']);
+    
+    $data = array(
+        'phone' => get_term_meta($term_id, 'instructor_phone', true),
+        'email' => get_term_meta($term_id, 'instructor_email', true),
+        'firstname' => get_term_meta($term_id, 'instructor_firstname', true),
+        'lastname' => get_term_meta($term_id, 'instructor_lastname', true)
+    );
+    
+    wp_send_json_success($data);
+}
+add_action('wp_ajax_get_instructor_data', 'get_instructor_data');
+
+// Legg til AJAX-håndtering for å hente instruktørbilde
+function get_instructor_image_ajax() {
+    check_ajax_referer('get_instructor_image_ajax', 'nonce');
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    $term_id = intval($_POST['term_id']);
+    $image_url = get_term_meta($term_id, 'image_instructor_ka', true);
+    
+    wp_send_json_success(array('image_url' => $image_url));
+}
+add_action('wp_ajax_get_instructor_image_ajax', 'get_instructor_image_ajax');
+
+// Legg til AJAX-håndtering for bildeopplasting
+function handle_instructor_image_upload() {
+    // Verifiser nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'upload_instructor_image')) {
+        wp_send_json_error('Sikkerhetsverifisering feilet');
+        return;
+    }
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    if (!isset($_POST['term_id'])) {
+        wp_send_json_error('Manglende term_id');
+        return;
+    }
+    
+    $term_id = intval($_POST['term_id']);
+    
+    // Sjekk om det er lastet opp et bilde
+    if (!isset($_FILES['instructor_image']) || $_FILES['instructor_image']['error'] !== UPLOAD_ERR_OK) {
+        wp_send_json_error('Ingen bildefil lastet opp eller feil ved opplasting');
+        return;
+    }
+    
+    require_once(ABSPATH . 'wp-admin/includes/image.php');
+    require_once(ABSPATH . 'wp-admin/includes/file.php');
+    require_once(ABSPATH . 'wp-admin/includes/media.php');
+    
+    // Last opp bildet til WordPress media library
+    $attachment_id = media_handle_upload('instructor_image', 0);
+    
+    if (is_wp_error($attachment_id)) {
+        wp_send_json_error('Feil ved opplasting av bilde: ' . $attachment_id->get_error_message());
+        return;
+    }
+    
+    // Hent bilde-URL
+    $image_url = wp_get_attachment_url($attachment_id);
+    
+    if (!$image_url) {
+        wp_send_json_error('Kunne ikke hente bilde-URL etter opplasting');
+        return;
+    }
+    
+    // Oppdater term meta
+    update_term_meta($term_id, 'image_instructor_ka', $image_url);
+    update_term_meta($term_id, 'instructor_image_edited', 'yes');
+    
+    wp_send_json_success(array('image_url' => $image_url));
+}
+add_action('wp_ajax_handle_instructor_image_upload', 'handle_instructor_image_upload');
+
+// Legg til AJAX-håndtering for fjerning av bilde
+function remove_instructor_image() {
+    // Verifiser nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'remove_instructor_image')) {
+        wp_send_json_error('Sikkerhetsverifisering feilet');
+        return;
+    }
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    if (!isset($_POST['term_id'])) {
+        wp_send_json_error('Manglende term_id');
+        return;
+    }
+    
+    $term_id = intval($_POST['term_id']);
+    
+    // Fjern bilde fra term meta
+    delete_term_meta($term_id, 'image_instructor_ka');
+    delete_term_meta($term_id, 'instructor_image_edited');
+    
+    wp_send_json_success();
+}
+add_action('wp_ajax_remove_instructor_image', 'remove_instructor_image');
+
+// Legg til hurtigredigering lagring
 function save_quick_edit_visibility($term_id) {
-    if (isset($_POST['quick_edit_hide_in_list'])) {
-        update_term_meta($term_id, 'hide_in_list', sanitize_text_field($_POST['quick_edit_hide_in_list']));
+    if (!current_user_can('manage_categories')) {
+        return;
     }
-    if (isset($_POST['quick_edit_hide_in_menu'])) {
-        update_term_meta($term_id, 'hide_in_menu', sanitize_text_field($_POST['quick_edit_hide_in_menu']));
+    
+    // Sjekk om hurtigredigering er aktiv
+    if (!isset($_POST['action']) || $_POST['action'] !== 'inline-save-tax') {
+        return;
     }
-    if (isset($_POST['quick_edit_hide_in_course_list'])) {
-        update_term_meta($term_id, 'hide_in_course_list', sanitize_text_field($_POST['quick_edit_hide_in_course_list']));
+    
+    // Hent og valider verdier
+    $hide_in_list = isset($_POST['quick_edit_hide_in_list']) ? sanitize_text_field($_POST['quick_edit_hide_in_list']) : 'Vis';
+    $hide_in_menu = isset($_POST['quick_edit_hide_in_menu']) ? sanitize_text_field($_POST['quick_edit_hide_in_menu']) : 'Vis';
+    $hide_in_course_list = isset($_POST['quick_edit_hide_in_course_list']) ? sanitize_text_field($_POST['quick_edit_hide_in_course_list']) : 'Vis';
+    
+    // Oppdater term meta
+    update_term_meta($term_id, 'hide_in_list', $hide_in_list);
+    update_term_meta($term_id, 'hide_in_menu', $hide_in_menu);
+    
+    // Sjekk om dette er en kurskategori før vi oppdaterer kursliste-visning
+    $term = get_term($term_id);
+    if ($term && $term->taxonomy === 'coursecategory') {
+        update_term_meta($term_id, 'hide_in_course_list', $hide_in_course_list);
     }
 }
+
+// Legg til ny AJAX-handler for å fjerne kun profil-edited-felter
+function remove_instructor_profile_edited() {
+    // Verifiser nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'remove_instructor_profile_edited')) {
+        wp_send_json_error('Sikkerhetsverifisering feilet');
+        return;
+    }
+    
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Ingen tilgang');
+        return;
+    }
+    
+    if (!isset($_POST['term_id'])) {
+        wp_send_json_error('Manglende term_id');
+        return;
+    }
+    
+    $term_id = intval($_POST['term_id']);
+    
+    // Fjern KUN profil-edited-felter
+    delete_term_meta($term_id, 'instructor_email_edited');
+    delete_term_meta($term_id, 'instructor_phone_edited');
+    delete_term_meta($term_id, 'instructor_firstname_edited');
+    delete_term_meta($term_id, 'instructor_lastname_edited');
+    
+    // Synkroniser data fra Kursagenten, men ikke bilde
+    sync_instructor_data_from_ka($term_id, false);
+    
+    wp_send_json_success();
+}
+add_action('wp_ajax_remove_instructor_profile_edited', 'remove_instructor_profile_edited');
 
 

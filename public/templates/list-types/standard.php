@@ -196,14 +196,13 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                         <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
                     <?php endif; ?>
                     <?php if (!empty($first_course_date)) : ?>
-                        <p>Kurset varer fra <?php echo esc_html($first_course_date); ?> til <?php echo esc_html($last_course_date); ?></p>
+                        <p>Kurset varer fra <?php echo esc_html($first_course_date); ?><?php if (!empty($last_course_date)) : ?> til <?php echo esc_html($last_course_date); ?><?php endif; ?></p>
                     <?php else : ?>
                         <?php 
                         $is_online = has_term('nettbasert', 'course_location', $course_id);
-                        //$show_registration = get_post_meta($course_id, 'course_showRegistrationForm', true);
                         if ($is_online) : ?>
                             <p>Etter påmelding vil du få en e-post med mer informasjon om kurset, og hvordan det skal gjennomføres.</p>
-                        <?php elseif ($show_registration === '1') : ?>
+                        <?php elseif ($show_registration === '1' || $show_registration === 1 || $show_registration === true || $show_registration === "true") : ?>
                             <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
                         <?php else : ?>
                             <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>

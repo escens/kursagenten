@@ -426,12 +426,12 @@ function cleanup_all_specific_locations() {
     foreach ($terms as $term) {
         if (delete_term_meta($term->term_id, 'specific_locations')) {
             $cleaned_count++;
-            error_log("Slettet specific_locations for term_id: " . $term->term_id);
+           // error_log("Slettet specific_locations for term_id: " . $term->term_id);
         }
     }
 
-    error_log("Slettet specific_locations for $cleaned_count kurssteder");
-    error_log("=== SLUTT: Rydder opp i alle specific_locations ===");
+    //error_log("Slettet specific_locations for $cleaned_count kurssteder");
+    //error_log("=== SLUTT: Rydder opp i alle specific_locations ===");
     return true;
 }
 

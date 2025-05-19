@@ -34,7 +34,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
     <header class="ka-section ka-taxonomy-header">
         <div class="ka-content-container">
             <div class="taxonomy-header-content">
-                <h1><?php echo esc_html($term->name); ?></h1>
+                
+                <h1>
+                <a href="javascript:void(0);" onclick="history.back();" class="back-link" title="Gå tilbake">
+                    <i class="ka-icon icon-circle-left-regular page-back-link"></i>
+                </a><?php echo esc_html($term->name); ?></h1>
                 <?php if (!empty($term->description)): ?>
                     <div class="taxonomy-description">
                         <?php echo wp_kses_post($term->description); ?>

@@ -165,16 +165,11 @@
     padding: 8px 16px;
     border-radius: 4px;
     border: none;
-    background-color: #1976d2;
     color: white;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s ease;
     font-size: 0.9em;
-}
-
-#ka .card-footer .courselist-button:hover {
-    background-color: #1565c0;
 }
 
 /* Availability tag */

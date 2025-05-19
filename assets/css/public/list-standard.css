@@ -97,6 +97,9 @@
 #ka .courselist-main .details-area {
     margin-top: 0;
 }
+#ka .courselist-main .details-area .startdate {
+    color: var(--ka-color);
+}
 #ka .courselist-main .details-area .location i.ka-icon {
     background-color: var(--ka-color-filter);
 }
@@ -140,6 +143,9 @@
 /* Courselist Content Panel */
 #ka .courselist-content {
     background: transparent;
+}
+#ka .courselist-content.open {
+    margin-top: 1em;
 }
 
 /* Mobile-friendly styles */
