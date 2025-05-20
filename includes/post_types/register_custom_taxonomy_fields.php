@@ -778,6 +778,7 @@ function kursagenten_make_fields_readonly($term) {
                             '<a href="https://kursadmin.kursagenten.no/Profile/<?php echo esc_js(esc_html($id)); ?>" target="_blank">' +
                                 'Rediger i Kursadmin' +
                             '</a>' +
+                            '<br><span class="instructor-ka-note" style="font-size:12px; color:#888; font-style:italic;"> Merk: instruktøren må være knyttet til et kurs for at dataene skal bli hentet over.</span>' +
                             <?php endif; ?>
                         '</div>' +
                     '</div>' +

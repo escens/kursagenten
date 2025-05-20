@@ -264,11 +264,18 @@ function kursagenten_admin_landing_page() {
                                 <td><span class="copytext">[kurskategorier fontmaks=18px]</span></td>
                             </tr>
                             <tr>
-                                <td>Vis</td>
+                                <td>Vis (k)</td>
                                 <td>For de kategoriene som har flere nivåer, er det mulighet til å vise kun toppnivåene, kun underkategoriene, eller alle.</td>
                                 <td>hovedkategorier, subkategorier<br><strong>Standard</strong>: viser alle</td>
                                 <td>Kurskategorier</td>
                                 <td><span class="copytext">[kurskategorier vis=hovedkategorier]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Vis (i)</td>
+                                <td>Velg å vise fornavn, etternavn eller begge.</td>
+                                <td>fornavn, etternavn<br><strong>Standard</strong>: viser fullt navn</td>
+                                <td>Instruktører</td>
+                                <td><span class="copytext">[instruktorer vis=fornavn]</span></td>
                             </tr>
                             <tr>
                                 <td>Skjul</td>

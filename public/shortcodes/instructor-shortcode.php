@@ -179,6 +179,16 @@ class InstructorGrid {
     }
 
     private function generate_instructor_html($term, string $thumbnail, string $description, array $a): string {
+        // Get display name based on 'vis' attribute
+        $display_name = match($a['vis']) {
+            'fornavn' => get_term_meta($term->term_id, 'instructor_firstname', true),
+            'etternavn' => get_term_meta($term->term_id, 'instructor_lastname', true),
+            default => $term->name
+        };
+
+        // If meta field is empty, fallback to term name
+        $display_name = !empty($display_name) ? $display_name : $term->name;
+        
         return "
             <div class='box term-{$term->term_id}'>
                 <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
@@ -188,7 +198,7 @@ class InstructorGrid {
                 </a>
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
+                        <{$a['overskrift']} class='tittel'>" . ucfirst($display_name) . "</{$a['overskrift']}>
                     </a>
                     <div class='description'>" . $description . "</div>
                 </div>
