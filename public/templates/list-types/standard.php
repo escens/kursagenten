@@ -122,6 +122,32 @@ if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors
 
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
+// Hent instruktører for kurset
+$instructors = get_the_terms($course_id, 'instructors');
+$instructor_links = [];
+if (!empty($instructors) && !is_wp_error($instructors)) {
+    $instructor_links = array_map(function ($term) {
+        $instructor_url = get_instructor_display_url($term, 'instructors');
+        // Bruk samme navnevisningslogikk som i default.php
+        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        $display_name = $term->name;
+        
+        if ($name_display === 'firstname') {
+            $firstname = get_term_meta($term->term_id, 'instructor_firstname', true);
+            if (!empty($firstname)) {
+                $display_name = $firstname;
+            }
+        } elseif ($name_display === 'lastname') {
+            $lastname = get_term_meta($term->term_id, 'instructor_lastname', true);
+            if (!empty($lastname)) {
+                $display_name = $lastname;
+            }
+        }
+        
+        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
+    }, $instructors);
+}
+
 ?>
 <div class="courselist-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>">
     <div class="courselist-main<?php echo $with_image_class; ?>">
@@ -171,6 +197,9 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                         <?php if (!empty($coursetime)) : ?>
                             <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
                         <?php endif; ?>
+                        <?php if (!empty($instructor_links)) : ?>
+                            <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
+                        <?php endif; ?>
                     <?php else : ?>
                         <?php if (!empty($price)) : ?>
                             <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></div>
@@ -180,6 +209,9 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                         <?php endif; ?>
                         <?php if (!empty($coursetime)) : ?>
                             <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($instructor_links)) : ?>
+                            <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
                         <?php endif; ?>
                     <?php endif; ?>
                     <?php if (!empty($location_freetext)) : ?>

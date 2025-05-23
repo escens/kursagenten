@@ -7,7 +7,6 @@ function get_taxonomy_data($full_path = '') {
     }
     
     $path_segments = explode('/', trim($full_path, '/'));
-    error_log('Taxonomy template: URL Path: ' . $full_path);
     
     return parse_taxonomy_path($path_segments);
 }
@@ -48,15 +47,12 @@ function map_taxonomy_slug($taxonomy_slug) {
 
 function get_taxonomy_term($taxonomy, $term_slug) {
     if (empty($taxonomy) || empty($term_slug)) {
-        error_log('Taxonomy template: Invalid taxonomy or term, using get_queried_object');
         return get_queried_object();
     }
     
     $term = get_term_by('slug', $term_slug, $taxonomy);
     
     if ($term) {
-        error_log('Taxonomy template: Found term: ' . $term->name . ' (ID: ' . $term->term_id . ')');
-        
         // Oppdater global query objekt
         global $wp_query;
         $wp_query->queried_object = $term;
@@ -100,6 +96,44 @@ function get_instructor_image($term_id) {
         $options['ka_plassholderbilde_instruktor'] : '';
     
     return !empty($image_url) ? esc_url($image_url) : '';
+}
+
+/**
+ * Get the display URL for an instructor term
+ * 
+ * @param WP_Term $term The instructor term object
+ * @param string $taxonomy The taxonomy name
+ * @return string The URL for the instructor
+ */
+function get_instructor_display_url($term, $taxonomy) {
+    if ($taxonomy !== 'instructors') {
+        return get_term_link($term);
+    }
+    
+    // Get name display setting
+    $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+    if (empty($name_display) || $name_display === 'full') {
+        return get_term_link($term);
+    }
+
+    // Get desired name based on setting
+    $display_name = '';
+    switch ($name_display) {
+        case 'firstname':
+            $display_name = get_term_meta($term->term_id, 'instructor_firstname', true);
+            break;
+        case 'lastname':
+            $display_name = get_term_meta($term->term_id, 'instructor_lastname', true);
+            break;
+    }
+
+    if (empty($display_name)) {
+        return get_term_link($term);
+    }
+
+    // Build new URL with desired name
+    $new_slug = sanitize_title($display_name);
+    return home_url('/instruktorer/' . $new_slug . '/');
 }
 
 function get_taxonomy_courses($term_id, $taxonomy) {

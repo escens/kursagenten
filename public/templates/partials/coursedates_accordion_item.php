@@ -48,6 +48,16 @@ if (!$course_link) {
     $course_link = false;
 }
 $item_class = $course_count === 1 ? 'course-item courselist-item single-item' : 'course-item courselist-item';
+
+// Hent instruktører for kurset
+$instructors = get_the_terms($course_id, 'instructors');
+$instructor_links = [];
+if (!empty($instructors) && !is_wp_error($instructors)) {
+    $instructor_links = array_map(function ($term) {
+        $instructor_url = get_instructor_display_url($term, 'instructors');
+        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
+    }, $instructors);
+}
 ?>
 <div class="<?php echo $item_class; ?>">
     <div class="courselist-main">
@@ -62,6 +72,9 @@ $item_class = $course_count === 1 ? 'course-item courselist-item single-item' : 
                 <?php endif; ?>
                 <?php if (!empty($location)) : ?>
                     <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($instructor_links)) : ?>
+                    <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
                 <?php endif; ?>
             </div>
             <div class="meta-area iconlist horizontal">

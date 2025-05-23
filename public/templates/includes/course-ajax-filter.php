@@ -11,8 +11,6 @@ if (!function_exists('get_course_template_part')) {
 
 // Funksjon for å hente filtrerte taksonomier
 function get_filtered_terms($taxonomy) {
-    error_log("=== START: get_filtered_terms for taxonomy: $taxonomy ===");
-    
     // Hent alle synlige kurs
     $visible_courses = get_posts([
         'post_type' => 'course',
@@ -30,11 +28,9 @@ function get_filtered_terms($taxonomy) {
             ]
         ]
     ]);
-    
-    error_log("Antall synlige kurs funnet: " . count($visible_courses));
 
-    // Hent alle taksonomier
-    $all_terms = get_terms([
+    // Hent alle taksonomier med riktige parametre
+    $args = [
         'taxonomy' => $taxonomy,
         'hide_empty' => true,
         'meta_query' => [
@@ -48,10 +44,17 @@ function get_filtered_terms($taxonomy) {
                 'compare' => 'NOT EXISTS'
             ]
         ]
-    ]);
-    
-    //error_log("Antall taksonomier funnet før filtrering: " . count($all_terms));
-    //error_log("Taksonomier før filtrering: " . print_r($all_terms, true));
+    ];
+
+    // Legg til spesielle parametre for kategorier
+    if ($taxonomy === 'coursecategory') {
+        $args['orderby'] = 'menu_order';
+        $args['order'] = 'ASC';
+        $args['hierarchical'] = true;
+        $args['parent'] = 0; // Start med toppnivå kategorier
+    }
+
+    $all_terms = get_terms($args);
 
     // Hent skjulte kategorier
     $hidden_categories = get_terms([
@@ -64,41 +67,71 @@ function get_filtered_terms($taxonomy) {
             ]
         ]
     ]);
-    
-    //error_log("Skjulte kategorier: " . print_r($hidden_categories, true));
 
     // Filtrer ut taksonomier som bare er knyttet til skjulte kurs eller kurs med skjulte kategorier
     $filtered_terms = array_filter($all_terms, function($term) use ($visible_courses, $hidden_categories) {
         foreach ($visible_courses as $course) {
-            // Sjekk om kurset er knyttet til termen
             if (has_term($term->term_id, $term->taxonomy, $course->ID)) {
-                // Sjekk om kurset er knyttet til noen skjulte kategorier
                 $has_hidden_category = false;
                 foreach ($hidden_categories as $hidden_category) {
                     if (has_term($hidden_category->term_id, 'coursecategory', $course->ID)) {
-                        //error_log("Kurs {$course->ID} er knyttet til skjult kategori {$hidden_category->name} (ID: {$hidden_category->term_id})");
                         $has_hidden_category = true;
                         break;
                     }
                 }
                 
                 if (!$has_hidden_category) {
-                    //error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til synlig kurs {$course->ID} uten skjulte kategorier");
                     return true;
-                } else {
-                    //error_log("Term {$term->name} (ID: {$term->term_id}) er knyttet til kurs {$course->ID} med skjulte kategorier - filtrerer ut");
                 }
             }
         }
-        //error_log("Term {$term->name} (ID: {$term->term_id}) er IKKE knyttet til noen synlige kurs uten skjulte kategorier");
         return false;
     });
 
-    //error_log("Antall taksonomier etter filtrering: " . count($filtered_terms));
-    //error_log("Taksonomier etter filtrering: " . print_r($filtered_terms, true));
-    
-    //error_log("=== SLUTT: get_filtered_terms for taxonomy: $taxonomy ===");
-    return $filtered_terms;
+    // For kategorier, hent også underkategorier for de filtrerte termene
+    if ($taxonomy === 'coursecategory') {
+        $final_terms = [];
+        foreach ($filtered_terms as $term) {
+            // Legg til toppnivå kategorien
+            $term->parent_class = '';
+            $term->parent_id = 0;
+            $final_terms[] = $term;
+
+            // Hent underkategorier for denne termen
+            $child_terms = get_terms([
+                'taxonomy' => $taxonomy,
+                'hide_empty' => true,
+                'parent' => $term->term_id,
+                'orderby' => 'menu_order',
+                'order' => 'ASC',
+                'meta_query' => [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_course_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_course_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ]);
+            
+            if (!is_wp_error($child_terms)) {
+                foreach ($child_terms as $child) {
+                    // Legg til parent-informasjon på underkategoriene
+                    $child->parent_class = 'has-parent';
+                    $child->parent_id = $term->term_id;
+                    $final_terms[] = $child;
+                }
+            }
+        }
+
+        error_log("Final terms for coursecategory: " . print_r($final_terms, true));
+        return $final_terms;
+    }
+
+    return array_values($filtered_terms);
 }
 
 // Funksjon for å hente filtrerte språk
@@ -133,8 +166,6 @@ function get_filtered_languages() {
 
 // Funksjon for å hente filtrerte måneder
 function get_filtered_months() {
-    //error_log("=== START: get_filtered_months ===");
-    
     // Hent kun coursedates siden månedene er lagret der
     $visible_coursedates = get_posts([
         'post_type' => 'coursedate',
@@ -152,14 +183,11 @@ function get_filtered_months() {
             ]
         ]
     ]);
-    
-    //error_log("Antall synlige coursedates funnet: " . count($visible_coursedates));
 
     $months = [];
     foreach ($visible_coursedates as $coursedate) {
         $month = get_post_meta($coursedate->ID, 'course_month', true);
         if (!empty($month)) {
-            //error_log("Fant måned {$month} for coursedate {$coursedate->ID}");
             $months[$month] = [
                 'value' => $month,
                 'name' => mb_ucfirst(date_i18n('F', mktime(0, 0, 0, $month, 1)))
@@ -170,9 +198,6 @@ function get_filtered_months() {
     // Sorter månedene i stigende rekkefølge basert på månedsnummeret
     ksort($months, SORT_NUMERIC);
 
-    //error_log("Måneder funnet: " . print_r($months, true));
-    //error_log("=== SLUTT: get_filtered_months ===");
-    
     return array_values($months);
 }
 
@@ -191,19 +216,15 @@ add_action('wp_ajax_nopriv_filter_courses', 'filter_courses_handler');
 function filter_courses_handler() {
     // Verifiser nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'filter_nonce')) {
-        //error_log('Nonce verification failed in filter_courses_handler');
         wp_send_json_error([
             'message' => 'Sikkerhetssjekk feilet. Vennligst oppdater siden og prøv igjen.'
         ], 403);
     }
 
     try {
-        // Logg innkommende parametre
-        //error_log('Incoming request parameters: ' . print_r($_REQUEST, true));
-        //error_log('Incoming POST parameters: ' . print_r($_POST, true));
-
         // Håndter datofilteret
         $date_param = $_POST['dato'] ?? $_REQUEST['dato'] ?? null;
+        
         if (!empty($date_param) && is_string($date_param)) {
             $dates = explode('-', sanitize_text_field($date_param));
             if (count($dates) === 2) {
@@ -219,19 +240,19 @@ function filter_courses_handler() {
             }
         }
 
-        $query = get_course_dates_query();
-
         // Håndter søk
         $search_param = $_POST['sok'] ?? $_REQUEST['sok'] ?? null;
+        
         if (!empty($search_param)) {
             $_REQUEST['s'] = sanitize_text_field($search_param);
         }
-        
-        // Logg query-parametere
-        //error_log('Query parameters: ' . print_r($query->query_vars, true));
-        //error_log('Current page: ' . $query->get('paged'));
-        //error_log('Max pages: ' . $query->max_num_pages);
 
+        // Håndter sortering
+        $sort = $_POST['sort'] ?? $_REQUEST['sort'] ?? null;
+        $order = $_POST['order'] ?? $_REQUEST['order'] ?? null;
+
+        $query = get_course_dates_query();
+        
         if ($query->have_posts()) {
             ob_start();
             $context = is_tax() ? 'taxonomy' : 'archive';
@@ -253,7 +274,8 @@ function filter_courses_handler() {
                         }
                     }
                 } catch (Exception $e) {
-                    error_log('Error loading template in filter_courses_handler: ' . $e->getMessage());
+                    // Logg bare faktiske feil
+                    error_log('Error loading template for post ' . get_the_ID() . ': ' . $e->getMessage());
                 }
             }
             wp_reset_postdata();
@@ -261,7 +283,6 @@ function filter_courses_handler() {
             // Hent gjeldende forespørsels-URL som base for paginering
             $current_url = '';
 
-            // Prøv først å hente fra HTTP_REFERER
             if (!empty($_SERVER['HTTP_REFERER'])) {
                 $referer = wp_parse_url($_SERVER['HTTP_REFERER']);
                 if ($referer && isset($referer['path'])) {
@@ -269,23 +290,14 @@ function filter_courses_handler() {
                 }
             }
 
-            // Fallback til REQUEST_URI hvis HTTP_REFERER ikke er tilgjengelig
             if (empty($current_url)) {
                 $request_uri = $_SERVER['REQUEST_URI'];
-                // Fjern query-parametre
                 $path = strtok($request_uri, '?');
                 $current_url = home_url($path);
             }
 
-            //error_log('Original request URL: ' . $_SERVER['HTTP_REFERER']);
-            //error_log('Parsed current URL for pagination: ' . $current_url);
-
-            // Fjern eventuelle eksisterende side-parametre fra URL-en
             $current_url = remove_query_arg('side', $current_url);
-            
-            //error_log('URL after removing side parameter: ' . $current_url);
 
-            // Bygg pagineringsparametere
             $pagination_args = [
                 'base' => $current_url . '%_%',
                 'current' => max(1, $query->get('paged')),
@@ -295,12 +307,8 @@ function filter_courses_handler() {
                     return is_array($item) ? join(',', $item) : $item;
                 }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'coursedate' => true, 'course' => true]))
             ];
-            
-            //error_log('Pagination arguments: ' . print_r($pagination_args, true));
 
             $pagination = paginate_links($pagination_args);
-            
-            //error_log('Generated pagination HTML: ' . $pagination);
 
             wp_send_json_success([
                 'html' => ob_get_clean(),

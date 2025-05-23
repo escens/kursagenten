@@ -22,12 +22,6 @@ $taxonomy = $term->taxonomy;
 $rich_description = get_term_meta($term_id, 'rich_description', true);
 $image_url = get_taxonomy_image($term_id, $taxonomy);
 $query = get_taxonomy_courses($term_id, $taxonomy);
-
-// Logg informasjon om termen vi bruker
-//error_log('Taxonomy template: Using term ID: ' . $term_id);
-//error_log('Taxonomy template: Using taxonomy: ' . $taxonomy);
-//error_log('Taxonomy template: Using term name: ' . $term->name);
-//error_log('Taxonomy template: Using term slug: ' . $term->slug);
 ?>
 
 <article class="ka-outer-container taxonomy-container">
@@ -36,9 +30,28 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
             <div class="taxonomy-header-content">
                 
                 <h1>
-                <a href="javascript:void(0);" onclick="history.back();" class="back-link" title="Gå tilbake">
+                <a href="javascript:history.back()" class="back-link" title="Gå tilbake">
                     <i class="ka-icon icon-circle-left-regular page-back-link"></i>
-                </a><?php echo esc_html($term->name); ?></h1>
+                </a><?php 
+                // Håndter navnevisning for instruktører
+                if ($taxonomy === 'instructors') {
+                    $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+                    switch ($name_display) {
+                        case 'firstname':
+                            $display_name = get_term_meta($term_id, 'instructor_firstname', true);
+                            echo esc_html(!empty($display_name) ? $display_name : $term->name);
+                            break;
+                        case 'lastname':
+                            $display_name = get_term_meta($term_id, 'instructor_lastname', true);
+                            echo esc_html(!empty($display_name) ? $display_name : $term->name);
+                            break;
+                        default:
+                            echo esc_html($term->name);
+                    }
+                } else {
+                    echo esc_html($term->name);
+                }
+                ?></h1>
                 <?php if (!empty($term->description)): ?>
                     <div class="taxonomy-description">
                         <?php echo wp_kses_post($term->description); ?>
@@ -161,7 +174,8 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                         <?php
                         $args = [
                             'course_count' => $query->found_posts,
-                            'query' => $query
+                            'query' => $query,
+                            'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null
                         ];
 
                         while ($query->have_posts()) : $query->the_post();
@@ -180,8 +194,9 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             <div class="pagination">
                             <?php
                             // Generate pagination links
+                            $base_url = $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : get_term_link($term);
                             echo paginate_links([
-                                'base' => get_term_link($term) . '?%_%',
+                                'base' => $base_url . '?%_%',
                                 'current' => max(1, $query->get('paged')),
                                 'format' => 'side=%#%',
                                 'total' => $query->max_num_pages,

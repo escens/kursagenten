@@ -245,7 +245,7 @@ class Kursinnstillinger {
 
         if (empty($tilbyder_id) || empty($tilbyder_guid)) : ?>
             <div class="" style="margin: 10px 0;padding: 1px 10px; background: #d63638; border-radius: 5px; color:white; width: fit-content;">
-                <p><strong>OBS!</strong> Fyll inn <a href="#kursagenten-innstillinger" style="color:white;">innstillinger fra Kursagenten</a> før du henter alle kursene dine (synkroniser alle kurs).</p>
+                <p><strong>OBS!</strong> Fyll inn <a href="#kursagenten-innstillinger" style="color:white; text-decoration: underline;">innstillinger fra Kursagenten</a> før du henter alle kursene dine (synkroniser alle kurs).</p>
             </div>
         <?php endif; ?>
 

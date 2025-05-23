@@ -118,6 +118,16 @@ if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors
 
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
+// Hent instruktører for kurset
+$instructors = get_the_terms($course_id, 'instructors');
+$instructor_links = [];
+if (!empty($instructors) && !is_wp_error($instructors)) {
+    $instructor_links = array_map(function ($term) {
+        $instructor_url = get_instructor_display_url($term, 'instructors');
+        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
+    }, $instructors);
+}
+
 ?>
 <div class="courselist-item grid-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>">
     <div class="courselist-card<?php echo $with_image_class; ?>">
@@ -178,12 +188,18 @@ $with_image_class = $show_images === 'yes' ? ' with-image' : '';
                             <?php if (!empty($coursetime)) : ?>
                             <li><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></li>
                             <?php endif; ?>
+                            <?php if (!empty($instructor_links)) : ?>
+                            <li><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></li>
+                            <?php endif; ?>
                         <?php else : ?>
                             <?php if (!empty($first_course_date)) : ?>
                             <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></li>
                             <?php endif; ?>
                             <?php if (!empty($coursetime)) : ?>
                             <li><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></li>
+                            <?php endif; ?>
+                            <?php if (!empty($instructor_links)) : ?>
+                            <li><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></li>
                             <?php endif; ?>
                         <?php endif; ?>
                     </ul>

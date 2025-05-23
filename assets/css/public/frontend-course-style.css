@@ -1053,7 +1053,7 @@ font-size: var(--ka-filter-font-size);
 }
 
 #ka .filter-list-item.radio .checkbox-label::before,
-#ka .filter-list-item.radio .checkbox-label::after {
+#ka .filter-list-item.radio .checkbox-label::after{
   border-radius: 100%;
   top: -2px;
 }
@@ -1124,6 +1124,30 @@ font-size: var(--ka-filter-font-size);
 #ka .filter-list-item > input:checked + .checkbox-label.line-across {
   text-decoration: line-through;
 }
+
+#ka .filter-category.has-parent {
+  padding-left: 12px;
+}
+#ka .filter-category.has-parent .checkbox-label::before,
+#ka .filter-category.has-parent .checkbox-label::after {
+  width: calc(var(--input-size) - 3px);
+  height: calc(var(--input-size) - 3px);
+  left: 5px;
+  top: 4px;
+}
+#ka .filter-category.has-parent .filter-list-item.checkbox .checkbox-label::after {
+  width: 7px;
+  height: 12px;
+  top: 3px;
+}
+#ka .filter-category.has-parent .checkbox-label {
+  font-size: .9em;
+  opacity: 0.85;
+}
+#ka .filter-category.has-parent:hover .checkbox-label {
+  opacity: 1;
+}
+
 
 /* Filter: date picker */
 /************************/
@@ -1460,6 +1484,10 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
     margin: 0;
     padding: 0;
 }
+#ka .mobile-filter-section .filter-list-item.checkbox .checkbox-label::before,
+#ka .mobile-filter-section .filter-list-item.checkbox .checkbox-label::after {
+  top: 9px;
+}
 
 /* Mobile chips styling */
 #ka .mobile-filter-section .filter-chip-wrapper {
@@ -1489,7 +1517,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 
 #ka .mobile-filter-footer button {
     flex: 1;
-    padding: 1em;
+    padding: .5em;
     border: none;
     border-radius: 5px;
     font-weight: 500;

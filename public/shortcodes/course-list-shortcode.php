@@ -14,6 +14,8 @@ if (!defined('ABSPATH')) exit;
  * Register the [kursliste] shortcode
  */
 function kursagenten_course_list_shortcode($atts) {
+    // Sjekk logging-status
+
     // Load required dependencies
     if (!function_exists('get_course_languages')) {
         require_once dirname(dirname(__FILE__)) . '/templates/includes/queries.php';
@@ -64,8 +66,6 @@ function kursagenten_course_list_shortcode($atts) {
         )
     );
 
- 
-
     // Initialize main course query and filter settings
     $query = get_course_dates_query();
 
@@ -97,21 +97,7 @@ function kursagenten_course_list_shortcode($atts) {
     $taxonomy_data = [
         'categories' => [
             'taxonomy' => 'coursecategory',
-            'terms' => get_terms([
-                'taxonomy' => 'coursecategory',
-                'hide_empty' => true,
-                'meta_query' => [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'hide_in_course_list',
-                        'value' => 'Vis',
-                    ],
-                    [
-                        'key' => 'hide_in_course_list',
-                        'compare' => 'NOT EXISTS'
-                    ]
-                ]
-            ]),
+            'terms' => get_filtered_terms('coursecategory'),
             'url_key' => 'k',
             'filter_key' => 'categories',
         ],
@@ -140,6 +126,7 @@ function kursagenten_course_list_shortcode($atts) {
             'filter_key' => 'months',
         ]
     ];
+
 
     // Prepare filter-information
     $filter_display_info = [];
@@ -188,8 +175,11 @@ function kursagenten_course_list_shortcode($atts) {
                             <div class="filter-container filter-top">
                                 <!-- Dynamic Filter Generation -->
                                 <?php foreach ($top_filters as $filter) : ?>
+                                    <?php 
+                                    ?>
                                     <div class="filter-item <?php echo esc_attr($filter_types[$filter] ?? ''); ?> <?php echo esc_attr($search_class); ?>">
-                                        <?php if ($filter === 'search') : ?>
+                                        <?php 
+                                        if ($filter === 'search') : ?>
                                             <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
                                         <?php elseif ($filter === 'date') : ?>
                                             <?php
@@ -220,7 +210,8 @@ function kursagenten_course_list_shortcode($atts) {
                                                 <a href="#" class="reset-date-filter" style="display: <?php echo $date ? 'block' : 'none'; ?>; font-size: var(--ka-font-xs); color: rgb(235, 121, 121); margin-top: 5px; text-decoration: none;">Nullstill dato</a>
                                             </div>
                                         <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
-                                            <?php if ($filter_types[$filter] === 'chips') : ?>
+                                            <?php 
+                                            if ($filter_types[$filter] === 'chips') : ?>
                                                 <!-- Chip-style Filter Display -->
                                                 <div class="filter-chip-wrapper">
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
@@ -233,7 +224,8 @@ function kursagenten_course_list_shortcode($atts) {
                                                     <?php endforeach; ?>
                                                 </div>
                                             <?php elseif ($filter_types[$filter] === 'list') : ?>
-                                                <!-- List-style Filter Display -->
+                                                <?php 
+                                                ?>
                                                 <div id="filter-list-<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>" class="filter">
                                                     <div class="filter-dropdown">
                                                         <?php
@@ -244,19 +236,16 @@ function kursagenten_course_list_shortcode($atts) {
                                                         $url_key = $taxonomy_data[$filter]['url_key'];
                                                         $active_filters = isset($_GET[$url_key]) ? explode(',', $_GET[$url_key]) : [];
 
+
                                                         if (empty($active_filters)) {
                                                             $display_text = $filter_placeholder;
                                                         } else {
                                                             $active_names = [];
                                                             foreach ($active_filters as $slug) {
-                                                                if ($filter === 'language') {
-                                                                    $active_names[] = ucfirst($slug);
-                                                                } else {
-                                                                    foreach ($taxonomy_data[$filter]['terms'] as $term) {
-                                                                        if (is_object($term) && ($filter === 'months' ? $term->value : $term->slug) === $slug) {
-                                                                            $active_names[] = $term->name;
-                                                                            break;
-                                                                        }
+                                                                foreach ($taxonomy_data[$filter]['terms'] as $term) {
+                                                                    if (is_object($term) && $term->slug === $slug) {
+                                                                        $active_names[] = $term->name;
+                                                                        break;
                                                                     }
                                                                 }
                                                             }
@@ -276,25 +265,49 @@ function kursagenten_course_list_shortcode($atts) {
                                                             <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
                                                         </div>
                                                         <div class="filter-dropdown-content">
-                                                            <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
-                                                                <label class="filter-list-item checkbox">
-                                                                    <?php 
-                                                                    if ($filter === 'months') {
-                                                                        $term_value = $term['value'];
-                                                                        $term_name = $term['name'];
-                                                                    } else {
-                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
-                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
-                                                                    }
-                                                                    $url_key = $taxonomy_data[$filter]['url_key'];
+                                                            <?php 
+                                                            if ($filter === 'categories') {
+                                                                
+                                                                
+                                                                foreach ($taxonomy_data['categories']['terms'] as $category) {
+                                                                    
+                                                                    $is_checked = in_array($category->slug, $active_filters) ? 'checked' : '';
+                                                                    $parent_class = isset($category->parent_class) ? $category->parent_class : '';
+                                                                    $parent_id_attr = isset($category->parent_id) ? ' data-parent-id="' . esc_attr($category->parent_id) . '"' : '';
+                                                                    
+                                                                  
+                                                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . '"' . $parent_id_attr . '>';
+                                                                    echo '<label class="filter-list-item checkbox">';
+                                                                    echo '<input type="checkbox" 
+                                                                        class="filter-checkbox"
+                                                                        value="' . esc_attr($category->slug) . '" 
+                                                                        data-filter-key="categories" 
+                                                                        data-url-key="k" 
+                                                                        ' . $is_checked . '>';
+                                                                    echo '<span class="checkbox-label">' . esc_html($category->name) . '</span>';
+                                                                    echo '</label>';
+                                                                    echo '</div>';
+                                                                }
+                                                            } else {
+                                                                // For andre filtre, vis en enkel liste
+                                                                foreach ($taxonomy_data[$filter]['terms'] as $term) {
+                                                                    $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                    $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    $is_checked = in_array($term_value, $active_filters) ? 'checked' : '';
                                                                     ?>
-                                                                    <input type="checkbox" class="filter-checkbox"
-                                                                        value="<?php echo esc_attr($term_value); ?>"
-                                                                        data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
-                                                                        data-url-key="<?php echo esc_attr($url_key); ?>">
-                                                                    <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
-                                                                </label>
-                                                            <?php endforeach; ?>
+                                                                    <label class="filter-list-item checkbox">
+                                                                        <input type="checkbox" 
+                                                                               class="filter-checkbox"
+                                                                               value="<?php echo esc_attr($term_value); ?>"
+                                                                               data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
+                                                                               data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
+                                                                               <?php echo $is_checked; ?>>
+                                                                        <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
+                                                                    </label>
+                                                                    <?php
+                                                                }
+                                                            }
+                                                            ?>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -319,6 +332,7 @@ function kursagenten_course_list_shortcode($atts) {
                                 <?php if ($has_left_filters) : ?>
                                     <div class="filter-container left-filter-section">
                                         <?php foreach ($left_filters as $filter) : ?>
+
                                             <div class="filter-item">
                                                 <?php
                                                 $current_filter_info = $filter_display_info[$filter] ?? [];
@@ -356,7 +370,8 @@ function kursagenten_course_list_shortcode($atts) {
                                                         <a href="#" class="reset-date-filter" style="display: <?php echo $date ? 'block' : 'none'; ?>; font-size: var(--ka-font-xs); color: rgb(235, 121, 121); margin-top: 5px; text-decoration: none;">Nullstill dato</a>
                                                     </div>
                                                 <?php elseif (!empty($taxonomy_data[$filter]['terms'])) : ?>
-                                                    <?php if ($filter_types[$filter] === 'chips') : ?>
+                                                    <?php 
+                                                    if ($filter_types[$filter] === 'chips') : ?>
                                                         <div class="filter-chip-wrapper">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <button class="chip filter-chip"
@@ -368,25 +383,36 @@ function kursagenten_course_list_shortcode($atts) {
                                                             <?php endforeach; ?>
                                                         </div>
                                                     <?php elseif ($filter_types[$filter] === 'list') : ?>
+                                                        <?php 
+                                                        if ($filter === 'categories') {
+                                                        }
+                                                        ?>
                                                         <div id="filter-list-location" class="filter-list expand-content" data-size="130">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                                                                <?php 
+                                                                if ($filter === 'months') {
+                                                                    $term_value = $term['value'];
+                                                                    $term_name = $term['name'];
+                                                                    $parent_class = '';
+                                                                    $parent_id_attr = '';
+                                                                } else {
+                                                                    $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                    $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    $parent_class = isset($term->parent_class) ? $term->parent_class : '';
+                                                                    $parent_id_attr = isset($term->parent_id) ? ' data-parent-id="' . esc_attr($term->parent_id) . '"' : '';
+                                                                    
+                                                                }
+                                                                $url_key = $taxonomy_data[$filter]['url_key'];
+                                                                ?>
+                                                                <div class="filter-category<?php echo $parent_class ? ' ' . esc_attr($parent_class) : ''; ?>"<?php echo $parent_id_attr; ?>>
                                                                 <label class="filter-list-item checkbox">
-                                                                    <?php 
-                                                                    if ($filter === 'months') {
-                                                                        $term_value = $term['value'];
-                                                                        $term_name = $term['name'];
-                                                                    } else {
-                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
-                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
-                                                                    }
-                                                                    $url_key = $taxonomy_data[$filter]['url_key'];
-                                                                    ?>
                                                                     <input type="checkbox" class="filter-checkbox"
                                                                         value="<?php echo esc_attr($term_value); ?>"
                                                                         data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                         data-url-key="<?php echo esc_attr($url_key); ?>">
                                                                     <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
                                                                 </label>
+                                                                </div>
                                                             <?php endforeach; ?>
                                                         </div>
                                                     <?php endif; ?>
@@ -451,6 +477,25 @@ function kursagenten_course_list_shortcode($atts) {
                                             'course_count' => $query->found_posts,
                                             'query' => $query
                                         ];
+
+                                        // Debug logging
+                                        error_log('=== START course-list-shortcode output ===');
+                                        error_log('Query found posts: ' . $query->found_posts);
+                                        error_log('Query post count: ' . $query->post_count);
+                                        error_log('Query SQL: ' . $query->request);
+                                        
+                                        // Sjekk om vi har posts
+                                        if ($query->have_posts()) {
+                                            error_log('Posts found in query:');
+                                            while ($query->have_posts()) {
+                                                $query->the_post();
+                                                error_log('- Post ID: ' . get_the_ID() . ', Title: ' . get_the_title());
+                                            }
+                                            wp_reset_postdata();
+                                        } else {
+                                            error_log('No posts found in query');
+                                        }
+                                        error_log('=== END course-list-shortcode output ===');
 
                                         while ($query->have_posts()) : $query->the_post();
                                             get_course_template_part($args);
@@ -756,15 +801,20 @@ function kursagenten_course_list_shortcode($atts) {
             const activeFilters = {};
             
             // Liste over alle mulige filter-parametre
-            const filterParams = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'search'];
+            const filterParams = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
             
             filterParams.forEach(param => {
                 if (urlParams.has(param)) {
-                    activeFilters[param] = urlParams.get(param).split(',');
+                    const value = urlParams.get(param);
+                    // Dekod verdiene før vi splitter på komma
+                    activeFilters[param] = value.split(',').map(v => decodeURIComponent(v.trim()));
                 }
             });
             
-            log('Aktive filtre fra URL:', activeFilters);
+            if (DEBUG) {
+                console.log('Active filters from URL:', activeFilters);
+            }
+            
             return activeFilters;
         }
 
@@ -772,9 +822,14 @@ function kursagenten_course_list_shortcode($atts) {
         function restoreActiveFilters() {
             const activeFilters = getActiveFiltersFromUrl();
             
+            // Debug logging
+            if (DEBUG) {
+                console.log('Restoring filters from URL:', activeFilters);
+            }
+            
             // Gjenopprett søk
-            if (activeFilters.search) {
-                $('.mobile-filter-content .filter-search').val(activeFilters.search);
+            if (activeFilters.sok) {
+                $('.mobile-filter-content .filter-search').val(activeFilters.sok);
             }
             
             // Gjenopprett dato
@@ -797,12 +852,26 @@ function kursagenten_course_list_shortcode($atts) {
                 const urlKey = $(this).data('url-key');
                 const filterValue = $(this).val();
                 
-                if (activeFilters[urlKey] && activeFilters[urlKey].includes(filterValue)) {
-                    $(this).prop('checked', true);
+                if (activeFilters[urlKey]) {
+                    // Spesiell håndtering for måned-filter
+                    if (urlKey === 'mnd') {
+                        // Konverter månedene til samme format for sammenligning
+                        const normalizedValue = filterValue.padStart(2, '0');
+                        const normalizedActiveFilters = activeFilters[urlKey].map(m => m.padStart(2, '0'));
+                        if (normalizedActiveFilters.includes(normalizedValue)) {
+                            $(this).prop('checked', true);
+                        }
+                    } else {
+                        if (activeFilters[urlKey].includes(filterValue)) {
+                            $(this).prop('checked', true);
+                        }
+                    }
                 }
             });
             
-            log('Gjenopprettet aktive filtre');
+            if (DEBUG) {
+                console.log('Active filters restored');
+            }
         }
         
         if (filterToggleBtn.length) {
@@ -1005,7 +1074,9 @@ function kursagenten_course_list_shortcode($atts) {
                 if (!filters[filterKey]) {
                     filters[filterKey] = [];
                 }
-                filters[filterKey].push(filterValue);
+                if (!filters[filterKey].includes(filterValue)) {
+                    filters[filterKey].push(filterValue);
+                }
             });
 
             $('.mobile-filter-content .filter-checkbox:checked').each(function() {
@@ -1014,7 +1085,9 @@ function kursagenten_course_list_shortcode($atts) {
                 if (!filters[filterKey]) {
                     filters[filterKey] = [];
                 }
-                filters[filterKey].push(filterValue);
+                if (!filters[filterKey].includes(filterValue)) {
+                    filters[filterKey].push(filterValue);
+                }
             });
 
             // Håndter dato-filter
@@ -1026,7 +1099,7 @@ function kursagenten_course_list_shortcode($atts) {
             // Håndter søk
             const searchTerm = $('.mobile-filter-content .filter-search').val();
             if (searchTerm) {
-                filters['search'] = searchTerm;
+                filters['sok'] = searchTerm;
             }
 
             // Behold eksisterende per_page parameter hvis den finnes
@@ -1036,15 +1109,31 @@ function kursagenten_course_list_shortcode($atts) {
                 filters['per_page'] = perPage;
             }
 
-            // Oppdater URL og last inn nye resultater
-            const queryString = Object.entries(filters)
-                .map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`)
-                .join('&');
+            // Bygg URL med riktig encoding
+            const searchParams = new URLSearchParams();
+            
+            // Legg til alle filtre med riktig encoding
+            Object.entries(filters).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    // For array-verdier, bruk encodeURIComponent på hver verdi
+                    searchParams.set(key, value.map(v => encodeURIComponent(v)).join(','));
+                } else {
+                    // For enkle verdier, bruk encodeURIComponent direkte
+                    searchParams.set(key, encodeURIComponent(value));
+                }
+            });
 
             // Fjern per_page fra aktive filtre før vi oppdaterer URL
             $('#active-filters .filter-tag[data-param="per_page"]').remove();
             
-            window.location.href = `${window.location.pathname}?${queryString}`;
+            // Debug logging
+            if (DEBUG) {
+                console.log('Filter values before update:', filters);
+                console.log('Search params:', searchParams.toString());
+            }
+            
+            // Bruk searchParams.toString() for å få riktig URL-encoding
+            window.location.href = `${window.location.pathname}?${searchParams.toString()}`;
         }
 
         // Initialiser mobilfiltre ved lasting og ved vindustørrelse-endring
@@ -1075,10 +1164,50 @@ function kursagenten_course_list_shortcode($atts) {
             font-size: 17px;
         }
         .kag .mobile-filter-overlay .filter-list-item .checkbox-label {
-
             margin-top: -4px;
         }
 
+        /*.filter-list-item {
+            display: block;
+            position: relative;
+            transition: padding-left 0.2s ease;
+        }
+        
+        .filter-list-item .checkbox-label {
+            display: inline-block;
+            margin-left: 5px;
+        }
+        
+
+        
+        .filter-list-item.has-parent::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            width: 8px;
+            height: 1px;
+            background-color: #ccc;
+        }
+        
+        .filter-list-item .filter-checkbox {
+            margin-right: 5px;
+        }*/
+        
+        /* Stil for mobil visning */
+        .mobile-filter-content .filter-list-item {
+            padding: 8px 0;
+        }
+        
+        .mobile-filter-content .filter-list-item .checkbox-label {
+            font-size: 16px;
+        }
+
+        /* Stil for desktop visning */
+        .filter-dropdown-content .filter-list-item.has-parent {
+            font-size: 0.95em;
+            color: #666;
+        }
     </style>
     <?php
 
@@ -1086,3 +1215,149 @@ function kursagenten_course_list_shortcode($atts) {
     return ob_get_clean();
 }
 add_shortcode('kursliste', 'kursagenten_course_list_shortcode'); 
+
+function display_category_hierarchy($parent_id = 0, $depth = 0, $selected_categories = []) {
+    // Hent kategorier for denne parent
+    $args = [
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'orderby' => 'menu_order',
+        'order' => 'ASC',
+        'parent' => $parent_id,
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ];
+
+    
+    $categories = get_terms($args);
+
+    if (is_wp_error($categories)) {
+        return;
+    }
+
+
+    if (!empty($categories)) {
+        foreach ($categories as $category) {
+            
+            // Sjekk om kategorien har synlige kurs
+            $has_visible_courses = false;
+            $courses = get_posts([
+                'post_type' => 'course',
+                'posts_per_page' => -1,
+                'post_status' => 'publish',
+                'tax_query' => [
+                    [
+                        'taxonomy' => 'coursecategory',
+                        'field' => 'term_id',
+                        'terms' => $category->term_id
+                    ]
+                ],
+                'meta_query' => [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_course_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_course_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ]);
+
+
+            if (!empty($courses)) {
+                $has_visible_courses = true;
+            }
+
+            // Sjekk om kategorien har synlige underkategorier
+            $has_visible_children = false;
+            $child_categories = get_terms([
+                'taxonomy' => 'coursecategory',
+                'hide_empty' => true,
+                'parent' => $category->term_id,
+                'meta_query' => [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_course_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_course_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ]);
+
+
+            if (!empty($child_categories) && !is_wp_error($child_categories)) {
+                foreach ($child_categories as $child) {
+                    $child_courses = get_posts([
+                        'post_type' => 'course',
+                        'posts_per_page' => -1,
+                        'post_status' => 'publish',
+                        'tax_query' => [
+                            [
+                                'taxonomy' => 'coursecategory',
+                                'field' => 'term_id',
+                                'terms' => $child->term_id
+                            ]
+                        ],
+                        'meta_query' => [
+                            'relation' => 'OR',
+                            [
+                                'key' => 'hide_in_course_list',
+                                'value' => 'Vis',
+                            ],
+                            [
+                                'key' => 'hide_in_course_list',
+                                'compare' => 'NOT EXISTS'
+                            ]
+                        ]
+                    ]);
+
+                    if (!empty($child_courses)) {
+                        $has_visible_children = true;
+                        break;
+                    }
+                }
+            }
+
+            // Vis kategorien hvis den har synlige kurs eller underkategorier
+            if ($has_visible_courses || $has_visible_children) {
+                $is_checked = in_array($category->term_id, $selected_categories) ? 'checked' : '';
+                
+                // Bruk parent-informasjonen fra term-objektet
+                $parent_class = isset($category->parent_class) ? $category->parent_class : '';
+                $parent_id_attr = isset($category->parent_id) ? ' data-parent-id="' . esc_attr($category->parent_id) . '"' : '';
+                
+                
+                echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . '"' . $parent_id_attr . '>';
+                echo '<label class="filter-list-item checkbox">';
+                echo '<input type="checkbox" 
+                    class="filter-checkbox"
+                    value="' . esc_attr($category->slug) . '" 
+                    data-filter-key="categories" 
+                    data-url-key="k" 
+                    ' . $is_checked . '>';
+                echo '<span class="checkbox-label">' . esc_html($category->name) . '</span>';
+                echo '</label>';
+                echo '</div>';
+
+                // Rekursivt kall for underkategorier
+                display_category_hierarchy($category->term_id, $depth + 1, $selected_categories);
+            } else {
+            }
+        }
+    }
+
+} 

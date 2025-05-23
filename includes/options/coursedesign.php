@@ -12,6 +12,12 @@ class Designmaler {
         add_action('admin_post_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
         // Legg til AJAX action
         add_action('wp_ajax_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
+        
+        // Legg til hooks for permalenk-håndtering
+        add_action('init', array($this, 'register_instructor_rewrite_rules'), 10);
+        add_action('update_option_kursagenten_taxonomy_instructors_name_display', array($this, 'update_instructor_permalinks'), 10, 2);
+        add_filter('term_link', array($this, 'modify_instructor_term_link'), 10, 3);
+        add_filter('request', array($this, 'handle_instructor_rewrite_request'));
     }
 
     public function design_add_plugin_page() {
@@ -489,6 +495,24 @@ class Designmaler {
                                             </select>
                                         </div>
                                     </div>
+
+                                    <?php if ($tax_name === 'instructors'): ?>
+                                    <!-- Navnevisning -->
+                                    <div class="option-row">
+                                        <label class="option-label">Navnevisning:</label>
+                                        <div class="option-input">
+                                            <?php
+                                            $name_display = get_option("kursagenten_taxonomy_{$tax_name}_name_display", '');
+                                            ?>
+                                            <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_name_display">
+                                                <option value="">Bruk standard innstilling</option>
+                                                <option value="full" <?php selected($name_display, 'full'); ?>>Fullt navn</option>
+                                                <option value="firstname" <?php selected($name_display, 'firstname'); ?>>Fornavn</option>
+                                                <option value="lastname" <?php selected($name_display, 'lastname'); ?>>Etternavn</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -683,6 +707,19 @@ class Designmaler {
                     )
                 );
             }
+
+            // Registrer navnevisning for instruktører
+            if ($tax_name === 'instructors') {
+                register_setting(
+                    'design_option_group',
+                    "kursagenten_taxonomy_{$tax_name}_name_display",
+                    array(
+                        'type' => 'string',
+                        'sanitize_callback' => 'sanitize_text_field',
+                        'default' => ''
+                    )
+                );
+            }
         }
     }
 
@@ -853,7 +890,7 @@ class Designmaler {
                 'kurssteder' => [
                     'title' => 'Kurssteder',
                     'content' => '  <!-- wp:shortcode -->
-                                    [kurssteder layout=rad stil=kort grid=3 gridtablet=2 gridmobil=1 radavstand=2em bildestr=100px bildeformat=1/1 fontmin="14" fontmaks="18"]
+r                                    [kurssteder layout=rad stil=kort grid=3 gridtablet=2 gridmobil=1 radavstand=2em bildestr=100px bildeform=firkantet bildeformat=1/1 fontmin="14" fontmaks="18"]
                                     <!-- /wp:shortcode -->',
                     'description' => 'Oversiktsside for alle kurssteder',
                     'slug' => 'kurssteder'
@@ -1129,6 +1166,95 @@ class Designmaler {
         }
         
         return '';
+    }
+
+    /**
+     * Registrer rewrite rules for instruktører
+     */
+    public function register_instructor_rewrite_rules() {
+        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        if ($name_display === 'firstname' || $name_display === 'lastname') {
+            add_rewrite_rule(
+                'instruktorer/([^/]+)/?$',
+                'index.php?instructors=$matches[1]',
+                'top'
+            );
+        }
+    }
+
+    /**
+     * Modifiser term_link for instruktører
+     */
+    public function modify_instructor_term_link($termlink, $term, $taxonomy) {
+        if ($taxonomy !== 'instructors') {
+            return $termlink;
+        }
+
+        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        if (empty($name_display) || $name_display === 'full') {
+            return $termlink;
+        }
+
+        // Hent ønsket navn basert på innstilling
+        $display_name = '';
+        switch ($name_display) {
+            case 'firstname':
+                $display_name = get_term_meta($term->term_id, 'instructor_firstname', true);
+                break;
+            case 'lastname':
+                $display_name = get_term_meta($term->term_id, 'instructor_lastname', true);
+                break;
+        }
+
+        if (empty($display_name)) {
+            return $termlink;
+        }
+
+        // Bygg ny URL med ønsket navn
+        $new_slug = sanitize_title($display_name);
+        return home_url('/instruktorer/' . $new_slug . '/');
+    }
+
+    /**
+     * Håndter rewrite request for instruktører
+     */
+    public function handle_instructor_rewrite_request($query_vars) {
+        if (isset($query_vars['instructors'])) {
+            $requested_slug = $query_vars['instructors'];
+            
+            // Finn instruktøren basert på fornavn eller etternavn
+            $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+            if ($name_display === 'firstname' || $name_display === 'lastname') {
+                $meta_key = $name_display === 'firstname' ? 'instructor_firstname' : 'instructor_lastname';
+                
+                // Finn alle instruktører med dette navnet
+                $terms = get_terms(array(
+                    'taxonomy' => 'instructors',
+                    'meta_key' => $meta_key,
+                    'meta_value' => $requested_slug,
+                    'hide_empty' => false
+                ));
+
+                if (!empty($terms)) {
+                    // Bruk den første matchende instruktøren
+                    $query_vars['instructors'] = $terms[0]->slug;
+                }
+            }
+        }
+        return $query_vars;
+    }
+
+    /**
+     * Oppdater permalenker når navnevisningsinnstillingen endres
+     */
+    public function update_instructor_permalinks($old_value, $new_value) {
+        if ($old_value !== $new_value) {
+            // Flush permalenker
+            flush_rewrite_rules();
+            
+            // Logg at permalenkene ble oppdatert
+            error_log('Instructor permalinks updated due to name display setting change from ' . $old_value . ' to ' . $new_value);
+        }
     }
 }
 

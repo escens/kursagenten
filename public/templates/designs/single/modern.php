@@ -32,6 +32,31 @@ $signup_url = get_post_meta($course_id, 'course_signup_url', true);
 $instructors = get_the_terms($course_id, 'instructors');
 $categories = get_the_terms($course_id, 'coursecategory');
 $locations = get_the_terms($course_id, 'course_location');
+
+// Formater instruktører med nye URL-er
+$instructor_links = [];
+if (!empty($instructors) && !is_wp_error($instructors)) {
+    $instructor_links = array_map(function ($term) {
+        $instructor_url = get_instructor_display_url($term, 'instructors');
+        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
+    }, $instructors);
+}
+
+// Formater kategorier
+$category_links = [];
+if (!empty($categories) && !is_wp_error($categories)) {
+    $category_links = array_map(function ($term) {
+        return '<a href="' . esc_url(get_term_link($term)) . '">' . esc_html($term->name) . '</a>';
+    }, $categories);
+}
+
+// Formater lokasjoner
+$location_links = [];
+if (!empty($locations) && !is_wp_error($locations)) {
+    $location_links = array_map(function ($term) {
+        return '<a href="' . esc_url(get_term_link($term)) . '">' . esc_html($term->name) . '</a>';
+    }, $locations);
+}
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('kursagenten-single-course modern-design'); ?>>
@@ -147,6 +172,13 @@ $locations = get_the_terms($course_id, 'course_location');
                                 <div class="info-value"><?php echo esc_html($location_room); ?></div>
                             </div>
                         <?php endif; ?>
+
+                        <?php if (!empty($instructor_links)) : ?>
+                            <div class="info-item">
+                                <div class="info-label">Instruktører:</div>
+                                <div class="info-value"><?php echo implode(', ', $instructor_links); ?></div>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <?php if (!empty($signup_url)) : ?>
@@ -158,15 +190,11 @@ $locations = get_the_terms($course_id, 'course_location');
                     <?php endif; ?>
                 </div>
                 
-                <?php if (!empty($categories)) : ?>
+                <?php if (!empty($category_links)) : ?>
                     <div class="course-categories-box">
                         <h3>Kategorier</h3>
                         <div class="categories-list">
-                            <?php foreach ($categories as $category) : ?>
-                                <a href="<?php echo esc_url(get_term_link($category)); ?>" class="category-tag">
-                                    <?php echo esc_html($category->name); ?>
-                                </a>
-                            <?php endforeach; ?>
+                            <?php echo implode(', ', $category_links); ?>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -202,11 +230,11 @@ $locations = get_the_terms($course_id, 'course_location');
         'tax_query' => []
     ];
 
-    if (!empty($categories)) {
+    if (!empty($category_links)) {
         $related_args['tax_query'][] = [
             'taxonomy' => 'coursecategory',
             'field' => 'term_id',
-            'terms' => wp_list_pluck($categories, 'term_id')
+            'terms' => array_map('term_exists', $category_links)
         ];
     }
 

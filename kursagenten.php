@@ -108,24 +108,47 @@ function kursagenten_fix_all_taxonomy_queries() {
                 break;
         }
         
-
-        
         // Sjekk om vi har gyldig taksonomi og term
         if (!empty($taxonomy) && !empty($term_slug)) {
-            // Hent term basert på slug og taksonomi
-            $term = get_term_by('slug', $term_slug, $taxonomy);
+            $term = null;
+            
+            // Spesiell håndtering for instruktører med navnevisning
+            if ($taxonomy === 'instructors') {
+                $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+                if ($name_display === 'firstname' || $name_display === 'lastname') {
+                    $meta_key = $name_display === 'firstname' ? 'instructor_firstname' : 'instructor_lastname';
+                    
+                    // Finn instruktør basert på fornavn/etternavn
+                    $terms = get_terms(array(
+                        'taxonomy' => 'instructors',
+                        'meta_key' => $meta_key,
+                        'meta_value' => $term_slug,
+                        'hide_empty' => false
+                    ));
+                    
+                    if (!empty($terms)) {
+                        $term = $terms[0];
+                    }
+                }
+            }
+            
+            // Hvis vi ikke fant term via navnevisning, prøv standard slug
+            if (!$term) {
+                $term = get_term_by('slug', $term_slug, $taxonomy);
+            }
             
             if ($term) {
-                //error_log('Taxonomy fix: Found term: ' . $term->name . ' (ID: ' . $term->term_id . ')');
-                
                 // Oppdater globale variabler
                 global $wp_query;
                 $wp_query->queried_object = $term;
                 $wp_query->queried_object_id = $term->term_id;
                 
-                //error_log('Taxonomy fix: Updated queried object to: ' . $wp_query->queried_object->name);
-            } else {
-                //error_log('Taxonomy fix: Term not found with slug: ' . $term_slug . ' in taxonomy: ' . $taxonomy);
+                // Oppdater også taksonomi-spørringen
+                $wp_query->set('taxonomy', $taxonomy);
+                $wp_query->set('term', $term->slug);
+                
+                // Sett riktig tittel
+                $wp_query->set('title', $term->name);
             }
         }
     }

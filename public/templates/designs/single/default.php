@@ -109,7 +109,8 @@
     $instructors = wp_get_post_terms(get_the_ID(), 'instructors');
     if (!empty($instructors) && !is_wp_error($instructors)) {
         $instructor_links = array_map(function ($term) {
-            return '<a href="' . esc_url(get_term_link($term)) . '">' . esc_html($term->name) . '</a>';
+            $instructor_url = get_instructor_display_url($term, 'instructors');
+            return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
         }, $instructors);
     }
 
@@ -177,7 +178,7 @@
                             $totalCourses = count($all_coursedates);
                             foreach ($all_coursedates as $index => $coursedate) : 
                                 $item_class = $totalCourses === 1 ? 'courselist-item single-item' : 'courselist-item';
-                                if ($coursedate['course_isFull'] === 'true') {
+                                if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === 'true') {
                                     $item_class .= ' full';
                                     $available_text = 'Kurset er fullt';
                                     $available_class = 'full';  
@@ -192,7 +193,7 @@
                                         <div class="text-area">
                                             <div class="title-area">
                                                 
-                                                <?php if ($coursedate['course_isFull'] === 'true') : ?>
+                                                <?php if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === 'true') : ?>
                                                     <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
                                                     <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
                                                 </span>
@@ -234,7 +235,7 @@
                                                 <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                        <?php if ($coursedate['course_isFull'] === 'true' || $coursedate['course_isFull'] === 1) : ?>
+                                        <?php if (isset($coursedate['course_isFull']) && ($coursedate['course_isFull'] === 'true' || $coursedate['course_isFull'] === 1)) : ?>
                                             <p>Kurset er fullt. Du kan melde din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                         <?php endif ?>
                                         <div class="course-grid col-1-1" style="padding-left: 2vw; padding-right: 2vw;">

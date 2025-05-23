@@ -33,6 +33,16 @@ if (!$course_link) {
 $course_count = $course_count ?? 0;
 $item_class = $course_count === 1 ? ' single-item' : '';
 
+// Hent instruktører for kurset
+$instructors = get_the_terms($course_id, 'instructors');
+$instructor_links = [];
+if (!empty($instructors) && !is_wp_error($instructors)) {
+    $instructor_links = array_map(function ($term) {
+        $instructor_url = get_instructor_display_url($term, 'instructors');
+        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
+    }, $instructors);
+}
+
 ?>
 <div class="courselist-item<?php echo $item_class; ?>">
     <div class="courselist-main with-image">
@@ -83,6 +93,9 @@ $item_class = $course_count === 1 ? ' single-item' : '';
                 <?php endif; ?>
                 <?php if (!empty($coursetime)) : ?>
                     <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
+                <?php endif; ?>
+                <?php if (!empty($instructor_links)) : ?>
+                    <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
                 <?php endif; ?>
                 <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
             </div>

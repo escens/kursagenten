@@ -8,7 +8,6 @@
  * @return array|null Returns an array with metadata for the selected coursedate, or null if none found.
  */
 function get_selected_coursedate_data($related_coursedate) {
-    
     $earliest_date = null;
     $earliest_full_date = null;
     $selected_coursedate = null;
@@ -17,7 +16,6 @@ function get_selected_coursedate_data($related_coursedate) {
 
     if (!empty($related_coursedate) && is_array($related_coursedate)) {
         foreach ($related_coursedate as $coursedate_id) {
-            
             // Skip if coursedate_id is empty or invalid
             if (empty($coursedate_id) || !get_post($coursedate_id)) {
                 continue;
@@ -61,7 +59,7 @@ function get_selected_coursedate_data($related_coursedate) {
         }
 
         if ($selected_coursedate) {
-            return [
+            $return_data = [
                 'id' => $selected_coursedate,
                 'title' => get_the_title($selected_coursedate),
                 'first_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_first_date', true)),
@@ -77,10 +75,10 @@ function get_selected_coursedate_data($related_coursedate) {
                 'is_full' => get_post_meta($selected_coursedate, 'course_isFull', true) || get_post_meta($selected_coursedate, 'course_markedAsFull', true),
                 'show_registration' => get_post_meta($selected_coursedate, 'course_showRegistrationForm', true),
             ];
+            return $return_data;
         }
     }
 
-    //error_log('Ingen coursedate funnet, returnerer tom data');
     return [
         'coursedatemissing' => $coursedatemissing,
     ];
@@ -202,373 +200,278 @@ add_filter('posts_join', function (string $join, WP_Query $query) {
  * @return WP_Query Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
 function get_course_dates_query($args = []) {
-	// Oppdater håndtering av side-parameter
-	$current_page = isset($_REQUEST['side']) ? max(1, intval($_REQUEST['side'])) : 
-		(isset($args['paged']) ? max(1, intval($args['paged'])) : 
-		max(1, get_query_var('paged')));
+    // Debug logging
+    error_log('=== START get_course_dates_query ===');
+    error_log('Request parameters: ' . print_r($_REQUEST, true));
 
-	// Parameter mapping - database_field => incoming_parameter
-    // Ved besøk direkte fra url
-	$param_mapping = [
-		'course_location' => 'sted',
-		'course_first_date' => 'dato',
-		'coursecategory' => 'k',
-		'instructors' => 'i',
-		'course_language' => 'sprak',
-		'course_price' => 'pris',
-		'course_month' => 'mnd',
-	];
-	$search_param = 'sok';
+    // Håndter request-parametere med støtte for arrays
+    $current_page = isset($_REQUEST['side']) ? max(1, intval($_REQUEST['side'])) : 1;
+    $locations = isset($_REQUEST['sted']) ? (is_array($_REQUEST['sted']) ? $_REQUEST['sted'] : explode(',', $_REQUEST['sted'])) : [];
+    $categories = isset($_REQUEST['k']) ? (is_array($_REQUEST['k']) ? $_REQUEST['k'] : explode(',', $_REQUEST['k'])) : [];
+    $instructors = isset($_REQUEST['i']) ? (is_array($_REQUEST['i']) ? $_REQUEST['i'] : explode(',', $_REQUEST['i'])) : [];
+    $languages = isset($_REQUEST['sprak']) ? (is_array($_REQUEST['sprak']) ? $_REQUEST['sprak'] : explode(',', $_REQUEST['sprak'])) : [];
+    $price_min = isset($_REQUEST['price_min']) ? floatval($_REQUEST['price_min']) : 0;
+    $price_max = isset($_REQUEST['price_max']) ? floatval($_REQUEST['price_max']) : PHP_FLOAT_MAX;
+    $date_from = isset($_REQUEST['date_from']) ? sanitize_text_field($_REQUEST['date_from']) : '';
+    $date_to = isset($_REQUEST['date_to']) ? sanitize_text_field($_REQUEST['date_to']) : '';
+    $sort = isset($_REQUEST['sort']) ? sanitize_text_field($_REQUEST['sort']) : '';
+    $order = isset($_REQUEST['order']) ? sanitize_text_field($_REQUEST['order']) : 'asc';
+    $months = isset($_REQUEST['mnd']) ? (is_array($_REQUEST['mnd']) ? $_REQUEST['mnd'] : explode(',', $_REQUEST['mnd'])) : [];
+    $per_page = isset($_REQUEST['per_page']) ? intval($_REQUEST['per_page']) : get_option('kursagenten_courses_per_page', 10);
+    $search = isset($_REQUEST['sok']) ? sanitize_text_field($_REQUEST['sok']) : '';
+    
+    error_log('Processed parameters:');
+    error_log('- Locations: ' . print_r($locations, true));
+    error_log('- Categories: ' . print_r($categories, true));
+    error_log('- Instructors: ' . print_r($instructors, true));
+    error_log('- Languages: ' . print_r($languages, true));
 
-	$default_args = [
-		'post_type'      => 'coursedate',
-		'posts_per_page' => -1, // Hent alle for å kunne sortere manuelt
-		'paged'          => $current_page,
-		'tax_query'      => ['relation' => 'AND'],
-		'meta_query'     => [
-			'relation' => 'AND',
-			[
-				'relation' => 'OR',
-				[
-					'key' => 'course_first_date',
-					'compare' => 'EXISTS'
-				],
-				[
-					'key' => 'course_first_date',
-					'compare' => 'NOT EXISTS'
-				]
-			]
-		]
-	];
+    // Håndter dato-parameter hvis den er satt
+    if (isset($_REQUEST['dato']) && !empty($_REQUEST['dato'])) {
+        $date_parts = explode('-', $_REQUEST['dato']);
+        if (count($date_parts) === 2) {
+            $date_from = date('Y-m-d', strtotime(str_replace('.', '-', $date_parts[0])));
+            $date_to = date('Y-m-d', strtotime(str_replace('.', '-', $date_parts[1])));
+        }
+    }
+    
+    // Bygg meta_query
+    $meta_query = ['relation' => 'AND'];
+    
+    // Legg til location filter
+    if (!empty($locations)) {
+        $location_query = ['relation' => 'OR'];
+        foreach ($locations as $location) {
+            $location_query[] = [
+                'relation' => 'OR',
+                [
+                    'key' => 'course_location',
+                    'value' => $location,
+                    'compare' => '='
+                ],
+                [
+                    'key' => 'course_location_freetext',
+                    'value' => $location,
+                    'compare' => '='
+                ]
+            ];
+        }
+        $meta_query[] = $location_query;
+        error_log('Location meta_query: ' . print_r($location_query, true));
+    }
+    
+    // Legg til språk filter
+    if (!empty($languages)) {
+        $language_query = ['relation' => 'OR'];
+        foreach ($languages as $language) {
+            $language_query[] = [
+                'key' => 'course_language',
+                'value' => $language,
+                'compare' => '='
+            ];
+        }
+        $meta_query[] = $language_query;
+    }
+    
+    // Legg til måned filter
+    if (!empty($months)) {
+        $month_query = ['relation' => 'OR'];
+        foreach ($months as $month) {
+            $month_query[] = [
+                'key' => 'course_month',
+                'value' => $month,
+                'compare' => '='
+            ];
+        }
+        $meta_query[] = $month_query;
+    }
+    
+    // Legg til pris filter
+    if ($price_min > 0 || $price_max < PHP_FLOAT_MAX) {
+        $meta_query[] = [
+            'key' => 'course_price',
+            'value' => [$price_min, $price_max],
+            'type' => 'NUMERIC',
+            'compare' => 'BETWEEN'
+        ];
+    }
+    
+    // Legg til dato filter
+    if (!empty($date_from) || !empty($date_to)) {
+        $date_query = ['relation' => 'AND'];
+        
+        if (!empty($date_from)) {
+            $date_query[] = [
+                'key' => 'course_first_date',
+                'value' => $date_from,
+                'compare' => '>=',
+                'type' => 'DATE'
+            ];
+        }
+        
+        if (!empty($date_to)) {
+            $date_query[] = [
+                'key' => 'course_first_date',
+                'value' => $date_to,
+                'compare' => '<=',
+                'type' => 'DATE'
+            ];
+        }
+        
+        $meta_query[] = $date_query;
+    }
+    
+    // Legg til søk hvis søkeord er angitt
+    if (!empty($search)) {
+        $meta_query[] = [
+            'relation' => 'OR',
+            [
+                'key' => 'course_title',
+                'value' => $search,
+                'compare' => 'LIKE'
+            ],
+            [
+                'key' => 'course_description',
+                'value' => $search,
+                'compare' => 'LIKE'
+            ]
+        ];
+    }
+    
+    // Bygg tax_query
+    $tax_query = ['relation' => 'AND'];
+    
+    // Hent skjulte kategorier
+    $hidden_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Skjul',
+            ]
+        ],
+        'fields' => 'ids'
+    ]);
 
-	// Håndter sted-filter
-	if (!empty($_REQUEST['sted'])) {
-		$locations = is_array($_REQUEST['sted']) ? $_REQUEST['sted'] : [$_REQUEST['sted']];
-		
-		$default_args['tax_query'][] = [
-			'taxonomy' => 'course_location',
-			'field' => 'slug',
-			'terms' => $locations,
-			'operator' => 'IN'
-		];
-	}
+    // Hvis vi har skjulte kategorier, legg til en enkel NOT IN query
+    if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+        $tax_query[] = [
+            'taxonomy' => 'coursecategory',
+            'field' => 'term_id',
+            'terms' => $hidden_categories,
+            'operator' => 'NOT IN'
+        ];
+    }
+    
+    // Legg til kategori filter hvis valgt
+    if (!empty($categories)) {
+        $tax_query[] = [
+            'taxonomy' => 'coursecategory',
+            'field' => 'slug',
+            'terms' => $categories,
+            'operator' => 'IN'
+        ];
+    }
+    
+    // Legg til instruktør filter
+    if (!empty($instructors)) {
+        $tax_query[] = [
+            'taxonomy' => 'instructors',
+            'field' => 'slug',
+            'terms' => $instructors,
+            'operator' => 'IN'
+        ];
+    }
+    
+    // Bygg WP_Query args
+    $query_args = [
+        'post_type' => 'coursedate',
+        'posts_per_page' => $per_page,
+        'paged' => $current_page,
+        'meta_query' => $meta_query,
+        'tax_query' => $tax_query,
+        'suppress_filters' => false,
+        'post_status' => ['publish']
+    ];
 
-	// Hent alle termer først
-	$all_terms = get_terms([
-		'taxonomy' => 'coursecategory',
-		'fields' => 'slugs',
-		'hide_empty' => false,
-		'meta_query' => [
-			'relation' => 'OR',
-			[
-				'key' => 'hide_in_course_list',
-				'compare' => 'NOT EXISTS'
-			],
-			[
-				'key' => 'hide_in_course_list',
-				'value' => 'Skjul',
-				'compare' => '!='
-			]
-		]
-	]);
+    error_log('Final query args: ' . print_r($query_args, true));
 
-	// Hent alle termer som er markert som skjult
-	$hidden_terms = get_terms([
-		'taxonomy' => 'coursecategory',
-		'fields' => 'slugs',
-		'hide_empty' => false,
-		'meta_query' => [
-			[
-				'key' => 'hide_in_course_list',
-				'value' => 'Skjul',
-				'compare' => '='
-			]
-		]
-	]);
+    // Legg til søk hvis søkeord er angitt
+    if (!empty($search)) {
+        $query_args['s'] = $search;
+    }
+    
+    // Legg til filter for å modifisere SQL-spørringen
+    add_filter('posts_join', function($join, $query) use ($sort) {
+        global $wpdb;
+        if ($query->get('post_type') === 'coursedate') {
+            $join .= " LEFT JOIN {$wpdb->postmeta} as course_date_meta ON ({$wpdb->posts}.ID = course_date_meta.post_id AND course_date_meta.meta_key = 'course_first_date')";
+            
+            // Legg til JOIN for pris-sortering
+            if ($sort === 'price') {
+                $join .= " LEFT JOIN {$wpdb->postmeta} as course_price_meta ON ({$wpdb->posts}.ID = course_price_meta.post_id AND course_price_meta.meta_key = 'course_price')";
+            }
+            
+            // Legg til JOIN for tittel-sortering
+            if ($sort === 'title') {
+                $join .= " LEFT JOIN {$wpdb->posts} as course_title ON ({$wpdb->posts}.ID = course_title.ID)";
+            }
+        }
+        return $join;
+    }, 10, 2);
+    
+    add_filter('posts_orderby', function($orderby, $query) use ($sort, $order) {
+        global $wpdb;
+        if ($query->get('post_type') === 'coursedate') {
+            $order = strtoupper($order);
+            
+            switch ($sort) {
+                case 'price':
+                    // Sorter på pris, med NULL-verdier sist
+                    $orderby = "CASE WHEN course_price_meta.meta_value IS NULL THEN 1 ELSE 0 END ASC, 
+                               CAST(COALESCE(course_price_meta.meta_value, '999999') AS DECIMAL) {$order}";
+                    break;
+                    
+                case 'title':
+                    // Sorter på tittel
+                    $orderby = "course_title.post_title {$order}";
+                    break;
+                    
+                case 'date':
+                    // Sorter på dato
+                    $orderby = "CASE WHEN course_date_meta.meta_value IS NULL THEN 1 ELSE 0 END ASC, 
+                               CASE WHEN course_date_meta.meta_value IS NOT NULL 
+                                    THEN CAST(course_date_meta.meta_value AS DATE) 
+                                    ELSE '9999-12-31' 
+                               END {$order}";
+                    break;
+                    
+                default:
+                    // Standard sortering: dato først, deretter tittel
+                    $orderby = "CASE WHEN course_date_meta.meta_value IS NULL THEN 1 ELSE 0 END ASC, 
+                               CASE WHEN course_date_meta.meta_value IS NOT NULL 
+                                    THEN CAST(course_date_meta.meta_value AS DATE) 
+                                    ELSE '9999-12-31' 
+                               END ASC, 
+                               {$wpdb->posts}.post_title ASC";
+            }
+        }
+        return $orderby;
+    }, 10, 2);
+    
+    // Kjør query
+    $query = new WP_Query($query_args);
+    
+    error_log('Query SQL: ' . $query->request);
+    error_log('Found posts: ' . $query->found_posts);
+    error_log('=== END get_course_dates_query ===');
 
-	if (!is_wp_error($hidden_terms) && !empty($hidden_terms)) {
-		// Oppdater tax_query for å ekskludere skjulte kategorier
-		$default_args['tax_query'][] = array(
-			'taxonomy' => 'coursecategory',
-			'field'    => 'slug',
-			'terms'    => $hidden_terms,
-			'operator' => 'NOT IN'
-		);
-	}
-
-	$query_args = wp_parse_args($args, $default_args);
-
-	// Fjern alle ekstra filters vi har lagt til
-	remove_all_filters('posts_join');
-	remove_all_filters('posts_where');
-	remove_all_filters('posts_join_paged');
-	remove_all_filters('posts_where_paged');
-
-	// Behandle alle filtre fra URL-parametere
-	foreach ($param_mapping as $db_field => $param_name) {
-		if (!array_key_exists($param_name, $_REQUEST) || empty($_REQUEST[$param_name])) {
-			continue;
-		}
-
-		$param = $_REQUEST[$param_name];
-		if (is_string($param)) {
-			$param = explode(',', urldecode($param));
-		}
-
-		if (in_array($db_field, ['coursecategory', 'instructors'])) {
-			$query_args['tax_query'][] = [
-				'taxonomy' => $db_field,
-				'field'    => 'slug',
-				'terms'    => $param,
-			];
-		} else if ($db_field !== 'course_location') { // Skip course_location her siden vi allerede har håndtert det
-			if ($db_field === 'course_first_date') {
-				// Spesiell håndtering for dato-filter
-				if (!empty($param)) {
-					if (is_array($param)) {
-						if (isset($param['from']) && isset($param['to'])) {
-							$from = date('Y-m-d H:i:s', strtotime($param['from']));
-							$to = date('Y-m-d H:i:s', strtotime($param['to']));
-						} else if (isset($param[0])) {
-							$dates = explode('-', $param[0]);
-							if (count($dates) === 2) {
-								$from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
-								$to_date = \DateTime::createFromFormat('d.m.Y', trim($dates[1]));
-								
-								if ($from_date && $to_date) {
-									$from = $from_date->format('Y-m-d H:i:s');
-									$to = $to_date->format('Y-m-d H:i:s');
-								}
-							}
-						}
-					} else if (is_string($param)) {
-						$dates = explode('-', $param);
-						if (count($dates) === 2) {
-							$from_date = \DateTime::createFromFormat('d.m.Y', trim($dates[0]));
-							$to_date = \DateTime::createFromFormat('d.m.Y', trim($dates[1]));
-							
-							if ($from_date && $to_date) {
-								$from = $from_date->format('Y-m-d H:i:s');
-								$to = $to_date->format('Y-m-d H:i:s');
-							}
-						}
-					}
-
-					if (isset($from) && isset($to)) {
-						$query_args['meta_query'][] = [
-							'key'     => $db_field,
-							'value'   => [$from, $to],
-							'compare' => 'BETWEEN',
-							'type'    => 'DATETIME'
-						];
-					}
-				}
-			} else if ($db_field === 'course_price') {
-				if (!empty($param['from']) && !empty($param['to'])) {
-					$query_args['meta_query'][] = [
-						'key'     => $db_field,
-						'value'   => [$param['from'], $param['to']],
-						'compare' => 'BETWEEN',
-						'type'    => 'NUMERIC'
-					];
-				}
-			} else {
-				$query_args['meta_query'][] = [
-					'key'     => $db_field,
-					'value'   => $param,
-					'compare' => 'IN',
-				];
-			}
-		}
-	}
-
-	// Spesiell håndtering for månedsfilter
-	if (!empty($_REQUEST['mnd'])) {
-		$months = is_array($_REQUEST['mnd']) ? $_REQUEST['mnd'] : explode(',', $_REQUEST['mnd']);
-		
-		// Valider og padde måneder
-		$valid_months = [];
-		foreach ($months as $month) {
-			$month = trim($month);
-			if (is_numeric($month) && $month >= 1 && $month <= 12) {
-				$valid_months[] = str_pad($month, 2, '0', STR_PAD_LEFT);
-			}
-		}
-		
-		if (!empty($valid_months)) {
-			$query_args['meta_query'][] = [
-				'key'     => 'course_month',
-				'value'   => $valid_months,
-				'compare' => 'IN',
-			];
-		}
-	}
-
-	// Søkefunksjonalitet
-	if (!empty($_REQUEST[$search_param])) {
-		$query_args['s'] = sanitize_text_field($_REQUEST[$search_param]);
-	}
-
-	// Sortering
-	$sort = sanitize_text_field($_REQUEST['sort'] ?? '');
-	$order = sanitize_text_field($_REQUEST['order'] ?? 'asc');
-
-	switch ($sort) {
-		case 'title':
-			$query_args['orderby'] = 'title';
-			$query_args['order'] = strtoupper($order);
-			break;
-		case 'price':
-			$query_args['orderby'] = 'meta_value_num';
-			$query_args['meta_key'] = 'course_price';
-			$query_args['order'] = strtoupper($order);
-			break;
-		case 'date':
-			// For date sorting, we only want coursedates with course_first_date
-			$query_args['meta_query']['relation'] = 'AND';
-			$query_args['meta_query'][] = [
-				'key' => 'course_first_date',
-				'compare' => 'EXISTS'
-			];
-			$query_args['orderby'] = 'course_first_date';
-			$query_args['order'] = strtoupper($order);
-			break;
-		default:
-			// Ingen sortering valgt - bruk default sortering fra default_args
-			break;
-	}
-
-	$query = new WP_Query($query_args);
-
-	// Sorter resultatene manuelt
-	$posts_with_date = [];
-	$posts_without_date = [];
-	
-	foreach ($query->posts as $post) {
-		$first_date = get_post_meta($post->ID, 'course_first_date', true);
-		$categories = wp_get_post_terms($post->ID, 'coursecategory', array('fields' => 'slugs'));
-		$locations = wp_get_post_terms($post->ID, 'course_location', array('fields' => 'slugs'));
-		
-		if (!empty($first_date)) {
-			$posts_with_date[] = $post;
-		} else {
-			$posts_without_date[] = $post;
-		}
-	}
-	
-	// Sjekk om det er spesifikk sortering valgt
-	$sort = sanitize_text_field($_REQUEST['sort'] ?? '');
-	$order = sanitize_text_field($_REQUEST['order'] ?? 'asc');
-	
-	if ($sort === 'title') {
-		// Sorter alle poster alfabetisk i én liste, med sekundær sortering på dato
-		$all_posts = array_merge($posts_with_date, $posts_without_date);
-		
-		usort($all_posts, function($a, $b) use ($order) {
-			// Først sorter på tittel (uten dato)
-			$title_a = preg_replace('/\s+\d{2}\.\d{2}\.\d{4}$/', '', strtolower($a->post_title));
-			$title_b = preg_replace('/\s+\d{2}\.\d{2}\.\d{4}$/', '', strtolower($b->post_title));
-			$title_compare = strcmp($title_a, $title_b);
-			
-			if ($title_compare !== 0) {
-				return $order === 'asc' ? $title_compare : -$title_compare;
-			}
-			
-			// Hvis titlene er like, sjekk først om noen av kursene mangler dato
-			$date_a = get_post_meta($a->ID, 'course_first_date', true);
-			$date_b = get_post_meta($b->ID, 'course_first_date', true);
-			
-			// Hvis begge har dato, sorter på dato
-			if (!empty($date_a) && !empty($date_b)) {
-				$timestamp_a = strtotime($date_a);
-				$timestamp_b = strtotime($date_b);
-				return $timestamp_a - $timestamp_b;
-			}
-			
-			// Hvis bare én har dato, plasser den med dato først
-			if (!empty($date_a)) return -1;
-			if (!empty($date_b)) return 1;
-			
-			// Hvis ingen har dato, sorter på full tittel (inkludert dato i tittelen)
-			return strcmp($a->post_title, $b->post_title);
-		});
-		
-		$query->posts = $all_posts;
-	} elseif ($sort === 'price') {
-		// Sorter alle poster på pris i én liste, med sekundær sortering på dato
-		$all_posts = array_merge($posts_with_date, $posts_without_date);
-		usort($all_posts, function($a, $b) use ($order) {
-			$price_a = (int)get_post_meta($a->ID, 'course_price', true);
-			$price_b = (int)get_post_meta($b->ID, 'course_price', true);
-			
-			if ($price_a !== $price_b) {
-				return $order === 'asc' ? $price_a - $price_b : $price_b - $price_a;
-			}
-			
-			// Hvis prisene er like, sorter på dato
-			$date_a = get_post_meta($a->ID, 'course_first_date', true);
-			$date_b = get_post_meta($b->ID, 'course_first_date', true);
-			
-			// Hvis begge har dato, sorter på dato
-			if (!empty($date_a) && !empty($date_b)) {
-				return strtotime($date_a) - strtotime($date_b);
-			}
-			// Hvis bare én har dato, plasser den med dato først
-			if (!empty($date_a)) return -1;
-			if (!empty($date_b)) return 1;
-			
-			// Hvis ingen har dato, behold rekkefølgen
-			return 0;
-		});
-		$query->posts = $all_posts;
-	} elseif ($sort === 'date') {
-		// Sorter kun poster med dato
-		usort($posts_with_date, function($a, $b) use ($order) {
-			$date_a = get_post_meta($a->ID, 'course_first_date', true);
-			$date_b = get_post_meta($b->ID, 'course_first_date', true);
-			return $order === 'asc' ? 
-				strtotime($date_a) - strtotime($date_b) : 
-				strtotime($date_b) - strtotime($date_a);
-		});
-		$query->posts = $posts_with_date;
-	} else {
-		// Standard sortering: dato først, deretter alfabetisk
-		usort($posts_with_date, function($a, $b) {
-			$date_a = get_post_meta($a->ID, 'course_first_date', true);
-			$date_b = get_post_meta($b->ID, 'course_first_date', true);
-			return strtotime($date_a) - strtotime($date_b);
-		});
-		usort($posts_without_date, function($a, $b) {
-			return strcmp($a->post_title, $b->post_title);
-		});
-		$query->posts = array_merge($posts_with_date, $posts_without_date);
-	}
-	
-	// Håndter paginering
-	$default_posts_per_page = get_option('kursagenten_courses_per_page', 5);
-	$user_selected_posts_per_page = isset($_REQUEST['per_page']) ? absint($_REQUEST['per_page']) : $default_posts_per_page;
-	$posts_per_page = min(max(1, $user_selected_posts_per_page), 50); // Begrens til 1-50
-	
-	$total_posts = count($query->posts);
-	$total_pages = ceil($total_posts / $posts_per_page);
-	
-	// Sikre at current_page ikke er større enn total_pages
-	$current_page = min($current_page, max(1, $total_pages));
-	
-	$offset = ($current_page - 1) * $posts_per_page;
-	
-	$query->posts = array_slice($query->posts, $offset, $posts_per_page);
-	
-	// Oppdater paginering og post counts
-	$query->post_count = count($query->posts);
-	$query->found_posts = $total_posts;
-	$query->max_num_pages = $total_pages;
-	
-	// Oppdater WP_Query internals
-	$query->set('posts_per_page', $posts_per_page);
-	$query->set('paged', $current_page);
-	
-	return $query;
+    // Fjern filtrene etter at queryen er kjørt
+    remove_all_filters('posts_join');
+    remove_all_filters('posts_orderby');
+    
+    return $query;
 }
 
 /**
