@@ -299,7 +299,20 @@ function kursagenten_admin_landing_page() {
                     </div>
                     <div class="kort">
                         <h4>Enkeltkurs</h4>
-                        <p>Hooks kommer...<br><span class="copytext"></span></p>
+                        <p style="line-height: 1.8;">
+                            <span class="copytext">ka_singel_header_links_after</span><br>
+                            <span class="copytext">ka_singel_header_after</span><br>
+                            <span class="copytext">ka_singel_courselist_after</span><br>
+                            <span class="copytext">ka_singel_nextcourse_after</span><br>
+                            <span class="copytext">ka_singel_content_intro_before</span><br>
+                            <span class="copytext">ka_singel_content_intro_after</span><br>
+                            <span class="copytext">ka_singel_content_before</span><br>
+                            <span class="copytext">ka_singel_content_after</span><br>
+                            <span class="copytext">ka_singel_aside_before</span><br>
+                            <span class="copytext">ka_singel_aside_after</span><br>
+                            <span class="copytext">ka_singel_footer_before</span><br>
+                            <span class="copytext">ka_singel_footer_after</span><br>
+                        </p>
                     </div>
 
                     <div class="kort">

@@ -152,6 +152,7 @@
                         <?php endif; ?>
                     </div>
                 </div>
+                <?php do_action('ka_singel_header_links_after'); ?>
                 <div class="course-buttons">
                     <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
                         <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
@@ -163,6 +164,9 @@
             </div>
         </div>
     </header>
+
+    <?php do_action('ka_singel_header_after'); ?>
+
     <!-- DETAILS -->
     <section class="ka-section details">
         <div class="ka-content-container">
@@ -288,6 +292,7 @@
                                 </div>
                             <?php endforeach; ?>
                         </div>
+                        <?php do_action('ka_singel_courselist_after'); ?>
                     </div>
                     <?php endif; ?>
                 </div>
@@ -319,6 +324,7 @@
                             <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
                         <?php endif; ?>
                     </div>
+                    <?php do_action('ka_singel_nextcourse_after'); ?>
                 </div>
                 
 
@@ -334,8 +340,10 @@
                 <div class="content">
                     
                     <h2>Om kurset</h2>
-                    
+                    <?php do_action('ka_singel_content_intro_before'); ?>
                     <p><?php the_excerpt(); ?></p>
+                    <?php do_action('ka_singel_content_intro_after'); ?>
+                    <?php do_action('ka_singel_content_before'); ?>
                     <!-- WP content -->
                     <?php if (!empty($wp_content)) : ?>
                         <?php if ($admin_view === 'true') : ?>
@@ -349,6 +357,7 @@
                         <div class="content-text<?php echo $admin_view_class; ?>"></div>
                     <?php endif; ?>
                     <p><?php echo wpautop(wp_kses_post($content)); ?></p>
+                    <?php do_action('ka_singel_content_after'); ?>
                 </div>
                 <!-- Course image -->
                 <?php if (has_post_thumbnail()): ?>
@@ -358,7 +367,7 @@
                 <?php endif; ?>
                 <!-- Sidebar -->
                 <div class="aside">
-                    
+                    <?php do_action('ka_singel_aside_before'); ?>
                     <?php if (!empty($contact_name)) : ?>
                         <div class="contact-info ka-box">
                             <h3>Kontaktinformasjon</h3>
@@ -370,18 +379,21 @@
                         </div>
                         <div class="similar-courses"></div>
                     <?php endif; ?>
+                    <?php do_action('ka_singel_aside_after'); ?>
                 </div>
 
 
             </div>
         </div>
     </section>
+    <?php do_action('ka_singel_footer_before'); ?>
     <section class="ka-section ka-footer">
         <div class="ka-content-container title-section">
             <h3>Kurs i samme kategori</h3>
         <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" bildeform=firkantet fontmin="13px" fontmaks="15px" avstand="2em .5em"]'); ?>
         </div>
     </section>
+    <?php do_action('ka_singel_footer_after'); ?>
 </article>
 
 
