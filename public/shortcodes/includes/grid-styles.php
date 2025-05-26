@@ -44,7 +44,7 @@ class GridStyles {
             
             /* Image */
             {$class_id} a.image { flex-shrink: 0; }
-            {$class_id}.rad a.image { max-width: 30vw; }
+            {$class_id}.rad a.image { max-width: 30vw; height: 100%;}
             {$class_id}.rad.kort.rund .image.box-inner { padding: .5em }
             {$class_id}.stablet.rund.kort a.image { padding-top: .5em; }
             {$class_id}.liste a.image { display: none; }
@@ -103,27 +103,29 @@ class GridStyles {
                 {$class_id}.kort.rund .wrapper { max-width: calc((calc({$a['bildestr']} * 5.5) * {$a['gridtablet']}) + (clamp(1vw, 2vw, 2rem) * ({$a['gridtablet']} - 1 )));}
             }
             
-            @media all and (max-width: 530px) {
+            @media all and (max-width: 630px) {
                 {$class_id} .wrapper {  grid-template-columns: repeat({$a['gridmobil']}, 1fr); }
                 {$class_id}.rad:not(.utdrag) .wrapper .box { align-items: center; } 
-                {$class_id}.rad:not(.kort) .wrapper .box { flex-direction: column; }
-                {$class_id}.rad:not(.kort) .text a.title { padding: .6em 0; margin-bottom: 0; text-align: center; align-items: flex-start; }
+                /*{$class_id}.rad:not(.kort) .wrapper .box { flex-direction: column; }*/
+                {$class_id}.rad:not(.kort) .text a.title { padding: .8em; margin-bottom: 0; align-items: flex-start; }
                 {$class_id}.rad:not(.kort) .text p { padding: 0; margin-bottom: 12px; }
-                {$class_id}.rad.kort .text a { padding-left: 0; }
+                {$class_id}.rad:not(.kort) picture { max-width: 20vw; }
+                {$class_id}.rad.kort .text a { padding-left: 0.8em; }
                 {$class_id}.rad.skygge .text { padding-left: 8px; }
                 {$class_id}.rad.utdrag .text a.title,
                 {$class_id}.rad.utdrag .text p { padding: 0px 1.2em; }
             }
             @media all and (max-width: 370px) {
-                {$class_id}.rad.kort .wrapper { max-width: calc(({$a['bildestr']} * {$a['gridmobil']}) + (clamp(1vw, 2vw, 2rem) * ({$a['gridmobil']} - 1 )));}
+                /*{$class_id}.rad.kort .wrapper { max-width: calc(({$a['bildestr']} * {$a['gridmobil']}) + (clamp(1vw, 2vw, 2rem) * ({$a['gridmobil']} - 1 )));}*/
                 {$class_id}.kort.rund .wrapper { max-width: calc((calc({$a['bildestr']} * 5.5) * {$a['gridmobil']}) + (clamp(1vw, 2vw, 2rem) * ({$a['gridmobil']} - 1 )));}
-                {$class_id}.rad.kort .wrapper .box { flex-direction: column; width: 100%; max-width: {$a['bildestr']};  margin: 0 auto; box-sizing: border-box;}
-                {$class_id}.rad.kort picture { padding: 0; width: 100%; max-width: {$a['bildestr']};}
+                /*{$class_id}.rad.kort .wrapper .box { flex-direction: column; width: 100%; max-width: {$a['bildestr']};  margin: 0 auto; box-sizing: border-box;}*/
+                /*{$class_id}.rad.kort picture { padding: 0; width: 100%; max-width: {$a['bildestr']};}*/
+                {$class_id}.rad picture { max-width: 20vw;}
                 {$class_id}.rad a.image { max-width: 100%; max-height: 50vw; }
-                {$class_id}.rad.kort img { border-radius: 5px 5px 0 0; }
+                /*{$class_id}.rad.kort img { border-radius: 5px 5px 0 0; }*/
                 {$class_id}.rad.kort.rund img { border-radius: {$a['bildeform']}; }
-                {$class_id}.rad.kort .text { flex-direction: column; align-items: flex-start; justify-content: center; padding: .3em 0 .3em 0;}
-                {$class_id}.rad .text a.title, {$class_id}.rad .text .info { text-align: center; justify-content: center;}
+                /*{$class_id}.rad.kort .text { flex-direction: column; align-items: flex-start; justify-content: center; padding: .3em 0 .3em 0;}*/
+                /*{$class_id}.rad .text a.title, {$class_id}.rad .text .info { text-align: center; justify-content: center;}*/
             }
         </style>";
     }

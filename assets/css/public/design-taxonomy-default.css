@@ -29,6 +29,15 @@
     line-height: 1.6;
     color: #666;
 }
+@media (max-width: 767px) {
+    #ka .taxonomy-container {
+        padding: 0;
+    }
+    #ka .taxonomy-header-content h1 {
+        font-size: 2.5rem;
+    }
+
+}
 
 /*  -- course location -- */
 .tax-course_location #ka .ka-taxonomy-header {

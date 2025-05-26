@@ -68,10 +68,10 @@
 }
 @media screen and (max-width: 768px) {
   #ka-main{
-    padding: 1em .8em;
+    padding: 0;
   }
   #ka-main .ka-section{
-    padding: 2em 6vw 2.5em;
+    padding: 2em 2vw 2.5em;
   }
 }
 
@@ -558,6 +558,12 @@ z-index: 10000;
 
 @media screen and (max-width: 768px){
     #ka picture.course-image.mobile { margin-bottom: 1em; }
+    #ka .courselist-header {
+      flex-direction: column;
+  }
+  #ka .sort-dropdown-content, #ka .per-page-dropdown-content {
+    left: 0;
+  }
 }
 #ka .courselist-main .text-area {
   display: flex;

@@ -191,24 +191,25 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                 <!-- Meta area -->
                 <div class="meta-area iconlist horizontal">
                     <?php if ($is_taxonomy_page) : ?>
-                        <?php if (!empty($duration)) : ?>
-                            <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
-                        <?php endif; ?>
                         <?php if (!empty($coursetime)) : ?>
                             <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
                         <?php endif; ?>
+                        <?php if (!empty($duration)) : ?>
+                            <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
+                        <?php endif; ?>
+                        
                         <?php if (!empty($instructor_links)) : ?>
                             <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
                         <?php endif; ?>
                     <?php else : ?>
-                        <?php if (!empty($price)) : ?>
-                            <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></div>
+                        <?php if (!empty($coursetime)) : ?>
+                            <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($duration)) : ?>
                             <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
                         <?php endif; ?>
-                        <?php if (!empty($coursetime)) : ?>
-                            <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
+                        <?php if (!empty($price)) : ?>
+                            <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></div>
                         <?php endif; ?>
                         <?php if (!empty($instructor_links)) : ?>
                             <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>

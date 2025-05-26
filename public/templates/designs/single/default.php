@@ -203,11 +203,12 @@
                                                 </span>
                                                 <?php endif; ?>
                                                 <strong class="<?php echo $available_class; ?>" title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
-                                            </div>
-                                            <div class="content-area">
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['first_date']) ?>
                                                 </span>
+                                            </div>
+                                            <div class="content-area">
+                                                
                                                 <?php if (!empty($coursedate['time'])) : ?>
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['time']) ?> 
