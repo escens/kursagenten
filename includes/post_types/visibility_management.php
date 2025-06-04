@@ -20,28 +20,63 @@ if (!defined('KURSAG_HIDDEN_TERMS')) {
 function exclude_hidden_kurs_posts($query) {
     // Bare kjør på hovedspørringen og ikke på våre egne spørringer
     if (!is_admin() && $query->is_main_query() && !isset($query->query_vars['get_course_dates'])) { 
-        $all_terms = get_terms([
-            'taxonomy' => 'coursecategory',
-            'fields' => 'slugs',
-            'hide_empty' => false
-        ]);
+        // Hent gjeldende post types fra spørringen
+        $post_types = $query->get('post_type');
         
-        if (!is_wp_error($all_terms)) {
-            $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
-            $visible_terms = array_diff($all_terms, $hidden_terms);
-            
-            if (!empty($visible_terms)) {
-                $tax_query = array(
-                    array(
-                        'taxonomy' => 'coursecategory',
-                        'field'    => 'slug',
-                        'terms'    => $visible_terms,
-                        'operator' => 'IN'
-                    )
-                );
-                
-                $query->set('tax_query', $tax_query);
+        // Hvis dette er en søkespørring, må vi håndtere det spesielt
+        if ($query->is_search()) {
+            // Hvis post_type ikke er spesifisert i søket, eller hvis det inkluderer course/coursedate
+            if (!empty($post_types)) {
+                // Hvis post_types er spesifisert, sjekk om den inneholder course eller coursedate
+                if (is_array($post_types) && (in_array('course', $post_types) || in_array('coursedate', $post_types)) ||
+                    $post_types === 'course' || 
+                    $post_types === 'coursedate') {
+                    apply_course_visibility_filter($query);
+                }
             }
+            // Hvis ingen post_type er spesifisert, ikke gjør noe filtering
+            return;
+        }
+        
+        // For ikke-søk spørringer, apply filter bare hvis det er course eller coursedate
+        if ($post_types === 'course' || $post_types === 'coursedate' ||
+            (is_array($post_types) && (in_array('course', $post_types) || in_array('coursedate', $post_types)))) {
+            apply_course_visibility_filter($query);
+        }
+    }
+}
+
+/**
+ * Helper function to apply the course visibility filter
+ */
+function apply_course_visibility_filter($query) {
+    $all_terms = get_terms([
+        'taxonomy' => 'coursecategory',
+        'fields' => 'slugs',
+        'hide_empty' => false
+    ]);
+    
+    if (!is_wp_error($all_terms)) {
+        $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
+        $visible_terms = array_diff($all_terms, $hidden_terms);
+        
+        if (!empty($visible_terms)) {
+            // Hent eksisterende tax query
+            $existing_tax_query = $query->get('tax_query');
+            if (!is_array($existing_tax_query)) {
+                $existing_tax_query = [];
+            }
+            
+            // Legg til vår nye tax query
+            $existing_tax_query[] = [
+                'taxonomy' => 'coursecategory',
+                'field'    => 'slug',
+                'terms'    => $visible_terms,
+                'operator' => 'IN'
+            ];
+            
+            // Sett tax query tilbake på spørringen
+            $query->set('tax_query', $existing_tax_query);
         }
     }
 }

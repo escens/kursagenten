@@ -114,36 +114,32 @@ function has_hidden_terms($post_id) {
  * @return array Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
 function get_all_sorted_coursedates($related_coursedate) {
-    //error_log('get_all_sorted_coursedates - Input: ' . print_r($related_coursedate, true));
-    
     $all_coursedates = [];
-    $coursedates_without_date = [];
 
     if (!empty($related_coursedate) && is_array($related_coursedate)) {
         foreach ($related_coursedate as $coursedate_id) {
-            //error_log('Prosesserer coursedate_id: ' . $coursedate_id);
+            // Skip if coursedate_id is empty or invalid
+            if (empty($coursedate_id) || !get_post($coursedate_id)) {
+                continue;
+            }
             
             if (has_hidden_terms($coursedate_id)) {
-                //error_log('Hopper over coursedate_id ' . $coursedate_id . ' - har skjulte termer');
                 continue;
             }
 
             $course_id = get_post_meta($coursedate_id, 'related_course', true);
-            //error_log('related_course for ' . $coursedate_id . ': ' . $course_id);
-
             if ($course_id && has_hidden_terms($course_id)) {
-                //error_log('Hopper over coursedate_id ' . $coursedate_id . ' - relatert kurs har skjulte termer');
                 continue;
             }
 
-            $course_first_date = ka_format_date(get_post_meta($coursedate_id, 'course_first_date', true));
-            //error_log('course_first_date for ' . $coursedate_id . ': ' . $course_first_date);
+            $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
+            $formatted_first_date = ka_format_date($course_first_date);
 
             $coursedate_data = [
                 'id' => $coursedate_id,
                 'title' => get_the_title($coursedate_id),
                 'course_title' => get_post_meta($coursedate_id, 'course_title', true),
-                'first_date' => $course_first_date,
+                'first_date' => $formatted_first_date,
                 'last_date' => ka_format_date(get_post_meta($coursedate_id, 'course_last_date', true)),
                 'price' => get_post_meta($coursedate_id, 'course_price', true),
                 'location' => get_post_meta($coursedate_id, 'course_location', true),
@@ -161,25 +157,24 @@ function get_all_sorted_coursedates($related_coursedate) {
                 'language' => get_post_meta($coursedate_id, 'course_language', true),
             ];
 
-            if (empty($course_first_date)) {
-                $coursedates_without_date[] = $coursedate_data;
-                //error_log('Lagt til coursedate uten dato: ' . $coursedate_id);
-            } else {
-                $all_coursedates[] = $coursedate_data;
-                //error_log('Lagt til coursedate med dato: ' . $coursedate_id);
-            }
+            // Legg til alle kursdatoer i hovedarrayen
+            $all_coursedates[] = $coursedate_data;
         }
 
-        // Sorter kursdatoer med dato
-        usort($all_coursedates, function ($a, $b) {
-            return strtotime($a['first_date']) - strtotime($b['first_date']);
-        });
-
-        // Legg til kursdatoer uten dato på slutten
-        $all_coursedates = array_merge($all_coursedates, $coursedates_without_date);
-        //error_log('Returnerer ' . count($all_coursedates) . ' coursedates');
-    } else {
-        //error_log('Ingen coursedates funnet i input');
+        // Sorter kursdatoer: først de med dato (sortert etter dato), deretter de uten dato
+        if (!empty($all_coursedates)) {
+            usort($all_coursedates, function ($a, $b) {
+                // Hvis begge har dato, sorter etter dato
+                if (!empty($a['first_date']) && !empty($b['first_date'])) {
+                    return strtotime($a['first_date']) - strtotime($b['first_date']);
+                }
+                // Hvis bare en har dato, sett den med dato først
+                if (!empty($a['first_date'])) return -1;
+                if (!empty($b['first_date'])) return 1;
+                // Hvis ingen har dato, behold original rekkefølge
+                return 0;
+            });
+        }
     }
 
     return $all_coursedates;
@@ -839,4 +834,40 @@ function ka_courses_per_page_callback() {
     $value = get_option('ka_courses_per_page', 5);
     echo '<input type="number" name="ka_courses_per_page" value="' . esc_attr($value) . '" min="1" max="50" />';
     echo '<p class="description">Velg standard antall kurs som skal vises per side (1-50)</p>';
+}
+
+/**
+ * Henter alle unike lokasjoner med tilhørende fritekst for et kurs.
+ * 
+ * @param array $related_coursedate Array med coursedate IDs.
+ * @return array Array med lokasjoner og fritekst.
+ */
+function get_course_locations_with_freetext($related_coursedate) {
+    $locations = [];
+    
+    if (!empty($related_coursedate) && is_array($related_coursedate)) {
+        foreach ($related_coursedate as $coursedate_id) {
+            // Skip hvis coursedate_id er tom eller ugyldig
+            if (empty($coursedate_id) || !get_post($coursedate_id)) {
+                continue;
+            }
+
+            $location = get_post_meta($coursedate_id, 'course_location', true);
+            $location_freetext = get_post_meta($coursedate_id, 'course_location_freetext', true);
+
+            // Bare legg til hvis både location og freetext er satt
+            if (!empty($location) && !empty($location_freetext)) {
+                $key = $location . ' - ' . $location_freetext;
+                $locations[$key] = [
+                    'location' => $location,
+                    'freetext' => $location_freetext
+                ];
+            }
+        }
+    }
+    
+    // Sorter lokasjonene alfabetisk
+    ksort($locations);
+    
+    return array_values($locations);
 }

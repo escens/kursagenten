@@ -177,7 +177,13 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                 <div class="details-area iconlist horizontal">
                     <?php if ($is_taxonomy_page) : ?>
                         <?php if (!empty($first_course_date)) : ?>
-                            <div class="startdate"><i class="ka-icon icon-calendar"></i> Neste kurs: <?php echo esc_html($first_course_date); ?></div>
+                            <div class="startdate"><i class="ka-icon icon-calendar"></i> <strong>Neste kurs:</strong> <?php echo esc_html($first_course_date); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($location)) : ?>
+                            <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($location_freetext)) : ?>
+                            <div class="location_room"><?php echo esc_html($location_freetext); ?></div>
                         <?php endif; ?>
                     <?php else : ?>
                         <?php if (!empty($first_course_date)) : ?>
@@ -191,16 +197,8 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                 <!-- Meta area -->
                 <div class="meta-area iconlist horizontal">
                     <?php if ($is_taxonomy_page) : ?>
-                        <?php if (!empty($coursetime)) : ?>
-                            <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($duration)) : ?>
-                            <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
-                        <?php endif; ?>
-                        
-                        <?php if (!empty($instructor_links)) : ?>
-                            <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
-                        <?php endif; ?>
+
+                        <div class="all-courses"><a href="<?php echo esc_url($course_link); ?>">Se alle tilgjengelige kurssteder og datoer</a></div>
                     <?php else : ?>
                         <?php if (!empty($coursetime)) : ?>
                             <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>
@@ -214,13 +212,14 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                         <?php if (!empty($instructor_links)) : ?>
                             <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
                         <?php endif; ?>
+                        <?php if (!empty($location_freetext)) : ?>
+                            <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($location_room)) : ?>
+                            <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
+                        <?php endif; ?>
                     <?php endif; ?>
-                    <?php if (!empty($location_freetext)) : ?>
-                        <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
-                    <?php endif; ?>
-                    <?php if (!empty($location_room)) : ?>
-                        <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
-                    <?php endif; ?>
+                    
                     <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
                 </div>
                 <!-- Accordion content -->
@@ -228,17 +227,48 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                     <?php if (!empty($excerpt)) : ?>
                         <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
                     <?php endif; ?>
-                    <?php if (!empty($first_course_date)) : ?>
-                        <p>Kurset varer fra <?php echo esc_html($first_course_date); ?><?php if (!empty($last_course_date)) : ?> til <?php echo esc_html($last_course_date); ?><?php endif; ?></p>
-                    <?php else : ?>
+                    <?php if ($is_taxonomy_page) : ?>
                         <?php 
-                        $is_online = has_term('nettbasert', 'course_location', $course_id);
-                        if ($is_online) : ?>
-                            <p>Etter påmelding vil du få en e-post med mer informasjon om kurset, og hvordan det skal gjennomføres.</p>
-                        <?php elseif ($show_registration === '1' || $show_registration === 1 || $show_registration === true || $show_registration === "true") : ?>
-                            <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
+                        error_log('=== START Location Display Debug ===');
+                        error_log('Related coursedate IDs: ' . print_r($related_coursedate_ids, true));
+                        
+                        $all_coursedates = get_all_sorted_coursedates($related_coursedate_ids);
+                        error_log('All coursedates: ' . print_r($all_coursedates, true));
+                        
+                        $location_list = [];
+                        foreach ($all_coursedates as $coursedate) {
+                            if (!empty($coursedate['location']) && !empty($coursedate['course_location_freetext'])) {
+                                $location_text = $coursedate['location'] . ' - ' . $coursedate['course_location_freetext'];
+                                error_log('Found location: ' . $location_text);
+                                if (!in_array($location_text, $location_list)) {
+                                    $location_list[] = esc_html($location_text);
+                                    error_log('Added unique location: ' . $location_text);
+                                }
+                            }
+                        }
+                        error_log('Final location list: ' . print_r($location_list, true));
+                        
+                        if (!empty($location_list)) : ?>
+                            <p>Dette kurset er tilgjengelig på flere steder: <?php echo implode(', ', $location_list); ?></p>
                         <?php else : ?>
-                            <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
+                            <p>Dette kurset er tilgjengelig på flere steder, men ingen spesifikke lokasjoner er satt opp ennå.</p>
+                        <?php endif;
+                        error_log('=== END Location Display Debug ===');
+                        ?>
+                    <?php else : ?>
+                    
+                        <?php if (!empty($first_course_date)) : ?>
+                            <p>Kurset varer fra <?php echo esc_html($first_course_date); ?><?php if (!empty($last_course_date)) : ?> til <?php echo esc_html($last_course_date); ?><?php endif; ?></p>
+                        <?php else : ?>
+                            <?php 
+                            $is_online = has_term('nettbasert', 'course_location', $course_id);
+                            if ($is_online) : ?>
+                                <p>Etter påmelding vil du få en e-post med mer informasjon om kurset, og hvordan det skal gjennomføres.</p>
+                            <?php elseif ($show_registration === '1' || $show_registration === 1 || $show_registration === true || $show_registration === "true") : ?>
+                                <p>Du kan melde deg på kurset nå. Etter påmelding vil du få mer informasjon.</p>
+                            <?php else : ?>
+                                <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
+                            <?php endif; ?>
                         <?php endif; ?>
                     <?php endif; ?>
                     <p><a href="<?php echo esc_url($course_link); ?>" class="course-link">Se kursdetaljer</a></p>

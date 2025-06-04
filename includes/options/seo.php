@@ -6,6 +6,7 @@ class SEO {
     public function __construct() {
         add_action('admin_menu', array($this, 'kag_seo_add_plugin_page'));
         add_action('admin_init', array($this, 'kag_seo_page_init'));
+        add_action('update_option_kag_seo_option_name', array($this, 'flush_rewrite_rules_on_update'), 10, 2);
         //add_action('update_option_course_slug', 'flush_rewrite_rules');
     }
 
@@ -94,6 +95,22 @@ class SEO {
         return $sanitary_values;
     }
     
+    public function flush_rewrite_rules_on_update($old_value, $new_value) {
+        // Sjekk om noen av URL-innstillingene har endret seg
+        $url_fields = array('ka_url_rewrite_kurs', 'ka_url_rewrite_instruktor', 'ka_url_rewrite_kurskategori', 'ka_url_rewrite_kurssted');
+        $has_changes = false;
+        
+        foreach ($url_fields as $field) {
+            if (isset($old_value[$field]) && isset($new_value[$field]) && $old_value[$field] !== $new_value[$field]) {
+                $has_changes = true;
+                break;
+            }
+        }
+        
+        if ($has_changes) {
+            flush_rewrite_rules();
+        }
+    }
 }
 
 ?>

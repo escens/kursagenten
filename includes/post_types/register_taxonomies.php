@@ -4,9 +4,10 @@ if (!defined('ABSPATH')) {
 }
 
 // Hent bedriftsvariabler for tilpassede URL-slugs
-$url_options = get_option('seo_option_name');
+$url_options = get_option('kag_seo_option_name');
 $kurskategori = !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori';
 $kurssted = !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted';
+$instruktor = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
 
 function capitalize_first_letter($string) {
     return ucfirst($string);
@@ -128,6 +129,6 @@ register_taxonomy('instructors', array('course', 'coursedate', 'instructor'), ar
     'show_admin_column' => true,
     'show_in_rest' => true,
     'rewrite' => array(
-        'slug' => 'instruktorer',
+        'slug' => $instruktor,
     ),
 ));

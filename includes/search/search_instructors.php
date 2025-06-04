@@ -187,7 +187,7 @@ add_filter('the_permalink', function($permalink, $post) {
     if ($post->post_type === 'instructor_term') {
         $term = get_term($post->term_id, 'instructors');
         if ($term) {
-            return get_term_link($term);
+            return get_instructor_display_url($term, 'instructors');
         }
     }
     return $permalink;
@@ -197,7 +197,7 @@ add_filter('post_link', function($permalink, $post) {
     if ($post->post_type === 'instructor_term') {
         $term = get_term($post->term_id, 'instructors');
         if ($term) {
-            return get_term_link($term);
+            return get_instructor_display_url($term, 'instructors');
         }
     }
     return $permalink;
@@ -207,7 +207,7 @@ add_filter('post_type_link', function($permalink, $post) {
     if ($post->post_type === 'instructor_term') {
         $term = get_term($post->term_id, 'instructors');
         if ($term) {
-            return get_term_link($term);
+            return get_instructor_display_url($term, 'instructors');
         }
     }
     return $permalink;

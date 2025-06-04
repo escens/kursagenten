@@ -1172,10 +1172,14 @@ r                                    [kurssteder layout=rad stil=kort grid=3 gri
      * Registrer rewrite rules for instruktører
      */
     public function register_instructor_rewrite_rules() {
+        // Hent URL-innstillinger
+        $url_options = get_option('kag_seo_option_name');
+        $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
+        
         $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
         if ($name_display === 'firstname' || $name_display === 'lastname') {
             add_rewrite_rule(
-                'instruktorer/([^/]+)/?$',
+                $instructor_slug . '/([^/]+)/?$',
                 'index.php?instructors=$matches[1]',
                 'top'
             );
@@ -1190,9 +1194,18 @@ r                                    [kurssteder layout=rad stil=kort grid=3 gri
             return $termlink;
         }
 
+        // Hent URL-innstillinger
+        $url_options = get_option('kag_seo_option_name');
+        $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
+
+        // Hent navnevisningsinnstilling
         $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        
+        // Hvis ingen spesifikk navnevisning er valgt, bruk standard term_link
         if (empty($name_display) || $name_display === 'full') {
-            return $termlink;
+            // Men fortsatt bruk riktig slug fra innstillingene
+            $new_slug = $term->slug;
+            return home_url('/' . $instructor_slug . '/' . $new_slug . '/');
         }
 
         // Hent ønsket navn basert på innstilling
@@ -1206,13 +1219,15 @@ r                                    [kurssteder layout=rad stil=kort grid=3 gri
                 break;
         }
 
+        // Hvis vi ikke fant et navn, bruk standard term_link med riktig slug
         if (empty($display_name)) {
-            return $termlink;
+            $new_slug = $term->slug;
+            return home_url('/' . $instructor_slug . '/' . $new_slug . '/');
         }
 
-        // Bygg ny URL med ønsket navn
+        // Bygg ny URL med ønsket navn og riktig slug
         $new_slug = sanitize_title($display_name);
-        return home_url('/instruktorer/' . $new_slug . '/');
+        return home_url('/' . $instructor_slug . '/' . $new_slug . '/');
     }
 
     /**
@@ -1221,6 +1236,10 @@ r                                    [kurssteder layout=rad stil=kort grid=3 gri
     public function handle_instructor_rewrite_request($query_vars) {
         if (isset($query_vars['instructors'])) {
             $requested_slug = $query_vars['instructors'];
+            
+            // Hent URL-innstillinger
+            $url_options = get_option('kag_seo_option_name');
+            $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
             
             // Finn instruktøren basert på fornavn eller etternavn
             $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');

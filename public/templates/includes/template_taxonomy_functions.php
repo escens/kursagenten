@@ -36,10 +36,14 @@ function parse_taxonomy_path($path_segments) {
 }
 
 function map_taxonomy_slug($taxonomy_slug) {
+    // Hent URL-innstillinger
+    $url_options = get_option('kag_seo_option_name');
+    
+    // Bygg mapping basert på innstillinger
     $taxonomy_map = [
-        'kurskategori' => 'coursecategory',
-        'kurssted' => 'course_location',
-        'instruktorer' => 'instructors'
+        !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori' => 'coursecategory',
+        !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted' => 'course_location',
+        !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer' => 'instructors'
     ];
     
     return isset($taxonomy_map[$taxonomy_slug]) ? $taxonomy_map[$taxonomy_slug] : '';
@@ -110,6 +114,10 @@ function get_instructor_display_url($term, $taxonomy) {
         return get_term_link($term);
     }
     
+    // Hent URL-innstillinger
+    $url_options = get_option('kag_seo_option_name');
+    $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
+    
     // Get name display setting
     $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
     if (empty($name_display) || $name_display === 'full') {
@@ -133,7 +141,7 @@ function get_instructor_display_url($term, $taxonomy) {
 
     // Build new URL with desired name
     $new_slug = sanitize_title($display_name);
-    return home_url('/instruktorer/' . $new_slug . '/');
+    return home_url('/' . $instructor_slug . '/' . $new_slug . '/');
 }
 
 function get_taxonomy_courses($term_id, $taxonomy) {

@@ -333,3 +333,58 @@ function kursagenten_admin_landing_page() {
         <?php
         kursagenten_admin_footer();
 }
+
+// Fjern " - privatundervisning" fra tittelen
+add_filter('the_title', function($title, $post_id = null) {
+    // Sjekk om vi er i admin eller frontend
+    if (is_admin()) {
+        return $title;
+    }
+    
+    // Fjern " - privatundervisning" fra tittelen (case-insensitive)
+    return preg_replace('/\s*-\s*privatundervisning/i', '', $title);
+}, 10, 2);
+
+// Filter for å vise kun foreldrekurs i Kadence Query Loop og fjerne "privatundervisning" fra tittelen
+add_filter('kadence_blocks_pro_query_loop_query_vars', function($query, $ql_query_meta, $ql_id) {
+    if ($ql_id == 3610) {
+        // Fjern offset og paged for testing
+        unset($query['offset']);
+        unset($query['paged']);
+        
+        // Kombinert meta_query som sjekker både sub_course_location og tittel
+        $query['meta_query'] = array(
+            'relation' => 'AND',
+            array(
+                'key' => 'sub_course_location',
+                'compare' => 'NOT EXISTS'
+            )
+        );
+        
+        // Legg til tittelfilter
+        $query['s'] = 'Privatundervisning';
+        
+        // Gjenopprett paginering for den faktiske queryen
+        $query['paged'] = 1;
+        $query['offset'] = 0;
+        
+        // Legg til filter for å modifisere resultatene
+        add_filter('posts_results', function($posts) use ($ql_id) {
+            if ($ql_id == 3610) {
+                foreach ($posts as $post) {
+                    // Bare fjern ordet "privatundervisning"
+                    $post->post_title = str_ireplace('privatundervisning', '', $post->post_title);
+                    // Fjern eventuelle doble mellomrom som kan oppstå
+                    $post->post_title = preg_replace('/\s+/', ' ', $post->post_title);
+                    // Fjern eventuelle mellomrom før og etter bindestrek
+                    $post->post_title = preg_replace('/\s*–\s*/', ' – ', $post->post_title);
+                    // Trim whitespace
+                    $post->post_title = trim($post->post_title);
+                }
+            }
+            return $posts;
+        }, 10, 1);
+    }
+    
+    return $query;
+}, 10, 3);

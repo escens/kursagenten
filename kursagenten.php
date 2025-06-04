@@ -94,19 +94,18 @@ function kursagenten_fix_all_taxonomy_queries() {
             $term_slug = substr($term_slug, 0, strpos($term_slug, '?'));
         }
         
+        // Hent URL-innstillinger
+        $url_options = get_option('kag_seo_option_name');
+        
+        // Bygg mapping basert på innstillinger
+        $taxonomy_map = [
+            !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori' => 'coursecategory',
+            !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted' => 'course_location',
+            !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer' => 'instructors'
+        ];
+        
         // Identifiser taksonomi basert på URL-sti
-        $taxonomy = '';
-        switch ($taxonomy_slug) {
-            case 'kurskategori':
-                $taxonomy = 'coursecategory';
-                break;
-            case 'kurssted':
-                $taxonomy = 'course_location';
-                break;
-            case 'instruktorer':
-                $taxonomy = 'instructors';
-                break;
-        }
+        $taxonomy = isset($taxonomy_map[$taxonomy_slug]) ? $taxonomy_map[$taxonomy_slug] : '';
         
         // Sjekk om vi har gyldig taksonomi og term
         if (!empty($taxonomy) && !empty($term_slug)) {
