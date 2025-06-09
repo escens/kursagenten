@@ -196,8 +196,6 @@ add_filter('posts_join', function (string $join, WP_Query $query) {
  */
 function get_course_dates_query($args = []) {
     // Debug logging
-    error_log('=== START get_course_dates_query ===');
-    error_log('Request parameters: ' . print_r($_REQUEST, true));
 
     // Håndter request-parametere med støtte for arrays
     $current_page = isset($_REQUEST['side']) ? max(1, intval($_REQUEST['side'])) : 1;
@@ -215,11 +213,6 @@ function get_course_dates_query($args = []) {
     $per_page = isset($_REQUEST['per_page']) ? intval($_REQUEST['per_page']) : get_option('kursagenten_courses_per_page', 10);
     $search = isset($_REQUEST['sok']) ? sanitize_text_field($_REQUEST['sok']) : '';
     
-    error_log('Processed parameters:');
-    error_log('- Locations: ' . print_r($locations, true));
-    error_log('- Categories: ' . print_r($categories, true));
-    error_log('- Instructors: ' . print_r($instructors, true));
-    error_log('- Languages: ' . print_r($languages, true));
 
     // Håndter dato-parameter hvis den er satt
     if (isset($_REQUEST['dato']) && !empty($_REQUEST['dato'])) {
@@ -237,17 +230,20 @@ function get_course_dates_query($args = []) {
     if (!empty($locations)) {
         $location_query = ['relation' => 'OR'];
         foreach ($locations as $location) {
+            // Konverter bindestrek til mellomrom for søk
+            $location_search = str_replace('-', ' ', $location);
+            
             $location_query[] = [
                 'relation' => 'OR',
                 [
                     'key' => 'course_location',
-                    'value' => $location,
-                    'compare' => '='
+                    'value' => $location_search,
+                    'compare' => 'LIKE'
                 ],
                 [
                     'key' => 'course_location_freetext',
-                    'value' => $location,
-                    'compare' => '='
+                    'value' => $location_search,
+                    'compare' => 'LIKE'
                 ]
             ];
         }

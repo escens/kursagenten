@@ -45,6 +45,18 @@ if ($is_taxonomy_page) {
     
     // Hent resten av lokasjonsinformasjonen
     $location = get_post_meta($course_id, 'course_location', true);
+    
+    // Hvis location ikke er satt direkte på kurset, prøv å hente fra coursedates
+    if (empty($location)) {
+        foreach ($related_coursedates as $coursedate) {
+            $coursedate_location = get_post_meta($coursedate->ID, 'course_location', true);
+            if (!empty($coursedate_location)) {
+                $location = $coursedate_location;
+                break;
+            }
+        }
+    }
+    
     $location_room = get_post_meta($course_id, 'course_location_room', true);
     
     // Hent bilde
@@ -177,21 +189,22 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                 <div class="details-area iconlist horizontal">
                     <?php if ($is_taxonomy_page) : ?>
                         <?php if (!empty($first_course_date)) : ?>
-                            <div class="startdate"><i class="ka-icon icon-calendar"></i> <strong>Neste kurs:</strong> <?php echo esc_html($first_course_date); ?></div>
+                            <div class="startdate"><i class="ka-icon icon-calendar"></i> <strong>Neste kurs: &nbsp;</strong> <?php echo esc_html($first_course_date); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($location)) : ?>
                             <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($location_freetext)) : ?>
-                            <div class="location_room"><?php echo esc_html($location_freetext); ?></div>
+                            <div class="location_room">(<?php echo esc_html($location_freetext); ?>)</div>
                         <?php endif; ?>
                     <?php else : ?>
                         <?php if (!empty($first_course_date)) : ?>
                             <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>
                         <?php endif; ?>
-                    <?php endif; ?>
-                    <?php if (!empty($location)) : ?>
-                        <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                    
+                        <?php if (!empty($location)) : ?>
+                            <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                        <?php endif; ?>
                     <?php endif; ?>
                 </div>
                 <!-- Meta area -->
