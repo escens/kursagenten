@@ -161,7 +161,19 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
 }
 
 ?>
-<div class="courselist-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>">
+<?php
+// Hent kurskategorier for data-category attributt
+$course_categories = get_the_terms($course_id, 'coursecategory');
+$category_slugs = [];
+if (!empty($course_categories) && !is_wp_error($course_categories)) {
+    foreach ($course_categories as $category) {
+        // Bruk kun den faktiske kategorien kurset tilhører
+        $category_slugs[] = $category->slug;
+    }
+}
+$category_slugs = array_unique($category_slugs);
+?>
+<div class="courselist-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>" data-category="<?php echo esc_attr(implode(' ', $category_slugs)); ?>">
     <div class="courselist-main<?php echo $with_image_class; ?>">
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->

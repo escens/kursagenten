@@ -8,6 +8,8 @@ class Kursinnstillinger {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
     }
 
+    // Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php
+
     public function enqueue_admin_scripts($hook) {
         if ('kursagenten_page_kursinnstillinger' !== $hook) {
             return;

@@ -147,6 +147,9 @@
 #ka .courselist-content.open {
     margin-top: 1em;
 }
+#ka .courselist-content p {
+    margin-bottom: 1em;
+}
 
 /* Mobile-friendly styles */
 @media screen and (max-width: 768px) {

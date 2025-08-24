@@ -489,10 +489,18 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
             update_instructor_taxonomies($coursedate_id, $location_instructors);
         }
     }
+    
+    // Clean up old coursedates that no longer exist in the API
+    if (!empty($location['schedules'])) {
+        cleanup_coursedates($location_id, $location['schedules']);
+    }
 }
 
 function cleanup_coursedates($location_id, $schedules_from_api) {
     //error_log("=== START: cleanup_coursedates for location_id: $location_id ===");
+    
+    // This function removes coursedates that no longer exist in the API
+    // It compares schedule_id from existing coursedates with valid schedule_ids from API
     
     // Hent alle kursdatoer for denne lokasjonen
     $coursedates = get_posts([

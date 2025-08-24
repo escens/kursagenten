@@ -103,6 +103,17 @@ kursagenten/
   - Deletions
   - Registrations
 
+## Admin options pages
+
+### Sync and cleanup buttons
+
+Cleanup button:
+AJAX call: When the button is clicked, it sends an AJAX call to the cleanup_courses action
+Calls cleanup_courses_on_demand(): This function performs a comprehensive cleanup of the entire system
+Deletes old courses: Removes courses that no longer exist in the API
+Deletes old course dates: Removes course dates that no longer exist in the API
+Cleans up locations: Deletes specific_locations metadata
+
 ## Custom Post Types
 
 ### Course (course)

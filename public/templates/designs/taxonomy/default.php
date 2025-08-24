@@ -170,6 +170,29 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 <div class="taxonomy-coursedates">
                     <h2>Tilgjengelige kurs</h2>
                     
+                    <?php
+                    // Hent toppnivå kurskategorier for filtrering
+                    $top_categories = get_top_level_categories_from_query($query);
+                    
+                    // Vis kun filteret hvis det er mer enn én kategori
+                    if (count($top_categories) > 1): ?>
+                        <div class="category-filter-wrapper">
+                            <div class="category-filter">
+                                <span class="filter-label">Filtrer på kategori:</span>
+                                <div class="category-buttons">
+                                    <button class="category-btn active" data-category="all">
+                                        Alle (<?php echo $query->found_posts; ?>)
+                                    </button>
+                                    <?php foreach ($top_categories as $category): ?>
+                                        <button class="category-btn" data-category="<?php echo esc_attr($category['slug']); ?>">
+                                            <?php echo esc_html($category['name']); ?> (<?php echo $category['count']; ?>)
+                                        </button>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                    
                     <div class="courselist-items" id="filter-results">
                         <?php
                         $args = [
@@ -186,6 +209,19 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             get_course_template_part($args);
                         endwhile;
                         ?>
+                    </div>
+                    
+                    <!-- Melding når ingen kurs matcher filteret -->
+                    <div class="no-courses-filtered-message" id="no-courses-filtered" style="display: none;">
+                        <div class="message-content">
+                            <i class="ka-icon icon-info"></i>
+                            <h3>Ingen kurs tilgjengelige for dette filteret</h3>
+                            <p>Prøv å endre dine filtervalg eller nullstill alle filtre for å se alle tilgjengelige kurs.</p>
+                            <button class="ka-button reset-filters-btn" id="reset-filters-btn">
+                                <i class="ka-icon icon-sync"></i>
+                                Nullstill alle filtre
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- Pagination Controls -->
@@ -228,6 +264,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const locationCards = document.querySelectorAll('.location-card');
     const courseList = document.getElementById('filter-results');
     let currentLocation = null;
+    
+    // Kategori-filter funksjonalitet
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    let currentCategory = 'all';
 
     locationCards.forEach(card => {
         card.addEventListener('click', function(e) {
@@ -252,15 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             // Filtrer kurs
-            const courses = courseList.querySelectorAll('.courselist-item');
-            courses.forEach(course => {
-                const courseLocation = course.dataset.location;
-                if (!currentLocation || courseLocation === currentLocation) {
-                    course.style.display = '';
-                } else {
-                    course.style.display = 'none';
-                }
-            });
+            filterCourses();
 
             // Oppdater URL med valgt lokasjon
             const url = new URL(window.location.href);
@@ -270,8 +302,151 @@ document.addEventListener('DOMContentLoaded', function() {
                 url.searchParams.delete('location');
             }
             window.history.pushState({}, '', url);
+            
+            // Oppdater filtrering basert på både lokasjon og kategori
+            filterCourses();
         });
     });
+    
+    // Event listeners for kategori-knapper
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const category = this.dataset.category;
+            
+            // Oppdater active state
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            currentCategory = category;
+            
+            // Oppdater URL med valgt kategori
+            const url = new URL(window.location.href);
+            if (category !== 'all') {
+                url.searchParams.set('category', category);
+            } else {
+                url.searchParams.delete('category');
+            }
+            window.history.pushState({}, '', url);
+            
+            // Oppdater filtrering basert på både lokasjon og kategori
+            filterCourses();
+        });
+    });
+    
+    // Event listener for nullstill filtre-knappen
+    const resetFiltersBtn = document.getElementById('reset-filters-btn');
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener('click', resetAllFilters);
+    }
+    
+    // Funksjon for å filtrere kurs basert på både lokasjon og kategori
+    function filterCourses() {
+        const courses = courseList.querySelectorAll('.courselist-item');
+        let visibleCount = 0;
+        
+        // Oppdater kategori-tellere basert på synlige kurs
+        updateCategoryCounts(courses);
+        
+        courses.forEach(course => {
+            const courseLocation = course.dataset.location;
+            const courseCategories = course.dataset.category ? course.dataset.category.split(' ') : [];
+            
+            // Sjekk om kurset matcher både lokasjon og kategori
+            const locationMatch = !currentLocation || courseLocation === currentLocation;
+            const categoryMatch = currentCategory === 'all' || courseCategories.includes(currentCategory);
+            
+            if (locationMatch && categoryMatch) {
+                course.style.display = '';
+                visibleCount++;
+            } else {
+                course.style.display = 'none';
+            }
+        });
+        
+        // "Alle" knappen oppdateres nå av updateCategoryCounts() funksjonen
+        
+        // Vis eller skjul "ingen kurs" meldingen
+        showNoCoursesMessage(visibleCount);
+    }
+    
+    // Funksjon for å vise/skjule "ingen kurs" meldingen
+    function showNoCoursesMessage(visibleCount) {
+        const noCoursesMessage = document.getElementById('no-courses-filtered');
+        const courseList = document.getElementById('filter-results');
+        
+        if (visibleCount === 0) {
+            noCoursesMessage.style.display = 'block';
+            courseList.style.display = 'none';
+        } else {
+            noCoursesMessage.style.display = 'none';
+            courseList.style.display = 'flex';
+        }
+    }
+    
+    // Funksjon for å nullstille alle filtre
+    function resetAllFilters() {
+        // Nullstill lokasjon
+        currentLocation = null;
+        locationCards.forEach(card => card.classList.remove('active'));
+        
+        // Nullstill kategori
+        currentCategory = 'all';
+        categoryButtons.forEach(btn => btn.classList.remove('active'));
+        const allButton = document.querySelector('.category-btn[data-category="all"]');
+        if (allButton) {
+            allButton.classList.add('active');
+        }
+        
+        // Oppdater URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('location');
+        url.searchParams.delete('category');
+        window.history.pushState({}, '', url);
+        
+        // Kjør filtrering på nytt
+        filterCourses();
+    }
+    
+    // Funksjon for å oppdatere kategori-tellere basert på synlige kurs
+    function updateCategoryCounts(courses) {
+        const categoryCounts = {};
+        let totalVisibleCount = 0;
+        
+        // Tell opp kurs for hver kategori basert på synlige kurs
+        courses.forEach(course => {
+            const courseLocation = course.dataset.location;
+            const courseCategories = course.dataset.category ? course.dataset.category.split(' ') : [];
+            
+            // Sjekk om kurset er synlig basert på lokasjon
+            const locationMatch = !currentLocation || courseLocation === currentLocation;
+            
+            if (locationMatch) {
+                totalVisibleCount++;
+                courseCategories.forEach(category => {
+                    if (!categoryCounts[category]) {
+                        categoryCounts[category] = 0;
+                    }
+                    categoryCounts[category]++;
+                });
+            }
+        });
+        
+        // Oppdater alle kategori-knappene med nye tall
+        categoryButtons.forEach(button => {
+            const category = button.dataset.category;
+            if (category !== 'all') {
+                const count = categoryCounts[category] || 0;
+                const originalText = button.textContent.split(' (')[0]; // Fjern eksisterende tall
+                button.textContent = `${originalText} (${count})`;
+            }
+        });
+        
+        // Oppdater "Alle" knappen med totalt antall synlige kurs
+        const allButton = document.querySelector('.category-btn[data-category="all"]');
+        if (allButton) {
+            allButton.textContent = `Alle (${totalVisibleCount})`;
+        }
+    }
 
     // Sjekk om det er en valgt lokasjon i URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -283,5 +458,17 @@ document.addEventListener('DOMContentLoaded', function() {
             card.click();
         }
     }
+    
+    // Sjekk om det er en valgt kategori i URL
+    const selectedCategory = urlParams.get('category');
+    if (selectedCategory) {
+        const categoryButton = document.querySelector(`.category-btn[data-category="${selectedCategory}"]`);
+        if (categoryButton) {
+            categoryButton.click();
+        }
+    }
+    
+    // Kjør initial filtrering
+    filterCourses();
 });
 </script>

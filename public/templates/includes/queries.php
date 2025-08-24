@@ -867,3 +867,49 @@ function get_course_locations_with_freetext($related_coursedate) {
     
     return array_values($locations);
 }
+
+/**
+ * Henter toppnivå kurskategorier (foreldrekategorier) som brukes i kurslisten
+ * 
+ * @param WP_Query $query The current query to analyze
+ * @return array Array of top-level category objects with name, slug, and count
+ */
+function get_top_level_categories_from_query($query) {
+    $categories = [];
+    $category_counts = [];
+    
+    if (!$query || !$query->have_posts()) {
+        return $categories;
+    }
+    
+    // Hent alle kurs fra spørringen
+    $posts = $query->posts;
+    
+    foreach ($posts as $post) {
+        // Hent kurskategorier for hvert kurs
+        $post_categories = wp_get_object_terms($post->ID, 'coursecategory');
+        
+        if (!is_wp_error($post_categories) && !empty($post_categories)) {
+            // For hvert kurs, legg til alle kategorier det tilhører
+            foreach ($post_categories as $category) {
+                $slug = $category->slug;
+                if (!isset($category_counts[$slug])) {
+                    $category_counts[$slug] = [
+                        'name' => $category->name,
+                        'slug' => $slug,
+                        'count' => 0
+                    ];
+                }
+                $category_counts[$slug]['count']++;
+            }
+        }
+    }
+    
+    // Konverter til array og sorter etter navn
+    $categories = array_values($category_counts);
+    usort($categories, function($a, $b) {
+        return strcmp($a['name'], $b['name']);
+    });
+    
+    return $categories;
+}

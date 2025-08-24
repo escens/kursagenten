@@ -8,6 +8,8 @@ require_once plugin_dir_path(__FILE__) . 'seo.php';
 require_once plugin_dir_path(__FILE__) . 'avansert.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php'; 
 
+// Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php
+
 // Instantiate the classes to add them as submenus
 if (is_admin()) {
     $kursinnstillinger = new Kursinnstillinger();
