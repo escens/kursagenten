@@ -154,7 +154,7 @@ $category_slugs = array_unique($category_slugs);
             </a>
             <?php if ($is_full === 'true' || $is_full === 1) : ?>
                 <span class="card-availability course-available full">Fullt</span>
-            <?php elseif ($show_registration !== 'true') : ?>
+            <?php elseif ($show_registration === 'false') : ?>
                 <span class="card-availability course-available on-demand">På forespørsel</span>
             <?php else : ?>
                 <span class="card-availability course-available">Ledige plasser</span>
@@ -174,7 +174,7 @@ $category_slugs = array_unique($category_slugs);
                         <div class="course-availability tooltip tooltip-left" data-title="Fullt">
                             <span class="card-availability course-available full"></span>
                         </div>
-                    <?php elseif ($show_registration !== 'true') : ?>
+                    <?php elseif ($show_registration === 'false') : ?>
                         <div class="course-availability tooltip tooltip-left" data-title="På forespørsel">
                             <span class="card-availability course-available on-demand"></span>
                         </div>

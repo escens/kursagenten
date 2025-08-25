@@ -193,7 +193,7 @@ $category_slugs = array_unique($category_slugs);
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
                         <?php if ($is_full === 'true') : ?>
                             <span class="course-available full">Fullt</span>
-                        <?php elseif ($show_registration !== 'true') : ?>
+                        <?php elseif ($show_registration === 'false') : ?>
                             <span class="course-available on-demand">På forespørsel</span>
                         <?php else : ?>
                             <span class="course-available">Ledige plasser</span>
@@ -243,7 +243,7 @@ $category_slugs = array_unique($category_slugs);
                             <div class="price"><i class="ka-icon icon-layers"></i><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></div>
                         <?php endif; ?>
                         <?php if (!empty($instructor_links)) : ?>
-                            <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
+                            <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(' ,&nbsp;', $instructor_links); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($location_freetext)) : ?>
                             <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
@@ -262,32 +262,59 @@ $category_slugs = array_unique($category_slugs);
                     <?php endif; ?>
                     <?php if ($is_taxonomy_page) : ?>
                         <?php 
-                        error_log('=== START Location Display Debug ===');
-                        error_log('Related coursedate IDs: ' . print_r($related_coursedate_ids, true));
+                        // Finn hovedkurset og alle tilgjengelige lokasjoner
+                        $main_course_id = get_post_meta($course_id, 'main_course_id', true);
                         
-                        $all_coursedates = get_all_sorted_coursedates($related_coursedate_ids);
-                        error_log('All coursedates: ' . print_r($all_coursedates, true));
+                        // Hvis dette er et hovedkurs, bruk course_id som main_course_id
+                        if (empty($main_course_id)) {
+                            $main_course_id = $course_id;
+                        }
                         
+                        // Hent alle kursdatoer som tilhører hovedkurset
+                        $all_coursedates = get_posts([
+                            'post_type' => 'coursedate',
+                            'posts_per_page' => -1,
+                            'meta_query' => [
+                                ['key' => 'main_course_id', 'value' => $main_course_id],
+                            ],
+                        ]);
+                        
+                        // Samle inn alle unike lokasjoner
                         $location_list = [];
-                        foreach ($all_coursedates as $coursedate) {
-                            if (!empty($coursedate['location']) && !empty($coursedate['course_location_freetext'])) {
-                                $location_text = $coursedate['location'] . ' - ' . $coursedate['course_location_freetext'];
-                                error_log('Found location: ' . $location_text);
-                                if (!in_array($location_text, $location_list)) {
+                        $location_count = 0;
+                        
+                        if (!empty($all_coursedates)) {
+                            foreach ($all_coursedates as $coursedate) {
+                                $coursedate_location = get_post_meta($coursedate->ID, 'course_location', true);
+                                $coursedate_location_freetext = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+                                
+                                // Bygg lokasjonstekst
+                                $location_text = '';
+                                if (!empty($coursedate_location) && !empty($coursedate_location_freetext)) {
+                                    $location_text = $coursedate_location . ' - ' . $coursedate_location_freetext;
+                                } elseif (!empty($coursedate_location)) {
+                                    $location_text = $coursedate_location;
+                                } elseif (!empty($coursedate_location_freetext)) {
+                                    $location_text = $coursedate_location_freetext;
+                                }
+                                
+                                // Legg til unike lokasjoner
+                                if (!empty($location_text) && !in_array($location_text, $location_list)) {
                                     $location_list[] = esc_html($location_text);
-                                    error_log('Added unique location: ' . $location_text);
+                                    $location_count++;
                                 }
                             }
                         }
-                        error_log('Final location list: ' . print_r($location_list, true));
                         
-                        if (!empty($location_list)) : ?>
-                            <p>Dette kurset er tilgjengelig på flere steder: <?php echo implode(', ', $location_list); ?></p>
+                        // Vis lokasjonsinformasjon
+                        if ($location_count > 1) : ?>
+                            <p><strong>Dette kurset er tilgjengelig på flere steder:</strong><br>
+                            <?php echo implode('<br>', $location_list); ?></p>
+                        <?php elseif ($location_count === 1) : ?>
+                            <p><strong>Kurssted:</strong> <?php echo $location_list[0]; ?></p>
                         <?php else : ?>
-                            <p>Dette kurset er tilgjengelig på flere steder, men ingen spesifikke lokasjoner er satt opp ennå.</p>
-                        <?php endif;
-                        error_log('=== END Location Display Debug ===');
-                        ?>
+                            <p>Lokasjon for kurset er ikke satt opp ennå.</p>
+                        <?php endif; ?>
                     <?php else : ?>
                     
                         <?php if (!empty($first_course_date)) : ?>

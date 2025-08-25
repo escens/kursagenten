@@ -256,7 +256,7 @@
                                 } else {
                                     // Sjekk om påmelding er tillatt
                                     $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
-                                    if ($show_registration !== 'true') {
+                                    if ($show_registration === 'false') {
                                         $item_class .= ' on-demand';
                                         $available_text = 'På forespørsel';
                                         $available_class = 'on-demand';

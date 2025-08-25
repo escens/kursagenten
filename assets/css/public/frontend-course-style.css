@@ -113,6 +113,7 @@
 #ka-main .medium i.ka-icon { width: var(--ka-font-sm); height: var(--ka-font-sm);}
 #ka-main .uppercase { text-transform: uppercase;}
 #ka-main a:not(.content a) { text-decoration: none;}
+#ka a { text-decoration: none;}
 
 /* Utility classes for font sizes */
 .ka-text-xs { font-size: var(--ka-font-xs); }
@@ -640,6 +641,9 @@ z-index: 10000;
   background: rgba(255, 255, 255, 0.568);
   border-top: 1px dashed #eee;
   }
+  #ka .courselist-content.open p{
+    margin-bottom: .6em;
+    }
 
 /* --Course available */
 
