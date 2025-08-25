@@ -98,6 +98,7 @@ class Designmaler {
                     <!-- Avanserte fargevalg -->
                     <div class="advanced-colors-section" style="display: none;">
                         <!-- Knappefarge -->
+                         <div style="color: #e72323; margin-bottom: 2em; font-style: italic;">* Merk: Denne delen er fortsatt under utvikling.</div>
                         <div class="option-row">
                             <label class="option-label">Knappefarge:</label>
                             <div class="option-input">

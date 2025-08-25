@@ -132,7 +132,7 @@
 
 #ka .card-details-list i {
     background-color: #777;
-    height: var(--ka-font-sm);
+    height: var(--ka-font-s);
     width: var(--ka-font-base);
 }
 

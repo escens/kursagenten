@@ -779,7 +779,7 @@ function display_course_locations($post_id) {
     
     // Legg til "Alle" link
     $output .= '<li class="' . ($is_parent_course === 'yes' ? 'active' : '') . '">';
-    $output .= '<a href="' . esc_url($main_course_url) . '">Alle</a>';
+    $output .= '<a href="' . esc_url($main_course_url) . '" class="button-filter">Alle</a>';
     $output .= '</li>';
     
     // Legg til alle lokasjoner
@@ -788,7 +788,7 @@ function display_course_locations($post_id) {
         $location_url = $main_course_url . $location['slug'] . '/';
         
         $output .= '<li class="' . ($is_active ? 'active' : '') . '">';
-        $output .= '<a href="' . esc_url($location_url) . '">' . esc_html($location['name']) . '</a>';
+        $output .= '<a href="' . esc_url($location_url) . '" class="button-filter">' . esc_html($location['name']) . '</a>';
         $output .= '</li>';
     }
     

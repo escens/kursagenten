@@ -21,7 +21,8 @@
   /* Font size levels */
   --ka-font-xxs: calc(var(--ka-base-font) * 0.68); 
   --ka-font-xs: calc(var(--ka-base-font) * 0.75);     /* 12px */
-  --ka-font-sm: calc(var(--ka-base-font) * 0.875);    /* 14px */
+  --ka-font-s: calc(var(--ka-base-font) * 0.875);    /* 14px */
+  --ka-font-s-plus: calc(var(--ka-base-font) * 0.9375);    /* 15px */
   --ka-font-base: var(--ka-base-font);                /* 16px */
   --ka-font-md: calc(var(--ka-base-font) * 1.125);    /* 18px */
   --ka-font-lg: calc(var(--ka-base-font) * 1.375);    /* 22px */
@@ -106,18 +107,18 @@
 #ka-main h2.small { font-size: var(--ka-font-md);}
 #ka-main h3 { font-size: var(--ka-font-md); line-height: var(--ka-line-height-tight);}
 #ka-main h4 { font-size: var(--ka-font-base); font-weight: 600;}
-#ka-main h5 { font-size: var(--ka-font-sm); font-weight: 600;}
+#ka-main h5 { font-size: var(--ka-font-s); font-weight: 600;}
 #ka-main h6 { font-size: var(--ka-font-xs); font-weight: 600;}
 #ka-main .small { font-size: var(--ka-font-xs); line-height: 1.5;}
-#ka-main .medium { font-size: var(--ka-font-sm); line-height: 1.5;}
-#ka-main .medium i.ka-icon { width: var(--ka-font-sm); height: var(--ka-font-sm);}
+#ka-main .medium { font-size: var(--ka-font-s); line-height: 1.5;}
+#ka-main .medium i.ka-icon { width: var(--ka-font-s); height: var(--ka-font-s);}
 #ka-main .uppercase { text-transform: uppercase;}
 #ka-main a:not(.content a) { text-decoration: none;}
 #ka a { text-decoration: none;}
 
 /* Utility classes for font sizes */
 .ka-text-xs { font-size: var(--ka-font-xs); }
-.ka-text-sm { font-size: var(--ka-font-sm); }
+.ka-text-sm { font-size: var(--ka-font-s); }
 .ka-text-base { font-size: var(--ka-font-base); }
 .ka-text-md { font-size: var(--ka-font-md); }
 .ka-text-lg { font-size: var(--ka-font-lg); }
@@ -231,6 +232,7 @@ row-gap: .8em;
 #ka .iconlist > div,
 #ka .iconlist.horizontal a {
 display: flex;
+align-items: center;
 }
 #ka .iconlist.horizontal .separator {
 padding: 0 8px;
@@ -253,7 +255,7 @@ opacity: .5;
 /* Base accordion container */
 #ka .accordion {
 border: 1px solid #eee;
-border-radius: 5px;
+border-radius: 8px;
 margin: 0 auto;
 font-size: 15px;
 line-height: 20px;
@@ -537,7 +539,7 @@ z-index: 10000;
 #ka .courselist-header {
   display: flex;
   justify-content: space-between;
-  font-size: var(--ka-font-sm);
+  font-size: var(--ka-font-s);
   align-items: baseline;
   margin-bottom: 1em;
 }
@@ -552,8 +554,7 @@ z-index: 10000;
   display: flex;
   align-items: center;
   column-gap: 1em;
-  padding: 10px;
-  background-color: #ffffffd1;
+  padding: 1em 10px;
   transition: background-color 0.3s;
 }
 
@@ -573,7 +574,7 @@ z-index: 10000;
 }
 #ka .courselist-main .course-title{
   margin: 0 0 .3em 0;
-  font-size: var(--ka-font-size-medium);
+  font-size: var(--ka-font-s-plus);
   color: #444;
 }
 #ka .courselist-main .content-area{
@@ -592,16 +593,16 @@ z-index: 10000;
 }
 #ka .courselist-main .details-area{
   margin-top: 5px;
-  font-size: var(--ka-font-xs);
+  font-size: var(--ka-font-s);
 }
 #ka .courselist-main .iconlist.horizontal i.ka-icon{
-  width: var(--ka-font-sm);
-  height: var(--ka-font-sm);
+  width: var(--ka-font-s);
+  height: var(--ka-font-s);
 }
 #ka .courselist-main .meta-area{
   display: flex;
   flex-wrap: wrap;
-  font-size: var(--ka-font-xxs);
+  font-size: var(--ka-font-xs);
   color: #666;
 }
 #ka .courselist-main .meta-area .accordion-icon{
@@ -633,11 +634,11 @@ z-index: 10000;
   padding: 0 10px;
   transition: height 0.3s ease, padding 0.3s ease;
   background: white;
-  font-size: var(--ka-font-sm);
+  font-size: var(--ka-font-s);
   }
 #ka .courselist-content.open {
-  padding: .5em 1em 1em;
-  margin-bottom: 1.5em;
+  padding: .5em 1em 3em 1em;
+  /* margin-bottom: 1.5em; */
   background: rgba(255, 255, 255, 0.568);
   border-top: 1px dashed #eee;
   }
@@ -697,7 +698,7 @@ background-color: #ffffff;
 color: #555;
 font-weight: 500;
 transition: all 0.2s ease;
-font-size: var(--ka-font-sm);
+font-size: var(--ka-font-s);
 }
 
 #ka .pagination .page-numbers.current {
@@ -721,14 +722,14 @@ transform: translateY(-1px);
 }
 
 #ka .pagination .ka-icon {
-font-size: var(--ka-font-sm);
+font-size: var(--ka-font-s);
 width: 0.875rem;
 height: 0.775rem;
 background-color: var(--ka-color);
 }
 
 #ka .pagination span {
-font-size: var(--ka-font-sm);
+font-size: var(--ka-font-s);
 }
 
 @media (max-width: 768px) {
@@ -739,7 +740,7 @@ font-size: var(--ka-font-sm);
 
 #ka .pagination .page-numbers {
     padding: 0.4rem 0.8rem;
-    font-size: var(--ka-font-sm);
+    font-size: var(--ka-font-s);
 }
 }*/
 
@@ -1483,7 +1484,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 
 #ka .mobile-filter-section h5 {
     margin: 0 0 1em 0;
-    font-size: var(--ka-font-sm);
+    font-size: var(--ka-font-s);
     color: #333;
 }
 
@@ -1514,7 +1515,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 #ka .mobile-filter-section .chip {
     margin: 0;
     padding: 8px 16px;
-    font-size: var(--ka-font-sm);
+    font-size: var(--ka-font-s);
 }
 
 /* Footer buttons */

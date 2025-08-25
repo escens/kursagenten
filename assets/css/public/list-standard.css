@@ -31,7 +31,7 @@
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
-    background: white;
+    /*background: white;*/
 }
 /* Image area */
 #ka .courselist-main .image {
@@ -87,7 +87,6 @@
 #ka .courselist-main .title-area .course-title a {
     color: inherit;
     text-decoration: none;
-    font-size: var(--ka-font-sm);
 }
 
 #ka .courselist-main .title-area .course-title a:hover {
@@ -117,7 +116,7 @@
     justify-content: flex-start;
 }
 #ka .courselist-main .links-area button {
-    font-size: var(--ka-font-sm);
+    font-size: var(--ka-font-s);
 }
 
 /* Meta area */

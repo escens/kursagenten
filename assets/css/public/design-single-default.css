@@ -140,7 +140,8 @@
 /* Course details */
 /******************/
     #ka .course-container .details {
-    background-color: var(--ka-alt-background);
+        background-color: var(--ka-alt-background);
+        padding-bottom: 2em;
     }
     #ka .course-container .details .iconlist > div{
         align-items: center;
@@ -151,7 +152,6 @@
     #ka .courselist-item {
         background-color: #ffffffd1;
         border-bottom: 1px solid #eee;
-        padding: .6em .2em;
     }
     #ka .courselist-item:hover {
         background-color: #ffffff;

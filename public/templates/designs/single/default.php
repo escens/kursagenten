@@ -275,21 +275,24 @@
                                                 <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
                                                 <span class="courselist-title <?php echo $available_class; ?>">
                                                 <strong class="<?php echo $available_class; ?>" title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
-                                                <span class="courselist-details">
-                                                    <?php echo esc_html($coursedate['first_date']) ?>
-                                                </span>
+                                                
                                             </div>
                                             <div class="content-area">
-                                            <?php if (!empty($coursedate['course_location_freetext'])) : ?>
-                                                <span class="courselist-details">
-                                                    <?php echo esc_html($coursedate['course_location_freetext']) ?> 
-                                                </span>
+                                                <?php if (!empty($coursedate['first_date'])) : ?>
+                                                    <span class="courselist-details">
+                                                        <?php echo esc_html($coursedate['first_date']) ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($coursedate['course_location_freetext'])) : ?>
+                                                    <span class="courselist-details">
+                                                        <?php echo esc_html($coursedate['course_location_freetext']) ?> 
+                                                    </span>
                                                 <?php endif; ?>
                                                 <?php if (!empty($coursedate['time']) || !empty($coursedate['course_days'])) : ?>
-                                                <span class="courselist-details">
-                                                    <?php if (!empty($coursedate['course_days'])) : ?><?php echo esc_html($coursedate['course_days']) ?> <?php endif; ?>
-                                                    <?php if (!empty($coursedate['time'])) : ?><?php echo esc_html($coursedate['time']) ?><?php endif; ?>
-                                                </span>
+                                                    <span class="courselist-details">
+                                                        <?php if (!empty($coursedate['course_days'])) : ?><?php echo esc_html($coursedate['course_days']) ?> <?php endif; ?>
+                                                        <?php if (!empty($coursedate['time'])) : ?><?php echo esc_html($coursedate['time']) ?><?php endif; ?>
+                                                    </span>
                                                 <?php endif; ?>
                                             </div>
                                         </div>

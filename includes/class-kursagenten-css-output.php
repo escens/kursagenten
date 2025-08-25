@@ -120,10 +120,29 @@ class Kursagenten_CSS_Output {
                 // Endre farger på knapper
                 $css .= '#ka .pagination .current {border-color: var(--ka-button-background); background: var(--ka-button-background); color: var(--ka-button-color);}';
                 $css .= '#ka .pagination a:hover, #ka .pagination a:focus, #ka .pagination a:active { border-color: var(--ka-button-background);}';
-                $css .= 'button{  background: var(--ka-button-background);  color: var(--ka-button-color);  border: none;}';
+                $css .= '#ka button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
+                $css .= '#ka .courselist-button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
+                $css .= '#ka .ka-button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
+                $css .= '#ka .pamelding { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
+                $css .= '#ka .button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
+                
+                // Hover-effekter for knapper
+                $css .= '#ka button:hover, #ka .courselist-button:hover, #ka .ka-button:hover, #ka .pamelding:hover, #ka .button:hover { background: var(--ka-button-background-darker); }';
+                $css .= '#ka button:focus, #ka .courselist-button:focus, #ka .ka-button:focus, #ka .pamelding:focus, #ka .button:focus { background: var(--ka-button-background-darker); }';
+                $css .= '#ka button:active, #ka .courselist-button:active, #ka .ka-button:active, #ka .pamelding:active, #ka .button:active { background: var(--ka-button-background-darker); }';
             }
             if ($button_color) {
                 $css .= '--ka-button-color: ' . esc_attr($button_color) . ';';
+            }
+            
+            // Hvis kun bakgrunnsfarge er satt, bruk standard tekstfarge
+            if ($button_background && !$button_color) {
+                $css .= '#ka button, #ka .courselist-button, #ka .ka-button, #ka .pamelding, #ka .button { color: #ffffff; }';
+            }
+            
+            // Hvis kun tekstfarge er satt, bruk standard bakgrunnsfarge
+            if ($button_color && !$button_background) {
+                $css .= '#ka button, #ka .courselist-button, #ka .ka-button, #ka .pamelding, #ka .button { background: var(--ka-color); }';
             }
 
             // Linker
@@ -132,6 +151,17 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-link-color: ' . esc_attr($link_color) . ';';
                 $css .= '--ka-link-color-lighter: ' . $this->adjust_lightness($link_color, 10) . ';';
                 $css .= '--ka-link-color-darker: ' . $this->adjust_lightness($link_color, -10) . ';';
+                
+                // Endre farger på linker
+                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter) { color: var(--ka-link-color); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):hover { color: var(--ka-link-color-darker); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):focus { color: var(--ka-link-color-darker); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):active { color: var(--ka-link-color-darker); }';
+            }
+            
+            // Hvis kun linkfarge er satt, bruk standard hover-farge
+            if ($link_color) {
+                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):hover { color: var(--ka-link-color-darker); }';
             }
 
             // Ikoner
@@ -140,6 +170,31 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-icon-color: ' . esc_attr($icon_color) . ';';
                 $css .= '--ka-icon-color-lighter: ' . $this->adjust_lightness($icon_color, 10) . ';';
                 $css .= '--ka-icon-color-darker: ' . $this->adjust_lightness($icon_color, -10) . ';';
+                
+                // Endre farger på ikoner
+                $css .= '#ka .ka-icon { background-color: var(--ka-icon-color); }';
+                $css .= '#ka .ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .iconlist i { background-color: var(--ka-icon-color); }';
+                $css .= '#ka .iconlist i:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .iconlist .ka-icon { background-color: var(--ka-icon-color); }';
+                $css .= '#ka .iconlist .ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .header-links .ka-icon { background-color: var(--ka-icon-color); }';
+                $css .= '#ka .header-links .ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .maps-link .ka-icon { background-color: var(--ka-icon-color); }';
+                $css .= '#ka .maps-link .ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .taxonomy-list .ka-icon { background-color: var(--ka-icon-color); }';
+                $css .= '#ka .taxonomy-list .ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .course-container .header-content i.ka-icon { background-color: var(--ka-icon-color-lighter); }';
+                $css .= '#ka .course-container .header-content i.ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                
+                // Generell regel for alle ikoner som ikke er knapper eller linker
+                $css .= '#ka i.ka-icon:not(.courselist-button i):not(.course-link i):not(.ka-button i):not(.button i):not(.course-container .header-content i) { background-color: var(--ka-icon-color); }';
+                $css .= '#ka i.ka-icon:not(.courselist-button i):not(.course-link i):not(.ka-button i):not(.button i):not(.course-container .header-content i):hover { background-color: var(--ka-icon-color-darker); }';
+            }
+            
+            // Hvis kun ikonfarge er satt, bruk standard hover-farge
+            if ($icon_color) {
+                $css .= '#ka .ka-icon:hover, #ka .iconlist i:hover, #ka .iconlist .ka-icon:hover, #ka .header-links .ka-icon:hover, #ka .maps-link .ka-icon:hover, #ka .taxonomy-list .ka-icon:hover, #ka .course-container .header-content i.ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
             }
 
             // Sidebakgrunn
@@ -148,14 +203,34 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-background-color: ' . esc_attr($background_color) . ';';
                 $css .= '--ka-background-color-lighter: ' . $this->adjust_lightness($background_color, 10) . ';';
                 $css .= '--ka-background-color-darker: ' . $this->adjust_lightness($background_color, -10) . ';';
+                
+                // Endre sidebakgrunn
+                $css .= '#ka { background-color: var(--ka-background-color); }';
+                //$css .= '#ka .ka-section { background-color: var(--ka-background-color); }';
+            }
+            
+            // Hvis kun bakgrunnsfarge er satt, bruk standard tekstfarge
+            if ($background_color) {
+                $css .= '#ka { color: inherit; }';
             }
 
             // Bakgrunn fremhevede områder
             $highlight_background = get_option('kursagenten_highlight_background', '');
             if ($highlight_background) {
                 $css .= '--ka-highlight-background: ' . esc_attr($highlight_background) . ';';
-                $css .= '--ka-highlight-background-lighter: ' . $this->adjust_lightness($highlight_background, 10) . ';';
+                $css .= '--ka-highlight-background-lighter: ' . $this->adjust_lightness($highlight_background, 5) . ';';
                 $css .= '--ka-highlight-background-darker: ' . $this->adjust_lightness($highlight_background, -10) . ';';
+                
+                // Endre bakgrunn på fremhevede områder
+                $css .= '#ka .options-card { background-color: var(--ka-highlight-background); }';
+                $css .= '#ka .ka-box { background-color: var(--ka-highlight-background); }';
+                $css .= '#ka .course-container .details, #ka .course-container .ka-footer { background-color: var(--ka-highlight-background-lighter); }';
+                //$css .= '#ka .courselist-item { background-color: var(--ka-highlight-background); }';
+            }
+            
+            // Hvis kun fremhevet bakgrunnsfarge er satt, bruk standard tekstfarge
+            if ($highlight_background) {
+                $css .= '#ka .ka-section, #ka .options-card, #ka .courselist-item { color: inherit; }';
             }
         }
         
