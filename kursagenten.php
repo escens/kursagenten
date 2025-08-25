@@ -226,8 +226,15 @@ require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/helpers/course_days_helper.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
+// Include test file for development (remove in production)
+/*
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    require_once KURSAG_PLUGIN_DIR . '/test_course_days.php';
+}
+*/
 // Last inn hovedklassen og CSS output
 require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten-css-output.php';

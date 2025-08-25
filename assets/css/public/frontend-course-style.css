@@ -662,6 +662,10 @@ z-index: 10000;
   background-color: #df7870;
 }
 
+#ka span.course-available.on-demand:before {
+  background-color: #999;
+}
+
 
 
 /* --Pagination Styling */

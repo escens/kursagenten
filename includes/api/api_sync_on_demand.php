@@ -174,6 +174,14 @@ function kursagenten_nightly_sync() {
                 $is_active = true;
             }
 
+            // Hent enkeltkursdata for denne lokasjonen
+            $single_course = kursagenten_get_course_details($location['courseId']);
+            
+            if (empty($single_course)) {
+                error_log("ADVARSEL: Kunne ikke hente enkeltkursdata for location_id: " . $location['courseId']);
+                continue;
+            }
+            
             $course_data = [
                 'location_id' => $location['courseId'],
                 'main_course_id' => $course['id'],
@@ -183,6 +191,7 @@ function kursagenten_nightly_sync() {
                 'language' => $course['language'],
                 'is_active' => $is_active,
                 'image_url_cms' => $location['cmsLogo'] ?? null,
+                'single_course_data' => $single_course // Send med hele single_course data
             ];
 
             try {

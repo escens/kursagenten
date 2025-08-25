@@ -58,9 +58,11 @@ if ($is_taxonomy_page) {
     $after_price = $selected_coursedate_data['after_price'] ?? '';
     $duration = $selected_coursedate_data['duration'] ?? '';
     $coursetime = $selected_coursedate_data['time'] ?? '';
+    $course_days = $selected_coursedate_data['course_days'] ?? '';
     $button_text = $selected_coursedate_data['button_text'] ?? '';
     $signup_url = $selected_coursedate_data['signup_url'] ?? '';
     $is_full = $selected_coursedate_data['is_full'] ?? false;
+    $show_registration = $selected_coursedate_data['show_registration'] ?? false;
 } else {
     // Original kode for coursedates
     $course_id = get_the_ID();
@@ -71,12 +73,14 @@ if ($is_taxonomy_page) {
     $registration_deadline =    ka_format_date(get_post_meta($course_id, 'course_registration_deadline', true));
     $duration =                 get_post_meta($course_id, 'course_duration', true);
     $coursetime =               get_post_meta($course_id, 'course_time', true);
+    $course_days =              get_post_meta($course_id, 'course_days', true);
     $price =                    get_post_meta($course_id, 'course_price', true);
     $after_price =              get_post_meta($course_id, 'course_text_after_price', true);
     $location =                 get_post_meta($course_id, 'course_location', true);
     $location_freetext =        get_post_meta($course_id, 'course_location_freetext', true);
     $location_room =            get_post_meta($course_id, 'course_location_room', true);
     $is_full =                  get_post_meta($course_id, 'course_isFull', true);
+    $show_registration =        get_post_meta($course_id, 'course_showRegistrationForm', true);
 
     $button_text =              get_post_meta($course_id, 'course_button_text', true);
     $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
@@ -150,6 +154,8 @@ $category_slugs = array_unique($category_slugs);
             </a>
             <?php if ($is_full === 'true' || $is_full === 1) : ?>
                 <span class="card-availability course-available full">Fullt</span>
+            <?php elseif ($show_registration !== 'true') : ?>
+                <span class="card-availability course-available on-demand">På forespørsel</span>
             <?php else : ?>
                 <span class="card-availability course-available">Ledige plasser</span>
             <?php endif; ?>
@@ -167,6 +173,10 @@ $category_slugs = array_unique($category_slugs);
                     <?php if ($is_full === 'true') : ?>
                         <div class="course-availability tooltip tooltip-left" data-title="Fullt">
                             <span class="card-availability course-available full"></span>
+                        </div>
+                    <?php elseif ($show_registration !== 'true') : ?>
+                        <div class="course-availability tooltip tooltip-left" data-title="På forespørsel">
+                            <span class="card-availability course-available on-demand"></span>
                         </div>
                     <?php else : ?>
                         <div class="course-availability tooltip tooltip-left" data-title="Ledige plasser">
@@ -197,8 +207,12 @@ $category_slugs = array_unique($category_slugs);
                             <?php if (!empty($first_course_date)) : ?>
                             <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></li>
                             <?php endif; ?>
-                            <?php if (!empty($coursetime)) : ?>
-                            <li><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></li>
+                            <?php if (!empty($coursetime) || !empty($course_days)) : ?>
+                            <li>
+                                <i class="ka-icon icon-time"></i>
+                                <?php if (!empty($course_days)) : ?><?php echo esc_html($course_days); ?> <?php endif; ?>
+                                <?php if (!empty($coursetime)) : ?><?php echo esc_html($coursetime); ?><?php endif; ?>
+                            </li>
                             <?php endif; ?>
                             <?php if (!empty($instructor_links)) : ?>
                             <li><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></li>

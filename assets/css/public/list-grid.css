@@ -188,6 +188,11 @@
     background-color: #ffe1e0;
     color: #c74444;
 }
+
+#ka .card-availability.on-demand {
+    background-color: #f5f5f5;
+    color: #666;
+}
 #ka .course-availability {
     position: absolute;
     right: 0;
@@ -209,6 +214,10 @@
 }
 #ka span.course-available:before {
     margin: 0 5px 0 0;
+}
+
+#ka span.course-available.on-demand:before {
+    background-color: #999;
 }
 
 /* Location styling */

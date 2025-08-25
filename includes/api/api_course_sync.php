@@ -419,8 +419,16 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (!empty($schedule['lastCourseDate'])) {      $meta_input['course_last_date'] = format_date_for_db($schedule['lastCourseDate']);}
         if (!empty($schedule['registrationDeadline'])) {$meta_input['course_registration_deadline'] = format_date_for_db($schedule['registrationDeadline']);}
         if (!empty($schedule['duration'])) {            $meta_input['course_duration'] = $schedule['duration'];}
-        if (!empty($schedule['coursetime'])) {          $meta_input['course_time'] = $schedule['coursetime'];}
+        if (!empty($schedule['coursetime'])) {          $meta_input['course_time'] = format_coursetime($schedule['coursetime']);}
         if (!empty($schedule['coursetimeType'])) {      $meta_input['course_time_type'] = $schedule['coursetimeType'];}
+        
+        // Add course_days based on coursetime format and firstCourseDate
+        if (!empty($schedule['coursetime']) && !empty($schedule['firstCourseDate'])) {
+            $course_days = get_course_days_from_coursetime($schedule['coursetime'], $schedule['firstCourseDate']);
+            if (!empty($course_days)) {
+                $meta_input['course_days'] = $course_days;
+            }
+        }
         if (!empty($schedule['startTime'])) {           $meta_input['course_start_time'] = $schedule['startTime'];}
         if (!empty($schedule['endTime'])) {             $meta_input['course_end_time'] = $schedule['endTime'];}
         if (!empty($schedule['price'])) {               $meta_input['course_price'] = (int) $schedule['price'];}
@@ -602,6 +610,20 @@ function format_date($date_string) {
     }
     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $date_string);
     return $date ? $date->format('d.m.Y') : $date_string;
+}
+
+function format_coursetime($coursetime) {
+    if (empty($coursetime)) {
+        return '';
+    }
+    
+    // Convert "Kl" to "kl" if it matches the valid pattern
+    if (is_valid_coursetime_format($coursetime)) {
+        return str_replace('Kl ', 'kl ', $coursetime);
+    }
+    
+    // Return original coursetime if it doesn't match the pattern
+    return $coursetime;
 }
 
 function format_date_for_db($date_string) {

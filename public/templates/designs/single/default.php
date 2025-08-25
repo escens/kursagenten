@@ -253,10 +253,18 @@
                                     $item_class .= ' full';
                                     $available_text = 'Kurset er fullt';
                                     $available_class = 'full';  
-                                }else{
-                                    $item_class .= ' available';
-                                    $available_text = 'Ledige plasser';
-                                    $available_class = 'available';
+                                } else {
+                                    // Sjekk om påmelding er tillatt
+                                    $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
+                                    if ($show_registration !== 'true') {
+                                        $item_class .= ' on-demand';
+                                        $available_text = 'På forespørsel';
+                                        $available_class = 'on-demand';
+                                    } else {
+                                        $item_class .= ' available';
+                                        $available_text = 'Ledige plasser';
+                                        $available_class = 'available';
+                                    }
                                 }
                             ?>
                                 <div class="<?php echo $item_class; ?>">
@@ -264,15 +272,8 @@
                                         <div class="text-area">
                                             <div class="title-area">
                                                 
-                                                <?php if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === 'true') : ?>
-                                                    <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
-                                                    <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
-                                                </span>
-                                                <?php else : ?>
-                                                    <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
-                                                    <span class="courselist-title <?php echo $available_class; ?>" title="<?php echo $available_text; ?>">
-                                                </span>
-                                                <?php endif; ?>
+                                                <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
+                                                <span class="courselist-title <?php echo $available_class; ?>">
                                                 <strong class="<?php echo $available_class; ?>" title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['first_date']) ?>
@@ -284,9 +285,10 @@
                                                     <?php echo esc_html($coursedate['course_location_freetext']) ?> 
                                                 </span>
                                                 <?php endif; ?>
-                                                <?php if (!empty($coursedate['time'])) : ?>
+                                                <?php if (!empty($coursedate['time']) || !empty($coursedate['course_days'])) : ?>
                                                 <span class="courselist-details">
-                                                    <?php echo esc_html($coursedate['time']) ?> 
+                                                    <?php if (!empty($coursedate['course_days'])) : ?><?php echo esc_html($coursedate['course_days']) ?> <?php endif; ?>
+                                                    <?php if (!empty($coursedate['time'])) : ?><?php echo esc_html($coursedate['time']) ?><?php endif; ?>
                                                 </span>
                                                 <?php endif; ?>
                                             </div>
@@ -382,8 +384,8 @@
                         <?php if (!empty($selected_coursedate_data['last_date'])) : ?>
                             <div><i class="ka-icon icon-calendar"></i>Slutter: <?php echo esc_html($selected_coursedate_data['last_date']) ;?></div>
                         <?php endif; ?>
-                        <?php if (!empty($selected_coursedate_data['time'])) : ?>
-                            <div><i class="ka-icon icon-time"></i>Kurstider: <?php echo esc_html($selected_coursedate_data['time']) ;?></div>
+                        <?php if (!empty($selected_coursedate_data['time']) || !empty($selected_coursedate_data['course_days'])) : ?>
+                            <div><i class="ka-icon icon-time"></i>Kurstider: <?php echo esc_html($selected_coursedate_data['course_days']) ;?> <?php echo esc_html($selected_coursedate_data['time']) ;?></div>
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data['duration'])) : ?>
                             <div><i class="ka-icon icon-stopwatch"></i>Varighet: <?php echo esc_html($selected_coursedate_data['duration']) ;?></div>
@@ -394,6 +396,13 @@
                         <?php if (!empty($selected_coursedate_data['price'])) : ?>
                             <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
                         <?php endif; ?>
+                        <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
+                            <div>
+                                <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                                <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?> <i class="ka-icon icon-chevron-right"></i>
+                                </a>
+                            </div>
+                    <?php endif; ?>
                     </div>
                     <?php do_action('ka_singel_nextcourse_after'); ?>
                 </div>
