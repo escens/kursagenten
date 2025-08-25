@@ -279,7 +279,11 @@
                                                 </span>
                                             </div>
                                             <div class="content-area">
-                                            <?php echo esc_html($coursedate['course_title']) /* KLADD  */ ?> 
+                                            <?php if (!empty($coursedate['course_location_freetext'])) : ?>
+                                                <span class="courselist-details">
+                                                    <?php echo esc_html($coursedate['course_location_freetext']) ?> 
+                                                </span>
+                                                <?php endif; ?>
                                                 <?php if (!empty($coursedate['time'])) : ?>
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['time']) ?> 
