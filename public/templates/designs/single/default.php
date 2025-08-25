@@ -39,6 +39,7 @@
     $price_posttext = get_post_meta(get_the_ID(), 'course_text_after_price', true);
     $difficulty = get_post_meta(get_the_ID(), 'course_difficulty_level', true);
     $button_text = get_post_meta(get_the_ID(), 'button-text', true);
+    $main_course_id = get_post_meta(get_the_ID(), 'main_course_id', true); // Added this line
     
     // Hent kursdatoer basert på om det er et foreldrekurs eller underkurs
     $is_parent_course = get_post_meta(get_the_ID(), 'is_parent_course', true);
@@ -54,15 +55,81 @@
             'fields' => 'ids'
         ]);
     } else {
-        // For underkurs: Hent kursdatoer basert på location_id
-        $related_coursedate = get_posts([
-            'post_type' => 'coursedate',
-            'posts_per_page' => -1,
-            'meta_query' => [
-                ['key' => 'location_id', 'value' => $course_id],
-            ],
-            'fields' => 'ids'
-        ]);
+        // For underkurs: Hent kursdatoer basert på course_location taksonomien
+        // i stedet for location_id
+        $course_location_terms = wp_get_post_terms(get_the_ID(), 'course_location');
+        
+        if (!empty($course_location_terms) && !is_wp_error($course_location_terms)) {
+            // Hent alle kursdatoer som tilhører samme course_location taksonomi
+            // OG som tilhører samme kurs (samme main_course_id)
+            $location_names = array_map(function($term) {
+                return $term->name;
+            }, $course_location_terms);
+
+            // Bruk main_course_id for å filtrere siden vi nå har den definert
+            if (!empty($main_course_id)) {
+                $meta_query_main = [
+                    'relation' => 'AND',
+                    [
+                        'relation' => 'OR',
+                        ['key' => 'course_location', 'value' => $location_names, 'compare' => 'IN'],
+                        ['key' => 'course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
+                    ],
+                    ['key' => 'main_course_id', 'value' => $main_course_id, 'compare' => '=']
+                ];
+                
+                $related_coursedate = get_posts([
+                    'post_type' => 'coursedate',
+                    'posts_per_page' => -1,
+                    'meta_query' => $meta_query_main,
+                    'fields' => 'ids'
+                ]);
+            } else {
+                // Fallback: bruk course_title hvis main_course_id ikke er tilgjengelig
+                $course_title = get_post_meta(get_the_ID(), 'course_title', true);
+                
+                if (!empty($course_title)) {
+                    $meta_query_title = [
+                        'relation' => 'AND',
+                        [
+                            'relation' => 'OR',
+                            ['key' => 'course_location', 'value' => $location_names, 'compare' => 'IN'],
+                            ['key' => 'course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
+                        ],
+                        ['key' => 'course_title', 'value' => $course_title, 'compare' => '=']
+                    ];
+                    
+                    $related_coursedate = get_posts([
+                        'post_type' => 'coursedate',
+                        'posts_per_page' => -1,
+                        'meta_query' => $meta_query_title,
+                        'fields' => 'ids'
+                    ]);
+                } else {
+                    // Fallback: bruk kun lokasjon hvis begge er tomme
+                    $related_coursedate = get_posts([
+                        'post_type' => 'coursedate',
+                        'posts_per_page' => -1,
+                        'meta_query' => [
+                            'relation' => 'OR',
+                            ['key' => 'course_location', 'value' => $location_names, 'compare' => 'IN'],
+                            ['key' => 'course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
+                        ],
+                        'fields' => 'ids'
+                    ]);
+                }
+            }
+        } else {
+            // Fallback til original logikk hvis ingen course_location taksonomi er satt
+            $related_coursedate = get_posts([
+                'post_type' => 'coursedate',
+                'posts_per_page' => -1,
+                'meta_query' => [
+                    ['key' => 'location_id', 'value' => $course_id],
+                ],
+                'fields' => 'ids'
+            ]);
+        }
     }
     
     if (empty($related_coursedate) || !is_array($related_coursedate)) {
@@ -88,7 +155,7 @@
 
     $wp_content = get_the_content();
 
-    // Get coursecategories
+    // Get coursecategories - finner kategorier som brukes som lenker i header
     $excluded_terms = ['skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv'];
     $coursecategories = wp_get_post_terms(get_the_ID(), 'coursecategory', [
         'exclude' => array_map(function ($term_slug) {
@@ -97,7 +164,7 @@
         }, $excluded_terms)
     ]);
 
-    // Forbedret håndtering av coursecategories
+    // Forbedret håndtering av coursecategories - viser kategorier som lenker i header
     $coursecategory_links = [];
     if (!empty($coursecategories) && !is_wp_error($coursecategories)) {
         $coursecategory_links = array_map(function ($term) {
@@ -114,10 +181,10 @@
         }, $instructors);
     }
 
-    // Sjekk selected_coursedate_data
+    // Sjekk selected_coursedate_data - finner første ledige kursdato
     $selected_coursedate_data = get_selected_coursedate_data($related_coursedate);
     
-    // Sjekk all_coursedates
+    // Sjekk all_coursedates - finner alle kursdatoer
     $all_coursedates = get_all_sorted_coursedates($related_coursedate);
  ?>
 
@@ -212,7 +279,7 @@
                                                 </span>
                                             </div>
                                             <div class="content-area">
-                                                
+                                            <?php echo esc_html($coursedate['course_title']) /* KLADD  */ ?> 
                                                 <?php if (!empty($coursedate['time'])) : ?>
                                                 <span class="courselist-details">
                                                     <?php echo esc_html($coursedate['time']) ?> 
@@ -395,6 +462,8 @@
     </section>
     <?php do_action('ka_singel_footer_after'); ?>
 </article>
+
+
 
 
 
