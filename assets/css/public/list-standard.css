@@ -8,6 +8,7 @@
     box-shadow: var(--ka-shadow-darker4);
     box-shadow: var(--ka-shadow-darkest);*/
     padding: 0;
+    background: white;
 }
 #ka .courselist-main:hover {
     box-shadow: var(--ka-shadow-darker);
@@ -90,7 +91,7 @@
 }
 
 #ka .courselist-main .title-area .course-title a:hover {
-    color: var(--ka-color-darker);
+    color: #222;
 }
 
 #ka .courselist-main .details-area {

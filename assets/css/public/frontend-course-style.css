@@ -353,6 +353,45 @@ border-radius: 8px;
 }
 
 
+/* --Button filter */
+/*****************/
+
+#ka .button-filter {
+  /* Base styles */
+  padding: 0.1em 0.8em 0.2em 0.8em;
+  margin: 0.2em;
+  color: var(--ka-color-filter, #666);
+  border-radius: 5px;
+  font-size: var(--ka-filter-font-size, 0.9rem);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  transition: all 0.2s ease;
+  border: none;
+  background: transparent;
+  font-weight: 500;
+}
+
+#ka .button-filter:hover {
+  color: var(--ka-color, #007bff);
+  background-color: white;
+  box-shadow: none;
+}
+
+#ka .button-filter.active,
+#ka .active .button-filter {
+  background: var(--ka-color, #007bff);
+  color: white;
+}
+
+#ka .button-filter.active:hover,
+#ka .active .button-filter:hover {
+  background: var(--ka-color-hover, #0056b3);
+  color: white;
+}
+
+
+
 /* --Tooltip */
 /************/
 #ka .tooltip { 
@@ -673,6 +712,8 @@ z-index: 10000;
 
 
 
+
+
 /* --Pagination Styling */
 /*********************/
 
@@ -777,11 +818,17 @@ font-size: var(--ka-font-s);
   font-size: var(--ka-font-xs);
 }
 #ka span.active-filter-chip {
+  /* Inherit common button-filter styles */
   background: var(--ka-color);
   color: white;
   margin-right: 5px;
   padding: 2px 0 3px 10px;
   border-radius: 3px;
+}
+#ka span.active-filter-chip:hover {
+  background: var(--ka-color);
+    color: white;
+    opacity: 0.8;
 }
 #ka span.remove-filter {
   padding: 0 5px 0 5px;

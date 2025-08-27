@@ -206,7 +206,7 @@
         margin: 0;
     }
     
-    #ka .location-tabs li a {
+        /*#ka .location-tabs li a {
         padding: 0.1em 0.8em;
         margin: 0.2em;
         color: var(--ka-color-filter);
@@ -225,7 +225,7 @@
     }
     #ka .location-tabs li.active a:hover {
         color: white;
-    }
+    }*/
 
     @media screen and (max-width: 768px) {
         #ka .courselist-main{

@@ -417,7 +417,7 @@
 				if (key === 'dato' && filters['dato']) {
 					const [fromDate, toDate] = filters['dato'].split('-');
 					
-					const filterChip = $(`<span class="active-filter-chip" data-filter-key="date" data-filter-value="date">
+					const filterChip = $(`<span class="active-filter-chip button-filter" data-filter-key="date" data-filter-value="date">
 						${fromDate} - ${toDate} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
 					</span>`);
 
@@ -458,7 +458,7 @@
 						displayText = value.charAt(0).toUpperCase() + value.slice(1);
 					} 
 
-					const filterChip = $(`<span class="active-filter-chip" data-filter-key="${key}" data-url-key="${filterKey}" data-filter-value="${value}">
+					const filterChip = $(`<span class="active-filter-chip button-filter" data-filter-key="${key}" data-url-key="${filterKey}" data-filter-value="${value}">
 						${displayText} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
 					</span>`);
 

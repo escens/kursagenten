@@ -180,11 +180,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             <div class="category-filter">
                                 <span class="filter-label">Filtrer på kategori:</span>
                                 <div class="category-buttons">
-                                    <button class="category-btn active" data-category="all">
+                                    <button class="category-btn button-filter active" data-category="all">
                                         Alle (<?php echo $query->found_posts; ?>)
                                     </button>
                                     <?php foreach ($top_categories as $category): ?>
-                                        <button class="category-btn" data-category="<?php echo esc_attr($category['slug']); ?>">
+                                        <button class="category-btn button-filter" data-category="<?php echo esc_attr($category['slug']); ?>">
                                             <?php echo esc_html($category['name']); ?> (<?php echo $category['count']; ?>)
                                         </button>
                                     <?php endforeach; ?>
@@ -217,7 +217,7 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             <i class="ka-icon icon-info"></i>
                             <h3>Ingen kurs tilgjengelige for dette filteret</h3>
                             <p>Prøv å endre dine filtervalg eller nullstill alle filtre for å se alle tilgjengelige kurs.</p>
-                            <button class="ka-button reset-filters-btn" id="reset-filters-btn">
+                            <button class="ka-button button-filter reset-filters-btn" id="reset-filters-btn">
                                 <i class="ka-icon icon-sync"></i>
                                 Nullstill alle filtre
                             </button>

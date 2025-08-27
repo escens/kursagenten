@@ -400,9 +400,9 @@
                             <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
-                            <div>
-                                <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
-                                <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?> <i class="ka-icon icon-chevron-right"></i>
+                            <div><i class="ka-icon icon-chevron-right"></i>
+                                <a href="#" class="pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                                <strong><?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?></strong> 
                                 </a>
                             </div>
                     <?php endif; ?>
