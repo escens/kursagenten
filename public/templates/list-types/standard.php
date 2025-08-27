@@ -206,13 +206,12 @@ $category_slugs = array_unique($category_slugs);
                     <?php if ($is_taxonomy_page) : ?>
                         <?php if (!empty($first_course_date)) : ?>
                             <div class="startdate"><i class="ka-icon icon-calendar"></i> <strong>Neste kurs: &nbsp;</strong> <?php echo esc_html($first_course_date); ?></div>
+                            <?php if (!empty($coursetime)) : ?><div class="coursetime"><i class="ka-icon icon-time"></i> <?php echo esc_html($coursetime); ?></div><?php endif; ?>
                         <?php endif; ?>
                         <?php if (!empty($location)) : ?>
-                            <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                            <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?> <?php if (!empty($location_freetext)) : ?>(<?php echo esc_html($location_freetext); ?>)<?php endif; ?></div>
                         <?php endif; ?>
-                        <?php if (!empty($location_freetext)) : ?>
-                            <div class="location_room">(<?php echo esc_html($location_freetext); ?>)</div>
-                        <?php endif; ?>
+                        
                     <?php else : ?>
                         <?php if (!empty($first_course_date)) : ?>
                             <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>

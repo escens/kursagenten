@@ -97,10 +97,11 @@
 #ka .courselist-main .details-area {
     margin-top: 0;
 }
-#ka .courselist-main .details-area .startdate {
+/*#ka .courselist-main .details-area .startdate {
     color: var(--ka-color);
-}
-#ka .courselist-main .details-area .location i.ka-icon {
+}*/
+#ka .courselist-main .details-area .location i.ka-icon,
+#ka .courselist-main .details-area .coursetime i.ka-icon {
     background-color: var(--ka-color-filter);
 }
 
