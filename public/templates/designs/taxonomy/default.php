@@ -361,10 +361,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const categoryMatch = currentCategory === 'all' || courseCategories.includes(currentCategory);
             
             if (locationMatch && categoryMatch) {
-                course.style.display = '';
+                course.classList.remove('hidden');
                 visibleCount++;
             } else {
-                course.style.display = 'none';
+                course.classList.add('hidden');
             }
         });
         
@@ -381,10 +381,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (visibleCount === 0) {
             noCoursesMessage.style.display = 'block';
-            courseList.style.display = 'none';
+            courseList.classList.add('hidden');
         } else {
             noCoursesMessage.style.display = 'none';
-            courseList.style.display = 'flex';
+            courseList.classList.remove('hidden');
         }
     }
     
@@ -405,6 +405,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Vis alle kategoriknapper igjen
         categoryButtons.forEach(btn => {
             btn.style.display = '';
+        });
+        
+        // Vis alle kurs igjen
+        const courses = courseList.querySelectorAll('.courselist-item');
+        courses.forEach(course => {
+            course.classList.remove('hidden');
         });
         
         // Oppdater URL

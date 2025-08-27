@@ -560,3 +560,9 @@
         font-size: 0.9rem;
     }
 }
+
+/* Hidden state for individual course items */
+#ka .courselist-item.hidden {
+    display: none !important;
+}
+
