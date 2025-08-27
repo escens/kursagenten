@@ -495,7 +495,7 @@
 
 #ka .no-courses-filtered-message .ka-icon {
     font-size: 3rem;
-    color: #6c757d;
+    background-color: white;
     margin-bottom: 1rem;
 }
 
@@ -518,7 +518,7 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.75rem 1.5rem;
-    background-color: #007bff;
+    background-color: var(--ka-color);
     color: white;
     border: none;
     border-radius: 6px;
@@ -530,7 +530,7 @@
 }
 
 #ka .reset-filters-btn:hover {
-    background-color: #0056b3;
+    background-color: var(--ka-color-darker);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }

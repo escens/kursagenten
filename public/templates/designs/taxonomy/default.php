@@ -174,6 +174,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                     // Hent toppnivå kurskategorier for filtrering
                     $top_categories = get_top_level_categories_from_query($query);
                     
+                    // Filtrer bort kategorier med teller 0
+                    $top_categories = array_filter($top_categories, function($category) {
+                        return $category['count'] > 0;
+                    });
+                    
                     // Vis kun filteret hvis det er mer enn én kategori
                     if (count($top_categories) > 1): ?>
                         <div class="category-filter-wrapper">
@@ -397,6 +402,11 @@ document.addEventListener('DOMContentLoaded', function() {
             allButton.classList.add('active');
         }
         
+        // Vis alle kategoriknapper igjen
+        categoryButtons.forEach(btn => {
+            btn.style.display = '';
+        });
+        
         // Oppdater URL
         const url = new URL(window.location.href);
         url.searchParams.delete('location');
@@ -431,13 +441,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // Oppdater alle kategori-knappene med nye tall
+        // Oppdater alle kategori-knappene med nye tall og skjul de med teller 0
         categoryButtons.forEach(button => {
             const category = button.dataset.category;
             if (category !== 'all') {
                 const count = categoryCounts[category] || 0;
                 const originalText = button.textContent.split(' (')[0]; // Fjern eksisterende tall
                 button.textContent = `${originalText} (${count})`;
+                
+                // Skjul kategoriknapper med teller 0
+                if (count === 0) {
+                    button.style.display = 'none';
+                } else {
+                    button.style.display = '';
+                }
             }
         });
         
