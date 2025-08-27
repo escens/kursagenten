@@ -105,9 +105,10 @@ class RelatedCourses {
         // Bruk første term (kan modifiseres for å håndtere flere terms)
         $current_term = $terms[0];
 
-        // Hent alle innlegg i samme 'kurskategori'
+        // Hent alle publiserte kurs i samme 'kurskategori'
         return get_posts([
             'post_type' => 'course',
+            'post_status' => 'publish',
             'tax_query' => [[
                 'taxonomy' => 'coursecategory',
                 'field' => 'term_id',

@@ -115,12 +115,29 @@ class CourseLocationGrid {
             return [];
         }
 
-        // For hvert kurssted, hent alle spesifikke lokasjoner
-        foreach ($terms as &$term) {
-            $term->specific_locations = $this->get_specific_locations_for_term($term->term_id);
+        // Filtrer bort steder uten publiserte kurs og berik med spesifikke lokasjoner
+        $filtered = [];
+        foreach ($terms as $term) {
+            $q = new \WP_Query([
+                'post_type' => 'course',
+                'post_status' => 'publish',
+                'posts_per_page' => 1,
+                'fields' => 'ids',
+                'tax_query' => [[
+                    'taxonomy' => 'course_location',
+                    'field' => 'term_id',
+                    'terms' => (int)$term->term_id,
+                ]],
+                'no_found_rows' => true,
+                'update_post_meta_cache' => false,
+                'update_post_term_cache' => false,
+            ]);
+            if ($q->have_posts()) {
+                $term->specific_locations = $this->get_specific_locations_for_term($term->term_id);
+                $filtered[] = $term;
+            }
         }
-
-        return $terms;
+        return $filtered;
     }
 
     private function get_specific_locations_for_term(int $term_id): array 

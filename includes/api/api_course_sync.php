@@ -197,7 +197,8 @@ function create_new_course($data, $main_course_id, $location_id, $language, $is_
 
         set_featured_image_from_url($data, $post_id, $main_course_id, $location_id, get_course_location($data));
 
-        create_or_update_course_date($data, $post_id, $main_course_id, $data['id'], $is_active);
+        // Use the correct location id when creating/updating coursedates
+        create_or_update_course_date($data, $post_id, $main_course_id, $location_id, $is_active);
     }
 
     return $post_id;
@@ -270,18 +271,21 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
         //$location_name = get_course_location($data);
         update_post_meta($post_id, 'course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
 
-        update_course_taxonomies($post_id, $data['id'], $data, $is_webhook);
+        // Pass the actual location id, not the main course id
+        update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
 
         // Fetch instructor data
-        $instructors = get_instructors_in_courselist($data, $data['id']);
+        // Use the correct location id for instructor extraction
+        $instructors = get_instructors_in_courselist($data, $location_id);
         $location_instructors = $instructors['instructors_location'];
         update_instructor_taxonomies($post_id, $location_instructors);
 
         sync_main_course_data($main_course_id);
 
-        set_featured_image_from_url($data, $post_id, $main_course_id, $data['id'], get_course_location($data));
+        set_featured_image_from_url($data, $post_id, $main_course_id, $location_id, get_course_location($data));
 
-        create_or_update_course_date($data, $post_id, $main_course_id, $data['id'], $is_active);
+        // Use the correct location id when creating/updating coursedates
+        create_or_update_course_date($data, $post_id, $main_course_id, $location_id, $is_active);
     }
 
     //error_log("=== SLUTT: create_new_sub_course ===");
@@ -338,8 +342,9 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
             sync_main_course_data($main_course_id);
         }
 
-        set_featured_image_from_url($data, $post_id, $main_course_id, $data['id'], get_course_location($data));
-        create_or_update_course_date($data, $post_id, $main_course_id, $data['id'], $is_active);
+        set_featured_image_from_url($data, $post_id, $main_course_id, $location_id, get_course_location($data));
+        // Use the correct location id when creating/updating coursedates
+        create_or_update_course_date($data, $post_id, $main_course_id, $location_id, $is_active);
     }
 }
 

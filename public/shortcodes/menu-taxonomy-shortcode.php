@@ -85,6 +85,8 @@ function kurstagger($atts){
                 ]
             ]
         ]);
+        // Filter bort termer uten publiserte kurs
+        $kurstagger = ka_filter_terms_with_published_courses($kurstagger, $taxonomy);
     }else{
         $parent = 0;
         $kurstagger = get_terms([
@@ -103,6 +105,8 @@ function kurstagger($atts){
             ]
             ]
         ]);
+        // Filter bort termer uten publiserte kurs
+        $kurstagger = ka_filter_terms_with_published_courses($kurstagger, $taxonomy);
     }
 
     if ( ! empty( $kurstagger ) && ! is_wp_error( $kurstagger ) ) {
@@ -134,6 +138,66 @@ function kurstagger($atts){
         }//end foreach
     return $output;
     }//end if
+}
+
+// Hjelpefunksjon: filtrer termer til de som har publiserte kurs (inkluder foreldre som har barn med publiserte kurs)
+function ka_filter_terms_with_published_courses($terms, $taxonomy) {
+    if (empty($terms) || is_wp_error($terms)) {
+        return $terms;
+    }
+
+    // Bygg barneliste per forelder
+    $children_of = [];
+    foreach ($terms as $t) {
+        if ($t->parent) {
+            $children_of[$t->parent] = $children_of[$t->parent] ?? [];
+            $children_of[$t->parent][] = (int)$t->term_id;
+        }
+    }
+
+    // For hver term, sjekk om den selv har publiserte kurs
+    $has_published = [];
+    foreach ($terms as $t) {
+        $has_published[$t->term_id] = ka_term_has_published_courses((int)$t->term_id, $taxonomy);
+    }
+
+    // Inkluder term hvis den selv har publiserte kurs, eller om noen barn har publiserte kurs
+    $filtered = array_filter($terms, function($t) use ($children_of, $has_published) {
+        $tid = (int)$t->term_id;
+        if (!empty($has_published[$tid])) {
+            return true;
+        }
+        if (!empty($children_of[$tid])) {
+            foreach ($children_of[$tid] as $child_id) {
+                if (!empty($has_published[$child_id])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    });
+
+    return array_values($filtered);
+}
+
+// Hjelpefunksjon: har term minst ett publisert course/coursedate avhengig av taksonomi
+function ka_term_has_published_courses(int $term_id, string $taxonomy): bool {
+    // For alle taksonomier her viser vi kurs, ikke coursedates, i meny
+    $q = new WP_Query([
+        'post_type' => 'course',
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+        'tax_query' => [[
+            'taxonomy' => $taxonomy,
+            'field' => 'term_id',
+            'terms' => $term_id,
+        ]],
+        'no_found_rows' => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    ]);
+    return $q->have_posts();
 }
 
 function get_menu_item_html($term, $url, $has_children = false, $theme = 'default') {

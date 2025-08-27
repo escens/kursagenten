@@ -119,29 +119,64 @@ class CourseCategories {
 
     private function filter_terms(array $terms, string $vis): array 
     {
-        // Bygg oversikt over foreldre-barn forhold
-        $parent_map = [];
-        // Bygg oversikt over foreldre til kategorier med innlegg
-        $active_parent_map = [];
+        // Build maps based on published posts only (avoid counting drafts)
+        $has_published = [];
+        $children_of = [];
         foreach ($terms as $term) {
+            $has_published[$term->term_id] = $this->term_has_published_courses((int)$term->term_id);
             if ($term->parent !== 0) {
-                $parent_map[$term->parent] = true;
-                if ($term->count > 0) {
-                    $active_parent_map[$term->parent] = true;
-                }
+                $children_of[$term->parent] = $children_of[$term->parent] ?? [];
+                $children_of[$term->parent][] = (int)$term->term_id;
             }
         }
 
-        return array_filter($terms, function($term) use ($vis, $parent_map, $active_parent_map) {
-            $has_children = isset($parent_map[$term->term_id]);
-            $has_active_children = isset($active_parent_map[$term->term_id]);
+        return array_filter($terms, function($term) use ($vis, $has_published, $children_of) {
+            $term_id = (int)$term->term_id;
+            $is_root = ($term->parent == 0);
+            $has_children = isset($children_of[$term_id]);
+            $has_active_children = false;
+            if ($has_children) {
+                foreach ($children_of[$term_id] as $child_id) {
+                    if (!empty($has_published[$child_id])) {
+                        $has_active_children = true;
+                        break;
+                    }
+                }
+            }
 
-            return match($vis) {
-                'subkategorier' => $has_children ? $term->parent != 0 : ($term->count > 0),
-                'hovedkategorier' => $term->parent == 0 && ($term->count > 0 || $has_active_children),
-                default => $term->count > 0
-            };
+            // Decide visibility per mode
+            switch ($vis) {
+                case 'subkategorier':
+                    // Show subcategories that themselves have published posts
+                    return ($term->parent != 0) && !empty($has_published[$term_id]);
+                case 'hovedkategorier':
+                    // Show root categories with own published posts OR at least one child with published posts
+                    return $is_root && (!empty($has_published[$term_id]) || $has_active_children);
+                default:
+                    // Standard: show any category that has published posts
+                    return !empty($has_published[$term_id]);
+            }
         });
+    }
+
+    // Check if a term has at least one published course
+    private function term_has_published_courses(int $term_id): bool {
+        // Query only published posts to avoid drafts keeping categories visible
+        $q = new \WP_Query([
+            'post_type' => 'course',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'tax_query' => [[
+                'taxonomy' => 'coursecategory',
+                'field' => 'term_id',
+                'terms' => $term_id,
+            ]],
+            'no_found_rows' => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+        ]);
+        return $q->have_posts();
     }
 
     private function generate_html(string $id, array $terms, array $a): string {

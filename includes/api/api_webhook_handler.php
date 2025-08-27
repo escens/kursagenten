@@ -79,6 +79,10 @@ function process_webhook_data($request) {
         }
 
         $course_data['location_id'] = $location_id;
+        // If webhook includes Enabled, override is_active from API list to avoid race conditions
+        if (isset($body['Enabled'])) {
+            $course_data['is_active'] = (bool) $body['Enabled'];
+        }
         
         try {
             error_log("Starting course processing for CourseId: $location_id");

@@ -100,6 +100,48 @@ function kursagenten_taxonomy_menu_shortcode($atts) {
             ]
         ]
     ]);
+    // Filtrer bort termer uten publiserte kurs (eller foreldre som kun har barn uten publiserte kurs)
+    if (!empty($terms) && !is_wp_error($terms)) {
+        $children_of = [];
+        foreach ($terms as $t) {
+            if ($t->parent) {
+                $children_of[$t->parent] = $children_of[$t->parent] ?? [];
+                $children_of[$t->parent][] = (int)$t->term_id;
+            }
+        }
+        $has_published = [];
+        foreach ($terms as $t) {
+            $q = new WP_Query([
+                'post_type' => 'course',
+                'post_status' => 'publish',
+                'posts_per_page' => 1,
+                'fields' => 'ids',
+                'tax_query' => [[
+                    'taxonomy' => $taxonomy,
+                    'field' => 'term_id',
+                    'terms' => (int)$t->term_id,
+                ]],
+                'no_found_rows' => true,
+                'update_post_meta_cache' => false,
+                'update_post_term_cache' => false,
+            ]);
+            $has_published[$t->term_id] = $q->have_posts();
+        }
+        $terms = array_values(array_filter($terms, function($t) use ($children_of, $has_published) {
+            $tid = (int)$t->term_id;
+            if (!empty($has_published[$tid])) {
+                return true;
+            }
+            if (!empty($children_of[$tid])) {
+                foreach ($children_of[$tid] as $child_id) {
+                    if (!empty($has_published[$child_id])) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }));
+    }
 
     if (!empty($terms) && !is_wp_error($terms)) {
         foreach ($terms as $term) {
