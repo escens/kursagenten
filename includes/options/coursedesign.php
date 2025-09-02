@@ -18,6 +18,17 @@ class Designmaler {
         add_action('update_option_kursagenten_taxonomy_instructors_name_display', array($this, 'update_instructor_permalinks'), 10, 2);
         add_filter('term_link', array($this, 'modify_instructor_term_link'), 10, 3);
         add_filter('request', array($this, 'handle_instructor_rewrite_request'));
+
+        // Kontroller dokumenttittel (browser/SEO) for instruktør-taksonomi
+        add_filter('document_title_parts', array($this, 'filter_document_title_parts'));
+        // Yoast SEO støtte
+        add_filter('wpseo_title', array($this, 'filter_wpseo_title'));
+        add_filter('wpseo_opengraph_title', array($this, 'filter_wpseo_title'));
+
+        // Rank Math SEO støtte
+        add_filter('rank_math/frontend/title', array($this, 'filter_rank_math_title'));
+        add_filter('rank_math/opengraph/facebook/title', array($this, 'filter_rank_math_title'));
+        add_filter('rank_math/opengraph/twitter/title', array($this, 'filter_rank_math_title'));
     }
 
     public function design_add_plugin_page() {
@@ -1262,6 +1273,86 @@ r                                    [kurssteder layout=rad stil=kort grid=3 gri
             }
         }
         return $query_vars;
+    }
+
+    /**
+     * Beregn visningsnavn for instruktør i henhold til innstilling
+     *
+     * @param WP_Term $term Instructors-term
+     * @return string Navnet som skal vises
+     */
+    private function get_instructor_display_name($term) {
+        if (!($term instanceof WP_Term) || $term->taxonomy !== 'instructors') {
+            return '';
+        }
+
+        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        if ($name_display === 'firstname') {
+            $display_name = get_term_meta($term->term_id, 'instructor_firstname', true);
+            return !empty($display_name) ? $display_name : $term->name;
+        }
+        if ($name_display === 'lastname') {
+            $display_name = get_term_meta($term->term_id, 'instructor_lastname', true);
+            return !empty($display_name) ? $display_name : $term->name;
+        }
+        return $term->name;
+    }
+
+    /**
+     * Juster document title parts for instruktør-taksonomi
+     *
+     * @param array $title_parts
+     * @return array
+     */
+    public function filter_document_title_parts($title_parts) {
+        if (is_tax('instructors')) {
+            $term = get_queried_object();
+            if ($term instanceof WP_Term) {
+                $display = $this->get_instructor_display_name($term);
+                if (!empty($display)) {
+                    $title_parts['title'] = $display;
+                }
+            }
+        }
+        return $title_parts;
+    }
+
+    /**
+     * Juster Yoast SEO tittel for instruktør-taksonomi
+     *
+     * @param string $title
+     * @return string
+     */
+    public function filter_wpseo_title($title) {
+        if (is_tax('instructors')) {
+            $term = get_queried_object();
+            if ($term instanceof WP_Term) {
+                $display = $this->get_instructor_display_name($term);
+                if (!empty($display)) {
+                    return $display;
+                }
+            }
+        }
+        return $title;
+    }
+
+    /**
+     * Juster Rank Math SEO tittel for instruktør-taksonomi
+     *
+     * @param string $title
+     * @return string
+     */
+    public function filter_rank_math_title($title) {
+        if (is_tax('instructors')) {
+            $term = get_queried_object();
+            if ($term instanceof WP_Term) {
+                $display = $this->get_instructor_display_name($term);
+                if (!empty($display)) {
+                    return $display;
+                }
+            }
+        }
+        return $title;
     }
 
     /**

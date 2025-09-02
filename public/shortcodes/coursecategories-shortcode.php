@@ -7,7 +7,13 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurskategorier i grid-format
- * [kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" radavstand="1rem" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1  vis="hovedkategorier/subkategorier/standard"]
+ * [kurskategorier kilde="bilde/ikon" layout="grid/rad/liste" radavstand="1rem" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" grid=3 gridtablet=2 gridmobil=1  vis="hovedkategorier/subkategorier/standard/<slug>"]
+ *
+ * "vis" kan være:
+ * - hovedkategorier: bare toppnivå-kategorier
+ * - subkategorier: bare underkategorier (alle som har forelder)
+ * - standard: alle kategorier som har publiserte kurs
+ * - <slug>: vis underkategorier under gitt foreldreslug, f.eks. vis=dans
  */
 class CourseCategories {
     private string $placeholder_image;
@@ -47,6 +53,8 @@ class CourseCategories {
         ];
 
         $a = shortcode_atts($defaults, $atts);
+        // Track if 'radavstand' was explicitly provided in the shortcode attributes
+        $a['_radavstand_provided'] = array_key_exists('radavstand', $atts) && $atts['radavstand'] !== '';
         $this->kilde = $a['kilde'];
         $random_id = 'k-' . uniqid();
         
@@ -119,6 +127,17 @@ class CourseCategories {
 
     private function filter_terms(array $terms, string $vis): array 
     {
+        // If "vis" is a slug, resolve to a specific parent term id
+        $parent_term_id = null;
+        $known_modes = ['subkategorier', 'hovedkategorier', 'standard'];
+        if (!in_array($vis, $known_modes, true)) {
+            $slug = sanitize_title($vis);
+            $parent_term = get_term_by('slug', $slug, 'coursecategory');
+            if ($parent_term && !is_wp_error($parent_term)) {
+                $parent_term_id = (int) $parent_term->term_id;
+            }
+        }
+
         // Build maps based on published posts only (avoid counting drafts)
         $has_published = [];
         $children_of = [];
@@ -130,7 +149,7 @@ class CourseCategories {
             }
         }
 
-        return array_filter($terms, function($term) use ($vis, $has_published, $children_of) {
+        return array_filter($terms, function($term) use ($vis, $parent_term_id, $has_published, $children_of) {
             $term_id = (int)$term->term_id;
             $is_root = ($term->parent == 0);
             $has_children = isset($children_of[$term_id]);
@@ -145,6 +164,11 @@ class CourseCategories {
             }
 
             // Decide visibility per mode
+            // If a specific parent slug was provided, show only its direct children with published posts
+            if ($parent_term_id !== null) {
+                return ($term->parent == $parent_term_id) && !empty($has_published[$term_id]);
+            }
+
             switch ($vis) {
                 case 'subkategorier':
                     // Show subcategories that themselves have published posts

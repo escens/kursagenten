@@ -125,7 +125,7 @@ function kursagenten_admin_landing_page() {
                 <h3>Innholdsblokker</h3>
                 <p>Kortkode med lister av enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, og så en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den.</p>
                 <div class="kort" id="lister" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
-                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/standard"]</span></p>
+                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard"]</span></p>
                     <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssted]</span></span><br><span class="copytext small">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]</span></p>
                     <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna"]</span></p>
                 </div>
@@ -267,10 +267,10 @@ function kursagenten_admin_landing_page() {
                             </tr>
                             <tr>
                                 <td>Vis (k)</td>
-                                <td>For de kategoriene som har flere nivåer, er det mulighet til å vise kun toppnivåene, kun underkategoriene, eller alle.</td>
-                                <td>hovedkategorier, subkategorier<br><strong>Standard</strong>: viser alle</td>
+                                <td>For de kategoriene som har flere nivåer, er det mulighet til å vise kun toppnivåene, kun underkategoriene, kun underkategorier under gitt foreldreslug, eller alle.</td>
+                                <td>hovedkategorier, subkategorier, foreldreslug<br><strong>Standard</strong>: viser alle</td>
                                 <td>Kurskategorier</td>
-                                <td><span class="copytext">[kurskategorier vis=hovedkategorier]</span></td>
+                                <td><span class="copytext">[kurskategorier vis=hovedkategorier/subkategorier/foreldreslug]</span></td>
                             </tr>
                             <tr>
                                 <td>Vis (i)</td>

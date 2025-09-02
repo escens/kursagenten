@@ -185,6 +185,8 @@ function create_new_course($data, $main_course_id, $location_id, $language, $is_
         update_post_meta($post_id, 'main_course_id', (int) $data['id']);
         update_post_meta($post_id, 'is_parent_course', 'yes');
         update_post_meta($post_id, 'meta_description', sanitize_text_field($data['introText']));
+        // Foreldrekurs har ikke is_active - statusen baseres på underkurs
+        update_post_meta($post_id, 'location_id', (int) $data['id']);
 
         update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
                     
@@ -266,6 +268,8 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
         update_post_meta($post_id, 'main_course_title', sanitize_text_field($data['name']));
         update_post_meta($post_id, 'sub_course_location', sanitize_text_field(get_course_location($data)));
         update_post_meta($post_id, 'meta_description', sanitize_text_field($data['introText']));
+        update_post_meta($post_id, 'is_active', $is_active ? '1' : '0');
+        update_post_meta($post_id, 'location_id', (int) $location_id);
         
         // Sett course_location_freetext basert på lokasjonsdata
         //$location_name = get_course_location($data);
@@ -298,14 +302,14 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
     $total_locations = count($data['locations'] ?? []);
 
     if ($is_parent_course === 'yes') {
-        // Kun hold hovedkurs publisert hvis det har flere lokasjoner
+        // Hovedkurs skal også respektere is_active statusen
         $updated_title = $data['name'];
-        $post_status = 'publish';
-        //error_log("Updating main course with multiple locations {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
+        $post_status = $is_active ? 'publish' : 'draft';
+        error_log("Updating main course with multiple locations {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
     } else {
         $updated_title = $is_parent_course === 'yes' ? $data['name'] : $data['name'] . ' - ' . get_course_location($data);
         $post_status = $is_active ? 'publish' : 'draft';
-        //error_log("Updating sub-course {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
+        error_log("Updating sub-course {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
     }
     error_log("Updating course {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
 
@@ -323,6 +327,12 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
         foreach ($common_meta_fields as $key => $value) {
             update_post_meta($post_id, $key, $value);
         }
+        // Oppdater is_active meta-verdi kun for underkurs (ikke foreldrekurs)
+        if ($is_parent_course !== 'yes') {
+            update_post_meta($post_id, 'is_active', $is_active ? '1' : '0');
+        }
+        // Oppdater location_id meta-verdi
+        update_post_meta($post_id, 'location_id', (int) $location_id);
         if ($is_parent_course !== 'yes') {
             update_post_meta($post_id, 'main_course_title', sanitize_text_field($data['name']));
             update_post_meta($post_id, 'sub_course_location', sanitize_text_field(get_course_location($data)));
@@ -1329,15 +1339,17 @@ function kursagenten_update_main_course_status($main_course_id = null) {
         
         //error_log("Antall publiserte subkurs: $published_count av totalt " . count($sub_courses));
 
-        // Oppdater hovedkursets status basert på antall publiserte subkurs
+        // Foreldrekursets status skal kun baseres på statusen til underkursene
+        // Hvis alle underkurs er inaktive, skal foreldrekurset være inaktivt
+        // Hvis minst ett underkurs er aktivt, skal foreldrekurset være aktivt
         if ($published_count === 0 && $main_course->post_status !== 'draft') {
-            //error_log("Setter hovedkurs {$main_course->ID} til kladd - ingen publiserte subkurs");
+            error_log("Setter hovedkurs {$main_course->ID} til kladd - ingen publiserte subkurs");
             wp_update_post(array(
                 'ID' => $main_course->ID,
                 'post_status' => 'draft'
             ));
         } elseif ($published_count > 0 && $main_course->post_status !== 'publish') {
-            //error_log("Setter hovedkurs {$main_course->ID} til publisert - har $published_count publiserte subkurs");
+            error_log("Setter hovedkurs {$main_course->ID} til publisert - har $published_count publiserte subkurs");
             wp_update_post(array(
                 'ID' => $main_course->ID,
                 'post_status' => 'publish'

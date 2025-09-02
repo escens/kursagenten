@@ -136,7 +136,7 @@ function get_main_course_id_by_location_id($location_id) {
                     'municipality' => $target_municipality,
                     'county' => $target_county,
                     'language' => $course['language'],
-                    'is_active' => $location['active'] ?? true,
+                    'is_active' => $location['active'] ?? false,
                     'all_locations' => []
                 ];
                 break 2; // Bryt ut av begge løkkene

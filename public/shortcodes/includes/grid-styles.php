@@ -26,7 +26,7 @@ class GridStyles {
             }
             {$class_id}.stablet.kort .wrapper { justify-items: center; max-width: calc(({$a['bildestr']} * {$a['grid']}) + (clamp(1vw, 2vw, 2rem) * ({$a['grid']} - 1 )));}
             {$class_id}.kort.rund .wrapper { max-width: calc((calc({$a['bildestr']} * 5.5) * {$a['grid']}) + (clamp(1vw, 2vw, 2rem) * ({$a['grid']} - 1 )));}
-            {$class_id}.liste .wrapper { grid-template-columns: repeat(1, 1fr); row-gap: 0.6em; width: auto; }
+            {$class_id}.liste .wrapper { grid-template-columns: repeat(1, 1fr); row-gap: " . (!empty($a['_radavstand_provided']) ? $a['radavstand'] : '0.6em') . "; width: auto; }
             {$class_id}.rad.utdrag .wrapper { row-gap: 3rem; }
             
             /* Box */

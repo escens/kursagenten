@@ -47,7 +47,9 @@ function kursagenten_get_course_ids() {
             } elseif (isset($course['active'])) {
                 $is_active = filter_var($course['active'], FILTER_VALIDATE_BOOLEAN);
             } else {
-                $is_active = true;
+                // Hvis ingen active-verdi er satt, anta at kurset er inaktivt
+                // Dette forhindrer at inaktive kurs blir aktivert som standard
+                $is_active = false;
             }
             
             // Hent enkeltkursdata for denne lokasjonen
@@ -171,7 +173,9 @@ function kursagenten_nightly_sync() {
             } elseif (isset($course['active'])) {
                 $is_active = filter_var($course['active'], FILTER_VALIDATE_BOOLEAN);
             } else {
-                $is_active = true;
+                // Hvis ingen active-verdi er satt, anta at kurset er inaktivt
+                // Dette forhindrer at inaktive kurs blir aktivert som standard
+                $is_active = false;
             }
 
             // Hent enkeltkursdata for denne lokasjonen
