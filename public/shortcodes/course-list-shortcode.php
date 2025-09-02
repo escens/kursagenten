@@ -215,10 +215,19 @@ function kursagenten_course_list_shortcode($atts) {
                                                 <!-- Chip-style Filter Display -->
                                                 <div class="filter-chip-wrapper">
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                                                        <?php
+                                                        // For locations, bruk term-navn (med diakritikk) som filterverdi, ikke slug
+                                                        $chip_value = '';
+                                                        if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                                            $chip_value = $term->name;
+                                                        } else {
+                                                            $chip_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                        }
+                                                        ?>
                                                         <button class="chip filter-chip"
                                                             data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                             data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                                            data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '')); ?>">
+                                                            data-filter="<?php echo esc_attr($chip_value); ?>">
                                                             <?php echo esc_html(is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '')); ?>
                                                         </button>
                                                     <?php endforeach; ?>
@@ -291,8 +300,14 @@ function kursagenten_course_list_shortcode($atts) {
                                                             } else {
                                                                 // For andre filtre, vis en enkel liste
                                                                 foreach ($taxonomy_data[$filter]['terms'] as $term) {
-                                                                    $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
-                                                                    $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    // For locations-listen, bruk term-navn (med æ/ø/å) som URL-verdi
+                                                                    if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                                                        $term_value = $term->name;
+                                                                        $term_name = $term->name;
+                                                                    } else {
+                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    }
                                                                     $is_checked = in_array($term_value, $active_filters) ? 'checked' : '';
                                                                     ?>
                                                                     <label class="filter-list-item checkbox">
@@ -396,8 +411,14 @@ function kursagenten_course_list_shortcode($atts) {
                                                                     $parent_class = '';
                                                                     $parent_id_attr = '';
                                                                 } else {
-                                                                    $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
-                                                                    $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    // For locations i venstre liste: bruk term-navn (med diakritikk) som verdi
+                                                                    if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                                                        $term_value = $term->name;
+                                                                        $term_name = $term->name;
+                                                                    } else {
+                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    }
                                                                     $parent_class = isset($term->parent_class) ? $term->parent_class : '';
                                                                     $parent_id_attr = isset($term->parent_id) ? ' data-parent-id="' . esc_attr($term->parent_id) . '"' : '';
                                                                     
@@ -478,24 +499,7 @@ function kursagenten_course_list_shortcode($atts) {
                                             'query' => $query
                                         ];
 
-                                        // Debug logging
-                                        error_log('=== START course-list-shortcode output ===');
-                                        error_log('Query found posts: ' . $query->found_posts);
-                                        error_log('Query post count: ' . $query->post_count);
-                                        error_log('Query SQL: ' . $query->request);
                                         
-                                        // Sjekk om vi har posts
-                                        if ($query->have_posts()) {
-                                            error_log('Posts found in query:');
-                                            while ($query->have_posts()) {
-                                                $query->the_post();
-                                                error_log('- Post ID: ' . get_the_ID() . ', Title: ' . get_the_title());
-                                            }
-                                            wp_reset_postdata();
-                                        } else {
-                                            error_log('No posts found in query');
-                                        }
-                                        error_log('=== END course-list-shortcode output ===');
 
                                         while ($query->have_posts()) : $query->the_post();
                                             get_course_template_part($args);

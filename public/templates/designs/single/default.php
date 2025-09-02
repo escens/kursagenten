@@ -256,7 +256,7 @@
                                 } else {
                                     // Sjekk om påmelding er tillatt
                                     $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
-                                    if ($show_registration === 'false') {
+                                    if (empty($show_registration) || $show_registration === 'false') {
                                         $item_class .= ' on-demand';
                                         $available_text = 'På forespørsel';
                                         $available_class = 'on-demand';
@@ -297,7 +297,7 @@
                                             </div>
                                         </div>
                                         <div class="links-area">
-                                            <span class="more-info ka-text-xs">Mer info</span>
+                                            <span class="more-info">Mer info</span>
                                             <a class="courselist-button pameldingskjema clickelement"  data-url="<?php echo esc_url($coursedate['signup_url']); ?>">
                                             <?php echo esc_html($coursedate['button_text']) ?>
                                             </a>   

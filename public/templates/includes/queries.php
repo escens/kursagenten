@@ -232,9 +232,10 @@ function get_course_dates_query($args = []) {
     if (!empty($locations)) {
         $location_query = ['relation' => 'OR'];
         foreach ($locations as $location) {
-            // Konverter bindestrek til mellomrom for søk
+            // Konverter bindestrek til mellomrom for søk, behold diakritikk
             $location_search = str_replace('-', ' ', $location);
-            
+            $location_search_ascii = remove_accents($location_search);
+
             $location_query[] = [
                 'relation' => 'OR',
                 [
@@ -246,11 +247,21 @@ function get_course_dates_query($args = []) {
                     'key' => 'course_location_freetext',
                     'value' => $location_search,
                     'compare' => 'LIKE'
+                ],
+                // Fallback: diakritikk-fri matching for eldre/sanerede data
+                [
+                    'key' => 'course_location',
+                    'value' => $location_search_ascii,
+                    'compare' => 'LIKE'
+                ],
+                [
+                    'key' => 'course_location_freetext',
+                    'value' => $location_search_ascii,
+                    'compare' => 'LIKE'
                 ]
             ];
         }
         $meta_query[] = $location_query;
-        error_log('Location meta_query: ' . print_r($location_query, true));
     }
     
     // Legg til språk filter
@@ -333,6 +344,9 @@ function get_course_dates_query($args = []) {
     
     // Bygg tax_query
     $tax_query = ['relation' => 'AND'];
+
+    // Viktig: Ikke bruk taksonomi-filter for lokasjon her, da ikke alle coursedates
+    // nødvendigvis har course_location-term satt. Vi baserer oss på meta_query over.
     
     // Hent skjulte kategorier
     $hidden_categories = get_terms([
@@ -388,7 +402,7 @@ function get_course_dates_query($args = []) {
         'post_status' => ['publish']
     ];
 
-    error_log('Final query args: ' . print_r($query_args, true));
+    
 
     // Legg til søk hvis søkeord er angitt
     if (!empty($search)) {
@@ -456,9 +470,7 @@ function get_course_dates_query($args = []) {
     // Kjør query
     $query = new WP_Query($query_args);
     
-    error_log('Query SQL: ' . $query->request);
-    error_log('Found posts: ' . $query->found_posts);
-    error_log('=== END get_course_dates_query ===');
+    
 
     // Fjern filtrene etter at queryen er kjørt
     remove_all_filters('posts_join');
@@ -772,6 +784,49 @@ function display_course_locations($post_id) {
     } else {
         $main_course_url = get_permalink($post_id);
     }
+
+    // Bygg map fra lokasjonsnavn -> underkurs-permalink for å unngå feil slug (f.eks. baerum vs baerum-sandvika)
+    // Dette prioriterer faktisk barn-innleggets permalenke fremfor taksonomi-slug.
+    $child_location_links = array();
+    $parent_main_course_id = ($is_parent_course === 'yes') ? get_post_meta($post_id, 'main_course_id', true) : get_post_meta($post_id, 'main_course_id', true);
+
+    // Hvis vi står på et foreldrekurs har det meta 'is_parent_course' = yes og deler main_course_id med barna
+    if ($is_parent_course === 'yes') {
+        $parent_post_id = $post_id;
+        // main_course_id på foreldrekurset peker på eksternt ID; vi bruker den for å finne barna
+        $parent_main_course_id = get_post_meta($post_id, 'main_course_id', true);
+    } else if (!empty($main_course)) {
+        $parent_post_id = $main_course[0]->ID;
+    } else {
+        $parent_post_id = 0;
+    }
+
+    if (!empty($parent_main_course_id)) {
+        $child_courses = get_posts(array(
+            'post_type' => 'course',
+            'post_status' => array('publish', 'draft'),
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                'relation' => 'AND',
+                array(
+                    'key' => 'main_course_id',
+                    'value' => $parent_main_course_id,
+                    'compare' => '='
+                ),
+                array(
+                    'key' => 'is_parent_course',
+                    'compare' => 'NOT EXISTS'
+                )
+            )
+        ));
+
+        foreach ($child_courses as $child) {
+            $sub_loc = get_post_meta($child->ID, 'sub_course_location', true);
+            if (!empty($sub_loc)) {
+                $child_location_links[$sub_loc] = get_permalink($child->ID);
+            }
+        }
+    }
     
     // Start HTML output
     $output = '<div class="course-locations-list">';
@@ -785,7 +840,12 @@ function display_course_locations($post_id) {
     // Legg til alle lokasjoner
     foreach ($locations as $location) {
         $is_active = ($current_location === $location['name']);
-        $location_url = $main_course_url . $location['slug'] . '/';
+        // Bruk barn-innleggets permalink hvis vi har en match på lokasjonsnavn; ellers fallback til taxonomi-slug
+        if (isset($child_location_links[$location['name']])) {
+            $location_url = $child_location_links[$location['name']];
+        } else {
+            $location_url = $main_course_url . $location['slug'] . '/';
+        }
         
         $output .= '<li class="' . ($is_active ? 'active' : '') . '">';
         $output .= '<a href="' . esc_url($location_url) . '" class="button-filter">' . esc_html($location['name']) . '</a>';

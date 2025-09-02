@@ -193,7 +193,7 @@ $category_slugs = array_unique($category_slugs);
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
                         <?php if ($is_full === 'true') : ?>
                             <span class="course-available full">Fullt</span>
-                        <?php elseif ($show_registration === 'false') : ?>
+                        <?php elseif (empty($show_registration) || $show_registration === 'false') : ?>
                             <span class="course-available on-demand">På forespørsel</span>
                         <?php else : ?>
                             <span class="course-available">Ledige plasser</span>
