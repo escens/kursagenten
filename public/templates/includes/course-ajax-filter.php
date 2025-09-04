@@ -127,7 +127,6 @@ function get_filtered_terms($taxonomy) {
             }
         }
 
-        error_log("Final terms for coursecategory: " . print_r($final_terms, true));
         return $final_terms;
     }
 

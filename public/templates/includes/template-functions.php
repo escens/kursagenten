@@ -218,8 +218,14 @@ add_filter('body_class', 'kursagenten_add_body_classes');
  * Hjelper-funksjon for å hente template-deler
  */
 function get_course_template_part($args = []) {
+    // Sjekk om vi skal tvinge standard visning (fra kortkode)
+    $force_standard_view = isset($args['force_standard_view']) && $args['force_standard_view'] === true;
+    
     // Bestem hvilken listevisning som skal brukes basert på kontekst
-    if (is_post_type_archive('course')) {
+    if ($force_standard_view) {
+        // Tving standard visning uansett kontekst
+        $style = get_option('kursagenten_archive_list_type', 'standard');
+    } elseif (is_post_type_archive('course')) {
         $style = get_option('kursagenten_archive_list_type', 'standard');
     } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
         $current_tax = get_queried_object();
@@ -249,9 +255,12 @@ function get_course_template_part($args = []) {
     
     // Sjekk om template eksisterer
     if (file_exists($template_path)) {
+        // Gjør $args tilgjengelig for template-filen
+        extract($args);
         include $template_path;
     } else {
         // Fallback til standard template
+        extract($args);
         include KURSAG_PLUGIN_DIR . "public/templates/list-types/standard.php";
     }
 }

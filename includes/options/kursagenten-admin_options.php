@@ -101,6 +101,9 @@ function kursagenten_admin_landing_page() {
                     <div class="kort">
                         <h4>Design: Lister og grid <span class="small"><a href="#lister">mer info</a></span></h4>
                         <p><span class="copytext">[kurskategorier]</span><br><span class="copytext">[kurssteder]</span><br><span class="copytext">[instruktorer]</span></p>
+                    
+                        <h4>Kursliste med filter <span class="small"><a href="#lister">mer info</a></span></h4>
+                        <p><span class="copytext">[kursliste]</span></p>
                         
                         <h4>Bilder</h4>
                         <p><span class="copytext">[plassholderbilde-kurs]</span><br><span class="copytext">[plassholderbilde-generelt]</span><br><span class="copytext">[plassholderbilde-instruktor]</span><br><span class="copytext">[plassholderbilde-sted]</span></p>
@@ -122,9 +125,10 @@ function kursagenten_admin_landing_page() {
 
             <div class="options-card">
                 
-                <h3>Innholdsblokker</h3>
+                <h3  id="lister">Innholdsblokker</h3>
                 <p>Kortkode med lister av enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, og så en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den.</p>
-                <div class="kort" id="lister" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
+                <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
+                    <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk"]</span></p>
                     <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard"]</span></p>
                     <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssted]</span></span><br><span class="copytext small">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]</span></p>
                     <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna"]</span></p>

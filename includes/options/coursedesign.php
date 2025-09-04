@@ -368,6 +368,7 @@ class Designmaler {
                                 $designs = [
                                     'default' => 'Standard',
                                     'default-2' => 'Standard 2',
+                                    'default-courselist-shortcode' => 'Standard - kursliste med kortkode',
                                     'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {

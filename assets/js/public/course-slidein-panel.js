@@ -48,7 +48,11 @@ window.initSlideInPanel = function() {
     // Initialize iFrame resizing
     iframe.addEventListener('load', function () {
         if (typeof iFrameResize === 'function') {
-            iFrameResize({ log: false }, '#kursagenten-iframe');
+            iFrameResize({ 
+                log: false,
+                checkOrigin: false,
+                trustedDomains: ['https://embed.kursagenten.no']
+            }, '#kursagenten-iframe');
         }
     });
 };

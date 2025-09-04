@@ -234,7 +234,13 @@ function get_course_dates_query($args = []) {
         foreach ($locations as $location) {
             // Konverter bindestrek til mellomrom for søk, behold diakritikk
             $location_search = str_replace('-', ' ', $location);
-            $location_search_ascii = remove_accents($location_search);
+            
+            // Håndter norske tegn riktig
+            $location_search_ascii = str_replace(
+                ['æ', 'ø', 'å', 'Æ', 'Ø', 'Å'],
+                ['ae', 'o', 'a', 'AE', 'O', 'A'],
+                $location_search
+            );
 
             $location_query[] = [
                 'relation' => 'OR',

@@ -192,6 +192,13 @@
 			updatedFilters.order = order;
 		}
 
+		// Legg til kortkode-parametre hvis de finnes
+		if (typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && kurskalender_data.shortcode_params) {
+			Object.keys(kurskalender_data.shortcode_params).forEach(key => {
+				updatedFilters[key] = kurskalender_data.shortcode_params[key];
+			});
+		}
+
 		// Fjern datofilteret fra URL-en
 		delete updatedFilters['fromdate'];
 		delete updatedFilters['todate'];
@@ -347,6 +354,17 @@
 
 	function updateURLParams(params) {
 		const url = new URL(window.location.href);
+		
+		// Legg til kortkode-parametre hvis de finnes
+		if (typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && kurskalender_data.shortcode_params) {
+			Object.keys(kurskalender_data.shortcode_params).forEach(key => {
+				// Kun legg til hvis parameteren ikke allerede finnes i params
+				if (!params[key]) {
+					params[key] = kurskalender_data.shortcode_params[key];
+				}
+			});
+		}
+		
 		url.search = new URLSearchParams(clean(params)).toString();
 
 		window.history.pushState({}, '', url.toString());
@@ -367,6 +385,16 @@
 				// Håndter andre parametere som før
 				params[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
 			}
+		}
+
+		// Legg til kortkode-parametre hvis de finnes
+		if (typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && kurskalender_data.shortcode_params) {
+			Object.keys(kurskalender_data.shortcode_params).forEach(key => {
+				// Kun legg til hvis parameteren ikke allerede finnes i URL
+				if (!params[key]) {
+					params[key] = kurskalender_data.shortcode_params[key];
+				}
+			});
 		}
 
 		return params;
@@ -413,6 +441,12 @@
 			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'per_page' && key !== 'order' && key !== 'side' &&
 				filters[key] && filters[key].length > 0) {
 				
+				// Ekskluder kortkode-parametere fra aktive filtre
+				if (typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && 
+					kurskalender_data.shortcode_params && kurskalender_data.shortcode_params[key]) {
+					return;
+				}
+				
 				// Spesiell håndtering for datofilteret
 				if (key === 'dato' && filters['dato']) {
 					const [fromDate, toDate] = filters['dato'].split('-');
@@ -439,17 +473,52 @@
 				const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
 				values.forEach(value => {
 					// For månedsfilteret, bruk 'months' som filter-key for å matche med checkbox
-					const filterKey = key === 'mnd' ? 'months' : key;
+					const filterKey = key === 'mnd' ? 'months' : 
+					                   key === 'k' ? 'categories' : 
+					                   key === 'sted' ? 'locations' : 
+					                   key === 'i' ? 'instructors' : 
+					                   key === 'sprak' ? 'language' : key;
 					
 					// Finn riktig visningstekst basert på filtertype
 					let displayText = value;
 					
-					// Prøv å finne checkbox med data-filter-key
+					// Prøv å finne checkbox med data-filter-key (søk i både topp og venstre filter)
 					let $checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${value}"]`);
 					
-					// Hvis ikke funnet, prøv med data-url-key
+					// Hvis ikke funnet, prøv med data-url-key (søk i både topp og venstre filter)
 					if (!$checkbox.length) {
 						$checkbox = $(`.filter-checkbox[data-url-key="${key}"][value="${value}"]`);
+					}
+					
+					// Hvis fortsatt ikke funnet, prøv å søke spesifikt i venstre kolonne
+					if (!$checkbox.length) {
+						$checkbox = $('.left-column .filter-checkbox[data-filter-key="' + filterKey + '"][value="' + value + '"]');
+					}
+					
+					// Hvis fortsatt ikke funnet, prøv å søke i venstre kolonne med data-url-key
+					if (!$checkbox.length) {
+						$checkbox = $('.left-column .filter-checkbox[data-url-key="' + key + '"][value="' + value + '"]');
+					}
+					
+					// Hvis checkbox ikke funnet, prøv å finne chip-knapp
+					if (!$checkbox.length) {
+						let $chip = $(`.filter-chip[data-filter-key="${filterKey}"][data-filter="${value}"]`);
+						
+						if (!$chip.length) {
+							$chip = $(`.filter-chip[data-url-key="${key}"][data-filter="${value}"]`);
+						}
+						
+						if (!$chip.length) {
+							$chip = $('.left-column .filter-chip[data-filter-key="' + filterKey + '"][data-filter="' + value + '"]');
+						}
+						
+						if (!$chip.length) {
+							$chip = $('.left-column .filter-chip[data-url-key="' + key + '"][data-filter="' + value + '"]');
+						}
+						
+						if ($chip.length) {
+							displayText = $chip.text().trim();
+						}
 					}
 					
 					if ($checkbox.length) {
@@ -468,7 +537,11 @@
 						const filterValue = $(this).parent().data('filter-value');
 
 						// Konverter tilbake til URL-nøkkel for månedsfilteret
-						const urlKey = filterKey === 'months' ? 'mnd' : filterKey;
+						const urlKey = filterKey === 'months' ? 'mnd' : 
+						               filterKey === 'categories' ? 'k' : 
+						               filterKey === 'locations' ? 'sted' : 
+						               filterKey === 'instructors' ? 'i' : 
+						               filterKey === 'language' ? 'sprak' : filterKey;
 
 						if (filters[urlKey]) {
 							if (Array.isArray(filters[urlKey])) {
@@ -498,6 +571,13 @@
 						if (!$checkbox.length) {
 							$checkbox = $(`.filter-checkbox[data-filter-key="${filterKey}"][value="${filterValue}"]`);
 						}
+						// Hvis fortsatt ikke funnet, prøv å søke spesifikt i venstre kolonne
+						if (!$checkbox.length) {
+							$checkbox = $('.left-column .filter-checkbox[data-url-key="' + filterKey + '"][value="' + filterValue + '"]');
+						}
+						if (!$checkbox.length) {
+							$checkbox = $('.left-column .filter-checkbox[data-filter-key="' + filterKey + '"][value="' + filterValue + '"]');
+						}
 						if ($checkbox.length) {
 							$checkbox.prop('checked', false);
 						}
@@ -523,8 +603,11 @@
 		const $resetButton = $('#reset-filters');
         const $activeFiltersContainer = $('#active-filters-container');
 		const hasActiveFilters = Object.keys(filters).some(key =>
-			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' &&
-			filters[key] && filters[key].length > 0
+			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' &&
+			filters[key] && filters[key].length > 0 &&
+			// Ekskluder kortkode-parametere fra aktive filtre
+			!(typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && 
+			  kurskalender_data.shortcode_params && kurskalender_data.shortcode_params[key])
 		);
 		hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
 		hasActiveFilters ? $activeFiltersContainer.addClass('active') : $activeFiltersContainer.removeClass('active');

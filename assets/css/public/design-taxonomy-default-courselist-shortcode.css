@@ -1,0 +1,5 @@
+#ka .reset-filters-btn,
+#ka .reset-filters-btn:hover {
+background: transparent;
+box-shadow: none;
+}

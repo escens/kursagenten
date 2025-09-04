@@ -4,6 +4,14 @@
  * 
  * Displays a list of courses with filters and pagination
  * 
+ * Shortcode usage examples:
+ * [kursliste] - Shows all courses
+ * [kursliste kategori="dans"] - Shows only dance courses
+ * [kursliste sted="bærum"] - Shows only courses in Bærum
+ * [kursliste kategori="dans" sted="oslo"] - Shows dance courses in Oslo
+ * [kursliste språk="norsk"] - Shows only Norwegian courses
+ * [kursliste måned="01"] - Shows only January courses
+ * 
  * @package Kursagenten
  * @subpackage Shortcodes
  */
@@ -14,7 +22,63 @@ if (!defined('ABSPATH')) exit;
  * Register the [kursliste] shortcode
  */
 function kursagenten_course_list_shortcode($atts) {
-    // Sjekk logging-status
+    // Hvis $atts er en string, prøv å parse den manuelt
+    if (is_string($atts)) {
+        $raw_atts = $atts;
+        $atts = array();
+        
+        // Parse attributter manuelt
+        if (preg_match_all('/(\w+)=([^"\s]+|"[^"]*")/', $raw_atts, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $key = $match[1];
+                $value = trim($match[2], '"');
+                $atts[$key] = $value;
+            }
+        }
+    }
+    
+    // Hvis $atts[0] inneholder attributter, parse dem manuelt
+    if (isset($atts[0]) && is_string($atts[0])) {
+        $raw_attrs = $atts[0];
+        $parsed_atts = array();
+        
+        // Parse attributter fra format som "språk=norsk måned=9" eller "språk=\"norsk\" måned=\"9\""
+        if (preg_match_all('/([a-zA-ZæøåÆØÅ]+)=["\']?([^"\'\s]+)["\']?/', $raw_attrs, $matches, PREG_SET_ORDER)) {
+            foreach ($matches as $match) {
+                $key = $match[1];
+                $value = $match[2];
+                $parsed_atts[$key] = $value;
+            }
+        }
+        
+        // Merge med eksisterende $atts
+        $atts = array_merge($atts, $parsed_atts);
+    }
+    
+    // Hvis $atts har flere elementer, parse dem også
+    foreach ($atts as $index => $value) {
+        if ($index > 0 && is_string($value)) {
+            // Parse attributter fra format som "måned=9"
+            if (preg_match_all('/([a-zA-ZæøåÆØÅ]+)=["\']?([^"\'\s]+)["\']?/', $value, $matches, PREG_SET_ORDER)) {
+                foreach ($matches as $match) {
+                    $key = $match[1];
+                    $value = $match[2];
+                    $atts[$key] = $value;
+                }
+            }
+        }
+    }
+    
+    // Parse shortcode attributes
+    $atts = shortcode_atts(array(
+        'kategori' => '',
+        'sted' => '',
+        'lokasjon' => '',
+        'instruktør' => '',
+        'språk' => '',
+        'måned' => '',
+        'force_standard_view' => 'false'
+    ), $atts, 'kursliste');
 
     // Load required dependencies
     if (!function_exists('get_course_languages')) {
@@ -23,6 +87,59 @@ function kursagenten_course_list_shortcode($atts) {
 
     // Include AJAX filter functionality
     require_once dirname(dirname(__FILE__)) . '/templates/includes/course-ajax-filter.php';
+
+    // Set $_REQUEST parameters based on shortcode attributes
+    // This allows the existing filter system to work with shortcode parameters
+    $has_shortcode_filters = false;
+    $shortcode_params = [];
+    $active_shortcode_filters = []; // Track which filters are active in shortcode
+    
+    if (!empty($atts['kategori'])) {
+        $_REQUEST['k'] = $atts['kategori'];
+        $_GET['k'] = $atts['kategori'];
+        $shortcode_params['k'] = $atts['kategori'];
+        $active_shortcode_filters[] = 'categories';
+        $has_shortcode_filters = true;
+    }
+    if (!empty($atts['sted'])) {
+        $_REQUEST['sted'] = $atts['sted'];
+        $_GET['sted'] = $atts['sted'];
+        $shortcode_params['sted'] = $atts['sted'];
+        $active_shortcode_filters[] = 'locations';
+        $has_shortcode_filters = true;
+    }
+    if (!empty($atts['lokasjon'])) {
+        $_REQUEST['sted'] = $atts['lokasjon'];
+        $_GET['sted'] = $atts['lokasjon'];
+        $shortcode_params['sted'] = $atts['lokasjon'];
+        $active_shortcode_filters[] = 'locations';
+        $has_shortcode_filters = true;
+    }
+    if (!empty($atts['instruktør'])) {
+        $_REQUEST['i'] = $atts['instruktør'];
+        $_GET['i'] = $atts['instruktør'];
+        $shortcode_params['i'] = $atts['instruktør'];
+        $active_shortcode_filters[] = 'instructors';
+        $has_shortcode_filters = true;
+    }
+    if (!empty($atts['språk'])) {
+        // Konverter til lowercase for å matche get_course_languages() format
+        $language_value = strtolower($atts['språk']);
+        $_REQUEST['sprak'] = $language_value;
+        $_GET['sprak'] = $language_value;
+        $shortcode_params['sprak'] = $language_value;
+        $active_shortcode_filters[] = 'language';
+        $has_shortcode_filters = true;
+    }
+    if (!empty($atts['måned'])) {
+        // Konverter til padded format for å matche get_course_months() format
+        $month_value = str_pad($atts['måned'], 2, '0', STR_PAD_LEFT);
+        $_REQUEST['mnd'] = $month_value;
+        $_GET['mnd'] = $month_value;
+        $shortcode_params['mnd'] = $month_value;
+        $active_shortcode_filters[] = 'months';
+        $has_shortcode_filters = true;
+    }
 
     // Hent valgt listetype fra innstillinger
     $list_type = get_option('kursagenten_archive_list_type', 'standard');
@@ -39,8 +156,14 @@ function kursagenten_course_list_shortcode($atts) {
     wp_enqueue_style('kursagenten-datepicker-style', KURSAG_PLUGIN_URL . '/assets/css/public/datepicker-caleran.min.css', array(), KURSAG_VERSION);
 
     // Enqueue required scripts
-    wp_enqueue_script('kursagenten-iframe-resizer', 'https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js', array(), null, true);
-    wp_enqueue_script('kursagenten-slidein-panel', KURSAG_PLUGIN_URL . '/assets/js/public/course-slidein-panel.js', array('jquery', 'kursagenten-iframe-resizer'), KURSAG_VERSION, true);
+    //wp_enqueue_script('kursagenten-iframe-resizer', 'https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js', array(), null, true);
+    //wp_enqueue_script('kursagenten-slidein-panel', KURSAG_PLUGIN_URL . '/assets/js/public/course-slidein-panel.js', array('jquery', 'kursagenten-iframe-resizer'), KURSAG_VERSION, true);
+    if ( ! wp_script_is('kursagenten-iframe-resizer', 'enqueued') ) {
+        wp_enqueue_script('kursagenten-iframe-resizer', 'https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js', [], null, true);
+    }
+    if ( ! wp_script_is('kursagenten-slidein-panel', 'enqueued') ) {
+        wp_enqueue_script('kursagenten-slidein-panel', KURSAG_PLUGIN_URL . '/assets/js/public/course-slidein-panel.js', ['jquery', 'kursagenten-iframe-resizer'], KURSAG_VERSION, true);
+    }
     wp_enqueue_script('kursagenten-ajax-filter', 
         KURSAG_PLUGIN_URL . '/assets/js/public/course-ajax-filter.js', 
         array(
@@ -62,7 +185,10 @@ function kursagenten_course_list_shortcode($atts) {
         'kurskalender_data',
         array(
             'ajax_url' => admin_url('admin-ajax.php'),
-            'filter_nonce' => wp_create_nonce('filter_nonce')
+            'filter_nonce' => wp_create_nonce('filter_nonce'),
+            'shortcode_params' => $shortcode_params,
+            'has_shortcode_filters' => $has_shortcode_filters,
+            'active_shortcode_filters' => $active_shortcode_filters
         )
     );
 
@@ -94,6 +220,13 @@ function kursagenten_course_list_shortcode($atts) {
     $is_search_only = is_array($top_filters) && count($top_filters) === 1 && in_array('search', $top_filters);
     $search_class = $is_search_only ? 'wide-search' : '';
 
+    // Function to check if a filter should be hidden due to shortcode parameters
+    if (!function_exists('should_hide_filter')) {
+        function should_hide_filter($filter_key, $active_shortcode_filters) {
+            return in_array($filter_key, $active_shortcode_filters);
+        }
+    }
+
     $taxonomy_data = [
         'categories' => [
             'taxonomy' => 'coursecategory',
@@ -103,7 +236,21 @@ function kursagenten_course_list_shortcode($atts) {
         ],
         'locations' => [
             'taxonomy' => 'course_location',
-            'terms' => get_filtered_terms('course_location'),
+            'terms' => get_terms([
+                'taxonomy' => 'course_location',
+                'hide_empty' => true,
+                'meta_query' => [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_course_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_course_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ]),
             'url_key' => 'sted',
             'filter_key' => 'locations',
         ],
@@ -176,6 +323,10 @@ function kursagenten_course_list_shortcode($atts) {
                                 <!-- Dynamic Filter Generation -->
                                 <?php foreach ($top_filters as $filter) : ?>
                                     <?php 
+                                    // Skip filters that are active in shortcode
+                                    if (should_hide_filter($filter, $active_shortcode_filters)) {
+                                        continue;
+                                    }
                                     ?>
                                     <div class="filter-item <?php echo esc_attr($filter_types[$filter] ?? ''); ?> <?php echo esc_attr($search_class); ?>">
                                         <?php 
@@ -216,19 +367,26 @@ function kursagenten_course_list_shortcode($atts) {
                                                 <div class="filter-chip-wrapper">
                                                     <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                         <?php
-                                                        // For locations, bruk term-navn (med diakritikk) som filterverdi, ikke slug
-                                                        $chip_value = '';
-                                                        if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
-                                                            $chip_value = $term->name;
+                                                        // Spesiell håndtering for måned-filter
+                                                        if ($filter === 'months') {
+                                                            $chip_value = $term['value'];
+                                                            $chip_name = $term['name'];
                                                         } else {
-                                                            $chip_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                            // For locations, bruk term-navn (med diakritikk) som filterverdi, ikke slug
+                                                            if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                                                $chip_value = $term->name;
+                                                                $chip_name = $term->name;
+                                                            } else {
+                                                                $chip_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                $chip_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                            }
                                                         }
                                                         ?>
                                                         <button class="chip filter-chip"
                                                             data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                             data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
                                                             data-filter="<?php echo esc_attr($chip_value); ?>">
-                                                            <?php echo esc_html(is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '')); ?>
+                                                            <?php echo esc_html($chip_name); ?>
                                                         </button>
                                                     <?php endforeach; ?>
                                                 </div>
@@ -300,13 +458,19 @@ function kursagenten_course_list_shortcode($atts) {
                                                             } else {
                                                                 // For andre filtre, vis en enkel liste
                                                                 foreach ($taxonomy_data[$filter]['terms'] as $term) {
-                                                                    // For locations-listen, bruk term-navn (med æ/ø/å) som URL-verdi
-                                                                    if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
-                                                                        $term_value = $term->name;
-                                                                        $term_name = $term->name;
+                                                                    // Spesiell håndtering for måned-filter
+                                                                    if ($filter === 'months') {
+                                                                        $term_value = $term['value'];
+                                                                        $term_name = $term['name'];
                                                                     } else {
-                                                                        $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
-                                                                        $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                        // For locations-listen, bruk term-navn (med æ/ø/å) som URL-verdi
+                                                                        if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                                                            $term_value = $term->name;
+                                                                            $term_name = $term->name;
+                                                                        } else {
+                                                                            $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                            $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                        }
                                                                     }
                                                                     $is_checked = in_array($term_value, $active_filters) ? 'checked' : '';
                                                                     ?>
@@ -339,6 +503,31 @@ function kursagenten_course_list_shortcode($atts) {
                         </div>
                     </div>
 
+                    <?php if ($has_shortcode_filters) : ?>
+                    <div class="ka-content-container inner-container shortcode-filters-info">
+                        <div class="shortcode-active-filters">
+                            <h4>Aktive filtre:</h4>
+                            <ul>
+                                <?php if (!empty($atts['kategori'])) : ?>
+                                    <li><strong>Kategori:</strong> <?php echo esc_html($atts['kategori']); ?></li>
+                                <?php endif; ?>
+                                <?php if (!empty($atts['sted'])) : ?>
+                                    <li><strong>Sted:</strong> <?php echo esc_html($atts['sted']); ?></li>
+                                <?php endif; ?>
+                                <?php if (!empty($atts['instruktør'])) : ?>
+                                    <li><strong>Instruktør:</strong> <?php echo esc_html($atts['instruktør']); ?></li>
+                                <?php endif; ?>
+                                <?php if (!empty($atts['språk'])) : ?>
+                                    <li><strong>Språk:</strong> <?php echo esc_html($atts['språk']); ?></li>
+                                <?php endif; ?>
+                                <?php if (!empty($atts['måned'])) : ?>
+                                    <li><strong>Måned:</strong> <?php echo esc_html($atts['måned']); ?></li>
+                                <?php endif; ?>
+                            </ul>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <!-- Main Content Container with Columns -->
                     <div class="ka-content-container inner-container main-section">
                         <div class="course-grid <?php echo esc_attr($left_column_class); ?>">
@@ -347,6 +536,12 @@ function kursagenten_course_list_shortcode($atts) {
                                 <?php if ($has_left_filters) : ?>
                                     <div class="filter-container left-filter-section">
                                         <?php foreach ($left_filters as $filter) : ?>
+                                            <?php 
+                                            // Skip filters that are active in shortcode
+                                            if (should_hide_filter($filter, $active_shortcode_filters)) {
+                                                continue;
+                                            }
+                                            ?>
 
                                             <div class="filter-item">
                                                 <?php
@@ -389,11 +584,27 @@ function kursagenten_course_list_shortcode($atts) {
                                                     if ($filter_types[$filter] === 'chips') : ?>
                                                         <div class="filter-chip-wrapper">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
+                                                                <?php
+                                                                // Spesiell håndtering for måned-filter
+                                                                if ($filter === 'months') {
+                                                                    $chip_value = $term['value'];
+                                                                    $chip_name = $term['name'];
+                                                                } else {
+                                                                    // For locations, bruk term-navn (med diakritikk) som filterverdi, ikke slug
+                                                                    if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                                                        $chip_value = $term->name;
+                                                                        $chip_name = $term->name;
+                                                                    } else {
+                                                                        $chip_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                                                        $chip_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                                                    }
+                                                                }
+                                                                ?>
                                                                 <button class="chip filter-chip"
                                                                     data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                     data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                                                    data-filter="<?php echo esc_attr(is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '')); ?>">
-                                                                    <?php echo esc_html(is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '')); ?>
+                                                                    data-filter="<?php echo esc_attr($chip_value); ?>">
+                                                                    <?php echo esc_html($chip_name); ?>
                                                                 </button>
                                                             <?php endforeach; ?>
                                                         </div>
@@ -496,7 +707,8 @@ function kursagenten_course_list_shortcode($atts) {
                                         <?php
                                         $args = [
                                             'course_count' => $query->found_posts,
-                                            'query' => $query
+                                            'query' => $query,
+                                            'force_standard_view' => $atts['force_standard_view'] === 'true'
                                         ];
 
                                         
@@ -511,13 +723,37 @@ function kursagenten_course_list_shortcode($atts) {
                                         <div class="pagination">
                                         <?php
                                         // Hent gjeldende side URL som base for paginering
-                                        $current_url = get_permalink();
+                                        $current_url = '';
+                                        if (is_tax()) {
+                                            // På taksonomisider, bruk term link
+                                            $term = get_queried_object();
+                                            if ($term instanceof WP_Term) {
+                                                $current_url = get_term_link($term);
+                                            }
+                                        }
+                                        if (!$current_url) {
+                                            $current_url = get_permalink();
+                                        }
                                         if (!$current_url) {
                                             $current_url = home_url('/');
                                         }
 
                                         // Fjern eventuelle eksisterende side-parametre fra URL-en
                                         $current_url = remove_query_arg('side', $current_url);
+
+                                        // Legg til kortkode-parametre i add_args hvis de finnes
+                                        $add_args = array_map(function ($item) {
+                                            return is_array($item) ? join(',', $item) : $item;
+                                        }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]));
+                                        
+                                        // Legg til kortkode-parametre hvis de ikke allerede er i $_REQUEST
+                                        if ($has_shortcode_filters) {
+                                            foreach ($shortcode_params as $key => $value) {
+                                                if (!isset($add_args[$key])) {
+                                                    $add_args[$key] = $value;
+                                                }
+                                            }
+                                        }
 
                                         echo paginate_links([
                                             'base' => $current_url . '%_%',
@@ -526,9 +762,7 @@ function kursagenten_course_list_shortcode($atts) {
                                             'total' => $query->max_num_pages,
                                             'prev_text' => '<i class="ka-icon icon-chevron-left"></i> <span>Forrige</span>',
                                             'next_text' => '<span>Neste</span> <i class="ka-icon icon-chevron-right"></i>',
-                                            'add_args' => array_map(function ($item) {
-                                                return is_array($item) ? join(',', $item) : $item;
-                                            }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+                                            'add_args' => $add_args
                                         ]);
                                         ?>
                                         </div>
@@ -550,11 +784,15 @@ function kursagenten_course_list_shortcode($atts) {
             </article>
         </div>
     </main>
+    <?php if ( ! is_tax(array('coursecategory','course_location','instructors')) 
+        && ! is_post_type_archive('course') 
+        && ! is_singular('course') ) : ?>
     <div id="slidein-overlay"></div>
     <div id="slidein-panel">
         <button class="close-btn" aria-label="Close">&times;</button>
         <iframe id="kursagenten-iframe" src=""></iframe>
     </div>
+    <?php endif; ?>
 </div>
 
     <!-- Filter Settings for JavaScript -->
@@ -583,8 +821,18 @@ function kursagenten_course_list_shortcode($atts) {
             const currentUrl = new URL(window.location.href);
             currentUrl.searchParams.set('per_page', perPage);
             
+            // Fjern side-parameter når per_page endres (for å unngå ugyldige sider)
+            currentUrl.searchParams.delete('side');
+            
             // Fjern per_page fra aktive filtre før vi oppdaterer URL
             $('#active-filters .filter-tag[data-param="per_page"]').remove();
+            
+            // Legg til kortkode-parametre hvis de finnes
+            if (kurskalender_data.has_shortcode_filters && kurskalender_data.shortcode_params) {
+                Object.keys(kurskalender_data.shortcode_params).forEach(key => {
+                    currentUrl.searchParams.set(key, kurskalender_data.shortcode_params[key]);
+                });
+            }
             
             window.location.href = currentUrl.toString();
         });
@@ -1169,6 +1417,41 @@ function kursagenten_course_list_shortcode($atts) {
         }
         .kag .mobile-filter-overlay .filter-list-item .checkbox-label {
             margin-top: -4px;
+        }
+
+        /* Styling for shortcode filter information */
+        .shortcode-filters-info {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .shortcode-active-filters h4 {
+            margin: 0 0 15px 0;
+            color: #495057;
+            font-size: 18px;
+        }
+        
+        .shortcode-active-filters ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .shortcode-active-filters li {
+            display: inline-block;
+            background-color: #007cba;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            margin: 0 10px 10px 0;
+            font-size: 14px;
+        }
+        
+        .shortcode-active-filters li strong {
+            font-weight: 600;
         }
 
         /*.filter-list-item {
