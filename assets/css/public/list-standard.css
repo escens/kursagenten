@@ -67,7 +67,7 @@
 }
 
 #ka .courselist-main .text-area {
-    padding: 1.5em 1.5em 1.6em 1.5em;
+    padding: 1.5em 1.5em .1em 1.5em;
     display: flex;
     flex-direction: column;
     flex: 1;

@@ -536,12 +536,6 @@ require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
             KURSAG_VERSION
         );
 
-        wp_enqueue_script(
-            'kursagenten-accordion_script',
-            KURSAG_PLUGIN_URL . '/assets/js/public/course-accordion.js',
-            array(),
-            KURSAG_VERSION
-        );
 
         wp_enqueue_script(
             'kursagenten-expand-content',

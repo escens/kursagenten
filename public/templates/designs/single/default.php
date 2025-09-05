@@ -341,6 +341,11 @@
                                                         <span style="font-weight: bold;">Sted:</span>
                                                         <span><?php echo esc_html($coursedate['location']) ?></span><br>
                                                     <?php endif; ?>
+
+                                                    <?php if (!empty($coursedate['course_location_room'])): ?>
+                                                        <span style="font-weight: bold;">Kurslokale:</span>
+                                                        <span><?php echo esc_html($coursedate['course_location_room']) ?></span><br>
+                                                    <?php endif; ?>
                                                     
                                                     <?php if (!empty($coursedate['duration'])): ?>
                                                         <span style="font-weight: bold;">Varighet:</span>
@@ -398,6 +403,9 @@
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data['price'])) : ?>
                             <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
+                        <?php endif; ?>
+                        <?php if (!empty($selected_coursedate_data['course_location_room'])) : ?>
+                            <div><i class="ka-icon icon-bag"></i>Kurslokale: <?php echo esc_html($selected_coursedate_data['course_location_room']) ;?></div>
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
                             <div><i class="ka-icon icon-chevron-right"></i>

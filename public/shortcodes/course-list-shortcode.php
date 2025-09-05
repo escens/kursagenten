@@ -176,7 +176,6 @@ function kursagenten_course_list_shortcode($atts) {
     );
     wp_enqueue_script('kursagenten-datepicker-moment', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/moment.min.js', array(), KURSAG_VERSION);
     wp_enqueue_script('kursagenten-datepicker-script', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/caleran.min.js', ['kursagenten-datepicker-moment'], KURSAG_VERSION);
-    wp_enqueue_script('kursagenten-accordion_script', KURSAG_PLUGIN_URL . '/assets/js/public/course-accordion.js', array(), KURSAG_VERSION);
     wp_enqueue_script('kursagenten-expand-content', KURSAG_PLUGIN_URL . '/assets/js/public/course-expand-content.js', array(), KURSAG_VERSION);
 
     // Localize script with necessary data
@@ -1770,11 +1769,6 @@ function kursagenten_course_list_shortcode($atts) {
 
         .filter-empty .checkbox-label {
             color: #999;
-        }
-
-        /* Hover-effekt for tilgjengelige filtervalg */
-        .filter-available:hover {
-            opacity: 0.8;
         }
 
         /* Tooltip for tomme filtervalg */

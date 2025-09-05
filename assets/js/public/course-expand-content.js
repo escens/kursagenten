@@ -129,7 +129,7 @@ function toggleAccordion(target) {
         icon.textContent = "+";
     } else {
         // Åpne denne seksjonen
-        content.style.height = content.scrollHeight + "px";
+        content.style.height = content.scrollHeight + 10 + "px";
         content.classList.add("open");
         accordionItem.classList.add("active");
         icon.textContent = "×";
@@ -139,5 +139,22 @@ function toggleAccordion(target) {
     toggleAccordionHeight(target);
 }
 
+// Funksjoner for å håndtere clickopen elementer
+function initAccordion() {
+    const elements = document.querySelectorAll(".clickopen");
+    
+    elements.forEach((element) => {
+        element.removeEventListener("click", handleAccordionClick);
+        element.addEventListener("click", handleAccordionClick);
+    });
+}
+
+function handleAccordionClick(event) {
+    toggleAccordion(event.target);
+}
+
 // Kjør når DOM er lastet
-document.addEventListener('DOMContentLoaded', initExpandableContent);
+document.addEventListener('DOMContentLoaded', function() {
+    initExpandableContent();
+    initAccordion();
+});

@@ -676,8 +676,7 @@ z-index: 10000;
   font-size: var(--ka-font-s);
   }
 #ka .courselist-content.open {
-  padding: .5em 1em 3em 1em;
-  /* margin-bottom: 1.5em; */
+  padding: .5em 1em .5em 1em;
   background: rgba(255, 255, 255, 0.568);
   border-top: 1px dashed #eee;
   }

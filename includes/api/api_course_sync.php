@@ -437,14 +437,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (!empty($schedule['coursetime'])) {          $meta_input['course_time'] = format_coursetime($schedule['coursetime']);}
         if (!empty($schedule['coursetimeType'])) {      $meta_input['course_time_type'] = $schedule['coursetimeType'];}
         
-        // Add course_days based on coursetime format and firstCourseDate
-        if (!empty($schedule['coursetime']) && !empty($schedule['firstCourseDate'])) {
-            $course_days = get_course_days_from_coursetime($schedule['coursetime'], $schedule['firstCourseDate']);
-            if (!empty($course_days)) {
-                $meta_input['course_days'] = $course_days;
-            }
-        }
-        if (!empty($schedule['startTime'])) {           $meta_input['course_start_time'] = $schedule['startTime'];}
+                if (!empty($schedule['startTime'])) {           $meta_input['course_start_time'] = $schedule['startTime'];}
         if (!empty($schedule['endTime'])) {             $meta_input['course_end_time'] = $schedule['endTime'];}
         if (!empty($schedule['price'])) {               $meta_input['course_price'] = (int) $schedule['price'];}
         if (!empty($schedule['textBeforeAmount'])) {    $meta_input['course_text_before_price'] = sanitize_text_field($schedule['textBeforeAmount']);}
@@ -452,7 +445,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (!empty($schedule['courseCode'])) {          $meta_input['course_code'] = $schedule['courseCode'];}
         if (!empty($schedule['formButtonText'])) {      $meta_input['course_button_text'] = $schedule['formButtonText'];}
         if (!empty($schedule['language'])) {            $meta_input['course_language'] = $schedule['language'];}
-        if (!empty($schedule['locationRooms']['name'])) {$meta_input['course_location_room'] = $schedule['locationRooms']['name'];}
+        
         if (!empty($schedule['maxParticipants'])) {     $meta_input['course_maxParticipants'] = $schedule['maxParticipants'];}
         if (isset($schedule['showRegistrationForm'])) { $meta_input['course_showRegistrationForm'] = $schedule['showRegistrationForm'];}
         if (isset($schedule['markedAsFull'])) {         $meta_input['course_markedAsFull'] = $schedule['markedAsFull'];}
@@ -465,6 +458,26 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (!empty($location['address']['streetAddressNumber'])) {  $meta_input['course_address_street_number'] = $location['address']['streetAddressNumber'];}
         if (!empty($location['address']['zipCode'])) {              $meta_input['course_address_zipcode'] = $location['address']['zipCode'];}
         if (!empty($location['address']['place'])) {                $meta_input['course_address_place'] = $location['address']['place'];}
+
+        if (!empty($schedule['locationRooms']) && is_array($schedule['locationRooms'])) {
+            $room_names = array();
+            foreach ($schedule['locationRooms'] as $room) {
+                if (!empty($room['name'])) {
+                    $room_names[] = $room['name'];
+                }
+            }
+            if (!empty($room_names)) {
+                $meta_input['course_location_room'] = implode(', ', $room_names);
+            }
+        }
+        // Add course_days based on coursetime format and firstCourseDate
+        if (!empty($schedule['coursetime']) && !empty($schedule['firstCourseDate'])) {
+            $course_days = get_course_days_from_coursetime($schedule['coursetime'], $schedule['firstCourseDate']);
+            if (!empty($course_days)) {
+                $meta_input['course_days'] = $course_days;
+            }
+        }
+        //****/
 
         // Create or update course date
         if ($coursedate_id) {
