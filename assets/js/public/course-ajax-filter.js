@@ -304,14 +304,14 @@
 						// Sjekk først etter topp-filter-seksjonen
 						const $topFilterSection = $('.top-filter-section');
 						if ($topFilterSection.length) {
-							scrollTarget = $topFilterSection.offset().top - 20;
+							scrollTarget = $topFilterSection.offset().top - 100;
 						} else {
 							// Fallback til aktive filtre hvis de er synlige
 							const $activeFilters = $('#active-filters-container');
 							if ($activeFilters.length && $activeFilters.is(':visible')) {
-								scrollTarget = $activeFilters.offset().top - 20;
+								scrollTarget = $activeFilters.offset().top - 100;
 							} else {
-								// Siste fallback til filter-results med mindre offset
+								// Siste fallback til filter-results med offset for sticky meny
 								scrollTarget = $filterResults.offset().top - 100;
 							}
 						}

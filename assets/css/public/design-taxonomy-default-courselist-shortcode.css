@@ -4,6 +4,7 @@ background: transparent;
 box-shadow: none;
 }
 
-.filter-empty {
-    display: none!important;
+.filter-empty,
+.filter-category:has(.filter-empty) {
+    display: none;
 }
