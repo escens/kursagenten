@@ -293,12 +293,31 @@
 					initAccordion();
 					initSlideInPanel();
 
-					// Scroll til toppen av resultatene med større offset
+					// Scroll til toppen av resultatene med bedre offset
 					const $filterResults = $('#filter-results');
 					if ($filterResults.length) {
 						console.log('Scroller til filter-results');
+						
+						// Finn den beste scroll-posisjonen
+						let scrollTarget;
+						
+						// Sjekk først etter topp-filter-seksjonen
+						const $topFilterSection = $('.top-filter-section');
+						if ($topFilterSection.length) {
+							scrollTarget = $topFilterSection.offset().top - 20;
+						} else {
+							// Fallback til aktive filtre hvis de er synlige
+							const $activeFilters = $('#active-filters-container');
+							if ($activeFilters.length && $activeFilters.is(':visible')) {
+								scrollTarget = $activeFilters.offset().top - 20;
+							} else {
+								// Siste fallback til filter-results med mindre offset
+								scrollTarget = $filterResults.offset().top - 100;
+							}
+						}
+						
 						$('html, body').animate({
-							scrollTop: $filterResults.offset().top - 170
+							scrollTop: scrollTarget
 						}, 500);
 					}
 
