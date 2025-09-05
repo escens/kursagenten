@@ -3,3 +3,7 @@
 background: transparent;
 box-shadow: none;
 }
+
+.filter-empty {
+    display: none!important;
+}

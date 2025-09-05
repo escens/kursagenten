@@ -441,3 +441,37 @@ function ka_load_mobile_filters() {
         wp_send_json_error(['message' => 'En feil oppstod: ' . $e->getMessage()]);
     }
 }
+
+// Legg til AJAX-handler for å hente oppdaterte filter counts
+add_action('wp_ajax_get_filter_counts', 'get_filter_counts_handler');
+add_action('wp_ajax_nopriv_get_filter_counts', 'get_filter_counts_handler');
+
+function get_filter_counts_handler() {
+    // Verifiser nonce
+    if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'filter_nonce')) {
+        wp_send_json_error(['message' => 'Sikkerhetssjekk feilet']);
+    }
+
+    try {
+        // Hent aktive filtre fra POST
+        $active_filters = [];
+        $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
+        foreach ($filter_params as $param) {
+            if (isset($_POST[$param])) {
+                $active_filters[$param] = is_array($_POST[$param]) ? $_POST[$param] : explode(',', $_POST[$param]);
+            }
+        }
+
+        // Hent counts for alle filtertyper
+        $counts = [];
+        $filter_types = ['categories', 'locations', 'instructors', 'language', 'months'];
+        
+        foreach ($filter_types as $filter_type) {
+            $counts[$filter_type] = get_filter_value_counts($filter_type, $active_filters);
+        }
+
+        wp_send_json_success(['counts' => $counts]);
+    } catch (Exception $e) {
+        wp_send_json_error(['message' => 'En feil oppstod under henting av filter counts']);
+    }
+}

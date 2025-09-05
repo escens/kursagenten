@@ -227,12 +227,22 @@ function kursagenten_course_list_shortcode($atts) {
         }
     }
 
+    // Hent aktive filtre fra URL for å beregne counts
+    $active_filters = [];
+    $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
+    foreach ($filter_params as $param) {
+        if (isset($_GET[$param])) {
+            $active_filters[$param] = explode(',', $_GET[$param]);
+        }
+    }
+
     $taxonomy_data = [
         'categories' => [
             'taxonomy' => 'coursecategory',
             'terms' => get_filtered_terms('coursecategory'),
             'url_key' => 'k',
             'filter_key' => 'categories',
+            'counts' => get_filter_value_counts('categories', $active_filters),
         ],
         'locations' => [
             'taxonomy' => 'course_location',
@@ -253,26 +263,43 @@ function kursagenten_course_list_shortcode($atts) {
             ]),
             'url_key' => 'sted',
             'filter_key' => 'locations',
+            'counts' => get_filter_value_counts('locations', $active_filters),
         ],
         'instructors' => [
             'taxonomy' => 'instructors',
             'terms' => get_filtered_terms('instructors'),
             'url_key' => 'i',
             'filter_key' => 'instructors',
+            'counts' => get_filter_value_counts('instructors', $active_filters),
         ],
         'language' => [
             'taxonomy' => '',
             'terms' => get_filtered_languages(),
             'url_key' => 'sprak',
             'filter_key' => 'language',
+            'counts' => get_filter_value_counts('language', $active_filters),
         ],
         'months' => [
             'taxonomy' => '',
             'terms' => get_filtered_months(),
             'url_key' => 'mnd',
             'filter_key' => 'months',
+            'counts' => get_filter_value_counts('months', $active_filters),
         ]
     ];
+
+    // Skjul lokasjoner som ikke har noen kurs (count = 0) når ingen filtre er aktive
+    $has_active_filters = false;
+    foreach ($active_filters as $key => $vals) {
+        if (!empty($vals)) { $has_active_filters = true; break; }
+    }
+    if (!$has_active_filters && !empty($taxonomy_data['locations']['terms'])) {
+        $location_counts = $taxonomy_data['locations']['counts'] ?? [];
+        $taxonomy_data['locations']['terms'] = array_values(array_filter($taxonomy_data['locations']['terms'], function($term) use ($location_counts) {
+            $name = is_object($term) && isset($term->name) ? $term->name : '';
+            return isset($location_counts[$name]) && (int)$location_counts[$name] > 0;
+        }));
+    }
 
 
     // Prepare filter-information
@@ -442,8 +469,11 @@ function kursagenten_course_list_shortcode($atts) {
                                                                     $parent_class = isset($category->parent_class) ? $category->parent_class : '';
                                                                     $parent_id_attr = isset($category->parent_id) ? ' data-parent-id="' . esc_attr($category->parent_id) . '"' : '';
                                                                     
-                                                                  
-                                                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . '"' . $parent_id_attr . '>';
+                                                                    // Sjekk om denne kategorien har 0 kurs
+                                                                    $count = $taxonomy_data['categories']['counts'][$category->slug] ?? 0;
+                                                                    $empty_class = ($count === 0) ? ' filter-empty' : ' filter-available';
+                                                                    
+                                                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . $empty_class . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
                                                                     echo '<label class="filter-list-item checkbox">';
                                                                     echo '<input type="checkbox" 
                                                                         class="filter-checkbox"
@@ -473,8 +503,12 @@ function kursagenten_course_list_shortcode($atts) {
                                                                         }
                                                                     }
                                                                     $is_checked = in_array($term_value, $active_filters) ? 'checked' : '';
+                                                                    
+                                                                    // Sjekk om denne termen har 0 kurs
+                                                                    $count = $taxonomy_data[$filter]['counts'][$term_value] ?? 0;
+                                                                    $empty_class = ($count === 0) ? ' filter-empty' : ' filter-available';
                                                                     ?>
-                                                                    <label class="filter-list-item checkbox">
+                                                                    <label class="filter-list-item checkbox<?php echo $empty_class; ?>">
                                                                         <input type="checkbox" 
                                                                                class="filter-checkbox"
                                                                                value="<?php echo esc_attr($term_value); ?>"
@@ -613,7 +647,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                         if ($filter === 'categories') {
                                                         }
                                                         ?>
-                                                        <div id="filter-list-location" class="filter-list expand-content" data-size="130">
+                                                        <div id="filter-list-location" class="filter-list expand-content" data-size="500">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <?php 
                                                                 if ($filter === 'months') {
@@ -635,8 +669,12 @@ function kursagenten_course_list_shortcode($atts) {
                                                                     
                                                                 }
                                                                 $url_key = $taxonomy_data[$filter]['url_key'];
+                                                                
+                                                                // Sjekk om denne termen har 0 kurs
+                                                                $count = $taxonomy_data[$filter]['counts'][$term_value] ?? 0;
+                                                                $empty_class = ($count === 0) ? ' filter-empty' : ' filter-available';
                                                                 ?>
-                                                                <div class="filter-category<?php echo $parent_class ? ' ' . esc_attr($parent_class) : ''; ?>"<?php echo $parent_id_attr; ?>>
+                                                                <div class="filter-category<?php echo $parent_class ? ' ' . esc_attr($parent_class) : ''; ?><?php echo $empty_class; ?>" data-term-id="<?php echo is_object($term) ? esc_attr($term->term_id) : ''; ?>"<?php echo $parent_id_attr; ?>>
                                                                 <label class="filter-list-item checkbox">
                                                                     <input type="checkbox" class="filter-checkbox"
                                                                         value="<?php echo esc_attr($term_value); ?>"
@@ -1036,16 +1074,18 @@ function kursagenten_course_list_shortcode($atts) {
             }
         }
 
-        // Event listener for "Nullstill filter"
-        $('.mobile-filter-content .reset-filters-button').on('click', function() {
-            log('Reset klikket');
-            $('.mobile-filter-content .filter-checkbox').prop('checked', false);
-            if (mobileCaleranInstance) {
-                mobileCaleranInstance.clearInput();
-            }
-            $('.mobile-filter-content .filter-search').val('');
-            updateFilters();
-        });
+                 // Event listener for "Nullstill filter"
+         $('.mobile-filter-content .reset-filters-button').on('click', function() {
+             log('Reset klikket');
+             $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+             if (mobileCaleranInstance) {
+                 mobileCaleranInstance.clearInput();
+             }
+             $('.mobile-filter-content .filter-search').val('');
+             updateFilters();
+             // Oppdater filter counts etter nullstilling
+             setTimeout(updateFilterCounts, 500);
+         });
 
         // Funksjon for å hente aktive filtre fra URL
         function getActiveFiltersFromUrl() {
@@ -1245,12 +1285,95 @@ function kursagenten_course_list_shortcode($atts) {
 
         // Funksjon for å initialisere event listeners på mobilfiltre
         function initializeMobileFilterEvents() {
-            // Event listener for checkboxes
-            $('.mobile-filter-content .filter-checkbox').on('change', function() {
-                // Checkbox handling håndteres automatisk av browseren
-            });
+                    // Event listener for checkboxes
+        $('.mobile-filter-content .filter-checkbox').on('change', function() {
+            // Checkbox handling håndteres automatisk av browseren
+        });
 
-            // Sjekk om det finnes en dato i URL-en og vis nullstill-knappen hvis det gjør det
+        // Forhindre klikk på tomme filtervalg
+        $('.filter-empty .filter-checkbox').on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        // Forhindre klikk på tomme filtervalg i desktop-filtre også
+        $(document).on('click', '.filter-empty .filter-checkbox', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        });
+
+        // Oppdater filter counts når filtre endres
+        function updateFilterCounts() {
+            const currentFilters = getCurrentFiltersFromURL();
+            
+            $.ajax({
+                url: kurskalender_data.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'get_filter_counts',
+                    nonce: kurskalender_data.filter_nonce,
+                    ...currentFilters
+                },
+                success: function(response) {
+                    if (response.success && response.data.counts) {
+                        updateFilterCountsDisplay(response.data.counts);
+                    }
+                }
+            });
+        }
+
+        // Oppdater visning av filter counts - kun visuell indikator
+        function updateFilterCountsDisplay(counts) {
+            // Reset all states before applying new counts to avoid lingering classes
+            const $allLabels = $('.filter-list-item.checkbox');
+            const $allCheckboxes = $allLabels.find('.filter-checkbox');
+            $allLabels.removeClass('filter-empty filter-available');
+            $allCheckboxes.prop('disabled', false);
+            
+            // Oppdater kategorier
+            if (counts.categories) {
+                Object.keys(counts.categories).forEach(slug => {
+                    const count = counts.categories[slug];
+                    const $element = $(`.filter-checkbox[data-filter-key="categories"][value="${slug}"]`);
+                    if ($element.length) {
+                        const $label = $element.closest('label');
+                        
+                        if (count === 0) {
+                            $label.addClass('filter-empty');
+                            $element.prop('disabled', true);
+                        } else {
+                            $label.addClass('filter-available');
+                            $element.prop('disabled', false);
+                        }
+                    }
+                });
+            }
+
+            // Oppdater andre filtre på samme måte
+            ['locations', 'instructors', 'language', 'months'].forEach(filterType => {
+                if (counts[filterType]) {
+                    Object.keys(counts[filterType]).forEach(value => {
+                        const count = counts[filterType][value];
+                        const $element = $(`.filter-checkbox[data-filter-key="${filterType}"][value="${value}"]`);
+                        if ($element.length) {
+                            const $label = $element.closest('label');
+                            
+                            if (count === 0) {
+                                $label.addClass('filter-empty');
+                                $element.prop('disabled', true);
+                            } else {
+                                $label.addClass('filter-available');
+                                $element.prop('disabled', false);
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Sjekk om det finnes en dato i URL-en og vis nullstill-knappen hvis det gjør det
             const urlParams = new URLSearchParams(window.location.search);
             const dateParam = urlParams.get('dato');
             if (dateParam) {
@@ -1267,21 +1390,25 @@ function kursagenten_course_list_shortcode($atts) {
                 // Søk håndteres når man klikker "Vis resultater"
             });
 
-            // Event listener for "Vis resultater"
-            $('.mobile-filter-content .apply-filters-button').on('click', function() {
-                log('Vis resultater klikket');
-                updateFilters();
-                hideMobileFilters();
-            });
+                    // Event listener for "Vis resultater"
+        $('.mobile-filter-content .apply-filters-button').on('click', function() {
+            log('Vis resultater klikket');
+            updateFilters();
+            hideMobileFilters();
+            // Oppdater filter counts etter at filtre er endret
+            setTimeout(updateFilterCounts, 500);
+        });
 
-            // Event listener for "Nullstill filter"
-            $('.mobile-filter-content .reset-filters-button').on('click', function() {
-                log('Reset klikket');
-                $('.mobile-filter-content .filter-checkbox').prop('checked', false);
-                $('.mobile-filter-content .caleran').val('').trigger('change');
-                $('.mobile-filter-content .filter-search').val('');
-                updateFilters();
-            });
+                         // Event listener for "Nullstill filter"
+             $('.mobile-filter-content .reset-filters-button').on('click', function() {
+                 log('Reset klikket');
+                 $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+                 $('.mobile-filter-content .caleran').val('').trigger('change');
+                 $('.mobile-filter-content .filter-search').val('');
+                 updateFilters();
+                 // Oppdater filter counts etter nullstilling
+                 setTimeout(updateFilterCounts, 500);
+             });
 
             // Legg til event listener for nullstilling av dato
             document.querySelectorAll('.reset-date-filter').forEach(function(resetBtn) {
@@ -1408,16 +1535,135 @@ function kursagenten_course_list_shortcode($atts) {
         
         // Lytt på vindustørrelse-endringer
         $(window).on('resize', handleResize);
+
+        // Hierarkisk kategori: generer toggles og håndter expand/collapse
+        function initHierarchyToggles(context) {
+            const $ctx = context ? $(context) : $(document);
+            if ($ctx.data('kaHierarchyInit')) { return; }
+            // Legg til toggle-ikon på alle toppnoder (de som har barn)
+            const parents = new Set();
+            $ctx.find('.filter-category[data-parent-id]').each(function(){
+                const parentId = Number($(this).data('parent-id'));
+                if (parentId && parentId > 0) parents.add(parentId);
+            });
+            $ctx.find('.filter-category').each(function(){
+                const $item = $(this);
+                const termId = $item.data('term-id');
+                if (termId && parents.has(Number(termId))) {
+                    if (!$item.data('toggle-initialized')) {
+                        const label = $item.find('label.filter-list-item');
+                        const toggle = $('<span class="ka-toggle" aria-hidden="true"><i class="ka-icon icon-chevron-right"></i></span>');
+                        toggle.insertAfter(label);
+                        $item.addClass('toggle-parent');
+                        $item.data('toggle-initialized', true);
+                    }
+                }
+            });
+            // Grupper barn under en container pr forelder
+            parents.forEach(function(pid){
+                const $parent = $ctx.find('.filter-category').filter(function(){ return Number($(this).data('term-id')) === pid; }).first();
+                if ($parent.length && !$parent.data('children-wrapped')) {
+                    const $children = $ctx.find('.filter-category').filter(function(){ return Number($(this).data('parent-id')) === pid; }).detach();
+                    if ($children.length) {
+                        const $wrap = $('<div class="ka-children"></div>');
+                        $children.appendTo($wrap);
+                        $wrap.insertAfter($parent);
+                        $parent.data('children-wrapped', true);
+                    }
+                }
+            });
+            $ctx.data('kaHierarchyInit', true);
+        }
+
+        function bindHierarchyEvents() {
+            function toggleNode(iconTarget) {
+                const $iconWrap = $(iconTarget).closest('.ka-toggle');
+                const $parent = $iconWrap.closest('.filter-category');
+                const $children = $parent.next('.ka-children');
+                if (!$children.length) return;
+                const isOpen = $children.hasClass('open');
+                if (isOpen) {
+                    $children.removeClass('open').slideUp(150);
+                    $iconWrap.removeClass('expanded');
+                } else {
+                    $children.addClass('open').slideDown(150);
+                    $iconWrap.addClass('expanded');
+                }
+            }
+
+            // Fjern tidligere handlers
+            $(document).off('click.kaToggleLeft pointerdown.kaToggleTop');
+
+            // Venstre kolonne: bruk click
+            $(document).on('click.kaToggleLeft', '.ka-toggle, .ka-toggle *', function(e){
+                // Unngå å reagere inne i dropdown, den håndteres under
+                if ($(this).closest('.filter-dropdown-content').length) return;
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                toggleNode(this);
+            });
+
+            // Topp-filter (dropdown): bruk pointerdown for å slå dropdown-close race
+            $(document).on('pointerdown.kaToggleTop', '.filter-dropdown-content .ka-toggle, .filter-dropdown-content .ka-toggle *', function(e){
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                toggleNode(this);
+            });
+            // Når hovedkategori checkes: åpne barn. Når unchecked: behold åpne hvis noen barn er checket
+            $(document).on('change', '.filter-category.toggle-parent input.filter-checkbox', function(){
+                const $parent = $(this).closest('.filter-category');
+                const $children = $parent.next('.ka-children');
+                if (!$children.length) return;
+                if (this.checked) {
+                    if (!$children.hasClass('open')) {
+                        $children.addClass('open').slideDown(150);
+                        $parent.find('.ka-toggle').addClass('expanded');
+                    }
+                } else {
+                    const anyChecked = $children.find('input.filter-checkbox:checked').length > 0;
+                    if (!anyChecked) {
+                        $children.removeClass('open').slideUp(150);
+                        $parent.find('.ka-toggle').removeClass('expanded');
+                    }
+                }
+            });
+        }
+
+        // Init ved load
+        initHierarchyToggles();
+        bindHierarchyEvents();
+
+        // Sørg for at hierarki initieres også når dropdown åpnes i top-filteret
+        $(document).on('click', '.filter-dropdown-toggle', function() {
+            const $dropdown = $(this).closest('.filter-dropdown');
+            const $content = $dropdown.find('.filter-dropdown-content');
+            // init kun når content blir åpnet (forhindrer duplisering og treghet)
+            if (!$content.data('kaHierarchyInit')) {
+                initHierarchyToggles($content);
+            }
+        });
     });
    
     </script>
     <style>
-        .kag .mobile-filter-overlay .filter-list {
-            font-size: 17px;
-        }
-        .kag .mobile-filter-overlay .filter-list-item .checkbox-label {
-            margin-top: -4px;
-        }
+        /* Hierarkisk filter UI */
+        .filter-category { position: relative; display: flex; align-items: center; }
+        .filter-category.toggle-parent { display: flex; align-items: center; }
+        .filter-list-item { position: relative; padding-right: 0; z-index: 1; }
+                 .ka-toggle { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; cursor: pointer; color: #666; position: relative; z-index: 2; pointer-events: auto; margin-left: 10px; }
+         .ka-toggle i { transition: transform .2s ease; }
+         .ka-toggle i.ka-icon { background-color: #9e9e9e; }
+         .ka-toggle.expanded i { transform: rotate(90deg); }
+        .ka-children { display: none; margin-left: 8px; margin-bottom: 8px; border-left: 1px solid #75757517; padding: 3px 8px 0 8px; }
+        .ka-children.open { display: block; }
+        .filter-list .filter-category.child-of { opacity: 1; }
+        .kag .mobile-filter-overlay .filter-list { font-size: 17px; }
+        .kag .mobile-filter-overlay .filter-list-item .checkbox-label { margin-top: -4px; }
+        #ka .filter-dropdown-content .ka-toggle { margin-bottom: 5px;}
+
+      
 
         /* Styling for shortcode filter information */
         .shortcode-filters-info {
@@ -1494,6 +1740,65 @@ function kursagenten_course_list_shortcode($atts) {
         .filter-dropdown-content .filter-list-item.has-parent {
             font-size: 0.95em;
             color: #666;
+        }
+
+        /* Visuell indikator for filtervalg - ingen tellere */
+        .filter-available {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .filter-empty {
+            opacity: 0.4;
+            pointer-events: none;
+            position: relative;
+        }
+
+        .filter-empty .filter-checkbox {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .filter-empty .checkbox-label {
+            color: #999;
+        }
+
+        /* Visuell indikator med farger */
+        .filter-available .checkbox-label {
+            color: #333;
+        }
+
+        .filter-empty .checkbox-label {
+            color: #999;
+        }
+
+        /* Hover-effekt for tilgjengelige filtervalg */
+        .filter-available:hover {
+            opacity: 0.8;
+        }
+
+        /* Tooltip for tomme filtervalg */
+        .filter-empty::after {
+            content: "Ingen kurs tilgjengelige med valgte filtre";
+            position: absolute;
+            left: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            margin-left: 10px;
+        }
+
+        .filter-empty:hover::after {
+            opacity: 1;
         }
     </style>
     <?php

@@ -232,39 +232,11 @@ function get_course_dates_query($args = []) {
     if (!empty($locations)) {
         $location_query = ['relation' => 'OR'];
         foreach ($locations as $location) {
-            // Konverter bindestrek til mellomrom for søk, behold diakritikk
-            $location_search = str_replace('-', ' ', $location);
-            
-            // Håndter norske tegn riktig
-            $location_search_ascii = str_replace(
-                ['æ', 'ø', 'å', 'Æ', 'Ø', 'Å'],
-                ['ae', 'o', 'a', 'AE', 'O', 'A'],
-                $location_search
-            );
-
+            // Bruk kun taksonomi-baserte lokasjoner (ikke fritekst)
             $location_query[] = [
-                'relation' => 'OR',
-                [
-                    'key' => 'course_location',
-                    'value' => $location_search,
-                    'compare' => 'LIKE'
-                ],
-                [
-                    'key' => 'course_location_freetext',
-                    'value' => $location_search,
-                    'compare' => 'LIKE'
-                ],
-                // Fallback: diakritikk-fri matching for eldre/sanerede data
-                [
-                    'key' => 'course_location',
-                    'value' => $location_search_ascii,
-                    'compare' => 'LIKE'
-                ],
-                [
-                    'key' => 'course_location_freetext',
-                    'value' => $location_search_ascii,
-                    'compare' => 'LIKE'
-                ]
+                'key' => 'course_location',
+                'value' => $location,
+                'compare' => '='
             ];
         }
         $meta_query[] = $location_query;
@@ -379,12 +351,17 @@ function get_course_dates_query($args = []) {
     
     // Legg til kategori filter hvis valgt
     if (!empty($categories)) {
-        $tax_query[] = [
-            'taxonomy' => 'coursecategory',
-            'field' => 'slug',
-            'terms' => $categories,
-            'operator' => 'IN'
-        ];
+        // Bruk hierarkisk kategorifiltrering
+        $hierarchical_categories = get_hierarchical_category_filter($categories);
+        
+        if (!empty($hierarchical_categories)) {
+            $tax_query[] = [
+                'taxonomy' => 'coursecategory',
+                'field' => 'slug',
+                'terms' => $hierarchical_categories,
+                'operator' => 'IN'
+            ];
+        }
     }
     
     // Legg til instruktør filter
@@ -980,4 +957,316 @@ function get_top_level_categories_from_query($query) {
     });
     
     return $categories;
+}
+
+/**
+ * Håndter hierarkisk kategorifiltrering
+ * 
+ * Logikk:
+ * 1. Hvis bare forelder er valgt: vis alle kurs i forelder og alle barn
+ * 2. Hvis forelder + barn er valgt: vis kun kurs i de valgte barna
+ * 3. Hvis bare barn er valgt: vis kun kurs i de valgte barna
+ * 4. Hvis flere barn under samme forelder er valgt: vis kurs i alle valgte barn
+ * 
+ * @param array $selected_categories Array av valgte kategorier (slugs)
+ * @return array Array av kategorier som skal inkluderes i query
+ */
+function get_hierarchical_category_filter($selected_categories) {
+    if (empty($selected_categories)) {
+        return [];
+    }
+    
+    // Hent alle kategorier med hierarki-informasjon
+    $all_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => false,
+        'hierarchical' => true,
+        'orderby' => 'menu_order',
+        'order' => 'ASC'
+    ]);
+    
+    if (is_wp_error($all_categories) || empty($all_categories)) {
+        return $selected_categories;
+    }
+    
+    // Lag en mapping av slug til term_id og parent, samt term_id til slug
+    $category_map = [];
+    $term_id_to_slug = [];
+    foreach ($all_categories as $category) {
+        $category_map[$category->slug] = [
+            'term_id' => $category->term_id,
+            'parent' => $category->parent,
+            'slug' => $category->slug
+        ];
+        $term_id_to_slug[$category->term_id] = $category->slug;
+    }
+    
+    // Identifiser foreldre og barn
+    $selected_parents = [];
+    $selected_children = [];
+    $children_of_selected_parents = [];
+    $children_by_parent_slug = [];
+    
+    foreach ($selected_categories as $slug) {
+        if (!isset($category_map[$slug])) {
+            continue;
+        }
+        
+        $category_info = $category_map[$slug];
+        
+        if ($category_info['parent'] == 0) {
+            // Dette er en forelder
+            $selected_parents[] = $slug;
+            
+            // Finn alle barn til denne forelderen
+            $children = get_terms([
+                'taxonomy' => 'coursecategory',
+                'hide_empty' => false,
+                'parent' => $category_info['term_id']
+            ]);
+            
+            if (!is_wp_error($children)) {
+                foreach ($children as $child) {
+                    $children_of_selected_parents[] = $child->slug;
+                    $children_by_parent_slug[$slug][] = $child->slug;
+                }
+            }
+        } else {
+            // Dette er et barn
+            $selected_children[] = $slug;
+        }
+    }
+    
+    // Bestem hvilke kategorier som skal inkluderes
+    $categories_to_include = [];
+    
+    // Hjelpefunksjon: inkluder barn og deres eventuelle barnebarn
+    $include_child_with_descendants = function(string $child_slug) use (&$categories_to_include, $category_map) {
+        $categories_to_include[] = $child_slug;
+        if (isset($category_map[$child_slug])) {
+            $child_children = get_terms([
+                'taxonomy' => 'coursecategory',
+                'hide_empty' => false,
+                'parent' => $category_map[$child_slug]['term_id']
+            ]);
+            if (!is_wp_error($child_children)) {
+                foreach ($child_children as $grandchild) {
+                    $categories_to_include[] = $grandchild->slug;
+                }
+            }
+        }
+    };
+    
+    // Bygg opp mapping over valgte barn gruppert per forelder-term_id
+    $selected_children_by_parent_id = [];
+    foreach ($selected_children as $child_slug) {
+        if (isset($category_map[$child_slug])) {
+            $parent_id = $category_map[$child_slug]['parent'];
+            if ($parent_id) {
+                $selected_children_by_parent_id[$parent_id][] = $child_slug;
+            }
+        }
+    }
+
+    // Inkluder foreldre- og barnevalg i henhold til reglene
+    if (!empty($selected_parents)) {
+        foreach ($selected_parents as $parent_slug) {
+            $parent_id = $category_map[$parent_slug]['term_id'];
+            $children_selected_under_parent = isset($selected_children_by_parent_id[$parent_id]) ? $selected_children_by_parent_id[$parent_id] : [];
+
+            if (!empty($children_selected_under_parent)) {
+                // Forelder + minst ett barn av samme forelder valgt: ta KUN de valgte barna (og deres undernivå)
+                foreach ($children_selected_under_parent as $child_slug) {
+                    $include_child_with_descendants($child_slug);
+                }
+            } else {
+                // Forelder valgt uten noen valgte barn: ta forelder + alle dens barn
+                $categories_to_include[] = $parent_slug;
+                if (!empty($children_by_parent_slug[$parent_slug])) {
+                    foreach ($children_by_parent_slug[$parent_slug] as $child_slug) {
+                        $categories_to_include[] = $child_slug;
+                    }
+                }
+            }
+        }
+    }
+
+    // Inkluder valgte barn der forelder IKKE er valgt i det hele tatt
+    if (!empty($selected_children)) {
+        foreach ($selected_children as $child_slug) {
+            $parent_id = isset($category_map[$child_slug]) ? $category_map[$child_slug]['parent'] : 0;
+            $parent_slug = $parent_id && isset($term_id_to_slug[$parent_id]) ? $term_id_to_slug[$parent_id] : '';
+            $parent_is_selected = $parent_slug && in_array($parent_slug, $selected_parents, true);
+            if (!$parent_is_selected) {
+                $include_child_with_descendants($child_slug);
+            }
+        }
+    }
+    
+    // Merk: Kombinasjonen av reglene over dekker tilfeller med både foreldre og barn valgt
+    
+    // Fjern duplikater og returner
+    return array_unique($categories_to_include);
+}
+
+/**
+ * Hent antall kurs for hvert filtervalg basert på aktive filtre
+ * 
+ * @param string $filter_type Type filter (categories, locations, instructors, language, months)
+ * @param array $active_filters Aktive filtre fra URL
+ * @return array Array med term_slug => count mapping
+ */
+function get_filter_value_counts($filter_type, $active_filters = []) {
+    // Fjern filteret vi sjekker fra aktive filtre for å unngå sirkulær referanse
+    $test_filters = $active_filters;
+    
+    switch ($filter_type) {
+        case 'categories':
+            unset($test_filters['k']);
+            break;
+        case 'locations':
+            unset($test_filters['sted']);
+            break;
+        case 'instructors':
+            unset($test_filters['i']);
+            break;
+        case 'language':
+            unset($test_filters['sprak']);
+            break;
+        case 'months':
+            unset($test_filters['mnd']);
+            break;
+    }
+    
+    // Hent alle termer for denne filtertypen
+    $terms = [];
+    switch ($filter_type) {
+        case 'categories':
+            $terms = get_filtered_terms('coursecategory');
+            break;
+        case 'locations':
+            $terms = get_terms([
+                'taxonomy' => 'course_location',
+                'hide_empty' => true,
+                'meta_query' => [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_course_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_course_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ]);
+            break;
+        case 'instructors':
+            $terms = get_filtered_terms('instructors');
+            break;
+        case 'language':
+            $terms = get_filtered_languages();
+            break;
+        case 'months':
+            $terms = get_filtered_months();
+            break;
+    }
+    
+    if (empty($terms) || is_wp_error($terms)) {
+        return [];
+    }
+    
+    $counts = [];
+    
+    // For hver term, sjekk hvor mange kurs som matcher med de aktive filtrene
+    foreach ($terms as $term) {
+        $term_value = '';
+        
+        // Hent riktig verdi basert på filtertype
+        switch ($filter_type) {
+            case 'categories':
+                $term_value = $term->slug;
+                break;
+            case 'locations':
+                $term_value = $term->name; // Bruk navn for locations
+                break;
+            case 'instructors':
+                $term_value = $term->slug;
+                break;
+            case 'language':
+                $term_value = $term; // Språk er allerede en string
+                break;
+            case 'months':
+                $term_value = $term['value']; // Måneder har value-felt
+                break;
+        }
+        
+        // Legg til denne termen til test-filtrene
+        $test_filters_with_term = $test_filters;
+        switch ($filter_type) {
+            case 'categories':
+                $test_filters_with_term['k'] = [$term_value];
+                break;
+            case 'locations':
+                $test_filters_with_term['sted'] = [$term_value];
+                break;
+            case 'instructors':
+                $test_filters_with_term['i'] = [$term_value];
+                break;
+            case 'language':
+                $test_filters_with_term['sprak'] = [$term_value];
+                break;
+            case 'months':
+                $test_filters_with_term['mnd'] = [$term_value];
+                break;
+        }
+        
+        // Kjør en test-query med disse filtrene
+        $test_query = get_course_dates_query_for_count($test_filters_with_term);
+        $count = $test_query->found_posts;
+        
+        // Lagre count for denne termen
+        $term_key = '';
+        switch ($filter_type) {
+            case 'categories':
+                $term_key = $term->slug;
+                break;
+            case 'locations':
+                $term_key = $term->name;
+                break;
+            case 'instructors':
+                $term_key = $term->slug;
+                break;
+            case 'language':
+                $term_key = $term;
+                break;
+            case 'months':
+                $term_key = $term['value'];
+                break;
+        }
+        
+        $counts[$term_key] = $count;
+    }
+    
+    return $counts;
+}
+
+/**
+ * Hjelpefunksjon for å kjøre en query kun for å telle resultater
+ * 
+ * @param array $filters Filtre å bruke
+ * @return WP_Query Query-objekt med resultater
+ */
+function get_course_dates_query_for_count($filters) {
+    // Sett opp $_REQUEST basert på filtrene
+    $original_request = $_REQUEST;
+    $_REQUEST = array_merge($_REQUEST, $filters);
+    
+    // Kjør query med posts_per_page = 1 for å få count raskt
+    $query = get_course_dates_query(['posts_per_page' => 1]);
+    
+    // Gjenopprett original $_REQUEST
+    $_REQUEST = $original_request;
+    
+    return $query;
 }

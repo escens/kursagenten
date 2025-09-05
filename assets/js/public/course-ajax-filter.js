@@ -36,6 +36,33 @@
 	$(document).on('change', '.filter-checkbox', function (e) {
 		const filterKey = $(this).data('filter-key');
 		const urlKey = $(this).data('url-key') || filterKey;
+		const $checkbox = $(this);
+		
+		// Spesiell UX-logikk for kategorier: når et barn krysses av, fjern kryss på tilhørende forelder.
+		// Når en forelder krysses av, fjern kryss på alle dens barn.
+		if (filterKey === 'categories') {
+			const isChecked = $checkbox.is(':checked');
+			const $childrenWrapper = $checkbox.closest('.ka-children');
+			if ($childrenWrapper.length) {
+				// Dette er et barn
+				if (isChecked) {
+					const $parentCategory = $childrenWrapper.prev('.filter-category.toggle-parent');
+					const $parentCheckbox = $parentCategory.find('input.filter-checkbox');
+					if ($parentCheckbox.prop('checked')) {
+						// Fjern kryss på forelder uten å trigge ny change (vi oppdaterer samlet under)
+						$parentCheckbox.prop('checked', false);
+					}
+				}
+			} else {
+				// Dette er en forelder
+				if (isChecked) {
+					const $children = $checkbox.closest('.filter-category').next('.ka-children');
+					if ($children && $children.length) {
+						$children.find('input.filter-checkbox:checked').prop('checked', false);
+					}
+				}
+			}
+		}
 		
 		const selectedValues = $('.filter-checkbox[data-filter-key="' + filterKey + '"]:checked').map(function () {
 			return $(this).val();
@@ -47,6 +74,9 @@
 		// Update filters and perform AJAX call with empty arrays if no values are selected
 		const filterUpdate = selectedValues.length > 0 ? { [urlKey]: selectedValues } : { [urlKey]: null };
 		updateFiltersAndFetch(filterUpdate);
+		
+		// Oppdater filter counts etter at filtre er endret
+		setTimeout(updateFilterCounts, 500);
 	});
 
 	// Handle search field
@@ -212,6 +242,9 @@
 
 		updateActiveFiltersList(updatedFilters);
 		toggleResetFiltersButton(updatedFilters);
+		
+		// Oppdater filter counts etter nullstilling
+		setTimeout(updateFilterCounts, 500);
 	}
 
 	function fetchCourses(data) {
@@ -612,6 +645,82 @@
 		hasActiveFilters ? $resetButton.addClass('active-filters') : $resetButton.removeClass('active-filters');
 		hasActiveFilters ? $activeFiltersContainer.addClass('active') : $activeFiltersContainer.removeClass('active');
 	}
+
+	// Oppdater filter counts når filtre endres
+	function updateFilterCounts() {
+		const currentFilters = getCurrentFiltersFromURL();
+		
+		$.ajax({
+			url: kurskalender_data.ajax_url,
+			type: 'POST',
+			data: {
+				action: 'get_filter_counts',
+				nonce: kurskalender_data.filter_nonce,
+				...currentFilters
+			},
+			success: function(response) {
+				if (response.success && response.data.counts) {
+					updateFilterCountsDisplay(response.data.counts);
+				}
+			}
+		});
+	}
+
+	// Oppdater visning av filter counts - kun visuell indikator
+	function updateFilterCountsDisplay(counts) {
+		// Reset all states before applying new counts to avoid lingering classes
+		const $allLabels = $('.filter-list-item.checkbox');
+		const $allCheckboxes = $allLabels.find('.filter-checkbox');
+		$allLabels.removeClass('filter-empty filter-available');
+		$allCheckboxes.prop('disabled', false);
+		
+		// Oppdater kategorier
+		if (counts.categories) {
+			Object.keys(counts.categories).forEach(slug => {
+				const count = counts.categories[slug];
+				const $element = $(`.filter-checkbox[data-filter-key="categories"][value="${slug}"]`);
+				if ($element.length) {
+					const $label = $element.closest('label');
+					
+					if (count === 0) {
+						$label.addClass('filter-empty');
+						$element.prop('disabled', true);
+					} else {
+						$label.addClass('filter-available');
+						$element.prop('disabled', false);
+					}
+				}
+			});
+		}
+
+		// Oppdater andre filtre på samme måte
+		['locations', 'instructors', 'language', 'months'].forEach(filterType => {
+			if (counts[filterType]) {
+				Object.keys(counts[filterType]).forEach(value => {
+					const count = counts[filterType][value];
+					const $element = $(`.filter-checkbox[data-filter-key="${filterType}"][value="${value}"]`);
+					if ($element.length) {
+						const $label = $element.closest('label');
+						
+						if (count === 0) {
+							$label.addClass('filter-empty');
+							$element.prop('disabled', true);
+						} else {
+							$label.addClass('filter-available');
+							$element.prop('disabled', false);
+						}
+					}
+				});
+			}
+		});
+	}
+
+	// Forhindre klikk på tomme filtervalg
+	$(document).on('click', '.filter-empty .filter-checkbox', function(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		return false;
+	});
 
 	// Initialize filters on page load
 	initializeFiltersFromURL();
