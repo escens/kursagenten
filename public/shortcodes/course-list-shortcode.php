@@ -910,7 +910,7 @@ function kursagenten_course_list_shortcode($atts) {
 
         // Funksjon for å initialisere datepicker
         function initializeDatepicker() {
-            log('Initialiserer datepicker');
+            // log('Initialiserer datepicker');
             const mobileDatepicker = document.querySelector('.mobile-filter-content .caleran');
             const dateWrapper = document.querySelector('.mobile-filter-content .date-range-wrapper');
             const dateInputMobile = document.getElementById('date-range-mobile');
@@ -1103,7 +1103,7 @@ function kursagenten_course_list_shortcode($atts) {
             });
             
             if (DEBUG) {
-                console.log('Active filters from URL:', activeFilters);
+                // console.log('Active filters from URL:', activeFilters);
             }
             
             return activeFilters;
@@ -1115,7 +1115,7 @@ function kursagenten_course_list_shortcode($atts) {
             
             // Debug logging
             if (DEBUG) {
-                console.log('Restoring filters from URL:', activeFilters);
+                // console.log('Restoring filters from URL:', activeFilters);
             }
             
             // Gjenopprett søk
@@ -1161,13 +1161,13 @@ function kursagenten_course_list_shortcode($atts) {
             });
             
             if (DEBUG) {
-                console.log('Active filters restored');
+                // console.log('Active filters restored');
             }
         }
         
         if (filterToggleBtn.length) {
             filterToggleBtn.on('click', function() {
-                log('Filter-knapp klikket');
+                // log('Filter-knapp klikket');
                 if (mobileOverlay.length && !isLoadingFilters) {
                     if (!mobileFiltersLoaded) {
                         loadMobileFilters();
@@ -1180,7 +1180,7 @@ function kursagenten_course_list_shortcode($atts) {
 
         if (closeFilterBtn.length) {
             closeFilterBtn.on('click', function() {
-                log('Lukk-knapp klikket');
+                // log('Lukk-knapp klikket');
                 hideMobileFilters();
             });
         }
@@ -1202,7 +1202,7 @@ function kursagenten_course_list_shortcode($atts) {
             if (isLoadingFilters) return;
             isLoadingFilters = true;
             
-            log('Laster mobilfiltre via AJAX');
+            // log('Laster mobilfiltre via AJAX');
             
             // Vis lasteindikatorer
             const loadingHtml = '<div class="mobile-filter-loading"><div class="loading-spinner"></div></div>';
@@ -1218,17 +1218,17 @@ function kursagenten_course_list_shortcode($atts) {
                     nonce: kurskalender_data.filter_nonce
                 },
                 success: function(response) {
-                    log('Mottok AJAX-respons:', response);
+                    // log('Mottok AJAX-respons:', response);
                     
                     if (response.success && response.data && response.data.html) {
-                        log('Mobilfiltre lastet');
+                        // log('Mobilfiltre lastet');
                         $('.mobile-filter-loading').remove();
                         mobileOverlay.append(response.data.html);
                         mobileFiltersLoaded = true;
                         // Gjenopprett aktive filtre FØRST
                         restoreActiveFilters();
                         // Deretter initialiser hierarkisk funksjonalitet
-                        log('Initialiserer hierarkisk funksjonalitet etter restoreActiveFilters');
+                        // log('Initialiserer hierarkisk funksjonalitet etter restoreActiveFilters');
                         initHierarchyToggles('.mobile-filter-content');
                         // Deretter initialiser event listeners
                         initializeMobileFilterEvents();
@@ -1345,7 +1345,7 @@ function kursagenten_course_list_shortcode($atts) {
 
             // Event listener for "Vis resultater"
             $('.mobile-filter-content .apply-filters-button').on('click', function() {
-                log('Vis resultater klikket');
+                // log('Vis resultater klikket');
                 updateFilters();
                 hideMobileFilters();
                 // Oppdater filter counts etter at filtre er endret
@@ -1354,7 +1354,7 @@ function kursagenten_course_list_shortcode($atts) {
 
             // Event listener for "Nullstill filter"
             $('.mobile-filter-content .reset-filters-button').on('click', function() {
-                log('Reset klikket');
+                // log('Reset klikket');
                 $('.mobile-filter-content .filter-checkbox').prop('checked', false);
                 $('.mobile-filter-content .caleran').val('').trigger('change');
                 $('.mobile-filter-content .filter-search').val('');
@@ -1372,7 +1372,7 @@ function kursagenten_course_list_shortcode($atts) {
                 const key = $chip.data('filter-key');
                 const value = $chip.data('filter-value');
                 
-                log(`Fjerner filter: ${key} = ${value}`);
+                // log(`Fjerner filter: ${key} = ${value}`);
                 
                 // Fjern filteret fra mobilfilteret
                 removeMobileFilter(key, value);
@@ -1381,7 +1381,7 @@ function kursagenten_course_list_shortcode($atts) {
 
         // Funksjon for å oppdatere aktive filtre i mobilfilteret (bruker desktop-logikk)
         function updateMobileActiveFilters() {
-            log('updateMobileActiveFilters kalt');
+            // log('updateMobileActiveFilters kalt');
             
             // Samle aktive filtre fra mobilfilteret
             const activeFilters = {};
@@ -1420,7 +1420,7 @@ function kursagenten_course_list_shortcode($atts) {
             const $activeFiltersContainer = $('#mobile-active-filters');
             const $container = $('#mobile-active-filters-container');
             
-            log(`updateMobileActiveFiltersList kalt med:`, filters);
+            // log(`updateMobileActiveFiltersList kalt med:`, filters);
             $activeFiltersContainer.empty();
 
             let hasActiveFilters = false;
@@ -1478,17 +1478,17 @@ function kursagenten_course_list_shortcode($atts) {
 
             // Vis/skjul container
             if (hasActiveFilters) {
-                log('Viser mobile active filters container');
+                // log('Viser mobile active filters container');
                 $container.show();
             } else {
-                log('Skjuler mobile active filters container');
+                // log('Skjuler mobile active filters container');
                 $container.hide();
             }
         }
 
         // Funksjon for å fjerne et filter fra mobilfilteret
         function removeMobileFilter(key, value) {
-            log(`removeMobileFilter kalt med: ${key} = ${value}`);
+            // log(`removeMobileFilter kalt med: ${key} = ${value}`);
             
             // Fjern fra mobilfilteret
             if (key === 'dato') {
@@ -1503,14 +1503,72 @@ function kursagenten_course_list_shortcode($atts) {
             // Oppdater aktive filtre umiddelbart
             setTimeout(updateMobileActiveFilters, 10);
             
+            // Oppdater URL umiddelbart for å sikre at getCurrentFiltersFromURL() får riktige verdier
+            updateURLFromMobileFilters();
+            
             // Oppdater filter counts etter fjerning
-            setTimeout(updateFilterCounts, 100);
+            setTimeout(updateFilterCounts, 200);
+        }
+
+        // Funksjon for å oppdatere URL fra mobile filtre uten å laste siden på nytt
+        function updateURLFromMobileFilters() {
+            const filters = {};
+            
+            // Samle alle aktive filtre fra mobile filter
+            $('.mobile-filter-content .filter-checkbox:checked').each(function() {
+                const filterKey = $(this).data('url-key');
+                const filterValue = $(this).val();
+                if (!filters[filterKey]) {
+                    filters[filterKey] = [];
+                }
+                if (!filters[filterKey].includes(filterValue)) {
+                    filters[filterKey].push(filterValue);
+                }
+            });
+
+            // Håndter dato-filter
+            const dateRange = $('.mobile-filter-content .caleran').val();
+            if (dateRange) {
+                filters['dato'] = dateRange;
+            }
+
+            // Håndter søk-filter
+            const searchTerm = $('.mobile-filter-content .filter-search').val();
+            if (searchTerm) {
+                filters['sok'] = searchTerm;
+            }
+
+            // Behold eksisterende per_page parameter hvis den finnes
+            const urlParams = new URLSearchParams(window.location.search);
+            const perPage = urlParams.get('per_page');
+            if (perPage) {
+                filters['per_page'] = perPage;
+            }
+
+            // Bygg URL med riktig encoding
+            const searchParams = new URLSearchParams();
+            
+            // Legg til alle filtre med riktig encoding
+            Object.entries(filters).forEach(([key, value]) => {
+                if (Array.isArray(value)) {
+                    // For array-verdier, bruk encodeURIComponent på hver verdi
+                    searchParams.set(key, value.map(v => encodeURIComponent(v)).join(','));
+                } else {
+                    // For enkle verdier, bruk encodeURIComponent direkte
+                    searchParams.set(key, encodeURIComponent(value));
+                }
+            });
+
+            // Oppdater URL uten å laste siden på nytt
+            const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+            window.history.pushState({}, '', newUrl);
         }
 
         // Oppdater visning av filter counts - kun visuell indikator
         function updateFilterCountsDisplay(counts) {
             // Reset all states before applying new counts to avoid lingering classes
-            const $allLabels = $('.filter-list-item.checkbox');
+            // Oppdater både desktop og mobile filtre
+            const $allLabels = $('.filter-list-item.checkbox, .mobile-filter-content .filter-list-item.checkbox');
             const $allCheckboxes = $allLabels.find('.filter-checkbox');
             $allLabels.removeClass('filter-empty filter-available');
             $allCheckboxes.prop('disabled', false);
@@ -1519,7 +1577,7 @@ function kursagenten_course_list_shortcode($atts) {
             if (counts.categories) {
                 Object.keys(counts.categories).forEach(slug => {
                     const count = counts.categories[slug];
-                    const $element = $(`.filter-checkbox[data-filter-key="categories"][value="${slug}"]`);
+                    const $element = $(`.filter-checkbox[data-filter-key="categories"][value="${slug}"], .mobile-filter-content .filter-checkbox[data-filter-key="categories"][value="${slug}"]`);
                     if ($element.length) {
                         const $label = $element.closest('label');
                         
@@ -1539,7 +1597,7 @@ function kursagenten_course_list_shortcode($atts) {
                 if (counts[filterType]) {
                     Object.keys(counts[filterType]).forEach(value => {
                         const count = counts[filterType][value];
-                        const $element = $(`.filter-checkbox[data-filter-key="${filterType}"][value="${value}"]`);
+                        const $element = $(`.filter-checkbox[data-filter-key="${filterType}"][value="${value}"], .mobile-filter-content .filter-checkbox[data-filter-key="${filterType}"][value="${value}"]`);
                         if ($element.length) {
                             const $label = $element.closest('label');
                             
@@ -1732,11 +1790,11 @@ function kursagenten_course_list_shortcode($atts) {
                         const parentChecked = $parent.find('input.filter-checkbox').is(':checked');
                         const anyChildChecked = $children.find('input.filter-checkbox:checked').length > 0;
                         
-                        log(`Parent ${pid}: parentChecked=${parentChecked}, anyChildChecked=${anyChildChecked}`);
+                        // log(`Parent ${pid}: parentChecked=${parentChecked}, anyChildChecked=${anyChildChecked}`);
                         
                         // Åpne hvis forelderen er avkrysset eller noen barn er avkrysset
                         if (parentChecked || anyChildChecked) {
-                            log(`Åpner parent ${pid} fordi den eller barna er avkrysset`);
+                            // log(`Åpner parent ${pid} fordi den eller barna er avkrysset`);
                             $wrap.addClass('open').show();
                             $parent.find('.ka-toggle').addClass('expanded');
                         }

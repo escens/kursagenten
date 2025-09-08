@@ -248,8 +248,8 @@
 	}
 
 	function fetchCourses(data) {
-		console.log('=== START: fetchCourses ===');
-		console.log('AJAX-kall med data:', data);
+		// console.log('=== START: fetchCourses ===');
+		// console.log('AJAX-kall med data:', data);
 		
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
@@ -261,30 +261,30 @@
 			const urlSide = urlParams.get('side');
 			if (urlSide) {
 				data.side = urlSide;
-				console.log('Bruker side-parameter fra URL:', urlSide);
+				// console.log('Bruker side-parameter fra URL:', urlSide);
 			}
 		}
 
 		// Vis loading indikator
 		$('.course-loading').show();
-		console.log('Sender AJAX-forespørsel til:', kurskalender_data.ajax_url);
+		// console.log('Sender AJAX-forespørsel til:', kurskalender_data.ajax_url);
 
 		$.ajax({
 			url: kurskalender_data.ajax_url,
 			type: 'POST',
 			data: data,
 			success: function(response) {
-				console.log('Svar fra server:', response);
+				// console.log('Svar fra server:', response);
 				if (response.success) {
-					console.log('Antall kurs funnet:', response.data['course-count']);
-					console.log('HTML-lengde:', response.data.html.length);
+					// console.log('Antall kurs funnet:', response.data['course-count']);
+					// console.log('HTML-lengde:', response.data.html.length);
 					
 					// Legg til null-sjekk for html_pagination
 					if (response.data.html_pagination) {
-						console.log('Paginering HTML-lengde:', response.data.html_pagination.length);
+						// console.log('Paginering HTML-lengde:', response.data.html_pagination.length);
 						updatePagination(response.data.html_pagination);
 					} else {
-						console.log('Ingen paginering HTML mottatt');
+						// console.log('Ingen paginering HTML mottatt');
 						updatePagination('');
 					}
 					
@@ -296,7 +296,7 @@
 					// Scroll til toppen av resultatene med bedre offset
 					const $filterResults = $('#filter-results');
 					if ($filterResults.length) {
-						console.log('Scroller til filter-results');
+						// console.log('Scroller til filter-results');
 						
 						// Finn den beste scroll-posisjonen
 						let scrollTarget;
@@ -323,14 +323,17 @@
 
 					// Update dropdown states based on current URL filters
 					const currentFilters = getCurrentFiltersFromURL();
-					console.log('Filtre etter oppdatering:', currentFilters);
+					// console.log('Filtre etter oppdatering:', currentFilters);
+					
+					// Oppdater filter counts etter at kurs er hentet
+					setTimeout(updateFilterCounts, 100);
 
 					// Handle language filter updates
 					if (currentFilters.sprak) {
 						const languages = Array.isArray(currentFilters.sprak) ?
 							currentFilters.sprak :
 							[currentFilters.sprak];
-						console.log('Oppdaterer språkfilter:', languages);
+						// console.log('Oppdaterer språkfilter:', languages);
 						updateDropdownText('language', languages);
 					}
 
@@ -339,7 +342,7 @@
 						const locations = Array.isArray(currentFilters.sted) ?
 							currentFilters.sted :
 							[currentFilters.sted];
-						console.log('Oppdaterer lokasjonsfilter:', locations);
+						// console.log('Oppdaterer lokasjonsfilter:', locations);
 						updateDropdownText('locations', locations);
 					}
 
@@ -348,7 +351,7 @@
 						const instructors = Array.isArray(currentFilters.i) ?
 							currentFilters.i :
 							[currentFilters.i];
-						console.log('Oppdaterer instruktørfilter:', instructors);
+						// console.log('Oppdaterer instruktørfilter:', instructors);
 						updateDropdownText('instructors', instructors);
 					}
 
@@ -358,7 +361,7 @@
 							currentFilters.mnd :
 							currentFilters.mnd.split(',').map(m => m.trim());
 						
-						console.log('Oppdaterer månedsfilter:', months);
+						// console.log('Oppdaterer månedsfilter:', months);
 						
 						// Konverter måneder til to-sifret format
 						const formattedMonths = months.map(month => {
@@ -368,7 +371,7 @@
 								month;
 						});
 						
-						console.log('Formaterte måneder:', formattedMonths);
+						// console.log('Formaterte måneder:', formattedMonths);
 						updateDropdownText('months', formattedMonths);
 					}
 				} else {
@@ -387,7 +390,7 @@
 			complete: function() {
 				// Skjul loading indikator
 				$('.course-loading').hide();
-				console.log('=== END: fetchCourses ===');
+				// console.log('=== END: fetchCourses ===');
 			}
 		});
 
@@ -751,8 +754,8 @@
 		
 		if (sideParam) {
 			const currentFilters = getCurrentFiltersFromURL();
-			console.log('Direkte tilgang til side:', sideParam);
-			console.log('Nåværende filtre:', currentFilters);
+			// console.log('Direkte tilgang til side:', sideParam);
+			// console.log('Nåværende filtre:', currentFilters);
 			fetchCourses(currentFilters);
 		}
 	});
@@ -924,14 +927,14 @@
 			const sortBy = $(this).data('sort');
 			const order = $(this).data('order');
 
-			console.log('Sortering startet:', { sortBy, order });
+			// console.log('Sortering startet:', { sortBy, order });
 
 			// Oppdater selected text
 			$('.sort-dropdown .selected-text').text($(this).text());
 
 			// Hent eksisterende filtre
 			const currentFilters = getCurrentFiltersFromURL();
-			console.log('Eksisterende filtre før sortering:', currentFilters);
+			// console.log('Eksisterende filtre før sortering:', currentFilters);
 			
 			// Konverter datoformat hvis nødvendig
 			if (currentFilters.dato && currentFilters.dato.includes(',')) {
@@ -949,7 +952,7 @@
 				side: 1  // Reset til side 1 ved ny sortering
 			};
 
-			console.log('Filtre som sendes til server:', updatedFilters);
+			// console.log('Filtre som sendes til server:', updatedFilters);
 
 			// Utfør filtrering med sortering
 			updateFiltersAndFetch(updatedFilters);
