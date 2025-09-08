@@ -144,6 +144,11 @@ ob_start();
                            class="filter-search" 
                            placeholder="<?php echo esc_attr($current_filter_info['placeholder'] ?? 'Søk etter kurs...'); ?>"
                            value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>">
+                    
+                    <!-- Bruk samme container som desktop-versjonen -->
+                    <div id="mobile-active-filters-container" style="display: none;">
+                        <div id="mobile-active-filters" class="active-filters"></div>
+                    </div>
 
                 <?php elseif ($filter === 'date') : ?>
                     <?php
@@ -176,20 +181,16 @@ ob_start();
                     <div class="filter-list">
                         <?php 
                         if ($filter === 'categories') {
-                            // Bruk display_category_hierarchy for kategorier
-                            $selected_categories = isset($active_filters[$taxonomy_data[$filter]['url_key']]) ? 
-                                array_map(function($slug) {
-                                    $term = get_term_by('slug', $slug, 'coursecategory');
-                                    return $term ? $term->term_id : 0;
-                                }, $active_filters[$taxonomy_data[$filter]['url_key']]) : [];
+                            // Hent aktive filtre fra URL
+                            $url_key = $taxonomy_data[$filter]['url_key'];
+                            $active_filters_for_category = isset($active_filters[$url_key]) ? $active_filters[$url_key] : [];
                             
-                            // Hent kategorier med parent-informasjon
+                            // Hent alle kategorier med parent-informasjon
                             $categories = get_terms([
                                 'taxonomy' => 'coursecategory',
                                 'hide_empty' => true,
                                 'orderby' => 'menu_order',
                                 'order' => 'ASC',
-                                'parent' => 0, // Hent kun toppnivå-kategorier
                                 'meta_query' => [
                                     'relation' => 'OR',
                                     [
@@ -202,82 +203,78 @@ ob_start();
                                     ]
                                 ]
                             ]);
-
-                            if (!is_wp_error($categories)) {
-                                foreach ($categories as $term) {
-                                    // Vis toppnivå-kategorien
-                                    $is_checked = in_array($term->term_id, $selected_categories) ? 'checked' : '';
-                                    echo '<div class="filter-category">';
+                            
+                            if (!empty($categories) && !is_wp_error($categories)) {
+                                foreach ($categories as $category) {
+                                    $is_checked = in_array($category->slug, $active_filters_for_category) ? 'checked' : '';
+                                    
+                                    // Bestem parent class basert på parent_id
+                                    $parent_class = $category->parent > 0 ? 'child-of' : '';
+                                    $parent_id_attr = $category->parent > 0 ? ' data-parent-id="' . esc_attr($category->parent) . '"' : '';
+                                    
+                                    // For nå, ikke markere som tomme filtre i mobilfilteret
+                                    // Dette vil bli håndtert av JavaScript etter at filtrene er lastet
+                                    $empty_class = ' filter-available';
+                                    
+                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . $empty_class . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
                                     echo '<label class="filter-list-item checkbox">';
                                     echo '<input type="checkbox" 
                                         class="filter-checkbox"
-                                        value="' . esc_attr($term->slug) . '" 
+                                        value="' . esc_attr($category->slug) . '" 
                                         data-filter-key="categories" 
                                         data-url-key="k" 
                                         ' . $is_checked . '>';
-                                    echo '<span class="checkbox-label">' . esc_html($term->name) . '</span>';
+                                    echo '<span class="checkbox-label">' . esc_html($category->name) . '</span>';
                                     echo '</label>';
                                     echo '</div>';
-
-                                    // Hent og vis underkategorier for denne termen
-                                    $child_terms = get_terms([
-                                        'taxonomy' => 'coursecategory',
-                                        'hide_empty' => true,
-                                        'parent' => $term->term_id,
-                                        'orderby' => 'menu_order',
-                                        'order' => 'ASC',
-                                        'meta_query' => [
-                                            'relation' => 'OR',
-                                            [
-                                                'key' => 'hide_in_course_list',
-                                                'value' => 'Vis',
-                                            ],
-                                            [
-                                                'key' => 'hide_in_course_list',
-                                                'compare' => 'NOT EXISTS'
-                                            ]
-                                        ]
-                                    ]);
-                                    
-                                    if (!is_wp_error($child_terms)) {
-                                        foreach ($child_terms as $child) {
-                                            $is_checked = in_array($child->term_id, $selected_categories) ? 'checked' : '';
-                                            echo '<div class="filter-category has-parent" data-parent-id="' . esc_attr($term->term_id) . '">';
-                                            echo '<label class="filter-list-item checkbox">';
-                                            echo '<input type="checkbox" 
-                                                class="filter-checkbox"
-                                                value="' . esc_attr($child->slug) . '" 
-                                                data-filter-key="categories" 
-                                                data-url-key="k" 
-                                                ' . $is_checked . '>';
-                                            echo '<span class="checkbox-label">' . esc_html($child->name) . '</span>';
-                                            echo '</label>';
-                                            echo '</div>';
-                                        }
-                                    }
                                 }
                             }
                         } else {
                             // Behold eksisterende kode for andre filtre
                             $terms = $taxonomy_data[$filter]['terms'];
+                            $url_key = $taxonomy_data[$filter]['url_key'];
+                            $active_filters_for_filter = isset($active_filters[$url_key]) ? $active_filters[$url_key] : [];
+                            
                             if (!empty($terms)) :
                                 foreach ($terms as $term) : 
-                                    $term_value = is_object($term) ? ($filter === 'months' ? $term->value : $term->slug) : strtolower($term);
-                                    $is_checked = isset($active_filters[$taxonomy_data[$filter]['url_key']]) && 
-                                                in_array($term_value, $active_filters[$taxonomy_data[$filter]['url_key']]);
+                                    // Spesiell håndtering for måned-filter
+                                    if ($filter === 'months') {
+                                        $term_value = $term->value;
+                                        $term_name = $term->name;
+                                    } else {
+                                        // For locations, bruk term-navn (med diakritikk) som filterverdi, ikke slug
+                                        if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
+                                            $term_value = $term->name;
+                                            $term_name = $term->name;
+                                        } elseif ($taxonomy_data[$filter]['filter_key'] === 'language' && is_object($term)) {
+                                            // For språk-filter, bruk value-property
+                                            $term_value = $term->value;
+                                            $term_name = $term->name;
+                                        } else {
+                                            $term_value = is_object($term) ? $term->slug : (is_string($term) ? strtolower($term) : '');
+                                            $term_name = is_object($term) ? $term->name : (is_string($term) ? ucfirst($term) : '');
+                                        }
+                                    }
+                                    
+                                    $is_checked = in_array($term_value, $active_filters_for_filter) ? 'checked' : '';
+                                    
+                                    // For nå, ikke markere som tomme filtre i mobilfilteret
+                                    // Dette vil bli håndtert av JavaScript etter at filtrene er lastet
+                                    $empty_class = ' filter-available';
                                     ?>
-                                    <label class="filter-list-item checkbox">
+                                    <label class="filter-list-item checkbox<?php echo $empty_class; ?>">
                                         <input type="checkbox" 
                                                class="filter-checkbox"
                                                value="<?php echo esc_attr($term_value); ?>"
                                                data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
-                                               <?php checked($is_checked); ?>>
+                                               <?php echo $is_checked; ?>>
                                         <span class="checkbox-label">
-                                            <?php echo esc_html(is_object($term) ? $term->name : ucfirst($term)); ?>
+                                            <?php echo esc_html($term_name); ?>
                                         </span>
                                     </label>
-                                <?php endforeach;
+                                    <?php
+                                endforeach;
                             else :
                                 echo '<p>Ingen alternativer tilgjengelig</p>';
                             endif;
