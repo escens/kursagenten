@@ -318,11 +318,7 @@ function kursagenten_course_list_shortcode($atts) {
     <div id="ka" class="kursagenten-wrapper">
     <main id="ka-m" class="kursagenten-main" role="main">
         <div class="ka-container">
-            <!-- Mobile Filter Button & Overlay -->
-            <button class="filter-toggle-button">
-                <i class="ka-icon icon-filter"></i>
-                <span>Filter</span>
-            </button>
+            <!-- Mobile Filter Overlay -->
 
             <div class="mobile-filter-overlay">
                 <div class="mobile-filter-header">
@@ -694,6 +690,15 @@ function kursagenten_course_list_shortcode($atts) {
 
                             <!-- Right Column -->
                             <div class="courselist-items-wrapper right-column">
+                                <!-- Mobile Filter Button (Sticky) -->
+                                <button class="filter-toggle-button sticky-filter-button">
+                                    <div class="ka-icon-wrapper">
+                                    <i class="ka-icon icon-filter"></i>
+                                    </div>
+                                    <span>Filtrer kurs</span>
+                                    
+                                </button>
+                                
                                 <?php if ($query instanceof WP_Query && $query->have_posts()) : ?>
                                     <div class="courselist-header">
                                         <div id="courselist-header-left">
@@ -1313,8 +1318,38 @@ function kursagenten_course_list_shortcode($atts) {
             
             // Event listener for checkboxes - oppdater aktive filtre i sanntid
             $('.mobile-filter-content .filter-checkbox').on('change', function() {
+                const $checkbox = $(this);
+                const filterKey = $checkbox.data('filter-key');
+
+                // Speil desktop-UX for kategorier: barn fjerner forelder, forelder fjerner barn
+                if (filterKey === 'categories') {
+                    const isChecked = $checkbox.is(':checked');
+                    const $childrenWrapper = $checkbox.closest('.ka-children');
+                    if ($childrenWrapper.length) {
+                        // Dette er et barn
+                        if (isChecked) {
+                            const $parentCategory = $childrenWrapper.prev('.filter-category.toggle-parent');
+                            const $parentCheckbox = $parentCategory.find('input.filter-checkbox');
+                            if ($parentCheckbox.prop('checked')) {
+                                $parentCheckbox.prop('checked', false);
+                            }
+                        }
+                    } else {
+                        // Dette er en forelder
+                        if (isChecked) {
+                            const $children = $checkbox.closest('.filter-category').next('.ka-children');
+                            if ($children && $children.length) {
+                                $children.find('input.filter-checkbox:checked').prop('checked', false);
+                            }
+                        }
+                    }
+                }
+
                 // Oppdater aktive filtre umiddelbart
                 updateMobileActiveFilters();
+
+                // Oppdater counts litt etter for å sikre riktig URL-tilstand
+                setTimeout(updateFilterCounts, 200);
             });
 
             // Forhindre klikk på tomme filtervalg
@@ -2065,6 +2100,15 @@ function kursagenten_course_list_shortcode($atts) {
         /* Styling for mobile active filters container */
         #mobile-active-filters-container {
             margin-top: 15px;
+        }
+
+
+
+        /* Hide on desktop */
+        @media (min-width: 769px) {
+            .sticky-filter-button {
+                display: none;
+            }
         }
     </style>
     <?php
