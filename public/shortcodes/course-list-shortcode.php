@@ -1383,15 +1383,15 @@ function kursagenten_course_list_shortcode($atts) {
                 setTimeout(updateFilterCounts, 200);
         });
 
-        // Forhindre klikk på tomme filtervalg
-            $('.mobile-filter-content .filter-empty .filter-checkbox').on('click', function(e) {
+        // Forhindre klikk på tomme filtervalg (men ikke på valgte tomme filtre)
+            $('.mobile-filter-content .filter-empty:not(.filter-empty-but-selected) .filter-checkbox').on('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             return false;
         });
 
-        // Forhindre klikk på tomme filtervalg i desktop-filtre også
-        $(document).on('click', '.filter-empty .filter-checkbox', function(e) {
+        // Forhindre klikk på tomme filtervalg i desktop-filtre også (men ikke på valgte tomme filtre)
+        $(document).on('click', '.filter-empty:not(.filter-empty-but-selected) .filter-checkbox', function(e) {
             e.preventDefault();
             e.stopPropagation();
             return false;
@@ -1574,7 +1574,13 @@ function kursagenten_course_list_shortcode($atts) {
                         
                         if (count === 0) {
                             $label.addClass('filter-empty');
-                            $element.prop('disabled', true);
+                            // Hvis filteret er valgt (checked), legg til en ekstra klasse for å tillate avkrysning
+                            if ($element.is(':checked')) {
+                                $label.addClass('filter-empty-but-selected');
+                                $element.prop('disabled', false); // Tillat avkrysning
+                            } else {
+                                $element.prop('disabled', true);
+                            }
                         } else {
                             $label.addClass('filter-available');
                             $element.prop('disabled', false);
@@ -1594,7 +1600,13 @@ function kursagenten_course_list_shortcode($atts) {
                             
                             if (count === 0) {
                                 $label.addClass('filter-empty');
-                                $element.prop('disabled', true);
+                                // Hvis filteret er valgt (checked), legg til en ekstra klasse for å tillate avkrysning
+                                if ($element.is(':checked')) {
+                                    $label.addClass('filter-empty-but-selected');
+                                    $element.prop('disabled', false); // Tillat avkrysning
+                                } else {
+                                    $element.prop('disabled', true);
+                                }
                             } else {
                                 $label.addClass('filter-available');
                                 $element.prop('disabled', false);
@@ -1984,9 +1996,20 @@ function kursagenten_course_list_shortcode($atts) {
             position: relative;
         }
 
+        .filter-empty-but-selected {
+            opacity: 0.4;
+            pointer-events: auto !important; /* Tillat klikk for valgte tomme filtre */
+            position: relative;
+        }
+
         .filter-empty .filter-checkbox {
             cursor: not-allowed;
             opacity: 0.5;
+        }
+
+        .filter-empty-but-selected .filter-checkbox {
+            cursor: pointer;
+            opacity: 0.7; /* Litt mer synlig enn vanlige tomme filtre */
         }
 
         .filter-empty .checkbox-label {
@@ -2038,9 +2061,20 @@ function kursagenten_course_list_shortcode($atts) {
             position: relative;
         }
 
+        .mobile-filter-content .filter-empty-but-selected {
+            opacity: 0.4;
+            pointer-events: auto !important; /* Tillat klikk for valgte tomme filtre */
+            position: relative;
+        }
+
         .mobile-filter-content .filter-empty .filter-checkbox {
             cursor: not-allowed;
             opacity: 0.5;
+        }
+
+        .mobile-filter-content .filter-empty-but-selected .filter-checkbox {
+            cursor: pointer;
+            opacity: 0.7; /* Litt mer synlig enn vanlige tomme filtre */
         }
 
         .mobile-filter-content .filter-empty .checkbox-label {
