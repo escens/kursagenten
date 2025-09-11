@@ -151,7 +151,18 @@
 		fetchCourses(updatedFilters);
 		updateActiveFiltersList(updatedFilters);
 		toggleResetFiltersButton(updatedFilters);
+
+		// Varsle mobil-overlay om at filtre er oppdatert
+		try { window.dispatchEvent(new CustomEvent('ka:filters-updated', { detail: updatedFilters })); } catch(e) {}
 	}
+
+	// Tillat mobilscript å trigge samme flyt via CustomEvent
+	window.addEventListener('ka:update-filters', function(e) {
+		try {
+			const payload = (e && e.detail && typeof e.detail === 'object') ? e.detail : {};
+			updateFiltersAndFetch(payload);
+		} catch(err) { console.error('ka:update-filters handler error', err); }
+	});
 
 	function updateDropdownText(filterKey, activeFilters) {
 		const $dropdown = $(`.filter-dropdown-toggle[data-filter="${filterKey}"]`);
@@ -1114,6 +1125,54 @@ document.addEventListener("DOMContentLoaded", async function () {
 /* Filter list dropdown - functionality for dropdown*/
 document.addEventListener("DOMContentLoaded", function () {
 	const dropdowns = document.querySelectorAll(".filter-dropdown");
+
+	// Ensure active filter chips are shown above the course list on mobile (single container, move only)
+	(function manageActiveFiltersPlacement() {
+		// Remove any legacy mobile container if present
+		const legacy = document.getElementById('mobile-top-active-filters-container');
+		if (legacy && legacy.parentNode) {
+			legacy.parentNode.removeChild(legacy);
+		}
+
+		// Ensure we have an origin placeholder before the active filters container
+		var activeFiltersContainer = document.getElementById('active-filters-container');
+		if (!activeFiltersContainer) return;
+		if (!document.getElementById('active-filters-origin')) {
+			var origin = document.createElement('div');
+			origin.id = 'active-filters-origin';
+			origin.style.display = 'none';
+			activeFiltersContainer.parentNode.insertBefore(origin, activeFiltersContainer);
+		}
+
+		function placeForViewport() {
+			var isMobile = window.matchMedia('(max-width: 768px)').matches;
+			var container = document.getElementById('active-filters-container');
+			if (!container) return;
+
+			if (isMobile) {
+				// Try place after courselist header in right column
+				var header = document.querySelector('.courselist-items-wrapper.right-column .courselist-header');
+				if (header && header.parentNode) {
+					header.parentNode.insertBefore(container, header.nextSibling);
+				} else {
+					// Fallback: prepend to right column wrapper
+					var rightCol = document.querySelector('.courselist-items-wrapper.right-column');
+					if (rightCol) {
+						rightCol.insertBefore(container, rightCol.firstChild);
+					}
+				}
+			} else {
+				// Move back after origin on desktop
+				var origin = document.getElementById('active-filters-origin');
+				if (origin && origin.parentNode) {
+					origin.parentNode.insertBefore(container, origin.nextSibling);
+				}
+			}
+		}
+
+		placeForViewport();
+		window.addEventListener('resize', placeForViewport);
+	})();
 
 	dropdowns.forEach(dropdown => {
 		const dropdownToggle = dropdown.querySelector(".filter-dropdown-toggle");

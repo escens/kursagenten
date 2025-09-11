@@ -1448,6 +1448,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
     box-shadow: none;
     color: inherit;
     border-radius: 50px;
+    box-shadow: 0 2px 8px hsl(0deg 0% 0% / 5%);
 }
 
 #ka .filter-toggle-button:hover {

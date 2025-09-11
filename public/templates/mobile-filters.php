@@ -70,31 +70,31 @@ error_log('Available filters: ' . print_r($available_filters, true));
 $taxonomy_data = [
     'categories' => [
         'taxonomy' => 'coursecategory',
-        'terms' => get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]),
+        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('coursecategory') : get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]),
         'url_key' => 'k',
         'filter_key' => 'categories',
     ],
     'locations' => [
         'taxonomy' => 'course_location',
-        'terms' => get_terms(['taxonomy' => 'course_location', 'hide_empty' => true]),
+        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('course_location') : get_terms(['taxonomy' => 'course_location', 'hide_empty' => true]),
         'url_key' => 'sted',
         'filter_key' => 'locations',
     ],
     'instructors' => [
         'taxonomy' => 'instructors',
-        'terms' => get_terms(['taxonomy' => 'instructors', 'hide_empty' => true]),
+        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('instructors') : get_terms(['taxonomy' => 'instructors', 'hide_empty' => true]),
         'url_key' => 'i',
         'filter_key' => 'instructors',
     ],
     'language' => [
         'taxonomy' => '',
-        'terms' => function_exists('get_course_languages') ? get_course_languages() : get_languages_from_meta(),
+        'terms' => function_exists('get_filtered_languages') ? get_filtered_languages() : (function_exists('get_course_languages') ? get_course_languages() : get_languages_from_meta()),
         'url_key' => 'sprak',
         'filter_key' => 'language',
     ],
     'months' => [
         'taxonomy' => '',
-        'terms' => function_exists('get_course_months') ? get_course_months() : [],
+        'terms' => function_exists('get_filtered_months') ? get_filtered_months() : (function_exists('get_course_months') ? get_course_months() : []),
         'url_key' => 'mnd',
         'filter_key' => 'months',
     ]
@@ -145,10 +145,6 @@ ob_start();
                            placeholder="<?php echo esc_attr($current_filter_info['placeholder'] ?? 'Søk etter kurs...'); ?>"
                            value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>">
                     
-                    <!-- Bruk samme container som desktop-versjonen -->
-                    <div id="mobile-active-filters-container" style="display: none;">
-                        <div id="mobile-active-filters" class="active-filters"></div>
-                    </div>
 
                 <?php elseif ($filter === 'date') : ?>
                     <?php
@@ -184,38 +180,21 @@ ob_start();
                             // Hent aktive filtre fra URL
                             $url_key = $taxonomy_data[$filter]['url_key'];
                             $active_filters_for_category = isset($active_filters[$url_key]) ? $active_filters[$url_key] : [];
-                            
-                            // Hent alle kategorier med parent-informasjon
-                            $categories = get_terms([
-                                'taxonomy' => 'coursecategory',
-                                'hide_empty' => true,
-                                'orderby' => 'menu_order',
-                                'order' => 'ASC',
-                                'meta_query' => [
-                                    'relation' => 'OR',
-                                    [
-                                        'key' => 'hide_in_course_list',
-                                        'value' => 'Vis',
-                                    ],
-                                    [
-                                        'key' => 'hide_in_course_list',
-                                        'compare' => 'NOT EXISTS'
-                                    ]
-                                ]
-                            ]);
-                            
+
+                            // Bruk samme filtrerte datasett som desktop
+                            $categories = $taxonomy_data[$filter]['terms'];
+
                             if (!empty($categories) && !is_wp_error($categories)) {
                                 foreach ($categories as $category) {
                                     $is_checked = in_array($category->slug, $active_filters_for_category) ? 'checked' : '';
-                                    
-                                    // Bestem parent class basert på parent_id
-                                    $parent_class = $category->parent > 0 ? 'child-of' : '';
-                                    $parent_id_attr = $category->parent > 0 ? ' data-parent-id="' . esc_attr($category->parent) . '"' : '';
-                                    
-                                    // For nå, ikke markere som tomme filtre i mobilfilteret
-                                    // Dette vil bli håndtert av JavaScript etter at filtrene er lastet
+
+                                    // Parent-informasjon legges på i get_filtered_terms for kategorier
+                                    $parent_class = isset($category->parent_class) ? $category->parent_class : ($category->parent > 0 ? 'has-parent' : '');
+                                    $parent_id_value = isset($category->parent_id) ? $category->parent_id : ($category->parent > 0 ? $category->parent : 0);
+                                    $parent_id_attr = $parent_id_value ? ' data-parent-id="' . esc_attr($parent_id_value) . '"' : '';
+
                                     $empty_class = ' filter-available';
-                                    
+
                                     echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . $empty_class . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
                                     echo '<label class="filter-list-item checkbox">';
                                     echo '<input type="checkbox" 
@@ -239,8 +218,14 @@ ob_start();
                                 foreach ($terms as $term) : 
                                     // Spesiell håndtering for måned-filter
                                     if ($filter === 'months') {
-                                        $term_value = $term->value;
-                                        $term_name = $term->name;
+                                        // Support both object (get_course_months) and array (get_filtered_months)
+                                        if (is_array($term)) {
+                                            $term_value = isset($term['value']) ? $term['value'] : '';
+                                            $term_name = isset($term['name']) ? $term['name'] : '';
+                                        } else {
+                                            $term_value = isset($term->value) ? $term->value : '';
+                                            $term_name = isset($term->name) ? $term->name : '';
+                                        }
                                     } else {
                                         // For locations, bruk term-navn (med diakritikk) som filterverdi, ikke slug
                                         if ($taxonomy_data[$filter]['filter_key'] === 'locations' && is_object($term)) {
@@ -256,6 +241,11 @@ ob_start();
                                         }
                                     }
                                     
+                                    // Skip empty month entries
+                                    if ($filter === 'months' && (empty($term_value) || empty($term_name))) {
+                                        continue;
+                                    }
+
                                     $is_checked = in_array($term_value, $active_filters_for_filter) ? 'checked' : '';
                                     
                                     // For nå, ikke markere som tomme filtre i mobilfilteret
