@@ -642,7 +642,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                         if ($filter === 'categories') {
                                                         }
                                                         ?>
-                                                        <div id="filter-list-location" class="filter-list expand-content" data-size="500">
+                                                        <div id="filter-list-location" class="filter-list expand-content" data-size="250">
                                                             <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                                 <?php 
                                                                 if ($filter === 'months') {

@@ -6,5 +6,5 @@ box-shadow: none;
 
 .filter-empty,
 .filter-category:has(.filter-empty) {
-    display: none;
+    display: none!important;
 }
