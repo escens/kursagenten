@@ -143,7 +143,7 @@
     $contact_email = get_post_meta(get_the_ID(), 'course_contactperson_email', true);
 
     // Get placeholder image from settings
-    $kursinnst_options = get_option('kag_kursinnst_option_name');
+    $kursinnst_options = get_option('design_option_name');
     $placeholder_image = !empty($kursinnst_options['ka_plassholderbilde_kurs'])
         ? $kursinnst_options['ka_plassholderbilde_kurs']
         : KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';

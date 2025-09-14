@@ -126,7 +126,7 @@ function kursagenten_admin_landing_page() {
             <div class="options-card">
                 
                 <h3  id="lister">Innholdsblokker</h3>
-                <p>Kortkode med lister av enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, og så en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den.</p>
+                <p>Kortkoder kan legges inn i teksten på sider og blogginnlegg. Du kan legge inn hele kurslisten, eller lister med enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, samt en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den.</p>
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
                     <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk"]</span></p>
                     <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard"]</span></p>
@@ -166,7 +166,7 @@ function kursagenten_admin_landing_page() {
                             </tr>
                             <tr>
                                 <td>Kilde (i)</td>
-                                <td>Du kan velge om du vil bruke et bildet du laster opp selv, eller bruke bildet hentet fra Kursagenten. Velg kilde=ka-bilde hvis du vil bruke dette.</td>
+                                <td>Du kan velge om du vil bruke et bilde du laster opp selv, eller bruke bildet hentet fra Kursagenten. Velg kilde=ka-bilde hvis du vil bruke bilde fra Kursagenten.</td>
                                 <td>bilde, ka-bilde<br><strong>Standard:</strong> bilde</td>
                                 <td>Instruktører</td>
                                 <td><span class="copytext">[instruktorer kilde=ka-bilde]</span></td>
@@ -272,9 +272,9 @@ function kursagenten_admin_landing_page() {
                             <tr>
                                 <td>Vis (k)</td>
                                 <td>For de kategoriene som har flere nivåer, er det mulighet til å vise kun toppnivåene, kun underkategoriene, kun underkategorier under gitt foreldreslug, eller alle.</td>
-                                <td>hovedkategorier, subkategorier, foreldreslug<br><strong>Standard</strong>: viser alle</td>
+                                <td>hovedkategorier, subkategorier, foreldreslug (feks dans eller truck)<br><strong>Standard</strong>: viser alle</td>
                                 <td>Kurskategorier</td>
-                                <td><span class="copytext">[kurskategorier vis=hovedkategorier/subkategorier/foreldreslug]</span></td>
+                                <td><span class="copytext">[kurskategorier vis=hovedkategorier/subkategorier/slug]</span></td>
                             </tr>
                             <tr>
                                 <td>Vis (i)</td>

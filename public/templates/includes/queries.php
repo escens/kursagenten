@@ -496,12 +496,17 @@ function get_course_info_by_location($related_course_id) {
         $course_id = $course->ID;
 
         // Hent informasjon fra det relaterte kurset
+        $design_options = get_option('design_option_name');
+        $placeholder_image = !empty($design_options['ka_plassholderbilde_kurs'])
+            ? $design_options['ka_plassholderbilde_kurs']
+            : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+
         $course_info = [
             'title'      => get_the_title($course_id),
             'permalink'  => get_permalink($course_id),
-            'thumbnail'  => get_the_post_thumbnail_url($course_id, 'thumbnail') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg',
-            'thumbnail-medium'  => get_the_post_thumbnail_url($course_id, 'medium') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg',
-            'thumbnail-full'  => get_the_post_thumbnail_url($course_id, 'full') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg',
+            'thumbnail'  => get_the_post_thumbnail_url($course_id, 'thumbnail') ?: $placeholder_image,
+            'thumbnail-medium'  => get_the_post_thumbnail_url($course_id, 'medium') ?: $placeholder_image,
+            'thumbnail-full'  => get_the_post_thumbnail_url($course_id, 'full') ?: $placeholder_image,
             'excerpt'    => get_the_excerpt($course_id),
         ];
 

@@ -36,8 +36,8 @@ input[type=textarea] {
 .options-form h3 {
     margin-top: 0!important;
     border-bottom: 1px solid #eee;
-    padding-bottom: 1em;
-    padding-top: 0!important;
+    padding-bottom: 1.1em;
+    padding-top: 2em !important;
     border-top: none!important;
 }
 .wrap h2 {
@@ -51,7 +51,7 @@ input[type=textarea] {
     border-radius: 10px;
 }
 .options-card {
-    padding: 2em;
+    padding: 0 2em 2em 2em;
     display: block;
     margin-bottom: 2em;
 }
@@ -99,6 +99,12 @@ input[type=textarea] {
 .ka-wrap .button-secondary {
 
     border-color: transparent;
+}
+.ka-wrap #sync-all-courses {
+    background: #2271b1;
+    padding: .5em 1em;
+    color: white;
+    font-size: 1.3em;
 }
 .ka-wrap .copytext {
     border-bottom: 1px dashed #ccc;

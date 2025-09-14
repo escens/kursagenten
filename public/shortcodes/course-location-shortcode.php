@@ -16,8 +16,8 @@ class CourseLocationGrid {
     }
 
     private function set_placeholder_image(): void {
-        $options = get_option('kag_kursinnst_option_name');
-        $this->placeholder_image = !empty($options['ka_plassholderbilde_kurssted']) 
+        $options = get_option('design_option_name');
+        $this->placeholder_image = !empty($options['ka_plassholderbilde_sted']) 
             ? $options['ka_plassholderbilde_sted']
             : KURSAG_PLUGIN_URL . 'assets/images/placeholder-location.jpg';
     }
@@ -212,9 +212,9 @@ class CourseLocationGrid {
             
             // Hvis ingen bilde, bruk placeholder
             if (empty($thumbnail)) {
-                $options = get_option('kag_kursinnst_option_name');
-                $thumbnail = isset($options['ka_plassholderbilde_kurssted']) ? 
-                    $options['ka_plassholderbilde_kurssted'] : 
+                $options = get_option('design_option_name');
+                $thumbnail = isset($options['ka_plassholderbilde_sted']) ? 
+                    $options['ka_plassholderbilde_sted'] : 
                     $this->placeholder_image;
             }
 

@@ -16,7 +16,7 @@ class InstructorGrid {
     }
 
     private function set_placeholder_image(): void {
-        $options = get_option('kag_kursinnst_option_name');
+        $options = get_option('design_option_name');
         $this->placeholder_image = !empty($options['ka_plassholderbilde_instruktor']) 
             ? $options['ka_plassholderbilde_instruktor']
             : KURSAG_PLUGIN_URL . 'assets/images/placeholder-instruktor.jpg';
@@ -155,9 +155,20 @@ class InstructorGrid {
                 $thumbnail = get_term_meta($term->term_id, 'image_instructor', true);
             }
             
+            // Hvis fortsatt ingen bilde funnet, prøv den andre kilden som fallback
+            if (empty($thumbnail)) {
+                if ($a['kilde'] === 'ka-bilde') {
+                    // Prøv opplastet bilde som fallback
+                    $thumbnail = get_term_meta($term->term_id, 'image_instructor', true);
+                } else {
+                    // Prøv KA-bilde som fallback
+                    $thumbnail = get_term_meta($term->term_id, 'image_instructor_ka', true);
+                }
+            }
+            
             // Hvis ingen bilde funnet, bruk placeholder
             if (empty($thumbnail)) {
-                $options = get_option('kag_kursinnst_option_name');
+                $options = get_option('design_option_name');
                 $thumbnail = isset($options['ka_plassholderbilde_instruktor']) ? 
                     $options['ka_plassholderbilde_instruktor'] : 
                     $this->placeholder_image;

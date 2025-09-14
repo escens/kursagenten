@@ -38,7 +38,7 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 // Hent Kursagenten-bilde eller placeholder
                 $ka_image_url = get_term_meta($term_id, 'image_instructor_ka', true);
                 if (empty($ka_image_url)) {
-                    $options = get_option('kag_kursinnst_option_name');
+                    $options = get_option('design_option_name');
                     $ka_image_url = isset($options['ka_plassholderbilde_instruktor']) ? 
                         $options['ka_plassholderbilde_instruktor'] : '';
                 }

@@ -25,7 +25,7 @@ class CourseCategories {
     }
 
     private function set_placeholder_image(): void {
-        $options = get_option('kag_kursinnst_option_name');
+        $options = get_option('design_option_name');
         $this->placeholder_image = !empty($options['ka_plassholderbilde_kurs']) 
             ? $options['ka_plassholderbilde_kurs']
             : KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';

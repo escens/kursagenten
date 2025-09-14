@@ -48,8 +48,14 @@ if ($is_taxonomy_page && !$force_standard_view) {
         }
     }
     
+    // Hent plassholderbilde fra innstillinger
+    $options = get_option('design_option_name');
+    $placeholder_image = !empty($options['ka_plassholderbilde_kurs']) 
+        ? $options['ka_plassholderbilde_kurs']
+        : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+    
     // Hent bilde
-    $featured_image_thumb = get_the_post_thumbnail_url($course_id, 'medium') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg';
+    $featured_image_thumb = get_the_post_thumbnail_url($course_id, 'medium') ?: $placeholder_image;
     
     // Sett opp link til kurset
     $course_link = get_permalink($course_id);

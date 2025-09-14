@@ -73,21 +73,21 @@ add_shortcode('youtube', function($atts) {
 
 // Placeholder image shortcodes
 add_shortcode('plassholderbilde-generelt', function($atts) {
-    $options = get_option('kag_kursinnst_option_name');
+    $options = get_option('design_option_name');
     return isset($options['ka_plassholderbilde_generelt']) ? esc_url($options['ka_plassholderbilde_generelt']) : '';
 });
 
 add_shortcode('plassholderbilde-kurs', function($atts) {
-    $options = get_option('kag_kursinnst_option_name');
+    $options = get_option('design_option_name');
     return isset($options['ka_plassholderbilde_kurs']) ? esc_url($options['ka_plassholderbilde_kurs']) : '';
 });
 
 add_shortcode('plassholderbilde-instruktor', function($atts) {
-    $options = get_option('kag_kursinnst_option_name');
+    $options = get_option('design_option_name');
     return isset($options['ka_plassholderbilde_instruktor']) ? esc_url($options['ka_plassholderbilde_instruktor']) : '';
 });
 
 add_shortcode('plassholderbilde-sted', function($atts) {
-    $options = get_option('kag_kursinnst_option_name');
+    $options = get_option('design_option_name');
     return isset($options['ka_plassholderbilde_sted']) ? esc_url($options['ka_plassholderbilde_sted']) : '';
 }); 

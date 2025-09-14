@@ -7,7 +7,7 @@ function kursagenten_sync_courses_button() {
 
     ob_start();
     ?>
-    <a href="#" class="button sync-api-to-posts" id="sync-all-courses">Synkroniser alle kurs</a>
+    <a href="#" class="button sync-api-to-posts" id="sync-all-courses">Hent alle kurs fra Kursagenten</a>
     <div id="sync-status-message" style="margin-top: 10px;"></div>
     <?php
     return ob_get_clean();

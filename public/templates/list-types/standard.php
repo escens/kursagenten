@@ -63,7 +63,13 @@ if ($is_taxonomy_page && !$force_standard_view) {
     $location_room = get_post_meta($course_id, 'course_location_room', true);
     
     // Hent bilde
-    $featured_image_thumb = get_the_post_thumbnail_url($course_id, 'thumbnail') ?: KURSAG_PLUGIN_URL . '/assets/images/placeholder-kurs.jpg';
+    // Hent plassholderbilde fra innstillinger
+    $options = get_option('design_option_name');
+    $placeholder_image = !empty($options['ka_plassholderbilde_kurs']) 
+        ? $options['ka_plassholderbilde_kurs']
+        : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+    
+    $featured_image_thumb = get_the_post_thumbnail_url($course_id, 'thumbnail') ?: $placeholder_image;
     
     // Sett opp link til kurset
     $course_link = get_permalink($course_id);
@@ -106,10 +112,19 @@ if ($is_taxonomy_page && !$force_standard_view) {
 
     $related_course_info = get_course_info_by_location($related_course_id);
 
+    // Hent plassholderbilde fra innstillinger
+    $options = get_option('design_option_name');
+    $placeholder_image = !empty($options['ka_plassholderbilde_kurs']) 
+        ? $options['ka_plassholderbilde_kurs']
+        : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+
     if ($related_course_info) {
         $course_link = esc_url($related_course_info['permalink']);
-        $featured_image_thumb = $related_course_info['thumbnail'];
+        $featured_image_thumb = $related_course_info['thumbnail'] ?: $placeholder_image;
         $excerpt = $related_course_info['excerpt'];
+    } else {
+        // Hvis ingen relatert kursinfo, bruk plassholderbilde
+        $featured_image_thumb = $placeholder_image;
     }
 
     if (!$course_link) {

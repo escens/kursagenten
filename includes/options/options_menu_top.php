@@ -158,11 +158,11 @@ function kursagenten_admin_footer() {
         margin-bottom: 0;
     }
 
-    .options-form h3 {
+    /*.options-form h3 {
         padding-top: 30px;
         margin-top: 20px;
         border-top: 1px solid #eee;
-    }
+    }*/
     </style>
     <?php
 } 

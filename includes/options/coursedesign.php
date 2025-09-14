@@ -57,15 +57,15 @@ class Designmaler {
                 <h2>Kursdesign</h2>
                 <!-- System-sider -->
                 <div class="options-card">
-                    <h3>System-sider</h3>
-                    <p>Her kan du administrere de automatisk genererte sidene for kurskategorier, kurssteder og instruktører.</p>
+                    <h3>Systemsider</h3>
+                    <p>Generer sider for kurs, kurskategorier, kurssteder og instruktører. Sidene opprettes som vanlige WordPress-sider, og du kan endre tittel og innhold. En kortkode legges inn automatisk. Sidene er merket som Kursagenten-systemsider i sideoversikten.</p>
                     <?php $this->render_system_pages_section(); ?>
                 </div>
 
                 <!-- Design Variabler -->
                 <div class="options-card">
-                    <h3>Design Variabler</h3>
-                    <p>Her kan du tilpasse grunnleggende designvariabler for Kursagenten.</p>
+                    <h3>Designvariabler</h3>
+                    <p>Tilpass grunnleggende designvariabler som farger, skriftstørrelser, og maksbredde på plugin-sider.</p>
                     
                     <!-- Maksbredde -->
                     <div class="option-row">
@@ -219,62 +219,10 @@ class Designmaler {
                     </div>
                 </div>
 
-                <!-- Single kurs -->
-                
-                <div class="options-card">
-                    <h3>Enkeltkurs</h3>
-                    
-                    <!-- Layoutbredde -->
-                    <div class="option-row">
-                        <label class="option-label">Bredde:</label>
-                        <div class="option-input">
-                            <label class="radio-label">
-                                <input type="radio" 
-                                       name="kursagenten_single_layout" 
-                                       value="default" 
-                                       <?php checked(get_option('kursagenten_single_layout'), 'default'); ?>>
-                                Tema-standard
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" 
-                                       name="kursagenten_single_layout" 
-                                       value="full-width" 
-                                       <?php checked(get_option('kursagenten_single_layout'), 'full-width'); ?>>
-                                Full bredde
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Design -->
-                    <div class="option-row">
-                        <label class="option-label">Design:</label>
-                        <div class="option-input">
-                            <select name="kursagenten_single_design">
-                                <?php
-                                $current_design = get_option('kursagenten_single_design', 'default');
-                                $designs = [
-                                    'default' => 'Standard',
-                                    'modern' => 'Moderne',
-                                    'minimal' => 'Minimal'
-                                ];
-                                foreach ($designs as $value => $label) {
-                                    printf(
-                                        '<option value="%s" %s>%s</option>',
-                                        esc_attr($value),
-                                        selected($current_design, $value, false),
-                                        esc_html($label)
-                                    );
-                                }
-                                ?>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Arkiv/Kurslister -->
                 <div class="options-card">
                     <h3>Kursliste med filter</h3>
-                    
+                    <p>Tilpass visningen av kurslisten. Denne vises på systemsiden "Kurs", og alle andre steder som bruker kortkoden <span class="copytext">[kursliste]</span>. Velg mellom standard liste og rutenett. Flere design kommer.</p>
                     <!-- Listevisning -->
                     <div class="option-row">
                         <label class="option-label">Listevisning:</label>
@@ -332,6 +280,192 @@ class Designmaler {
                     </div>
                 </div>
 
+                <!-- Filter Settings -->
+                <div class="options-card">
+                    <h3 id="filterinnstillinger">Filterinnstillinger</h3>
+                    <p>Velg hvilke filtre som skal vises på kurslisten. Du kan dra filteret til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.</p>
+                    <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.<br>
+                    For å fjerne et filter, dra det tilbake til tilgjengelige filtre. Husk å <strong>lagre</strong> endringene dine.
+                    </p>
+                    <?php
+                    // Add filter settings
+                    $available_filters = [
+                        'search' => [
+                            'label' => 'Søk',
+                            'placeholder' => 'Søk etter kurs'
+                        ],
+                        'categories' => [
+                            'label' => 'Kategorier',
+                            'placeholder' => 'Velg kategori'
+                        ],
+                        'locations' => [
+                            'label' => 'Kurssteder',
+                            'placeholder' => 'Velg kurssted'
+                        ],
+                        'instructors' => [
+                            'label' => 'Instruktører',
+                            'placeholder' => 'Velg instruktør'
+                        ],
+                        'language' => [
+                            'label' => 'Språk',
+                            'placeholder' => 'Velg språk'
+                        ],
+                        'time_of_day' => [
+                            'label' => 'Dag-/kveldskurs',
+                            'placeholder' => 'Velg tidspunkt'
+                        ],
+                        'price' => [
+                            'label' => 'Pris',
+                            'placeholder' => 'Velg pris'
+                        ],
+                        'date' => [
+                            'label' => 'Startdato',
+                            'placeholder' => 'Velg dato'
+                        ],
+                        'months' => [
+                            'label' => 'Startmåned',
+                            'placeholder' => 'Velg måned'
+                        ]
+                    ];
+                    $inactive_filters = ['time_of_day', 'price'];
+                    $top_filters = get_option('kursagenten_top_filters', []);
+                    $left_filters = get_option('kursagenten_left_filters', []);
+                    $filter_types = get_option('kursagenten_filter_types', []);
+
+                    // Ensure values are arrays
+                    $top_filters = is_array($top_filters) ? $top_filters : explode(',', $top_filters);
+                    $left_filters = is_array($left_filters) ? $left_filters : explode(',', $left_filters);
+
+                    // Save available_filters as an option
+                    update_option('kursagenten_available_filters', $available_filters);
+                    ?>
+                    <div class="filter-selection">
+                        <h4>Tilgjengelige filtre:</h4>
+                        <ul id="available-filters" class="sortable-list">
+                            <?php foreach ($available_filters as $key => $filter) : 
+                                $disabled_class = in_array($key, $inactive_filters) ? 'disabled-filter' : '';
+                                if (!in_array($key, $top_filters) && !in_array($key, $left_filters)) : ?>
+                                    <li data-filter="<?php echo esc_attr($key); ?>" class="ui-sortable-handle <?php echo $disabled_class; ?>"> 
+                                    <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($filter['label']); ?>
+                                        <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language', 'months'])) : ?>
+                                            <span class="filter-type-options">
+                                                <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Knapper</label>
+                                                <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (!isset($filter_types[$key]) || $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
+                                            </span>
+                                        <?php endif; ?>
+                                    </li>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                    
+                    <div class="filter-containers">
+                        <div class="filter-container">
+                            <h4>Filtre i venstre kolonne</h4>
+                            <ul id="left-filters" class="sortable-list">
+                                <?php foreach ($left_filters as $filter) : ?>
+                                    <?php if (!empty($filter)) : ?>
+                                    <li data-filter="<?php echo esc_attr($filter); ?>">
+                                    <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($available_filters[$filter]['label']); ?>
+                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
+                                            <span class="filter-type-options">
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
+                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
+                                                        <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
+                                                </label>
+                                            </span>
+                                        <?php endif; ?>
+                                    </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </ul>
+                            <input type="hidden" name="kursagenten_left_filters" id="left-filters-input" value="<?php echo esc_attr(implode(',', $left_filters)); ?>">
+                        </div>
+
+                        <div class="filter-container">
+                            <h4>Filtre over kurslisten</h4>
+                            <ul id="top-filters" class="sortable-list">
+                                <?php foreach ($top_filters as $filter) : ?>
+                                    <?php if (!empty($filter)) : ?>
+                                    <li data-filter="<?php echo esc_attr($filter); ?>">
+                                    <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($available_filters[$filter]['label']); ?>
+                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
+                                            <span class="filter-type-options">
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
+                                                        <?php echo (isset($filter_types[$filter]) && $filter_types[$filter] === 'chips') ? 'checked' : ''; ?>> Knapper
+                                                </label>
+                                                <label>
+                                                    <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
+                                                        <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
+                                                </label>
+                                            </span>
+                                        <?php endif; ?>
+                                    </li>
+                                    <?php endif; ?>
+                                <?php endforeach; ?>
+                            </ul>
+                            <input type="hidden" name="kursagenten_top_filters" id="top-filters-input" value="<?php echo esc_attr(implode(',', $top_filters)); ?>">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Single kurs -->
+                
+                <div class="options-card">
+                    <h3>Enkeltkurs</h3>
+                    <p>Velg design på sider som viser kursdetaljer, både for alle lokasjoner og enkeltlokasjoner.</p>
+                    <!-- Layoutbredde -->
+                    <div class="option-row">
+                        <label class="option-label">Bredde:</label>
+                        <div class="option-input">
+                            <label class="radio-label">
+                                <input type="radio" 
+                                       name="kursagenten_single_layout" 
+                                       value="default" 
+                                       <?php checked(get_option('kursagenten_single_layout'), 'default'); ?>>
+                                Tema-standard
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" 
+                                       name="kursagenten_single_layout" 
+                                       value="full-width" 
+                                       <?php checked(get_option('kursagenten_single_layout'), 'full-width'); ?>>
+                                Full bredde
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Design -->
+                    <div class="option-row">
+                        <label class="option-label">Design:</label>
+                        <div class="option-input">
+                            <select name="kursagenten_single_design">
+                                <?php
+                                $current_design = get_option('kursagenten_single_design', 'default');
+                                $designs = [
+                                    'default' => 'Standard',
+                                    'modern' => 'Moderne',
+                                    'minimal' => 'Minimal'
+                                ];
+                                foreach ($designs as $value => $label) {
+                                    printf(
+                                        '<option value="%s" %s>%s</option>',
+                                        esc_attr($value),
+                                        selected($current_design, $value, false),
+                                        esc_html($label)
+                                    );
+                                }
+                                ?>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Taxonomi -->
                 <div class="options-card">
                     <h3>Taksonomi-sider</h3>
@@ -368,7 +502,7 @@ class Designmaler {
                                 $designs = [
                                     'default' => 'Standard',
                                     'default-2' => 'Standard 2',
-                                    'default-courselist-shortcode' => 'Standard - kursliste med kortkode',
+                                    'default-courselist-shortcode' => 'Standard - kursliste med filter',
                                     'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {
@@ -523,6 +657,7 @@ class Designmaler {
                                                 <option value="firstname" <?php selected($name_display, 'firstname'); ?>>Fornavn</option>
                                                 <option value="lastname" <?php selected($name_display, 'lastname'); ?>>Etternavn</option>
                                             </select>
+                                            <p class="description">Merk: på <a href="/wp-admin/admin.php?page=design#section-systemsider">siden</a> med instruktøroversikten må du legge til vis="fornavn" eller vis="etternavn" i kortkoden for å vise kun fornavn eller etternavn. Du kan gå direkte til redigering fra <a href="/wp-admin/admin.php?page=design#section-systemsider">Systemsider</a>.</p>
                                         </div>
                                     </div>
                                     <?php endif; ?>
@@ -530,6 +665,30 @@ class Designmaler {
                             </div>
                         <?php endforeach; ?>
                     </div>
+                </div>
+
+                <!-- Standardbilder -->
+                <div class="options-card">
+                    <h3 id="valg-for-bilder">Valg for bilder</h3>
+                    <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsbilder om nødvendig. Du kan også sette inn url til plassholderbilder via <a href="/wp-admin/admin.php?page=kursagenten#kortkoder">kortkoder</a>.</p>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row">Generelt plassholderbilde</th>
+                            <td><?php $this->plassholderbilde_generelt_callback(); ?></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Plassholderbilde for kurs</th>
+                            <td><?php $this->plassholderbilde_kurs_callback(); ?></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Plassholderbilde for instruktør</th>
+                            <td><?php $this->plassholderbilde_instruktor_callback(); ?></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Plassholderbilde for sted</th>
+                            <td><?php $this->plassholderbilde_sted_callback(); ?></td>
+                        </tr>
+                    </table>
                 </div>
 
                 <div class="design-setion">
@@ -734,6 +893,12 @@ class Designmaler {
                 );
             }
         }
+
+        // Registrer filter-innstillinger
+        register_setting('design_option_group', 'kursagenten_top_filters');
+        register_setting('design_option_group', 'kursagenten_left_filters');
+        register_setting('design_option_group', 'kursagenten_filter_types');
+        register_setting('design_option_group', 'kursagenten_available_filters');
     }
 
     public function design_sanitize($input) {
@@ -753,7 +918,11 @@ class Designmaler {
             'taxonomy_list_type',
             'show_images',
             'show_images_taxonomy',
-            'custom_css'
+            'custom_css',
+            'ka_plassholderbilde_generelt',
+            'ka_plassholderbilde_kurs',
+            'ka_plassholderbilde_instruktor',
+            'ka_plassholderbilde_sted'
         ];
 
         foreach ($valid_keys as $key) {
@@ -810,6 +979,17 @@ class Designmaler {
 
         wp_enqueue_style('wp-color-picker');
         wp_enqueue_script('wp-color-picker');
+        wp_enqueue_script('jquery-ui-sortable');
+        wp_enqueue_media();
+        
+        // Enqueue the existing image upload script
+        wp_enqueue_script(
+            'custom-admin-upload-script',
+            plugins_url('/assets/js/admin/image-upload.js', dirname(dirname(__FILE__))),
+            array('jquery'),
+            '1.0.3',
+            true
+        );
         
         wp_enqueue_script(
             'ka-admin-script',
@@ -826,13 +1006,55 @@ class Designmaler {
             '1.0.0'
         );
 
-        // Legg til inline JavaScript for fargevalg-toggle
+        // Legg til inline JavaScript for fargevalg-toggle, seksjons-kollaps og filter-sortable
         wp_add_inline_script('ka-admin-script', '
             jQuery(document).ready(function($) {
+                // Kollaps/utvid seksjoner: h3 fungerer som toggle
+                $(".options-card").each(function() {
+                    var $card = $(this);
+                    var $title = $card.children("h3").first();
+                    var $children = $card.children().not($title);
+                    var $firstParagraph = $children.filter("p").first();
+                    // Innhold som skal toggles (ekskluder <style> og <script>)
+                    var $toggleContent = $children.not($firstParagraph).not("style, script");
+
+                    // Marker og vis kun tittel + første p, skjul resten
+                    $card.addClass("ka-collapsible");
+                    $toggleContent.hide();
+                    $card.attr("data-collapsed", "true");
+
+                    // Legg til liten forklarings-klasse på første p
+                    if ($firstParagraph.length) {
+                        $firstParagraph.addClass("ka-collapsible-intro");
+                    }
+
+                    // Klikk på tittel toggler resten
+                    $title.css("cursor", "pointer").on("click", function(e) {
+                        var isCollapsed = $card.attr("data-collapsed") === "true";
+                        if (isCollapsed) {
+                            $toggleContent.show();
+                            $card.attr("data-collapsed", "false");
+                            // Re-evaluer visning av avanserte farger når seksjonen åpnes
+                            if (typeof toggleAdvancedColors === "function") {
+                                toggleAdvancedColors();
+                            }
+                        } else {
+                            $toggleContent.hide();
+                            $card.attr("data-collapsed", "true");
+                        }
+                    });
+                });
+
                 // Håndter toggle av avanserte fargevalg
                 function toggleAdvancedColors() {
                     var isChecked = $(".ka-advanced-colors-toggle").is(":checked");
-                    $(".advanced-colors-section").toggle(isChecked);
+                    $(".advanced-colors-section").each(function(){
+                        var $section = $(this);
+                        var $card = $section.closest(".options-card");
+                        var isCollapsed = ($card.length && $card.attr("data-collapsed") === "true");
+                        // Vis kun når avkrysset OG seksjonen er utvidet
+                        $section.toggle(isChecked && !isCollapsed);
+                    });
                 }
 
                 // Initial toggle
@@ -840,7 +1062,167 @@ class Designmaler {
 
                 // Bind toggle-funksjon til checkbox
                 $(".ka-advanced-colors-toggle").on("change", toggleAdvancedColors);
+
+                // Filter sortable functionality
+                $(".sortable-list").sortable({
+                    connectWith: ".sortable-list",
+                    placeholder: "ui-state-highlight",
+                    start: function(event, ui) {
+                        ui.placeholder.css({
+                            "height": ui.item.height(),
+                            "background": "#f3f8ff",
+                            "border": "1px dashed #1e88e5",
+                            "margin": "10px 5px"
+                        });
+                    },
+                    over: function(event, ui) {
+                        $(this).addClass("ui-state-hover");
+                    },
+                    out: function(event, ui) {
+                        $(this).removeClass("ui-state-hover");
+                    },
+                    update: function() {
+                        let topFilters = $("#top-filters").sortable("toArray", { attribute: "data-filter" });
+                        let leftFilters = $("#left-filters").sortable("toArray", { attribute: "data-filter" });
+
+                        $("#top-filters-input").val(topFilters.join(","));
+                        $("#left-filters-input").val(leftFilters.join(","));
+
+                        // Beholder radioknappene etter flytting
+                        $(".sortable-list li").each(function() {
+                            let filter = $(this).attr("data-filter");
+                            if (["categories", "locations", "instructors", "language", "months", "time_of_day"].includes(filter)) {
+                                if ($(this).find(".filter-type-options").length === 0) {
+                                    $(this).append(`
+                                        <span class="filter-type-options">
+                                            <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="chips"> Knapper</label>
+                                            <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="list" checked> Liste</label>
+                                        </span>
+                                    `);
+                                }
+                            }
+                        });
+                    }
+                }).disableSelection();
             });
+        ');
+
+        // Legg til filter-CSS
+        wp_add_inline_style('wp-admin', '
+            .filter-containers {
+                display: grid;
+                grid-template-columns: 1fr 2fr;
+                gap: 1em;
+            }
+            /* Kollaps/utvid indikator */
+            .ka-collapsible > h3 {
+                position: relative;
+                padding-right: 24px;
+                user-select: none;
+            }
+            .ka-collapsible > h3::after {
+                content: "\1F782"; /* 🞂 */
+                position: absolute;
+                right: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #666;
+                font-size: 16px;
+                line-height: 1;
+                transition: transform 0.2s ease;
+            }
+            .ka-collapsible[data-collapsed="false"] > h3::after {
+                content: "\1F783"; /* 🞃 */
+            }
+            .ka-collapsible-intro {
+                margin-top: -6px;
+                color: #555;
+            }
+            .sortable-list {
+                list-style: none;
+                padding: 10px;
+                background: #f6f6f67a;
+                min-height: 50px;
+                border: 2px dashed #cccccc61;
+                border-radius: 8px;
+            }
+            .sortable-list.ui-state-hover {
+                background: #e8f0fe;
+                border: 2px dashed #1e88e5;
+                transition: all 0.2s ease;
+            }
+            .sortable-list li.ui-sortable-helper {
+                background: #ffffff;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                transform: scale(1.02);
+                transition: all 0.2s ease;
+            }
+            .sortable-list li {
+                padding: 10px 10px;
+                margin: 10px 5px;
+                background: #fff;
+                cursor: move;
+                border: 1px solid #e5e5e5;
+                border-radius: 5px;
+                font-weight: bold;
+                position: relative;
+            }
+            #available-filters.sortable-list {
+                display: flex;
+                border: 0;
+                background: #f6f6f67a;
+                padding: 1em;
+                border: 2px dashed #ccc;
+                border-radius: 8px;
+            }
+            #available-filters.sortable-list li {
+                width: fit-content;
+                height: fit-content;
+            }
+            .sortable-list li {
+                padding: 10px 15px 10px 20px;
+                position: relative;
+            }
+            .sortable-list li i.ka-icon {
+                position: absolute;
+                top: 12px;
+                left: 2px;
+            }
+            #available-filters .filter-type-options {
+                display: none;
+            }
+            .filter-type-options {
+                float: right;
+                margin-left: 10px;
+                font-weight: normal;
+                color: #777;
+            }
+            #left-filters .filter-type-options {
+                float: none;
+                clear: both;
+                display: block;
+                margin-top: 10px;
+            }
+            .disabled-filter {
+                color: #616161;
+                pointer-events: none;
+                opacity: 0.6;
+                position: relative;
+            }
+            li.disabled-filter::after {
+                content: "kommer";
+                display: block;
+                position: absolute;
+                right: -4px;
+                bottom: -11px;
+                background: #fff;
+                color: #4d4d4d;
+                font-size: 10px;
+                font-weight: normal;
+                padding: 0 4px;
+                border-radius: 3px;
+                border: 1px solid #eee;
+            }
         ');
     }
 
@@ -1367,6 +1749,70 @@ r                                    [kurssteder layout=rad stil=kort grid=3 gri
             // Logg at permalenkene ble oppdatert
             error_log('Instructor permalinks updated due to name display setting change from ' . $old_value . ' to ' . $new_value);
         }
+    }
+
+    /**
+     * Callback for generelt plassholderbilde
+     */
+    public function plassholderbilde_generelt_callback() {
+        $image_url = isset($this->design_options['ka_plassholderbilde_generelt']) ? $this->design_options['ka_plassholderbilde_generelt'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-generell.jpg';
+        ?>
+        <div class="image-upload-wrapper">
+            <img id="ka_plassholderbilde_generelt_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
+            <input type="hidden" id="ka_plassholderbilde_generelt" name="design_option_name[ka_plassholderbilde_generelt]" value="<?php echo esc_attr($image_url); ?>" />
+            <button type="button" class="button upload_image_button_ka_plassholderbilde_generelt">Velg bilde</button>
+            <button type="button" class="button remove_image_button_ka_plassholderbilde_generelt" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
+        </div>
+        <?php
+    }
+
+    /**
+     * Callback for kurs plassholderbilde
+     */
+    public function plassholderbilde_kurs_callback() {
+        $image_url = isset($this->design_options['ka_plassholderbilde_kurs']) ? $this->design_options['ka_plassholderbilde_kurs'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';
+        ?>
+        <div class="image-upload-wrapper">
+            <img id="ka_plassholderbilde_kurs_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
+            <input type="hidden" id="ka_plassholderbilde_kurs" name="design_option_name[ka_plassholderbilde_kurs]" value="<?php echo esc_attr($image_url); ?>" />
+            <button type="button" class="button upload_image_button_ka_plassholderbilde_kurs">Velg bilde</button>
+            <button type="button" class="button remove_image_button_ka_plassholderbilde_kurs" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
+        </div>
+        <?php
+    }
+
+    /**
+     * Callback for instruktør plassholderbilde
+     */
+    public function plassholderbilde_instruktor_callback() {
+        $image_url = isset($this->design_options['ka_plassholderbilde_instruktor']) ? $this->design_options['ka_plassholderbilde_instruktor'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-instruktor.jpg';
+        ?>
+        <div class="image-upload-wrapper">
+            <img id="ka_plassholderbilde_instruktor_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
+            <input type="hidden" id="ka_plassholderbilde_instruktor" name="design_option_name[ka_plassholderbilde_instruktor]" value="<?php echo esc_attr($image_url); ?>" />
+            <button type="button" class="button upload_image_button_ka_plassholderbilde_instruktor">Velg bilde</button>
+            <button type="button" class="button remove_image_button_ka_plassholderbilde_instruktor" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
+        </div>
+        <?php
+    }
+
+    /**
+     * Callback for sted plassholderbilde
+     */
+    public function plassholderbilde_sted_callback() {
+        $image_url = isset($this->design_options['ka_plassholderbilde_sted']) ? $this->design_options['ka_plassholderbilde_sted'] : '';
+        $fallback_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-location.jpg';
+        ?>
+        <div class="image-upload-wrapper">
+            <img id="ka_plassholderbilde_sted_preview" src="<?php echo esc_url($image_url ? $image_url : $fallback_url); ?>" style="max-width: 80px; max-height: 80px; <?php echo ($image_url || $fallback_url) ? '' : 'display: none;'; ?> border:1px solid #eee; background:#fafafa;" />
+            <input type="hidden" id="ka_plassholderbilde_sted" name="design_option_name[ka_plassholderbilde_sted]" value="<?php echo esc_attr($image_url); ?>" />
+            <button type="button" class="button upload_image_button_ka_plassholderbilde_sted">Velg bilde</button>
+            <button type="button" class="button remove_image_button_ka_plassholderbilde_sted" style="<?php echo $image_url ? '' : 'display: none;'; ?>">Fjern bilde</button>
+        </div>
+        <?php
     }
 }
 

@@ -95,7 +95,7 @@ function get_instructor_image($term_id) {
     }
     
     // Hvis fortsatt ingen bilde, bruk placeholder fra innstillinger
-    $options = get_option('kag_kursinnst_option_name');
+    $options = get_option('design_option_name');
     $image_url = isset($options['ka_plassholderbilde_instruktor']) ? 
         $options['ka_plassholderbilde_instruktor'] : '';
     
