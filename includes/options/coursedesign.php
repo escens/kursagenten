@@ -359,6 +359,20 @@ class Designmaler {
                         </ul>
                     </div>
                     
+                    <!-- Standard høyde for filterlister -->
+                    <div class="option-row">
+                        <label class="option-label">Standard høyde for filterlister:</label>
+                        <div class="option-input">
+                            <input type="number" 
+                                   name="kursagenten_filter_default_height" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_filter_default_height', 250)); ?>"
+                                   min="100" 
+                                   max="1000"
+                                   step="10">
+                            <p class="description">Standard høyde i piksler for filterlister (100-1000px). Standard: 250px</p>
+                        </div>
+                    </div>
+
                     <div class="filter-containers">
                         <div class="filter-container">
                             <h4>Filtre i venstre kolonne</h4>
@@ -377,6 +391,19 @@ class Designmaler {
                                                     <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
                                                         <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
                                                 </label>
+                                                <?php if (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') : ?>
+                                                    <label class="checkbox-label-small filter-list-options size-limit-checkbox">
+                                                        <?php 
+                                                        $no_collapse_settings = get_option('kursagenten_filter_no_collapse', array());
+                                                        $is_checked = isset($no_collapse_settings[$filter]) && $no_collapse_settings[$filter];
+                                                        ?>
+                                                        <input type="checkbox" 
+                                                               name="kursagenten_filter_no_collapse[<?php echo esc_attr($filter); ?>]" 
+                                                               value="1" 
+                                                               <?php checked($is_checked, true); ?>>
+                                                        Ikke begrens høyde
+                                                    </label>
+                                                <?php endif; ?>
                                             </span>
                                         <?php endif; ?>
                                     </li>
@@ -745,11 +772,20 @@ class Designmaler {
                     .taxonomy-override .option-row {
                         margin-bottom: 15px;
                     }
-                    .checkbox-label {
-                        font-weight: 600;
-                        margin-bottom: 1em;
-                        display: block;
-                    }
+            .checkbox-label {
+                font-weight: 600;
+                margin-bottom: 1em;
+                display: block;
+            }
+            .checkbox-label-small {
+                font-weight: normal;
+                font-size: 0.9em;
+                margin-left: 10px;
+
+            }
+            #top-filters .size-limit-checkbox {
+                display: none;
+            }
                 </style>
 
                 <!-- Egen CSS -->
@@ -899,6 +935,9 @@ class Designmaler {
         register_setting('design_option_group', 'kursagenten_left_filters');
         register_setting('design_option_group', 'kursagenten_filter_types');
         register_setting('design_option_group', 'kursagenten_available_filters');
+        register_setting('design_option_group', 'kursagenten_filter_default_height');
+        register_setting('design_option_group', 'kursagenten_filter_no_collapse');
+        
     }
 
     public function design_sanitize($input) {
@@ -950,6 +989,13 @@ class Designmaler {
                         $sanitary_values[$key] = sanitize_text_field($input[$key]);
                     }
                 }
+            }
+        }
+
+        // Sanitize filter no-collapse settings
+        if (isset($input['kursagenten_filter_no_collapse']) && is_array($input['kursagenten_filter_no_collapse'])) {
+            foreach ($input['kursagenten_filter_no_collapse'] as $filter => $value) {
+                $sanitary_values['kursagenten_filter_no_collapse'][$filter] = rest_sanitize_boolean($value);
             }
         }
         
@@ -1007,7 +1053,7 @@ class Designmaler {
         );
 
         // Legg til inline JavaScript for fargevalg-toggle, seksjons-kollaps og filter-sortable
-        wp_add_inline_script('ka-admin-script', '
+        wp_add_inline_script('ka-admin-script', <<<'JS'
             jQuery(document).ready(function($) {
                 // Kollaps/utvid seksjoner: h3 fungerer som toggle
                 $(".options-card").each(function() {
@@ -1063,6 +1109,20 @@ class Designmaler {
                 // Bind toggle-funksjon til checkbox
                 $(".ka-advanced-colors-toggle").on("change", toggleAdvancedColors);
 
+                // Håndter toggle av filter-type og visning av "Ikke begrens høyde" checkbox
+                $(document).on("change", "input[name^=\"kursagenten_filter_types\"]", function() {
+                    var $this = $(this);
+                    var $container = $this.closest("li");
+                    var $listOptions = $container.find(".checkbox-label-small.filter-list-options");
+                    
+                    // Vis kun checkbox i venstre kolonne (ikke i toppfilteret)
+                    if ($this.val() === "list" && $container.closest("#left-filters").length > 0) {
+                        $listOptions.show();
+                    } else {
+                        $listOptions.hide();
+                    }
+                });
+
                 // Filter sortable functionality
                 $(".sortable-list").sortable({
                     connectWith: ".sortable-list",
@@ -1093,10 +1153,21 @@ class Designmaler {
                             let filter = $(this).attr("data-filter");
                             if (["categories", "locations", "instructors", "language", "months", "time_of_day"].includes(filter)) {
                                 if ($(this).find(".filter-type-options").length === 0) {
+                                    let $container = $(this);
+                                    let isLeftFilter = $container.closest("#left-filters").length > 0;
+                                    
+                                    let checkboxHtml = '';
+                                    if (isLeftFilter) {
+                                        checkboxHtml = `<label class="checkbox-label-small filter-list-options size-limit-checkbox">
+                                            <input type="checkbox" name="kursagenten_filter_no_collapse[${filter}]" value="1"> Ikke begrens høyde
+                                        </label>`;
+                                    }
+                                    
                                     $(this).append(`
                                         <span class="filter-type-options">
                                             <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="chips"> Knapper</label>
                                             <label><input type="radio" name="kursagenten_filter_types[${filter}]" value="list" checked> Liste</label>
+                                            ${checkboxHtml}
                                         </span>
                                     `);
                                 }
@@ -1104,8 +1175,9 @@ class Designmaler {
                         });
                     }
                 }).disableSelection();
-            });
-        ');
+        });
+        JS    
+        );
 
         // Legg til filter-CSS
         wp_add_inline_style('wp-admin', '
@@ -1285,7 +1357,7 @@ class Designmaler {
                 'kurssteder' => [
                     'title' => 'Kurssteder',
                     'content' => '  <!-- wp:shortcode -->
-r                                    [kurssteder layout=rad stil=kort grid=3 gridtablet=2 gridmobil=1 radavstand=2em bildestr=100px bildeform=firkantet bildeformat=1/1 fontmin="14" fontmaks="18"]
+                                    [kurssteder layout=rad stil=kort grid=3 gridtablet=2 gridmobil=1 radavstand=2em bildestr=100px bildeform=firkantet bildeformat=1/1 fontmin="14" fontmaks="18"]
                                     <!-- /wp:shortcode -->',
                     'description' => 'Oversiktsside for alle kurssteder',
                     'slug' => 'kurssteder'

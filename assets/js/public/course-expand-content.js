@@ -5,7 +5,14 @@ function initExpandableContent() {
     const expandableElements = document.querySelectorAll('.expand-content');
 
     expandableElements.forEach(element => {
-        const maxHeight = parseInt(element.dataset.size) || 200;
+        const dataSize = element.dataset.size;
+        
+        // Hvis data-size er "auto", ikke begrens høyden
+        if (dataSize === 'auto') {
+            return; // Hopp over dette elementet
+        }
+        
+        const maxHeight = parseInt(dataSize) || 200;
         
         // Sjekk om innholdet er høyere enn maksimal høyde
         if (element.scrollHeight > maxHeight) {

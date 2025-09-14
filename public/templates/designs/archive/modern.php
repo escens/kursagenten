@@ -313,7 +313,14 @@ foreach ($available_filters as $filter_key => $filter_info) {
                                                 <?php endforeach; ?>
                                             </div>
                                         <?php elseif ($filter_types[$filter] === 'list') : ?>
-                                            <div id="filter-list-location" class="filter-list expand-content" data-size="100">
+                                            <?php 
+                                            // Hent innstillinger for filterhøyde
+                                            $default_height = get_option('kursagenten_filter_default_height', 250);
+                                            $no_collapse_settings = get_option('kursagenten_filter_no_collapse', array());
+                                            $no_collapse = isset($no_collapse_settings[$filter]) && $no_collapse_settings[$filter];
+                                            $data_size = $no_collapse ? 'auto' : $default_height;
+                                            ?>
+                                            <div id="filter-list-location" class="filter-list expand-content" data-size="<?php echo esc_attr($data_size); ?>">
                                                 <?php foreach ($taxonomy_data[$filter]['terms'] as $term) : ?>
                                                     <label class="filter-list-item checkbox">
                                                         <input type="checkbox" class="filter-checkbox"
