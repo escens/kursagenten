@@ -163,7 +163,7 @@ function get_filtered_languages() {
     return array_values($languages);
 }
 
-// Funksjon for å hente filtrerte måneder
+// Funksjon for å hente filtrerte måneder med årstall-støtte
 function get_filtered_months() {
     // Hent kun coursedates siden månedene er lagret der
     $visible_coursedates = get_posts([
@@ -184,18 +184,69 @@ function get_filtered_months() {
     ]);
 
     $months = [];
+    $current_year = (int) date('Y');
+    
     foreach ($visible_coursedates as $coursedate) {
         $month = get_post_meta($coursedate->ID, 'course_month', true);
+        $first_date = get_post_meta($coursedate->ID, 'course_first_date', true);
+        
         if (!empty($month)) {
-            $months[$month] = [
-                'value' => $month,
-                'name' => mb_ucfirst(date_i18n('F', mktime(0, 0, 0, $month, 1)))
+            $month_num = (int) $month;
+            
+            // Hvis vi har course_first_date, bruk den for å bestemme år
+            if (!empty($first_date)) {
+                // Prøv forskjellige datoformater
+                $date_obj = null;
+                
+                // Format 1: Y-m-d H:i:s (fra format_date_for_db)
+                $date_obj = DateTime::createFromFormat('Y-m-d H:i:s', $first_date);
+                
+                // Format 2: Y-m-d (bare dato)
+                if (!$date_obj) {
+                    $date_obj = DateTime::createFromFormat('Y-m-d', $first_date);
+                }
+                
+                // Format 3: d.m.Y (fra format_date)
+                if (!$date_obj) {
+                    $date_obj = DateTime::createFromFormat('d.m.Y', $first_date);
+                }
+                
+                if ($date_obj) {
+                    $year = (int) $date_obj->format('Y');
+                } else {
+                    // Fallback til inneværende år hvis dato ikke kan parses
+                    $year = $current_year;
+                }
+            } else {
+                // Fallback til inneværende år hvis course_first_date ikke er satt
+                $year = $current_year;
+            }
+            
+            // Lag en unik nøkkel som kombinerer måned og år
+            $month_year_key = sprintf('%02d%04d', $month_num, $year);
+            
+            // Bestem visningsnavn basert på år
+            if ($year === $current_year) {
+                $display_name = mb_ucfirst(date_i18n('F', mktime(0, 0, 0, $month_num, 1)));
+            } else {
+                $display_name = mb_ucfirst(date_i18n('F', mktime(0, 0, 0, $month_num, 1))) . ' ' . $year;
+            }
+            
+            $months[$month_year_key] = [
+                'value' => $month_year_key, // Format: MMYYYY (eks: 092025)
+                'name' => $display_name,
+                'month' => $month_num,
+                'year' => $year,
+                'sort_key' => $year * 100 + $month_num // For kronologisk sortering
             ];
         }
     }
 
-    // Sorter månedene i stigende rekkefølge basert på månedsnummeret
-    ksort($months, SORT_NUMERIC);
+    // Sorter månedene kronologisk basert på år og måned
+    uasort($months, function($a, $b) {
+        return $a['sort_key'] - $b['sort_key'];
+    });
+
 
     return array_values($months);
 }

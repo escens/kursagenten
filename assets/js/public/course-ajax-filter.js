@@ -374,12 +374,19 @@
 						
 						// console.log('Oppdaterer månedsfilter:', months);
 						
-						// Konverter måneder til to-sifret format
+						// Konverter måneder til riktig format (MMYYYY)
 						const formattedMonths = months.map(month => {
-							const numMonth = parseInt(month, 10);
-							return numMonth >= 1 && numMonth <= 12 ? 
-								numMonth.toString().padStart(2, '0') : 
-								month;
+							// Hvis det allerede er i MMYYYY format, bruk det
+							if (month.length === 6 && /^\d{6}$/.test(month)) {
+								return month;
+							}
+							// Hvis det er bare måned (MM), legg til inneværende år
+							else if (month.length <= 2 && /^\d{1,2}$/.test(month)) {
+								const currentYear = new Date().getFullYear();
+								return month.padStart(2, '0') + currentYear;
+							}
+							// Ellers returner som den er
+							return month;
 						});
 						
 						// console.log('Formaterte måneder:', formattedMonths);
@@ -483,12 +490,21 @@
 			// Handle checkbox-based filters
 			if ($('.filter-checkbox[data-url-key="' + filterKey + '"]').length) {
 				values.forEach(value => {
-					const lowercaseValue = value.toLowerCase();
-					$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
-						if ($(this).val().toLowerCase() === lowercaseValue) {
-							$(this).prop('checked', true);
-						}
-					});
+					// Spesiell håndtering for månedsfilteret
+					if (filterKey === 'mnd') {
+						$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
+							if ($(this).val() === value) {
+								$(this).prop('checked', true);
+							}
+						});
+					} else {
+						const lowercaseValue = value.toLowerCase();
+						$('.filter-checkbox[data-url-key="' + filterKey + '"]').each(function () {
+							if ($(this).val().toLowerCase() === lowercaseValue) {
+								$(this).prop('checked', true);
+							}
+						});
+					}
 				});
 			}
 		});
@@ -611,11 +627,9 @@
 
 						if (filters[urlKey]) {
 							if (Array.isArray(filters[urlKey])) {
-								// For måneder, sørg for at vi sammenligner med samme format
-								const formattedValue = String(filterValue).padStart(2, '0');
+								// For måneder, sammenlign med samme format (MMYYYY)
 								filters[urlKey] = filters[urlKey].filter(item => {
-									const formattedItem = String(item).padStart(2, '0');
-									return formattedItem !== formattedValue;
+									return item !== filterValue;
 								});
 								if (filters[urlKey].length === 0) {
 									filters[urlKey] = null;

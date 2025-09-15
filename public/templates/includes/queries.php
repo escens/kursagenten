@@ -214,6 +214,7 @@ function get_course_dates_query($args = []) {
     $sort = isset($_REQUEST['sort']) ? sanitize_text_field($_REQUEST['sort']) : '';
     $order = isset($_REQUEST['order']) ? sanitize_text_field($_REQUEST['order']) : 'asc';
     $months = isset($_REQUEST['mnd']) ? (is_array($_REQUEST['mnd']) ? $_REQUEST['mnd'] : explode(',', $_REQUEST['mnd'])) : [];
+    
     $per_page = isset($_REQUEST['per_page']) ? intval($_REQUEST['per_page']) : get_option('kursagenten_courses_per_page', 10);
     $search = isset($_REQUEST['sok']) ? sanitize_text_field($_REQUEST['sok']) : '';
     
@@ -257,15 +258,43 @@ function get_course_dates_query($args = []) {
         $meta_query[] = $language_query;
     }
     
-    // Legg til måned filter
+    // Legg til måned filter med årstall-støtte
     if (!empty($months)) {
         $month_query = ['relation' => 'OR'];
-        foreach ($months as $month) {
-            $month_query[] = [
-                'key' => 'course_month',
-                'value' => $month,
-                'compare' => '='
-            ];
+        foreach ($months as $month_year) {
+            // Parse måned+år format (MMYYYY)
+            if (strlen($month_year) === 6 && is_numeric($month_year)) {
+                $month = substr($month_year, 0, 2);
+                $year = substr($month_year, 2, 4);
+                
+                // Sjekk både måned og år ved å sammenligne med course_first_date
+                // Vi bruker >= og <= for å sammenligne datoer riktig
+                $month_query[] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'course_month',
+                        'value' => sprintf('%02d', $month), // Bruk string-format (01, 03, etc.)
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'course_first_date',
+                        'value' => $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
+                        'compare' => '>='
+                    ],
+                    [
+                        'key' => 'course_first_date',
+                        'value' => $year . '-' . sprintf('%02d', $month) . '-31 23:59:59',
+                        'compare' => '<='
+                    ]
+                ];
+            } else {
+                // Fallback for gamle format (bare måned)
+                $month_query[] = [
+                    'key' => 'course_month',
+                    'value' => $month_year,
+                    'compare' => '='
+                ];
+            }
         }
         $meta_query[] = $month_query;
     }
@@ -548,12 +577,11 @@ function get_course_languages() {
 }
 
 /**
- * Get all available months from course dates
+ * Get all available months from course dates with year support
  * 
  * @return array Array of month objects with name and number
  */
-
- function get_course_months() {
+function get_course_months() {
     $args = [
         'post_type'      => 'coursedate',
         'posts_per_page' => -1,
@@ -562,22 +590,68 @@ function get_course_languages() {
 
     $coursedates = get_posts($args);
     $month_terms = [];
+    $current_year = (int) date('Y');
 
     foreach ($coursedates as $post_id) {
         $meta_month = get_post_meta($post_id, 'course_month', true);
+        $first_date = get_post_meta($post_id, 'course_first_date', true);
+        
         if (!empty($meta_month) && is_numeric($meta_month) && $meta_month >= 1 && $meta_month <= 12) {
-            $padded_month = str_pad($meta_month, 2, '0', STR_PAD_LEFT);
+            $month_num = (int) $meta_month;
+            
+            // Hvis vi har course_first_date, bruk den for å bestemme år
+            if (!empty($first_date)) {
+                // Prøv forskjellige datoformater
+                $date_obj = null;
+                
+                // Format 1: Y-m-d H:i:s (fra format_date_for_db)
+                $date_obj = DateTime::createFromFormat('Y-m-d H:i:s', $first_date);
+                
+                // Format 2: Y-m-d (bare dato)
+                if (!$date_obj) {
+                    $date_obj = DateTime::createFromFormat('Y-m-d', $first_date);
+                }
+                
+                // Format 3: d.m.Y (fra format_date)
+                if (!$date_obj) {
+                    $date_obj = DateTime::createFromFormat('d.m.Y', $first_date);
+                }
+                
+                if ($date_obj) {
+                    $year = (int) $date_obj->format('Y');
+                } else {
+                    // Fallback til inneværende år hvis dato ikke kan parses
+                    $year = $current_year;
+                }
+            } else {
+                // Fallback til inneværende år hvis course_first_date ikke er satt
+                $year = $current_year;
+            }
+            
+            // Lag en unik nøkkel som kombinerer måned og år
+            $month_year_key = sprintf('%02d%04d', $month_num, $year);
+            
+            // Bestem visningsnavn basert på år
+            if ($year === $current_year) {
+                $display_name = ucfirst(date_i18n('F', strtotime("2024-{$meta_month}-01")));
+            } else {
+                $display_name = ucfirst(date_i18n('F', strtotime("2024-{$meta_month}-01"))) . ' ' . $year;
+            }
+            
             $month_terms[] = (object) [
-                'slug' => $padded_month,
-                'name' => ucfirst(date_i18n('F', strtotime("2024-{$padded_month}-01"))),
-                'value' => $padded_month
+                'slug' => $month_year_key,
+                'name' => $display_name,
+                'value' => $month_year_key,
+                'month' => $month_num,
+                'year' => $year,
+                'sort_key' => $year * 100 + $month_num
             ];
         }
     }
 
-    // Sorter månedene etter verdi
+    // Sorter månedene kronologisk basert på år og måned
     usort($month_terms, function($a, $b) {
-        return (int)$a->value - (int)$b->value;
+        return $a->sort_key - $b->sort_key;
     });
 
     return array_unique($month_terms, SORT_REGULAR);
@@ -1232,6 +1306,7 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
         $test_query = get_course_dates_query_for_count($test_filters_with_term);
         $count = $test_query->found_posts;
         
+        
         // Lagre count for denne termen
         $term_key = '';
         switch ($filter_type) {
@@ -1265,15 +1340,103 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
  * @return WP_Query Query-objekt med resultater
  */
 function get_course_dates_query_for_count($filters) {
-    // Sett opp $_REQUEST basert på filtrene
-    $original_request = $_REQUEST;
-    $_REQUEST = array_merge($_REQUEST, $filters);
+    // Lag en direkte spørring uten å bruke $_REQUEST
+    $args = [
+        'post_type' => 'coursedate',
+        'post_status' => 'publish', // Kun publiserte coursedates
+        'posts_per_page' => 1, // Kun for å få count raskt
+        'meta_query' => ['relation' => 'AND']
+    ];
     
-    // Kjør query med posts_per_page = 1 for å få count raskt
-    $query = get_course_dates_query(['posts_per_page' => 1]);
+    // Legg til måned filter hvis det er spesifisert
+    if (!empty($filters['mnd'])) {
+        $months = is_array($filters['mnd']) ? $filters['mnd'] : [$filters['mnd']];
+        $month_query = ['relation' => 'OR'];
+        
+        foreach ($months as $month_year) {
+            if (strlen($month_year) === 6 && is_numeric($month_year)) {
+                $month = substr($month_year, 0, 2);
+                $year = substr($month_year, 2, 4);
+                
+                $month_query[] = [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'course_month',
+                        'value' => sprintf('%02d', $month), // Bruk string-format (01, 03, etc.)
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'course_first_date',
+                        'value' => $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
+                        'compare' => '>='
+                    ],
+                    [
+                        'key' => 'course_first_date',
+                        'value' => $year . '-' . sprintf('%02d', $month) . '-31 23:59:59',
+                        'compare' => '<='
+                    ]
+                ];
+            }
+        }
+        $args['meta_query'][] = $month_query;
+    }
     
-    // Gjenopprett original $_REQUEST
-    $_REQUEST = $original_request;
+    // Legg til kategori filter hvis det er spesifisert
+    if (!empty($filters['k'])) {
+        $categories = is_array($filters['k']) ? $filters['k'] : [$filters['k']];
+        $args['tax_query'] = [
+            'relation' => 'AND',
+            [
+                'taxonomy' => 'coursecategory',
+                'field' => 'slug',
+                'terms' => $categories,
+                'operator' => 'IN'
+            ]
+        ];
+    }
     
-    return $query;
+    // Legg til lokasjon filter hvis det er spesifisert
+    if (!empty($filters['sted'])) {
+        $locations = is_array($filters['sted']) ? $filters['sted'] : [$filters['sted']];
+        $location_query = ['relation' => 'OR'];
+        foreach ($locations as $location) {
+            $location_query[] = [
+                'key' => 'course_location',
+                'value' => $location,
+                'compare' => '='
+            ];
+        }
+        $args['meta_query'][] = $location_query;
+    }
+    
+    // Legg til instruktør filter hvis det er spesifisert
+    if (!empty($filters['i'])) {
+        $instructors = is_array($filters['i']) ? $filters['i'] : [$filters['i']];
+        if (!isset($args['tax_query'])) {
+            $args['tax_query'] = ['relation' => 'AND'];
+        }
+        $args['tax_query'][] = [
+            'taxonomy' => 'instructors',
+            'field' => 'slug',
+            'terms' => $instructors,
+            'operator' => 'IN'
+        ];
+    }
+    
+    // Legg til språk filter hvis det er spesifisert
+    if (!empty($filters['sprak'])) {
+        $languages = is_array($filters['sprak']) ? $filters['sprak'] : [$filters['sprak']];
+        $language_query = ['relation' => 'OR'];
+        foreach ($languages as $language) {
+            $language_query[] = [
+                'key' => 'course_language',
+                'value' => $language,
+                'compare' => '='
+            ];
+        }
+        $args['meta_query'][] = $language_query;
+    }
+    
+    
+    return new WP_Query($args);
 }
