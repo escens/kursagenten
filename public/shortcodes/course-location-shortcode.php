@@ -213,7 +213,7 @@ class CourseLocationGrid {
             // Hvis ingen bilde, bruk placeholder
             if (empty($thumbnail)) {
                 $options = get_option('design_option_name');
-                $thumbnail = isset($options['ka_plassholderbilde_sted']) ? 
+                $thumbnail = !empty($options['ka_plassholderbilde_sted']) ? 
                     $options['ka_plassholderbilde_sted'] : 
                     $this->placeholder_image;
             }

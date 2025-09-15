@@ -169,7 +169,7 @@ class InstructorGrid {
             // Hvis ingen bilde funnet, bruk placeholder
             if (empty($thumbnail)) {
                 $options = get_option('design_option_name');
-                $thumbnail = isset($options['ka_plassholderbilde_instruktor']) ? 
+                $thumbnail = !empty($options['ka_plassholderbilde_instruktor']) ? 
                     $options['ka_plassholderbilde_instruktor'] : 
                     $this->placeholder_image;
             }

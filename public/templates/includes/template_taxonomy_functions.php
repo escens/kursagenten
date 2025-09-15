@@ -96,10 +96,15 @@ function get_instructor_image($term_id) {
     
     // Hvis fortsatt ingen bilde, bruk placeholder fra innstillinger
     $options = get_option('design_option_name');
-    $image_url = isset($options['ka_plassholderbilde_instruktor']) ? 
+    $image_url = !empty($options['ka_plassholderbilde_instruktor']) ? 
         $options['ka_plassholderbilde_instruktor'] : '';
     
-    return !empty($image_url) ? esc_url($image_url) : '';
+    // Hvis ingen placeholder i innstillinger, bruk fallback-bilde
+    if (empty($image_url)) {
+        $image_url = KURSAG_PLUGIN_URL . 'assets/images/placeholder-instruktor.jpg';
+    }
+    
+    return esc_url($image_url);
 }
 
 /**
