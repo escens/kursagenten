@@ -56,14 +56,14 @@ class Designmaler {
                 <?php kursagenten_sticky_admin_menu(); ?>
                 <h2>Kursdesign</h2>
                 <!-- System-sider -->
-                <div class="options-card">
+                <div class="options-card" id="section-systemsider" data-section="systemsider">
                     <h3>Systemsider</h3>
                     <p>Generer sider for kurs, kurskategorier, kurssteder og instruktører. Sidene opprettes som vanlige WordPress-sider, og du kan endre tittel og innhold. En kortkode legges inn automatisk. Sidene er merket som Kursagenten-systemsider i sideoversikten.</p>
                     <?php $this->render_system_pages_section(); ?>
                 </div>
 
                 <!-- Design Variabler -->
-                <div class="options-card">
+                <div class="options-card" data-section="designvariabler">
                     <h3>Designvariabler</h3>
                     <p>Tilpass grunnleggende designvariabler som farger, skriftstørrelser, og maksbredde på plugin-sider.</p>
                     
@@ -220,7 +220,7 @@ class Designmaler {
                 </div>
 
                 <!-- Arkiv/Kurslister -->
-                <div class="options-card">
+                <div class="options-card" data-section="kursliste">
                     <h3>Kursliste med filter</h3>
                     <p>Tilpass visningen av kurslisten. Denne vises på systemsiden "Kurs", og alle andre steder som bruker kortkoden <span class="copytext">[kursliste]</span>. Velg mellom standard liste og rutenett. Flere design kommer.</p>
                     <!-- Listevisning -->
@@ -281,7 +281,7 @@ class Designmaler {
                 </div>
 
                 <!-- Filter Settings -->
-                <div class="options-card">
+                <div class="options-card" data-section="filterinnstillinger">
                     <h3 id="filterinnstillinger">Filterinnstillinger</h3>
                     <p>Velg hvilke filtre som skal vises på kurslisten. Du kan dra filteret til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.</p>
                     <p>Ta tak i filteret du ønsker å bruke, og dra til enten venstre kolonne eller over kursliste. Velg om filteret skal vises som tagger eller avkrysningsliste.<br>
@@ -358,21 +358,7 @@ class Designmaler {
                             <?php endforeach; ?>
                         </ul>
                     </div>
-                    
-                    <!-- Standard høyde for filterlister -->
-                    <div class="option-row">
-                        <label class="option-label">Standard høyde for filterlister:</label>
-                        <div class="option-input">
-                            <input type="number" 
-                                   name="kursagenten_filter_default_height" 
-                                   value="<?php echo esc_attr(get_option('kursagenten_filter_default_height', 250)); ?>"
-                                   min="100" 
-                                   max="1000"
-                                   step="10">
-                            <p class="description">Standard høyde i piksler for filterlister (100-1000px). Standard: 250px</p>
-                        </div>
-                    </div>
-
+                   
                     <div class="filter-containers">
                         <div class="filter-container">
                             <h4>Filtre i venstre kolonne</h4>
@@ -439,11 +425,30 @@ class Designmaler {
                             <input type="hidden" name="kursagenten_top_filters" id="top-filters-input" value="<?php echo esc_attr(implode(',', $top_filters)); ?>">
                         </div>
                     </div>
+
+                    <!-- Standard høyde for filterlister -->
+                    <div class="list-height-container">
+                        <h4>Standard høyde for filterlister:</h4>
+                        <p>Listene med filtre i venstre kolonne kan bli lange. De begrenses til en standard høyde, med "Vis mer"-link. Standard høyde er 250px. Du kan velge en annen høyde for filterlister under.</p>
+                        
+                        <div style="display: inline-block;">Høyde: </div>
+                        <div class="option-input" style="display: inline-block;">
+                            <input type="number" 
+                                   name="kursagenten_filter_default_height" 
+                                   value="<?php echo esc_attr(get_option('kursagenten_filter_default_height', 250)); ?>"
+                                   min="100" 
+                                   max="1000"
+                                   step="10">
+                                
+                            
+                        </div>
+                        <div class="description" style="display: inline-block;"> (100-1000px)</div>
+                    </div>
                 </div>
 
                 <!-- Single kurs -->
                 
-                <div class="options-card">
+                <div class="options-card" data-section="enkeltkurs">
                     <h3>Enkeltkurs</h3>
                     <p>Velg design på sider som viser kursdetaljer, både for alle lokasjoner og enkeltlokasjoner.</p>
                     <!-- Layoutbredde -->
@@ -494,7 +499,7 @@ class Designmaler {
                 </div>
 
                 <!-- Taxonomi -->
-                <div class="options-card">
+                <div class="options-card" data-section="taksonomi">
                     <h3>Taksonomi-sider</h3>
                     <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</p>
                     <p>&nbsp;</p>
@@ -695,7 +700,7 @@ class Designmaler {
                 </div>
 
                 <!-- Standardbilder -->
-                <div class="options-card">
+                <div class="options-card" data-section="valg-for-bilder">
                     <h3 id="valg-for-bilder">Valg for bilder</h3>
                     <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsbilder om nødvendig. Du kan også sette inn url til plassholderbilder via <a href="/wp-admin/admin.php?page=kursagenten#kortkoder">kortkoder</a>.</p>
                     <table class="form-table">
@@ -722,7 +727,7 @@ class Designmaler {
                     <h3>Egen CSS</h3>
                     <p>Her kan du legge til egendefinert CSS som vil bli lastet inn på alle sider som hører til utvidelsen. Denne CSS-en vil ha høyest prioritet og vil overstyre utvidelsens standard CSS.</p>
                     
-                    <div class="options-card">
+                    <div class="options-card" data-section="egen-css">
                         <textarea name="kursagenten_custom_css" id="kursagenten_custom_css" rows="10" style="width: 100%; font-family: monospace;"><?php echo esc_textarea(get_option('kursagenten_custom_css', '')); ?></textarea>
                         
                         <p class="description">
@@ -1055,10 +1060,72 @@ class Designmaler {
         // Legg til inline JavaScript for fargevalg-toggle, seksjons-kollaps og filter-sortable
         wp_add_inline_script('ka-admin-script', <<<'JS'
             jQuery(document).ready(function($) {
+                // Helpers for querystring state (ka_open)
+                function getUrlParams() {
+                    var params = new URLSearchParams(window.location.search);
+                    return params;
+                }
+                function getCurrentlyOpenSections() {
+                    var open = [];
+                    $(".options-card").each(function(){
+                        var $card = $(this);
+                        var key = $card.data('section');
+                        if (key && $card.attr('data-collapsed') === 'false') {
+                            open.push(String(key));
+                        }
+                    });
+                    return open;
+                }
+                function setReferrerParam(name, valueArray) {
+                    var $ref = $('input[name="_wp_http_referer"]');
+                    // Fallback: create if missing
+                    if ($ref.length === 0) {
+                        var current = window.location.pathname + window.location.search;
+                        $ref = $('<input type="hidden" name="_wp_http_referer" />').val(current).appendTo('form[action="options.php"]');
+                    }
+                    try {
+                        var refUrl = $ref.val() || '';
+                        // Ensure it is an absolute URL for URL API
+                        var absRef = refUrl.match(/^https?:\/\//) ? refUrl : (window.location.origin + refUrl);
+                        var u = new URL(absRef);
+                        if (!valueArray || valueArray.length === 0) {
+                            u.searchParams.delete(name);
+                        } else {
+                            u.searchParams.set(name, valueArray.join(','));
+                        }
+                        var newVal = u.pathname + (u.search ? u.search : '');
+                        $ref.val(newVal);
+                    } catch(e) {
+                        // No-op on malformed values
+                    }
+                }
+                function setUrlParam(name, valueArray) {
+                    var params = getUrlParams();
+                    if (!valueArray || valueArray.length === 0) {
+                        params.delete(name);
+                    } else {
+                        params.set(name, valueArray.join(','));
+                    }
+                    var newUrl = window.location.pathname + '?' + params.toString();
+                    window.history.replaceState({}, '', newUrl);
+                    // Keep WP referer in sync so redirect preserves ka_open
+                    setReferrerParam(name, valueArray);
+                }
+                function getOpenSectionsFromUrl() {
+                    var params = getUrlParams();
+                    var val = params.get('ka_open');
+                    if (!val) return [];
+                    return val.split(',').filter(Boolean);
+                }
+
                 // Kollaps/utvid seksjoner: h3 fungerer som toggle
                 $(".options-card").each(function() {
                     var $card = $(this);
                     var $title = $card.children("h3").first();
+                    // Sett inn ikonbeholder i tittelen
+                    if ($title.find('i.ka-icon').length === 0) {
+                        $title.append(' <i class="ka-icon icon-chevron-right" aria-hidden="true"></i>');
+                    }
                     var $children = $card.children().not($title);
                     var $firstParagraph = $children.filter("p").first();
                     // Innhold som skal toggles (ekskluder <style> og <script>)
@@ -1080,16 +1147,57 @@ class Designmaler {
                         if (isCollapsed) {
                             $toggleContent.show();
                             $card.attr("data-collapsed", "false");
+                            $title.find('i.ka-icon').removeClass('icon-chevron-right').addClass('icon-chevron-down');
                             // Re-evaluer visning av avanserte farger når seksjonen åpnes
                             if (typeof toggleAdvancedColors === "function") {
                                 toggleAdvancedColors();
                             }
+                            // Oppdater URL-state: inkluder denne i settet av åpne bokser
+                            var sectionKey = $card.data('section');
+                            if (sectionKey) {
+                                var currentOpen = getCurrentlyOpenSections();
+                                if (currentOpen.indexOf(String(sectionKey)) === -1) {
+                                    currentOpen.push(String(sectionKey));
+                                }
+                                setUrlParam('ka_open', currentOpen);
+                            }
                         } else {
                             $toggleContent.hide();
                             $card.attr("data-collapsed", "true");
+                            $title.find('i.ka-icon').removeClass('icon-chevron-down').addClass('icon-chevron-right');
+                            // Hvis denne boksen var i URL-state, fjern den
+                            var current = getCurrentlyOpenSections();
+                            var sectionKey = $card.data('section');
+                            if (sectionKey) {
+                                current = current.filter(function(k){ return k !== sectionKey; });
+                                setUrlParam('ka_open', current);
+                            }
                         }
                     });
                 });
+
+                // Åpne boks(er) fra URL ved innlasting
+                (function openFromUrl(){
+                    var openKeys = getOpenSectionsFromUrl();
+                    if (!openKeys.length) return;
+                    // Vi støtter både én (prioritert) og flere nøkler
+                    $(".options-card").each(function(){
+                        var $card = $(this);
+                        var key = $card.data('section');
+                        if (key && openKeys.indexOf(String(key)) !== -1) {
+                            var $title = $card.children("h3").first();
+                            // Simuler åpen tilstand
+                            var $children = $card.children().not($title);
+                            var $firstParagraph = $children.filter("p").first();
+                            var $toggleContent = $children.not($firstParagraph).not("style, script");
+                            $toggleContent.show();
+                            $card.attr("data-collapsed", "false");
+                            $title.find('i.ka-icon').removeClass('icon-chevron-right').addClass('icon-chevron-down');
+                        }
+                    });
+                    // Sørg for at referer også bærer åpen seksjon ved lagring
+                    setReferrerParam('ka_open', openKeys);
+                })();
 
                 // Håndter toggle av avanserte fargevalg
                 function toggleAdvancedColors() {
@@ -1189,22 +1297,17 @@ class Designmaler {
             /* Kollaps/utvid indikator */
             .ka-collapsible > h3 {
                 position: relative;
-                padding-right: 24px;
                 user-select: none;
             }
-            .ka-collapsible > h3::after {
-                content: "\1F782"; /* 🞂 */
-                position: absolute;
-                right: 0;
-                top: 50%;
-                transform: translateY(-50%);
+            /* Deaktiver gammel pseudo-pil */
+            .ka-collapsible > h3::after { content: "" !important; }
+            .ka-collapsible[data-collapsed="false"] > h3::after { content: "" !important; }
+            /* Stil for nye ikonpiler */
+            .ka-collapsible > h3 .ka-icon {
                 color: #666;
                 font-size: 16px;
                 line-height: 1;
-                transition: transform 0.2s ease;
-            }
-            .ka-collapsible[data-collapsed="false"] > h3::after {
-                content: "\1F783"; /* 🞃 */
+                padding-left: 1em;
             }
             .ka-collapsible-intro {
                 margin-top: -6px;
@@ -1294,6 +1397,11 @@ class Designmaler {
                 padding: 0 4px;
                 border-radius: 3px;
                 border: 1px solid #eee;
+            }
+            .ka-collapsible[data-collapsed="false"] {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.06);
+                border-radius: 8px;     /* valgfritt */
+                background: #fff;       /* valgfritt, gir renere skygge */
             }
         ');
     }
