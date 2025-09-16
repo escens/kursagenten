@@ -236,7 +236,14 @@ $category_slugs = array_unique($category_slugs);
                         <?php endif; ?>
                     
                         <?php if (!empty($location)) : ?>
-                            <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                            <div class="location">
+                                <i class="ka-icon icon-location"></i><?php echo esc_html($location); ?>
+                                <?php if (!empty($location_freetext)) : ?>
+                                    <div class="location_freetext">
+                                        &nbsp;(<?php echo esc_html($location_freetext); ?>)
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                     <?php endif; ?>
                 </div>
@@ -261,9 +268,6 @@ $category_slugs = array_unique($category_slugs);
                         <?php endif; ?>
                         <?php if (!empty($instructor_links)) : ?>
                             <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(' ,&nbsp;', $instructor_links); ?></div>
-                        <?php endif; ?>
-                        <?php if (!empty($location_freetext)) : ?>
-                            <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
                         <?php endif; ?>
                         <?php if (!empty($location_room)) : ?>
                             <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>

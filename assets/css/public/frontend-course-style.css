@@ -634,6 +634,12 @@ z-index: 10000;
   margin-top: 5px;
   font-size: var(--ka-font-s);
 }
+#ka .courselist-main .details-area .location_freetext{
+  font-size: var(--ka-font-xs);
+  padding-left: .3em;
+  padding-top: 2px;
+  opacity: 0.9;
+}
 #ka .courselist-main .iconlist.horizontal i.ka-icon{
   width: var(--ka-font-s);
   height: var(--ka-font-s);

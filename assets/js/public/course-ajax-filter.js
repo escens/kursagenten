@@ -259,8 +259,8 @@
 	}
 
 	function fetchCourses(data) {
-		// console.log('=== START: fetchCourses ===');
-		// console.log('AJAX-kall med data:', data);
+		console.log('=== START: fetchCourses ===');
+		console.log('AJAX-kall med data:', data);
 		
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
@@ -272,23 +272,23 @@
 			const urlSide = urlParams.get('side');
 			if (urlSide) {
 				data.side = urlSide;
-				// console.log('Bruker side-parameter fra URL:', urlSide);
+				console.log('Bruker side-parameter fra URL:', urlSide);
 			}
 		}
 
 		// Vis loading indikator
 		$('.course-loading').show();
-		// console.log('Sender AJAX-forespørsel til:', kurskalender_data.ajax_url);
+		console.log('Sender AJAX-forespørsel til:', kurskalender_data.ajax_url);
 
 		$.ajax({
 			url: kurskalender_data.ajax_url,
 			type: 'POST',
 			data: data,
 			success: function(response) {
-				// console.log('Svar fra server:', response);
+				console.log('Svar fra server:', response);
 				if (response.success) {
-					// console.log('Antall kurs funnet:', response.data['course-count']);
-					// console.log('HTML-lengde:', response.data.html.length);
+					console.log('Antall kurs funnet:', response.data['course-count']);
+					console.log('HTML-lengde:', response.data.html.length);
 					
 					// Legg til null-sjekk for html_pagination
 					if (response.data.html_pagination) {
@@ -402,10 +402,13 @@
 				console.error('AJAX Error:', {
 					status: status,
 					error: error,
-					response: xhr.responseText
+					response: xhr.responseText,
+					statusCode: xhr.status,
+					headers: xhr.getAllResponseHeaders()
 				});
 			},
 			complete: function() {
+				console.log('AJAX request completed');
 				// Skjul loading indikator
 				$('.course-loading').hide();
 				// console.log('=== END: fetchCourses ===');
@@ -554,8 +557,8 @@
 
 				const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
 				values.forEach(value => {
-					// For månedsfilteret, bruk 'months' som filter-key for å matche med checkbox
-					const filterKey = key === 'mnd' ? 'months' : 
+					// For månedsfilteret, bruk 'mnd' som filter-key for å matche med checkbox
+					const filterKey = key === 'mnd' ? 'mnd' : 
 					                   key === 'k' ? 'categories' : 
 					                   key === 'sted' ? 'locations' : 
 					                   key === 'i' ? 'instructors' : 
@@ -619,31 +622,35 @@
 						const filterValue = $(this).parent().data('filter-value');
 
 						// Konverter tilbake til URL-nøkkel for månedsfilteret
-						const urlKey = filterKey === 'months' ? 'mnd' : 
+						const urlKey = filterKey === 'mnd' ? 'mnd' : 
 						               filterKey === 'categories' ? 'k' : 
 						               filterKey === 'locations' ? 'sted' : 
 						               filterKey === 'instructors' ? 'i' : 
 						               filterKey === 'language' ? 'sprak' : filterKey;
 
-						if (filters[urlKey]) {
-							if (Array.isArray(filters[urlKey])) {
+						// Hent aktuelle filtre fra URL
+						const currentFilters = getCurrentFiltersFromURL();
+						
+						if (currentFilters[urlKey]) {
+							if (Array.isArray(currentFilters[urlKey])) {
 								// For måneder, sammenlign med samme format (MMYYYY)
-								filters[urlKey] = filters[urlKey].filter(item => {
-									return item !== filterValue;
+								currentFilters[urlKey] = currentFilters[urlKey].filter(item => {
+									// Konverter begge til string for sikker sammenligning
+									return String(item) !== String(filterValue);
 								});
-								if (filters[urlKey].length === 0) {
-									filters[urlKey] = null;
+								if (currentFilters[urlKey].length === 0) {
+									currentFilters[urlKey] = null;
 								}
 							} else {
-								filters[urlKey] = null;
+								currentFilters[urlKey] = null;
 							}
 						}
 
 						// Behold sorteringsparameterne når et filter fjernes
 						const updatedFilters = {
-							...filters,
-							sort: filters.sort,
-							order: filters.order
+							...currentFilters,
+							sort: currentFilters.sort,
+							order: currentFilters.order
 						};
 
 						// Uncheck the corresponding checkbox
@@ -716,7 +723,8 @@
 	// Oppdater visning av filter counts - kun visuell indikator
 	function updateFilterCountsDisplay(counts) {
 		// Reset all states before applying new counts to avoid lingering classes
-		const $allLabels = $('.filter-list-item.checkbox');
+		// Inkluder både desktop og mobile filtere
+		const $allLabels = $('.filter-list-item.checkbox, .mobile-filter-content .filter-list-item.checkbox');
 		const $allCheckboxes = $allLabels.find('.filter-checkbox');
 		$allLabels.removeClass('filter-empty filter-available');
 		$allCheckboxes.prop('disabled', false);
@@ -729,13 +737,13 @@
 				if ($element.length) {
 					const $label = $element.closest('label');
 					
-					if (count === 0) {
-						$label.addClass('filter-empty');
-						$element.prop('disabled', true);
-					} else {
-						$label.addClass('filter-available');
-						$element.prop('disabled', false);
-					}
+				if (count === 0) {
+					$label.addClass('filter-empty');
+					$element.prop('disabled', true);
+				} else {
+					$label.addClass('filter-available');
+					$element.prop('disabled', false);
+				}
 				}
 			});
 		}
@@ -749,24 +757,40 @@
 					if ($element.length) {
 						const $label = $element.closest('label');
 						
-						if (count === 0) {
-							$label.addClass('filter-empty');
-							$element.prop('disabled', true);
-						} else {
-							$label.addClass('filter-available');
-							$element.prop('disabled', false);
-						}
+				if (count === 0) {
+					$label.addClass('filter-empty');
+					$element.prop('disabled', true);
+				} else {
+					$label.addClass('filter-available');
+					$element.prop('disabled', false);
+				}
 					}
 				});
 			}
 		});
 	}
 
-	// Forhindre klikk på tomme filtervalg
+	// Forhindre klikk på tomme filtervalg (både desktop og mobile)
 	$(document).on('click', '.filter-empty .filter-checkbox', function(e) {
 		e.preventDefault();
 		e.stopPropagation();
 		return false;
+	});
+
+	// Oppdater mobil-filter tilgjengelighet når overlay åpnes
+	$(document).on('click', '.filter-toggle-button', function() {
+		// Vent litt for at overlay skal være synlig, deretter oppdater counts
+		setTimeout(function() {
+			updateFilterCounts();
+		}, 100);
+	});
+
+	// Oppdater mobil-filter tilgjengelighet når filtre endres i mobil-overlay
+	$(document).on('change', '.mobile-filter-content .filter-checkbox', function() {
+		// Oppdater counts etter at filter er endret
+		setTimeout(function() {
+			updateFilterCounts();
+		}, 50);
 	});
 
 	// Initialize filters on page load

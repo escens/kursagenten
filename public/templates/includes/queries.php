@@ -198,9 +198,7 @@ add_filter('posts_join', function (string $join, WP_Query $query) {
  *
  * @return WP_Query Returns an array of sorted coursedate data, including metadata and an indicator for missing first date.
  */
-function get_course_dates_query($args = []) {
-    // Debug logging
-
+function get_course_dates_query($per_page = 10, $current_page = 1) {
     // Håndter request-parametere med støtte for arrays
     $current_page = isset($_REQUEST['side']) ? max(1, intval($_REQUEST['side'])) : 1;
     $locations = isset($_REQUEST['sted']) ? (is_array($_REQUEST['sted']) ? $_REQUEST['sted'] : explode(',', $_REQUEST['sted'])) : [];
@@ -267,25 +265,15 @@ function get_course_dates_query($args = []) {
                 $month = substr($month_year, 0, 2);
                 $year = substr($month_year, 2, 4);
                 
-                // Sjekk både måned og år ved å sammenligne med course_first_date
-                // Vi bruker >= og <= for å sammenligne datoer riktig
+                // Forenklet: bare bruk course_first_date med dato-intervall
                 $month_query[] = [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'course_month',
-                        'value' => sprintf('%02d', $month), // Bruk string-format (01, 03, etc.)
-                        'compare' => '='
+                    'key' => 'course_first_date',
+                    'value' => [
+                        $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
+                        $year . '-' . sprintf('%02d', $month) . '-31 23:59:59'
                     ],
-                    [
-                        'key' => 'course_first_date',
-                        'value' => $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
-                        'compare' => '>='
-                    ],
-                    [
-                        'key' => 'course_first_date',
-                        'value' => $year . '-' . sprintf('%02d', $month) . '-31 23:59:59',
-                        'compare' => '<='
-                    ]
+                    'compare' => 'BETWEEN',
+                    'type' => 'DATETIME'
                 ];
             } else {
                 // Fallback for gamle format (bare måned)
@@ -413,7 +401,7 @@ function get_course_dates_query($args = []) {
         'meta_query' => $meta_query,
         'tax_query' => $tax_query,
         'suppress_filters' => false,
-        'post_status' => ['publish']
+        'post_status' => 'publish'
     ];
 
     
@@ -482,10 +470,14 @@ function get_course_dates_query($args = []) {
     }, 10, 2);
     
     // Kjør query
-    $query = new WP_Query($query_args);
+    try {
+        $query = new WP_Query($query_args);
+    } catch (Exception $e) {
+        error_log('QUERY DEBUG: WP_Query failed with error: ' . $e->getMessage());
+        error_log('QUERY DEBUG: Error trace: ' . $e->getTraceAsString());
+        throw $e;
+    }
     
-    
-
     // Fjern filtrene etter at queryen er kjørt
     remove_all_filters('posts_join');
     remove_all_filters('posts_orderby');
@@ -1223,7 +1215,7 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
     $terms = [];
     switch ($filter_type) {
         case 'categories':
-            $terms = get_filtered_terms('coursecategory');
+            $terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : get_filtered_terms('coursecategory');
             break;
         case 'locations':
             $terms = get_terms([
@@ -1303,8 +1295,7 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
         }
         
         // Kjør en test-query med disse filtrene
-        $test_query = get_course_dates_query_for_count($test_filters_with_term);
-        $count = $test_query->found_posts;
+        $count = get_course_dates_query_for_count($test_filters_with_term);
         
         
         // Lagre count for denne termen
@@ -1337,15 +1328,30 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
  * Hjelpefunksjon for å kjøre en query kun for å telle resultater
  * 
  * @param array $filters Filtre å bruke
- * @return WP_Query Query-objekt med resultater
+ * @return int Antall posts som matcher filtrene
  */
 function get_course_dates_query_for_count($filters) {
     // Lag en direkte spørring uten å bruke $_REQUEST
     $args = [
         'post_type' => 'coursedate',
         'post_status' => 'publish', // Kun publiserte coursedates
-        'posts_per_page' => 1, // Kun for å få count raskt
-        'meta_query' => ['relation' => 'AND']
+        'posts_per_page' => -1, // Hent alle for å telle
+        'fields' => 'ids', // Kun ID-er for raskere telling
+        'meta_query' => [
+            'relation' => 'AND',
+            // Ekskluder skjulte coursedates
+            [
+                'relation' => 'OR',
+                [
+                    'key' => 'hide_in_course_list',
+                    'value' => 'Vis',
+                ],
+                [
+                    'key' => 'hide_in_course_list',
+                    'compare' => 'NOT EXISTS'
+                ]
+            ]
+        ]
     ];
     
     // Legg til måned filter hvis det er spesifisert
@@ -1358,23 +1364,22 @@ function get_course_dates_query_for_count($filters) {
                 $month = substr($month_year, 0, 2);
                 $year = substr($month_year, 2, 4);
                 
+                // Forenklet: bare bruk course_first_date med dato-intervall
                 $month_query[] = [
-                    'relation' => 'AND',
-                    [
-                        'key' => 'course_month',
-                        'value' => sprintf('%02d', $month), // Bruk string-format (01, 03, etc.)
-                        'compare' => '='
+                    'key' => 'course_first_date',
+                    'value' => [
+                        $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
+                        $year . '-' . sprintf('%02d', $month) . '-31 23:59:59'
                     ],
-                    [
-                        'key' => 'course_first_date',
-                        'value' => $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
-                        'compare' => '>='
-                    ],
-                    [
-                        'key' => 'course_first_date',
-                        'value' => $year . '-' . sprintf('%02d', $month) . '-31 23:59:59',
-                        'compare' => '<='
-                    ]
+                    'compare' => 'BETWEEN',
+                    'type' => 'DATETIME'
+                ];
+            } else {
+                // Fallback for gamle format (bare måned)
+                $month_query[] = [
+                    'key' => 'course_month',
+                    'value' => $month_year,
+                    'compare' => '='
                 ];
             }
         }
@@ -1384,15 +1389,64 @@ function get_course_dates_query_for_count($filters) {
     // Legg til kategori filter hvis det er spesifisert
     if (!empty($filters['k'])) {
         $categories = is_array($filters['k']) ? $filters['k'] : [$filters['k']];
-        $args['tax_query'] = [
-            'relation' => 'AND',
-            [
+        
+        // Hent skjulte kategorier
+        $hidden_categories = get_terms([
+            'taxonomy' => 'coursecategory',
+            'hide_empty' => true,
+            'meta_query' => [
+                [
+                    'key' => 'hide_in_course_list',
+                    'value' => 'Skjul',
+                ]
+            ],
+            'fields' => 'ids'
+        ]);
+        
+        $args['tax_query'] = ['relation' => 'AND'];
+        
+        // Hvis vi har skjulte kategorier, legg til en enkel NOT IN query
+        if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+            $args['tax_query'][] = [
                 'taxonomy' => 'coursecategory',
-                'field' => 'slug',
-                'terms' => $categories,
-                'operator' => 'IN'
-            ]
+                'field' => 'term_id',
+                'terms' => $hidden_categories,
+                'operator' => 'NOT IN'
+            ];
+        }
+        
+        // Legg til valgte kategorier
+        $args['tax_query'][] = [
+            'taxonomy' => 'coursecategory',
+            'field' => 'slug',
+            'terms' => $categories,
+            'operator' => 'IN'
         ];
+    } else {
+        // Hvis ingen kategori-filter er spesifisert, ekskluder skjulte kategorier
+        $hidden_categories = get_terms([
+            'taxonomy' => 'coursecategory',
+            'hide_empty' => true,
+            'meta_query' => [
+                [
+                    'key' => 'hide_in_course_list',
+                    'value' => 'Skjul',
+                ]
+            ],
+            'fields' => 'ids'
+        ]);
+        
+        if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+            $args['tax_query'] = [
+                'relation' => 'AND',
+                [
+                    'taxonomy' => 'coursecategory',
+                    'field' => 'term_id',
+                    'terms' => $hidden_categories,
+                    'operator' => 'NOT IN'
+                ]
+            ];
+        }
     }
     
     // Legg til lokasjon filter hvis det er spesifisert
@@ -1438,5 +1492,7 @@ function get_course_dates_query_for_count($filters) {
     }
     
     
-    return new WP_Query($args);
+    $query = new WP_Query($args);
+    
+    return $query->found_posts;
 }

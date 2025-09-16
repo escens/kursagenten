@@ -66,11 +66,14 @@ if (in_array('search', $all_filters)) {
 error_log('Combined filters for mobile: ' . print_r($all_filters, true));
 error_log('Available filters: ' . print_r($available_filters, true));
 
+// Spesiell håndtering for coursecategory taksonomi-sider
+$category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : (function_exists('get_filtered_terms') ? get_filtered_terms('coursecategory') : get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]));
+
 // Definer taxonomy og meta felt data struktur for filtre
 $taxonomy_data = [
     'categories' => [
         'taxonomy' => 'coursecategory',
-        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('coursecategory') : get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]),
+        'terms' => $category_terms,
         'url_key' => 'k',
         'filter_key' => 'categories',
     ],

@@ -9,6 +9,54 @@ if (!function_exists('get_course_template_part')) {
     }
 }
 
+// Funksjon for å hente filtrerte taksonomier med spesiell håndtering for coursecategory taksonomi-sider
+function get_filtered_terms_for_context($taxonomy) {
+    // Spesiell håndtering for coursecategory taksonomi-sider
+    if ($taxonomy === 'coursecategory' && is_tax('coursecategory')) {
+        $current_term = get_queried_object();
+        if ($current_term && $current_term->taxonomy === 'coursecategory') {
+            // Sjekk om vi er på en foreldrekategori (parent = 0)
+            if ($current_term->parent == 0) {
+                // Vi er på en foreldrekategori, vis kun barnekategoriene
+                $child_categories = get_terms([
+                    'taxonomy' => $taxonomy,
+                    'hide_empty' => true,
+                    'parent' => $current_term->term_id,
+                    'orderby' => 'menu_order',
+                    'order' => 'ASC',
+                    'meta_query' => [
+                        'relation' => 'OR',
+                        [
+                            'key' => 'hide_in_course_list',
+                            'value' => 'Vis',
+                        ],
+                        [
+                            'key' => 'hide_in_course_list',
+                            'compare' => 'NOT EXISTS'
+                        ]
+                    ]
+                ]);
+                
+                if (!is_wp_error($child_categories) && !empty($child_categories)) {
+                    // Legg til parent-informasjon på barnekategoriene
+                    foreach ($child_categories as $child) {
+                        $child->parent_class = 'has-parent';
+                        $child->parent_id = $current_term->term_id;
+                    }
+                    return $child_categories;
+                } else {
+                    // Ingen barnekategorier, returner tom array
+                    return [];
+                }
+            }
+            // Hvis vi er på en barnekategori, bruk standard funksjon
+        }
+    }
+    
+    // For alle andre tilfeller, bruk standard get_filtered_terms
+    return get_filtered_terms($taxonomy);
+}
+
 // Funksjon for å hente filtrerte taksonomier
 function get_filtered_terms($taxonomy) {
     // Hent alle synlige kurs
@@ -272,6 +320,13 @@ function filter_courses_handler() {
     }
 
     try {
+        // Debug: Log måned-filter data
+        if (isset($_POST['mnd'])) {
+            error_log('MONTH DEBUG: POST mnd data: ' . print_r($_POST['mnd'], true));
+        }
+        
+        error_log('AJAX DEBUG: Starting filter_courses_handler');
+        
         // Håndter datofilteret
         $date_param = $_POST['dato'] ?? $_REQUEST['dato'] ?? null;
         
@@ -301,7 +356,9 @@ function filter_courses_handler() {
         $sort = $_POST['sort'] ?? $_REQUEST['sort'] ?? null;
         $order = $_POST['order'] ?? $_REQUEST['order'] ?? null;
 
+        error_log('AJAX DEBUG: About to call get_course_dates_query()');
         $query = get_course_dates_query();
+        error_log('AJAX DEBUG: Query completed, found_posts: ' . $query->found_posts);
         
         if ($query->have_posts()) {
             ob_start();
@@ -360,6 +417,7 @@ function filter_courses_handler() {
 
             $pagination = paginate_links($pagination_args);
 
+            error_log('AJAX DEBUG: About to send success response');
             wp_send_json_success([
                 'html' => ob_get_clean(),
                 'html_pagination' => $pagination,
@@ -383,7 +441,8 @@ function filter_courses_handler() {
             ]);
         }
     } catch (Exception $e) {
-        error_log('Error in filter_courses_handler: ' . $e->getMessage());
+        error_log('AJAX DEBUG: Exception caught: ' . $e->getMessage());
+        error_log('AJAX DEBUG: Exception trace: ' . $e->getTraceAsString());
         wp_send_json_error([
             'message' => 'En feil oppstod under filtreringen.'
         ]);
