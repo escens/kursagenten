@@ -10,45 +10,53 @@ function kursagenten_admin_header($title) {
                 <div class="section-nav">
                     <ul>
                         <li><a href="#toppen"><img src="https://login.kursagenten.no/kursagenten-nettstedsikon.png" alt="Kursagenten logo" style="width: 30px; height: 30px;"></a></li> 
-                        <li><a href="#toppen">Til toppen</a></li>    
-                        <?php
-                        // Denne delen vil bli fylt dynamisk med JavaScript
-                        ?>
+                        <li><a href="#toppen">Til toppen</a></li>
                     </ul>
                 </div>
                 <div class="sticky-save">
                     <?php submit_button(null, 'primary', 'submit', false); ?>
                 </div>
             </div>
-            <div class="wrap-inner">
-            <?php settings_errors(); ?>
-            <h2 id="toppen"><?php echo esc_html($title); ?></h2> 
+            <div class="ka-admin-container">
+                <nav class="ka-sidebar" aria-label="Seksjonsmeny">
+                    <ul class="ka-section-nav"></ul>
+                </nav>
+                <div class="ka-content">
+                    <div class="wrap-inner">
+                    <?php settings_errors(); ?>
+                    <h2 id="toppen"><?php echo esc_html($title); ?></h2> 
     <?php
 }
-function kursagenten_sticky_admin_menu() {
+function kursagenten_sticky_admin_menu($show_save = true) {
     ?>
 
             <div class="sticky-header">
                 <div class="section-nav">
                     <ul>
                         <li><a href="#toppen"><img src="https://login.kursagenten.no/kursagenten-nettstedsikon.png" alt="Kursagenten logo" style="width: 30px; height: 30px;"></a></li> 
-                        <li><a href="#toppen">Til toppen</a></li>    
-                        <?php
-                        // Denne delen vil bli fylt dynamisk med JavaScript
-                        ?>
+                        <li><a href="#toppen">Til toppen</a></li>
                     </ul>
                 </div>
                 <div class="sticky-save">
-                    <?php submit_button(null, 'primary', 'submit', false); ?>
+                    <?php if ($show_save) { submit_button(null, 'primary', 'submit', false); } ?>
                 </div>
             </div>
-            <div class="wrap-inner">
-            <?php settings_errors(); ?>
+            <div class="ka-admin-container">
+                <nav class="ka-sidebar" aria-label="Seksjonsmeny">
+                    <div class="ka-section-nav-title">På denne siden:</div>
+                    <ul class="ka-section-nav"></ul>
+                </nav>
+                <div class="ka-content">
+                    <div class="wrap-inner">
+                    <?php settings_errors(); ?>
     <?php
 }
 
 function kursagenten_admin_footer() {
     ?>
+                    </div>
+                </div>
+            </div>
         </form>
     </div>
     </div>
@@ -67,8 +75,8 @@ function kursagenten_admin_footer() {
                         const offset = target.offset().top - 100;
 
                         if (scrollPosition >= offset) {
-                            $('.section-nav a').removeClass('active');
-                            $('.section-nav a[href="#' + id + '"]').addClass('active');
+                            $('.ka-section-nav a').removeClass('active');
+                            $('.ka-section-nav a[href="#' + id + '"]').addClass('active');
                         }
                     });
                     scrollTimeout = null;
@@ -76,8 +84,8 @@ function kursagenten_admin_footer() {
             }
         });
 
-        // Finn alle h3-elementer og legg til i menyen
-        const $nav = $('.section-nav ul');
+        // Finn alle h3-elementer og legg til i venstremeny
+        const $nav = $('.ka-section-nav');
         $('h3').each(function() {
             const $heading = $(this);
             const id = $heading.attr('id') || 'section-' + $heading.text().toLowerCase().replace(/\s+/g, '-');
@@ -89,7 +97,7 @@ function kursagenten_admin_footer() {
         });
 
         // Smooth scroll for navigation links
-        $('.section-nav a').on('click', function(e) {
+        $('.ka-section-nav a').on('click', function(e) {
             e.preventDefault();
             const target = $($(this).attr('href'));
             $('html, body').animate({
@@ -163,6 +171,17 @@ function kursagenten_admin_footer() {
         margin-top: 20px;
         border-top: 1px solid #eee;
     }*/
+    /* Venstre admin-layout */
+    .ka-admin-container { display: flex; gap: 24px; }
+    .ka-sidebar { position: sticky; top: 110px; align-self: flex-start; width: 240px; min-width: 180px; max-height: calc(100vh - 100px); overflow: auto; padding: 12px 4px 12px 8px; background: #fff; border-radius: 10px;}
+    .ka-section-nav-title { font-size: 1.1em; font-weight: 600; margin-bottom: 1em; padding-left: 8px; }
+    .ka-section-nav { list-style: none; margin: 0; padding: 0; }
+    .ka-section-nav li { margin: 0; padding: .2em 0;}
+    .ka-section-nav a { display: block; padding: 6px 8px; color: #1d2327; text-decoration: none; border-radius: 4px; }
+    .ka-section-nav a:hover { background: #f0f0f1; color: #2271b1; }
+    .ka-section-nav a.active { background: #e7f1ff; color: #1d2327; }
+    .ka-content { flex: 1 1 auto; min-width: 0; }
+
     </style>
     <?php
 } 

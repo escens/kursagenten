@@ -369,3 +369,7 @@ h4.welcome-panel-title {
 .kursagenten-changelog li {
     margin-bottom: 8px;
 }
+/*Fix standard WP footer*/
+#wpfooter {
+    position: relative;
+}

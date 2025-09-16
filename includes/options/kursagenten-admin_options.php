@@ -6,6 +6,7 @@ require_once plugin_dir_path(__FILE__) . 'coursedesign.php';
 require_once plugin_dir_path(__FILE__) . 'theme_specific_customizations.php';
 require_once plugin_dir_path(__FILE__) . 'seo.php';
 require_once plugin_dir_path(__FILE__) . 'avansert.php';
+require_once plugin_dir_path(__FILE__) . 'documentation.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php'; 
 
 // Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php

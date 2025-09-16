@@ -57,7 +57,7 @@ class Designmaler {
                 <h2>Kursdesign</h2>
                 <!-- System-sider -->
                 <div class="options-card" id="section-systemsider" data-section="systemsider">
-                    <h3>Systemsider</h3>
+                    <h3>Wordpress sider</h3>
                     <p>Generer sider for kurs, kurskategorier, kurssteder og instruktører. Sidene opprettes som vanlige WordPress-sider, og du kan endre tittel og innhold. En kortkode legges inn automatisk. Sidene er merket som Kursagenten-systemsider i sideoversikten.</p>
                     <?php $this->render_system_pages_section(); ?>
                 </div>
@@ -723,24 +723,20 @@ class Designmaler {
                     </table>
                 </div>
 
-                <div class="design-setion">
+                <div class="options-card" data-section="egen-css">
                     <h3>Egen CSS</h3>
                     <p>Her kan du legge til egendefinert CSS som vil bli lastet inn på alle sider som hører til utvidelsen. Denne CSS-en vil ha høyest prioritet og vil overstyre utvidelsens standard CSS.</p>
-                    
-                    <div class="options-card" data-section="egen-css">
-                        <textarea name="kursagenten_custom_css" id="kursagenten_custom_css" rows="10" style="width: 100%; font-family: monospace;"><?php echo esc_textarea(get_option('kursagenten_custom_css', '')); ?></textarea>
-                        
-                        <p class="description">
-                            <strong>Nyttige selectorer:</strong><br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka</code> - Den ytterste wrapperen på alle frontend-sider som hører til utvidelsen<br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-single</code> - Enkeltkurs-sider<br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-archive</code> - Kurslister<br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy</code> - Taksonomi-sider<br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-course-card</code> - Kurskort i lister<br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-button</code> - Standard knapper<br>
-                            <code class="copytext" title="Kopier til utklippstavle">#ka .ka-section</code> - Seksjoner i kursinnhold
-                        </p>
-                    </div>
+                    <textarea name="kursagenten_custom_css" id="kursagenten_custom_css" rows="10" style="width: 100%; font-family: monospace;"><?php echo esc_textarea(get_option('kursagenten_custom_css', '')); ?></textarea>
+                    <p class="description">
+                        <strong>Nyttige selectorer:</strong><br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka</code> - Den ytterste wrapperen på alle frontend-sider som hører til utvidelsen<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-single</code> - Enkeltkurs-sider<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-archive</code> - Kurslister<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy</code> - Taksonomi-sider<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-course-card</code> - Kurskort i lister<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-button</code> - Standard knapper<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-section</code> - Seksjoner i kursinnhold
+                    </p>
                 </div>
 
                 <style>
@@ -1052,7 +1048,7 @@ class Designmaler {
 
         wp_enqueue_style(
             'ka-admin-style',
-            plugins_url('/assets/css/admin/admin-style.css', dirname(dirname(__FILE__))),
+            plugins_url('/assets/css/admin/kursagenten-admin.css', dirname(dirname(__FILE__))),
             array(),
             '1.0.0'
         );
