@@ -770,6 +770,8 @@ function update_specific_locations($term_id, $data, $is_webhook = false) {
         if (!empty($data['all_locations'])) {
             foreach ($data['all_locations'] as $location) {
                 $description = $location['description'] ?? '';
+                // Rens bort uønsket prefiks som "::marker"
+                $description = sanitize_specific_location_description($description);
                 if (empty($description)) {
                     //error_log("Ingen description funnet, hopper over lokasjon");
                     continue;
@@ -832,6 +834,8 @@ function update_specific_locations($term_id, $data, $is_webhook = false) {
     // Legg til nye lokasjoner fra API-data
     foreach ($data['locations'] as $location) {
         $description = $location['placeFreeText'] ?? $location['description'] ?? '';
+        // Rens bort uønsket prefiks som "::marker"
+        $description = sanitize_specific_location_description($description);
         if (empty($description)) {
             //error_log("Ingen description for denne lokasjonen, hopper over");
             continue;
@@ -867,6 +871,37 @@ function update_specific_locations($term_id, $data, $is_webhook = false) {
     
     //error_log("Ferdig med å prosessere lokasjoner. Totalt antall: " . count($updated_locations));
     //error_log("=== SLUTT: update_specific_locations ===");
+}
+
+/**
+ * Sanitize description for specific_locations by removing list marker artifacts
+ * like the leading "::marker" that sometimes appears when pasting from external sources.
+ * Returns a trimmed string or empty string if input is not usable.
+ */
+function sanitize_specific_location_description($description) {
+    if (!is_string($description)) {
+        return '';
+    }
+
+    $clean = trim($description);
+
+    // Fjern alle usynlige tegn og kontrolltegn i starten
+    $clean = preg_replace('/^[\x{FEFF}\x{200B}-\x{200D}\x{00}-\x{1F}\x{7F}-\x{9F}]+/u', '', $clean);
+
+    // Fjern prefiks '::marker' (case-insensitive) og påfølgende whitespace
+    $clean = preg_replace('/^::marker\s*/i', '', $clean);
+
+    // Fjern alle mulige liste-markører og punkt-tegn i starten
+    // Inkluderer: : :: • - – — * · · · ◦ ‣ ⁃ ▪ ▫ ○ ● ◯ ◉ ◐ ◑ ◒ ◓ ◔ ◕ ◖ ◗ ◘ ◙ ◚ ◛ ◜ ◝ ◞ ◟ ◠ ◡ ◢ ◣ ◤ ◥ ◦ ◧ ◨ ◩ ◪ ◫ ◬ ◭ ◮ ◯ ◰ ◱ ◲ ◳ ◴ ◵ ◶ ◷ ◸ ◹ ◺ ◻ ◼ ◽ ◾ ◿
+    $clean = preg_replace('/^(?:(?:[:\.*\-•–—··◦‣⁃▪▫○●◯◉◐◑◒◓◔◕◖◗◘◙◚◛◜◝◞◟◠◡◢◣◤◥◦◧◨◩◪◫◬◭◮◯◰◱◲◳◴◵◶◷◸◹◺◻◼◽◾◿]+)\s*)+/u', '', $clean);
+
+    // Fjern eventuelle gjenværende kontrolltegn
+    $clean = preg_replace('/[\x{00}-\x{1F}\x{7F}-\x{9F}]/u', '', $clean);
+
+    // Normaliser mellomrom
+    $clean = preg_replace('/\s+/u', ' ', $clean);
+
+    return trim((string) $clean);
 }
 
 function sync_main_course_data($main_course_id) {

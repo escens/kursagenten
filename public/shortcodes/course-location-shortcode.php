@@ -115,29 +115,60 @@ class CourseLocationGrid {
             return [];
         }
 
-        // Filtrer bort steder uten publiserte kurs og berik med spesifikke lokasjoner
+        // Filtrer bort steder uten tilknyttede kurs/coursedates og berik med spesifikke lokasjoner
         $filtered = [];
         foreach ($terms as $term) {
-            $q = new \WP_Query([
-                'post_type' => 'course',
-                'post_status' => 'publish',
-                'posts_per_page' => 1,
-                'fields' => 'ids',
-                'tax_query' => [[
-                    'taxonomy' => 'course_location',
-                    'field' => 'term_id',
-                    'terms' => (int)$term->term_id,
-                ]],
-                'no_found_rows' => true,
-                'update_post_meta_cache' => false,
-                'update_post_term_cache' => false,
-            ]);
-            if ($q->have_posts()) {
-                $term->specific_locations = $this->get_specific_locations_for_term($term->term_id);
+            if ($this->has_associated_content((int) $term->term_id)) {
+                $term->specific_locations = $this->get_specific_locations_for_term((int) $term->term_id);
                 $filtered[] = $term;
             }
         }
         return $filtered;
+    }
+
+    /**
+     * Determine if a location term has any associated published content
+     * either via 'course' posts with the taxonomy or via 'coursedate' posts
+     * referencing the term id in meta 'location_id'.
+     */
+    private function has_associated_content(int $term_id): bool
+    {
+        // Sjekk etter publiserte 'course' knyttet til dette kursstedet
+        $course_query = new \WP_Query([
+            'post_type' => 'course',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'tax_query' => [[
+                'taxonomy' => 'course_location',
+                'field' => 'term_id',
+                'terms' => $term_id,
+            ]],
+            'no_found_rows' => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+        ]);
+        if ($course_query->have_posts()) {
+            return true;
+        }
+
+        // Sjekk etter publiserte 'coursedate' som peker til dette kursstedet via meta 'location_id'
+        $coursedate_ids = get_posts([
+            'post_type' => 'coursedate',
+            'post_status' => 'publish',
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+            'no_found_rows' => true,
+            'update_post_meta_cache' => false,
+            'update_post_term_cache' => false,
+            'meta_query' => [[
+                'key' => 'location_id',
+                'value' => $term_id,
+                'compare' => '=',
+            ]],
+        ]);
+
+        return !empty($coursedate_ids);
     }
 
     private function get_specific_locations_for_term(int $term_id): array 
@@ -185,6 +216,24 @@ class CourseLocationGrid {
                 font-size: 0.9em;
                 color: #666;
                 margin: 0.3em 0;
+            }
+            /* Fjern alle listemarkører og tvungen pseudo-marker i denne komponenten */
+            #{$id} .specific-locations ul { 
+                list-style: none !important; 
+                margin: 0 !important; 
+                padding: 0 !important; 
+            }
+            #{$id} .specific-locations li { 
+                list-style: none !important; 
+                list-style-type: none !important;
+            }
+            #{$id} .specific-locations li::marker { 
+                content: '' !important; 
+                display: none !important;
+            }
+            #{$id} .specific-locations li::before { 
+                content: '' !important; 
+                display: none !important;
             }
         </style>";
     }
@@ -249,49 +298,26 @@ class CourseLocationGrid {
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
                     <a class='info' href='" . get_term_link($term) . "'>
-                        <div class='description'>" . wp_kses_post($description) . "</div>";
+                        <div class='description'>" . wp_kses_post($description) . "</div>
+                    </a>";
 
                         // Hent spesifikke lokasjoner
                         $specific_locations = get_term_meta($term->term_id, 'specific_locations', true);
                         
                         if (!empty($specific_locations) && is_array($specific_locations)) {
-                            $output .= "<div class='specific-locations'>";
-                            //output .= "<h4>Spesifikke lokasjoner:</h4>";
+                            $output .= "<a class='info' href='" . get_term_link($term) . "'><div class='specific-locations'>";
                             $output .= "<ul>";
                             
                             foreach ($specific_locations as $location) {
                                 $output .= "<li class='location-item'>";
-                                $output .= "" . esc_html($location['description']) . "";
-                                
-                                // Vis adresse hvis tilgjengelig
-                                /*if (!empty($location['address']['street'])) {
-                                    $output .= "<div class='address'>";
-                                    $output .= esc_html($location['address']['street']);
-
-                                    $output .= "<br>";
-                                    if (!empty($location['address']['zipcode'])) {
-                                        $output .= esc_html($location['address']['zipcode']);
-                                    }
-                                    if (!empty($location['address']['place'])) {
-                                        $output .= " " . esc_html($location['address']['place']);
-                                    }
-                                    $output .= "</div>";
-                                }*/
-                                
-                                // Vis maks antall deltakere hvis tilgjengelig
-                                /*if (!empty($location['maxParticipants'])) {
-                                    $output .= "<div class='max-participants'>";
-                                    $output .= "Maks antall deltakere: " . esc_html($location['maxParticipants']);
-                                    $output .= "</div>";
-                                }*/
-                                
+                                $output .= "" . esc_html($location['description']) . "";                         
                                 $output .= "</li>";
                             }
                             
                             $output .= "</ul>";
-                        $output .= "</div>";//slutt specific-locations
+                        $output .= "</div></a>";//slutt specific-locations
                     }
-                    $output .= "</a>";//slutt info
+                    $output .= "";//slutt info
                     //$output .= "</div>";//slutt box-inner
                     //$output .= "</div>";//slutt box
         

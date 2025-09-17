@@ -1660,3 +1660,32 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
         display: flex;
     }
 }
+
+
+
+
+/* Fjern alle liste-markører fra specific-locations */
+.kag .specific-locations ul,
+.kag .specific-locations-section ul {
+    list-style: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.kag .specific-locations li,
+.kag .specific-locations-section li {
+    list-style: none !important;
+    list-style-type: none !important;
+}
+
+.kag .specific-locations li::marker,
+.kag .specific-locations-section li::marker {
+    content: '' !important;
+    display: none !important;
+}
+
+.kag .specific-locations li::before,
+.kag .specific-locations-section li::before {
+    content: '' !important;
+    display: none !important;
+}
