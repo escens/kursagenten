@@ -104,8 +104,8 @@ class BlocksShortcodeStyles {
                 align-items: center;
                 text-align: left;
             }
-            {$class_id}.rad.utdrag .text a.title,
-            {$class_id}.rad.utdrag .text p {
+            {$class_id}.rad.utdrag:not(.kort) .text a.title,
+            {$class_id}.rad.utdrag:not(.kort) .text p {
                 padding: 0px 2em;
                 margin-bottom: 1em;
             }

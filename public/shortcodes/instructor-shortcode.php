@@ -36,6 +36,7 @@ class InstructorGrid {
             'bildeformat' => '4/4',
             'skygge' => '',
             'utdrag' => '',
+            'beskrivelse' => '',
             'overskrift' => 'H3',
             'fontmin' => '13px',
             'fontmaks' => '18px',
@@ -69,8 +70,13 @@ class InstructorGrid {
     }
 
     private function process_attributes(array $atts): array {
-        // Prosesser utdrag
-        $atts['utdrag'] = ($atts['utdrag'] === 'ja') ? ' utdrag' : '';
+        // Prosesser utdrag/beskrivelse: begge viser .description, men innholdet velges senere
+        $should_show_description = ($atts['utdrag'] === 'ja') || ($atts['beskrivelse'] === 'ja');
+        $atts['utdrag'] = $should_show_description ? ' utdrag' : '';
+        // Sett egen klasse når lang beskrivelse er aktivert
+        $atts['beskrivelse'] = ($atts['beskrivelse'] === 'ja') ? ' beskrivelse' : '';
+        // Internt flagg for om vi skal vise rich (lang) beskrivelse
+        $atts['_show_rich'] = (trim($atts['beskrivelse']) === 'beskrivelse');
         
         // Prosesser bildeform
         $atts['bildeform'] = match($atts['bildeform']) {
@@ -141,7 +147,7 @@ class InstructorGrid {
             $bildeformen = 'rund';
         }
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag}{$a['beskrivelse']} {$bildeformen}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
@@ -177,12 +183,15 @@ class InstructorGrid {
             // Sikre at URL-en er trygg
             $thumbnail = esc_url($thumbnail);
 
-            // Hent beskrivelse
-            $short_description = wpautop(wp_kses_post($term->description));
-            $description = get_term_meta($term->term_id, 'rich_description', true);
-            $description = wpautop(wp_kses_post($description));
+        // Hent kort (WP term description) og lang (rich_description) beskrivelse
+        $short_description = wpautop(wp_kses_post($term->description));
+        $rich_description = get_term_meta($term->term_id, 'rich_description', true);
+        $rich_description = wpautop(wp_kses_post($rich_description));
 
-            $output .= $this->generate_instructor_html($term, $thumbnail, $short_description, $a);
+        // Velg innhold basert på attributter: beskrivelse => lang, utdrag => kort
+        $selected_description = $a['_show_rich'] ? $rich_description : $short_description;
+
+        $output .= $this->generate_instructor_html($term, $thumbnail, $selected_description, $a);
         }
 
         $output .= "</div></div>";

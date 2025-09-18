@@ -270,13 +270,13 @@ class CourseLocationGrid {
             // Sikre at URL-en er trygg
             $thumbnail = esc_url($thumbnail);
 
-            // Hent beskrivelser
+            // Fetch short and rich descriptions
             $short_description = wp_kses_post($term->description);
             $rich_description = get_term_meta($term->term_id, 'rich_description', true);
             $rich_description = wpautop(wp_kses_post($rich_description));
-            
-            // Bruk rich_description hvis tilgjengelig, ellers bruk standard beskrivelse
-            $description = !empty($rich_description) ? $rich_description : $short_description;
+
+            // Always prefer short description for this shortcode
+            $description = $short_description;
 
             $output .= $this->generate_location_html($term, $thumbnail, $description, $a);
         }

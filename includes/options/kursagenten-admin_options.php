@@ -130,9 +130,9 @@ function kursagenten_admin_landing_page() {
                 <p>Kortkoder kan legges inn i teksten på sider og blogginnlegg. Du kan legge inn hele kurslisten, eller lister med enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, samt en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den.</p>
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
                     <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk"]</span></p>
-                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard"]</span></p>
-                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssted]</span></span><br><span class="copytext small">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]</span></p>
-                    <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna"]</span></p>
+                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" utdrag="ja"]</span></p>
+                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssted]</span></span><br><span class="copytext small">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja"]</span></p>
+                    <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja"]</span></p>
                 </div>
                 <p>&nbsp;</p>
                 
@@ -238,7 +238,7 @@ function kursagenten_admin_landing_page() {
                             <tr>
                                 <td>Bildeformat</td>
                                 <td>Hvorvidt bildet skal være liggende, stående eller kvadratisk.</td>
-                                <td>4/3, 16/9, 1/1<br><strong>Standard</strong>: 4/3</td>
+                                <td>feks 4/3, 16/9, 1/1<br><strong>Standard</strong>: 4/3</td>
                                 <td>Alle</td>
                                 <td><span class="copytext">[kurskategorier bildeformat=16/9]</span></td>
                             </tr>
@@ -252,21 +252,21 @@ function kursagenten_admin_landing_page() {
                             <tr>
                                 <td>Overskrift</td>
                                 <td>Velg hvilken overskrift du vil bruke for navnene.</td>
-                                <td>h3, h4, h5, h6<br><strong>Standard</strong>: h3</td>
+                                <td>feks h3, h4, h5, p, span, div<br><strong>Standard</strong>: h3</td>
                                 <td>Alle</td>
                                 <td><span class="copytext">[kurskategorier overskrift=h4]</span></td>
                             </tr>
                             <tr>
                                 <td>Fontmin</td>
                                 <td>Teksten justerer seg etter skjermstørrelse. Dette er den minste fontstørrelsen du vil bruke for tekst og overskrifter.</td>
-                                <td>13px, 15px, 18px<br><strong>Standard</strong>: 13px</td>
+                                <td>feks 13px, 15px, 18px<br><strong>Standard</strong>: 13px</td>
                                 <td>Alle</td>
                                 <td><span class="copytext">[kurskategorier fontmin=15px]</span></td>
                             </tr>
                             <tr>
                                 <td>Fontmaks</td>
                                 <td>Dette er den største fontstørrelsen du vil bruke for tekst og overskrifter.</td>
-                                <td>15px, 18px, 26px<br><strong>Standard</strong>: 18px</td>
+                                <td>feks 15px, 18px, 26px<br><strong>Standard</strong>: 18px</td>
                                 <td>Alle</td>
                                 <td><span class="copytext">[kurskategorier fontmaks=18px]</span></td>
                             </tr>
@@ -290,6 +290,20 @@ function kursagenten_admin_landing_page() {
                                 <td>kommasepartert liste<br><strong>Standard</strong>: viser alle</td>
                                 <td>Instruktører</td>
                                 <td><span class="copytext">[instruktor skjul=Anna,Per]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Utdrag</td>
+                                <td>Vis tekst fra feltet "Kort beskrivelse".</td>
+                                <td>ja<br><strong>Standard</strong>: viser ikke</td>
+                                <td>Alle</td>
+                                <td><span class="copytext">[kurssted utdrag=ja]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Beskrivelse</td>
+                                <td>Vis tekst fra feltet "Utvidet beskrivelse". Merk at dette vil overskrive utdrag.</td>
+                                <td>ja<br><strong>Standard</strong>: viser ikke</td>
+                                <td>Instruktører</td>
+                                <td><span class="copytext">[instruktorer beskrivelse=ja]</span></td>
                             </tr>
                         </tbody>
                     </table>

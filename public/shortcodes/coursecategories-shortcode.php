@@ -267,6 +267,9 @@ class CourseCategories {
     }
 
     private function generate_term_html($term, string $thumbnail, array $a): string {
+        // Short description (WP term description)
+        $short_description = wpautop(wp_kses_post($term->description));
+
         return "
             <div class='box term-{$term->term_id}'>
                 <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
@@ -278,6 +281,7 @@ class CourseCategories {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
+                    <div class='description'>" . $short_description . "</div>
                 </div>
             </div>";
     }
