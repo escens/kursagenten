@@ -1,11 +1,13 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__FILE__) . '/includes/stable-id-generator.php';
+
 if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurssteder i grid-format
- * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja"]
+ * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" vis="standard/spesifikke-lokasjoner"]
  */
 class CourseLocationGrid {
     private string $placeholder_image;
@@ -40,11 +42,12 @@ class CourseLocationGrid {
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
+            'vis' => 'standard'
         ];
 
         // Slå sammen med brukerens attributter
         $a = shortcode_atts($defaults, $atts);
-        $random_id = 'l-' . uniqid();
+        $random_id = \StableIdGenerator::generate_id('kurssteder');
         
         // Prosesser attributter
         $a = $this->process_attributes($a);
@@ -56,7 +59,7 @@ class CourseLocationGrid {
             return '<div class="no-locations">Det er for øyeblikket ingen kurssteder å vise.</div>';
         }
 
-        // Generer output
+        // Generer output ved å bruke ID-spesifikke grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
         $output .= $this->get_location_specific_styles($random_id);
         $output .= $this->generate_html($random_id, $terms, $a);
@@ -71,7 +74,7 @@ class CourseLocationGrid {
         // Prosesser bildeform
         $atts['bildeform'] = match($atts['bildeform']) {
             'rund' => '50%',
-            'firkantet' => '0',
+            'firkantet' => '0px',  // Mer eksplisitt med px
             'avrundet' => '8px',
             default => $atts['bildeform']
         };
@@ -198,43 +201,7 @@ class CourseLocationGrid {
 
     private function get_location_specific_styles(string $id): string {
         return "<style>
-            #{$id}.skygge:not(.kort) .box img {
-                -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
-                -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
-                box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.15);
-                transition: transform ease 0.3s, box-shadow ease 0.3s;
-            }
-            #{$id}.rad .text {
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: flex-start;
-            
 
-
-            
-            #{$id} .specific-locations .address {
-                font-size: 0.9em;
-                color: #666;
-                margin: 0.3em 0;
-            }
-            /* Fjern alle listemarkører og tvungen pseudo-marker i denne komponenten */
-            #{$id} .specific-locations ul { 
-                list-style: none !important; 
-                margin: 0 !important; 
-                padding: 0 !important; 
-            }
-            #{$id} .specific-locations li { 
-                list-style: none !important; 
-                list-style-type: none !important;
-            }
-            #{$id} .specific-locations li::marker { 
-                content: '' !important; 
-                display: none !important;
-            }
-            #{$id} .specific-locations li::before { 
-                content: '' !important; 
-                display: none !important;
-            }
         </style>";
     }
 
@@ -250,6 +217,8 @@ class CourseLocationGrid {
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
+        } else {
+            $bildeformen = '';
         }
 
         $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
@@ -297,26 +266,26 @@ class CourseLocationGrid {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
-                    <a class='info' href='" . get_term_link($term) . "'>
-                        <div class='description'>" . wp_kses_post($description) . "</div>
-                    </a>";
+                    <div class='description info'>" . wp_kses_post($description) . "</div>";
 
-                        // Hent spesifikke lokasjoner
-                        $specific_locations = get_term_meta($term->term_id, 'specific_locations', true);
-                        
-                        if (!empty($specific_locations) && is_array($specific_locations)) {
-                            $output .= "<a class='info' href='" . get_term_link($term) . "'><div class='specific-locations'>";
-                            $output .= "<ul>";
+                        // Hent spesifikke lokasjoner (kun hvis vis="spesifikke-lokasjoner")
+                        if ($a['vis'] === 'spesifikke-lokasjoner') {
+                            $specific_locations = get_term_meta($term->term_id, 'specific_locations', true);
                             
-                            foreach ($specific_locations as $location) {
-                                $output .= "<li class='location-item'>";
-                                $output .= "" . esc_html($location['description']) . "";                         
-                                $output .= "</li>";
+                            if (!empty($specific_locations) && is_array($specific_locations)) {
+                                $output .= "<a class='infowrapper' href='" . get_term_link($term) . "'><div class='specific-locations info'>";
+                                $output .= "<ul>";
+                                
+                                foreach ($specific_locations as $location) {
+                                    $output .= "<li class='location-item'>";
+                                    $output .= "" . esc_html($location['description']) . "";                         
+                                    $output .= "</li>";
+                                }
+                                
+                                $output .= "</ul>";
+                                $output .= "</div></a>";//slutt specific-locations
                             }
-                            
-                            $output .= "</ul>";
-                        $output .= "</div></a>";//slutt specific-locations
-                    }
+                        }
                     $output .= "";//slutt info
                     //$output .= "</div>";//slutt box-inner
                     //$output .= "</div>";//slutt box

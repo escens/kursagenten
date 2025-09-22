@@ -131,14 +131,14 @@ function kursagenten_admin_landing_page() {
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
                     <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk"]</span></p>
                     <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" utdrag="ja"]</span></p>
-                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssted]</span></span><br><span class="copytext small">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja"]</span></p>
+                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="spesifikke-lokasjoner"]</span></p>
                     <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja"]</span></p>
                 </div>
                 <p>&nbsp;</p>
                 
                 <div class="">
                     <h3>Valg for lister og grid</h3>
-                    <p>Skriver du kun kortkodene <span class="copytext">[kurskategorier]</span> eller <span class="copytext">[kurssted]</span> brukes standardvalgene.<br>Bruk eventuelt de fulle kodene over, og fjern de valgene du ikke trenger.</p>
+                    <p>Skriver du kun kortkodene <span class="copytext">[kurskategorier]</span>, <span class="copytext">[kurssteder]</span> eller <span class="copytext">[instruktorer]</span> brukes standardvalgene.<br>Bruk eventuelt de fulle kodene over, og fjern de valgene du ikke trenger.</p>
                 
                     <table class="widefat light-grey-rows" style="border: 0; background: #fbfbfb; padding: 1em; border-radius: 10px;">
                         <colgroup>
@@ -283,6 +283,13 @@ function kursagenten_admin_landing_page() {
                                 <td>fornavn, etternavn<br><strong>Standard</strong>: viser fullt navn</td>
                                 <td>Instruktører</td>
                                 <td><span class="copytext">[instruktorer vis=fornavn]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Vis (s)</td>
+                                <td>Velg å vise spesifikke lokasjoner.</td>
+                                <td>spesifikke-lokasjoner<br><strong>Standard</strong>: vises ikke</td>
+                                <td>Kurssteder</td>
+                                <td><span class="copytext">[kurssteder vis=spesifikke-lokasjoner]</span></td>
                             </tr>
                             <tr>
                                 <td>Skjul</td>

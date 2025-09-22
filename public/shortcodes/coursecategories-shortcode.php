@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once dirname(__FILE__) . '/includes/grid-styles.php';
+require_once dirname(__FILE__) . '/includes/stable-id-generator.php';
 
 if (!defined('ABSPATH')) exit;
 
@@ -56,7 +57,7 @@ class CourseCategories {
         // Track if 'radavstand' was explicitly provided in the shortcode attributes
         $a['_radavstand_provided'] = array_key_exists('radavstand', $atts) && $atts['radavstand'] !== '';
         $this->kilde = $a['kilde'];
-        $random_id = 'k-' . uniqid();
+        $random_id = \StableIdGenerator::generate_id('kurskategorier');
         
         // Prosesser attributter
         $a = $this->process_attributes($a);
@@ -64,7 +65,7 @@ class CourseCategories {
         // Hent og filtrer terms
         $terms = $this->get_filtered_terms($a['vis']);
         
-        // Generer output ved å bruke felles grid-stiler
+        // Generer output ved å bruke ID-spesifikke grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
         
         // Legg til kategori-spesifikk CSS
@@ -82,7 +83,7 @@ class CourseCategories {
         // Prosesser bildeform
         $atts['bildeform'] = match($atts['bildeform']) {
             'rund' => '50%',
-            'firkantet' => '0',
+            'firkantet' => '0px',  // Mer eksplisitt med px
             'avrundet' => '8px',
             default => $atts['bildeform']
         };
@@ -216,6 +217,8 @@ class CourseCategories {
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
+        } else {
+            $bildeformen = '';
         }
 
         $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
@@ -281,7 +284,7 @@ class CourseCategories {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
-                    <div class='description'>" . $short_description . "</div>
+                    <div class='description info'>" . $short_description . "</div>
                 </div>
             </div>";
     }

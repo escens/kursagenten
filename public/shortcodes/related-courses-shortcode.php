@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once dirname(__FILE__) . '/includes/grid-styles.php';
+require_once dirname(__FILE__) . '/includes/stable-id-generator.php';
 
 if (!defined('ABSPATH')) exit;
 
@@ -45,7 +46,7 @@ class RelatedCourses {
         ];
 
         $a = shortcode_atts($defaults, $atts);
-        $random_id = 'r-' . uniqid();
+        $random_id = \StableIdGenerator::generate_id('related-courses');
         
         // Prosesser attributter
         $a = $this->process_attributes($a);
@@ -57,7 +58,7 @@ class RelatedCourses {
             return '<div class="no-courses">Det er for øyeblikket ingen relaterte kurs å vise.</div>';
         }
 
-        // Generer output ved å bruke felles grid-stiler
+        // Generer output ved å bruke ID-spesifikke grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
         
         // Legg til kurs-spesifikk CSS
@@ -75,7 +76,7 @@ class RelatedCourses {
         // Prosesser bildeform
         $atts['bildeform'] = match($atts['bildeform']) {
             'rund' => '50%',
-            'firkantet' => '0',
+            'firkantet' => '0px',  // Mer eksplisitt med px
             'avrundet' => '8px',
             default => $atts['bildeform']
         };
@@ -149,6 +150,8 @@ class RelatedCourses {
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
+        } else {
+            $bildeformen = '';
         }
 
         $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";

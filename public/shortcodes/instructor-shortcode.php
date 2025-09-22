@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once dirname(__FILE__) . '/includes/stable-id-generator.php';
+
 if (!defined('ABSPATH')) exit;
 
 /**
@@ -46,7 +48,7 @@ class InstructorGrid {
         ];
 
         $a = shortcode_atts($defaults, $atts);
-        $random_id = 'i-' . uniqid();
+        $random_id = \StableIdGenerator::generate_id('instruktorer');
         
         // Prosesser attributter
         $a = $this->process_attributes($a);
@@ -58,7 +60,7 @@ class InstructorGrid {
             return '<div class="no-instructors">Det er for øyeblikket ingen instruktører å vise.</div>';
         }
 
-        // Generer output ved å bruke felles grid-stiler
+        // Generer output ved å bruke ID-spesifikke grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
         
         // Legg til instruktør-spesifikk CSS
@@ -81,7 +83,7 @@ class InstructorGrid {
         // Prosesser bildeform
         $atts['bildeform'] = match($atts['bildeform']) {
             'rund' => '50%',
-            'firkantet' => '0',
+            'firkantet' => '0px',  // Mer eksplisitt med px
             'avrundet' => '8px',
             default => $atts['bildeform']
         };
@@ -145,6 +147,8 @@ class InstructorGrid {
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
+        } else {
+            $bildeformen = '';
         }
 
         $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag}{$a['beskrivelse']} {$bildeformen}' id='{$id}'>";
@@ -220,7 +224,7 @@ class InstructorGrid {
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($display_name) . "</{$a['overskrift']}>
                     </a>
-                    <div class='description'>" . $description . "</div>
+                    <div class='description info'>" . $description . "</div>
                 </div>
             </div>";
     }
