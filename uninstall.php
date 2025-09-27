@@ -4,6 +4,22 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
+// Notify server about uninstall before cleaning options
+if (function_exists('wp_remote_post')) {
+    $api_key = get_option('kursagenten_api_key', '');
+    $site_url = site_url();
+    if (!empty($api_key)) {
+        // Match server-plugin endpoints: /kursagenten-api/unregister_site
+        $endpoint = 'https://admin.lanseres.no/kursagenten-api/unregister_site';
+        $body = array(
+            'api_key' => $api_key,
+            'site_url' => $site_url,
+        );
+        // Best-effort; ignore response
+        wp_remote_post($endpoint, array('body' => $body, 'timeout' => 5));
+    }
+}
+
 // Delete plugin options
 $options_to_delete = array(
     'kag_bedriftsinfo_option_name',
@@ -27,12 +43,20 @@ $options_to_delete = array(
     'kursagenten_taxonomy_coursecategory_override',
     'kursagenten_taxonomy_coursecategory_list_type',
     'kursagenten_taxonomy_instructors_override',
-    'kursagenten_taxonomy_instructors_list_type'
+    'kursagenten_taxonomy_instructors_list_type',
+    // License-related options
+    'kursagenten_api_key',
+    'kursagenten_site_registered',
+    'kursagenten_last_register'
 );
 
 foreach ($options_to_delete as $option) {
     delete_option($option);
 }
+
+// Delete transients used by updater/registration
+delete_transient('kursagenten_secure_updater');
+delete_transient('kursagenten_register_success');
 
 global $wpdb;
 

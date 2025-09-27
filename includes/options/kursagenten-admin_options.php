@@ -11,18 +11,21 @@ require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php';
 
 // Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php
 
-// Instantiate the classes to add them as submenus
-if (is_admin()) {
-    $kursinnstillinger = new Kursinnstillinger();
-}
-// Instansier Designmaler-klassen både i admin og frontend
-$designmaler = new Designmaler();
+// Instantiate submenu classes kun når lisens (API-nøkkel) finnes for å redusere last
+$__kag_api_key_present = get_option('kursagenten_api_key', '');
+if (!empty($__kag_api_key_present)) {
+    if (is_admin()) {
+        $kursinnstillinger = new Kursinnstillinger();
+    }
+    // Instansier Designmaler-klassen både i admin og frontend
+    $designmaler = new Designmaler();
 
-if (is_admin()) {
-    $theme_specific_customizations = new Kursagenten_Theme_Customizations();
-    $seo = new SEO();
-    $bedriftsinformasjon = new Bedriftsinformasjon();
-    $avansert = new Avansert();
+    if (is_admin()) {
+        $theme_specific_customizations = new Kursagenten_Theme_Customizations();
+        $seo = new SEO();
+        $bedriftsinformasjon = new Bedriftsinformasjon();
+        $avansert = new Avansert();
+    }
 }
 
 // Add the main admin menu
@@ -54,6 +57,39 @@ add_action('admin_menu', 'kursagenten_register_admin_menu', 9);
 
 // Landing page function remains the same
 function kursagenten_admin_landing_page() {
+    // Vis kun lisensboks dersom API-nøkkel mangler
+    $current_key = get_option('kursagenten_api_key', '');
+    if (empty($current_key)) {
+        ?>
+        <div class="wrap options-form ka-wrap" id="toppen" style="max-width: 720px; margin: 0 auto; margin-top: 10vh;">
+            <h1>Velkommen til Kursagenten</h1>
+            <div style="padding:12px; margin-top:12px; background:#fff3cd; border-left:4px solid #dba617; border-radius:4px; color:#533f03;">
+                <p style="margin:0;"><?php echo esc_html__('Du må legge inn lisensnøkkel før du kan bruke innstillingene.', 'kursagenten'); ?></p>
+            </div>
+            <div class="options-card" style="max-width:720px; margin-top: 1em;">
+                <h3><?php echo esc_html__('Legg inn lisensnøkkel', 'kursagenten'); ?></h3>
+                <form method="post" action="options.php">
+                    <?php 
+                        if (function_exists('settings_fields')) {
+                            settings_fields('kursagenten_license');
+                        }
+                    ?>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><?php echo esc_html__('API-nøkkel', 'kursagenten'); ?></th>
+                            <td>
+                                <input type="text" name="kursagenten_api_key" class="regular-text" value="" />
+                                <p class="description"><?php echo esc_html__('Lim inn API-nøkkelen du fikk tildelt.', 'kursagenten'); ?></p>
+                            </td>
+                        </tr>
+                    </table>
+                    <?php submit_button( esc_html__('Lagre lisens', 'kursagenten') ); ?>
+                </form>
+            </div>
+        </div>
+        <?php
+        return;
+    }
     ?>
     <div class="wrap options-form ka-wrap" id="toppen">
         <form method="post" action="options.php">

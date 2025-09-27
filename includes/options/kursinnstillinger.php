@@ -31,6 +31,13 @@ class Kursinnstillinger {
     }
 
     public function kag_kursinnst_create_admin_page() {
+        // Global guard: redirect to Oversikt if API key is missing
+        $api_key = get_option('kursagenten_api_key', '');
+        if (empty($api_key)) {
+            wp_safe_redirect( admin_url('admin.php?page=kursagenten') );
+            exit;
+        }
+
         $this->kag_kursinnst_options = get_option('kag_kursinnst_option_name'); 
         require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 

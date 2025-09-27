@@ -4,7 +4,7 @@
  *
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
- * Description:       Dine kurs hentet og oppdatert fra Kursagenten.
+ * Description:       Komplett løsning for kursadministrasjon med automatisk synkronisering fra Kursagenten-plattformen.
  * Version:           1.0.1
  * Author:            Tone B. Hagen
  * Author URI:        https://kursagenten.no
@@ -13,6 +13,43 @@
  * Requires PHP:      7.4
  * Requires at least: 6.0
  */
+
+ 
+// Plugin versjon
+define('KURSAG_VERSION', '1.0.1');
+
+// Plugin konstanter - bruk disse overalt for konsistent informasjon
+if (!defined('KURSAG_DESCRIPTION')) {
+    define('KURSAG_DESCRIPTION', 'Komplett løsning for kursadministrasjon med automatisk synkronisering fra Kursagenten-plattformen.');
+}
+if (!defined('KURSAG_INSTALLATION')) {
+    define('KURSAG_INSTALLATION', '1. Installer plugin<br>2. Legg inn tilsendt API-nøkkel i Innstillinger<br>3. Gå til Oversikt for å videre instruksjoner');
+}
+if (!defined('KURSAG_AUTHOR')) {
+    define('KURSAG_AUTHOR', 'Tone B. Hagen');
+}
+if (!defined('KURSAG_AUTHOR_URI')) {
+    define('KURSAG_AUTHOR_URI', 'https://kursagenten.no');
+}
+if (!defined('KURSAG_HOMEPAGE')) {
+    define('KURSAG_HOMEPAGE', 'https://deltagersystem.no/wp-plugin');
+}
+if (!defined('KURSAG_WP_REQUIRES')) {
+    define('KURSAG_WP_REQUIRES', '6.0');
+}
+if (!defined('KURSAG_WP_TESTED')) {
+    define('KURSAG_WP_TESTED', '6.6');
+}
+if (!defined('KURSAG_PHP_REQUIRES')) {
+    define('KURSAG_PHP_REQUIRES', '7.4');
+}
+if (!defined('KURSAG_BANNER_LOW')) {
+    define('KURSAG_BANNER_LOW', 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp');
+}
+if (!defined('KURSAG_BANNER_HIGH')) {
+    define('KURSAG_BANNER_HIGH', 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp');
+}
+
 
 if (defined('WP_DEBUG') && WP_DEBUG) {
     // Bare sett cache headers under utvikling
@@ -33,28 +70,19 @@ if (!defined('ABSPATH')) {
 register_activation_hook(__FILE__, 'kursagenten_check_dependencies');
 
 function kursagenten_check_dependencies() {
-    if (version_compare(PHP_VERSION, '7.4', '<')) {
+    $min_php = defined('KURSAG_PHP_REQUIRES') ? KURSAG_PHP_REQUIRES : '7.4';
+    $min_wp = defined('KURSAG_WP_REQUIRES') ? KURSAG_WP_REQUIRES : '6.0';
+    
+    if (version_compare(PHP_VERSION, $min_php, '<')) {
         deactivate_plugins(plugin_basename(__FILE__));
-        wp_die('Kursagenten krever PHP 7.4 eller høyere.');
+        wp_die("Kursagenten krever PHP {$min_php} eller høyere.");
     }
     
-    if (version_compare($GLOBALS['wp_version'], '6.0', '<')) {
+    if (version_compare($GLOBALS['wp_version'], $min_wp, '<')) {
         deactivate_plugins(plugin_basename(__FILE__));
-        wp_die('Kursagenten krever WordPress 6.0 eller høyere.');
+        wp_die("Kursagenten krever WordPress {$min_wp} eller høyere.");
     }
 }
-
-
-// Gruppér relaterte konstanter
-if (defined('WP_DEBUG') && WP_DEBUG) {
-    // Under utvikling - bruk timestamp
-    define('KURSAG_VERSION', date('YmdHis'));
-} else {
-    // I produksjon - bruk vanlig versjonsnummer
-    define('KURSAG_VERSION', '1.0.1');
-}
-define('KURSAG_MIN_PHP',     '7.4');
-define('KURSAG_MIN_WP',      '6.0');
 
 // Filstier
 define('KURSAG_PLUGIN_FILE', __FILE__);
@@ -242,6 +270,10 @@ require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten-css-output.php';
 // Initialiser hovedklassen
 $kursagenten = new Kursagenten();
 
+// Last inn oppdateringshåndtering og initialiser
+require_once KURSAG_PLUGIN_DIR . '/includes/plugin_update/secure_updater.php';
+new \KursagentenUpdater\SecureUpdater();
+
 /* MISC ADMIN FUNCTIONS */
 require_once KURSAG_PLUGIN_DIR . '/includes/misc/hide_course-images_in_mediafolder.php';
 require_once KURSAG_PLUGIN_DIR . '/assets/dynamic-icons.php';
@@ -276,6 +308,41 @@ function kursagenten_load_admin_options() {
     }
 }
 add_action('plugins_loaded', 'kursagenten_load_admin_options');
+
+// Global guard: redirect alle Kursagenten-undersider til Oversikt dersom API-nøkkel mangler
+add_action('admin_init', function() {
+    if (!is_admin()) {
+        return;
+    }
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+    $api_key = get_option('kursagenten_api_key', '');
+    if (!empty($api_key)) {
+        return;
+    }
+    // Siden vi står på
+    $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+    if (empty($page)) {
+        return;
+    }
+    // Alle kjente Kursagenten-sider (submenu slugs)
+    $kursagenten_pages = array(
+        'kursagenten',
+        'kursinnstillinger',
+        'design',
+        'bedriftsinformasjon',
+        'seo',
+        'avansert',
+        'documentation',
+        'kursagenten-theme-customizations'
+    );
+    // Omdiriger alle unntatt selve oversikten
+    if (in_array($page, $kursagenten_pages, true) && $page !== 'kursagenten') {
+        wp_safe_redirect( admin_url('admin.php?page=kursagenten') );
+        exit;
+    }
+});
     
     
 /* ENQUEUE JS & CSS ADMIN SCRIPTS */
@@ -284,6 +351,7 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
             $screen = get_current_screen();
             $plugin_admin_pages = array('kursagenten', 'bedriftsinformasjon', 'kursinnstillinger', 'seo', 'avansert');
             $enqueue_plugin_pages = false;
+            $api_key = get_option('kursagenten_api_key', '');
             
             // Sjekk om vi er på en Kursagenten admin-side
             foreach ($plugin_admin_pages as $slug) {
@@ -298,7 +366,8 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
                 $enqueue_plugin_pages = true;
             }
             
-            if ($enqueue_plugin_pages) {
+            // Ikke last tunge admin-scripts hvis lisensnøkkel mangler
+            if ($enqueue_plugin_pages && !empty($api_key)) {
                 wp_enqueue_media();// Enqueue media scripts for file uploads
                 wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
                 wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), '1.0.317',  true  );  
@@ -310,34 +379,35 @@ add_action('plugins_loaded', 'kursagenten_load_admin_options');
 
 
 
- /* FRONT END */   
+/* FRONT END */
+if (!is_admin()) {
+    // Definer en konstant for plugin path som brukes i template-functions.php
+    define('KURSAGENTEN_PATH', KURSAG_PLUGIN_DIR);
 
-// Definer en konstant for plugin path som brukes i template-functions.php
-define('KURSAGENTEN_PATH', KURSAG_PLUGIN_DIR);
+    // Sørg for at funksjonen er inkludert
+    require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template-functions.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
 
-// Sørg for at funksjonen er inkludert
-require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template-functions.php';
-require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
-require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
-require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
+    // Shortcodes content blocks
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-list-shortcode.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.php';
 
-// Shortcodes content blocks
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-list-shortcode.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.php';
+    // Menus
+    //require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
+    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
 
-// Menus
-//require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
+    // General Kursagenten shortcodes
+    require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
 
-// General Kursagenten shortcodes
-require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
-
-// Blocks
-//require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
+    // Blocks
+    //require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
+}
 
     
     function kursagenten_enqueue_styles() {
