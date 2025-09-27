@@ -87,7 +87,10 @@ class SecureUpdater {
             set_transient('kursagenten_register_success', 1, 60);
         } elseif (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 401) {
             // License is invalid - delete API key to force re-entry
-            $this->handle_invalid_license();
+            $this->handle_invalid_license('invalid');
+        } elseif (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 403) {
+            // License limit exceeded - treat as invalid license and delete API key
+            $this->handle_invalid_license('limit_exceeded');
         }
     }
 
@@ -172,7 +175,7 @@ class SecureUpdater {
             
             // If license is invalid (401), delete API key to force re-entry
             if ($response_code === 401) {
-                $this->handle_invalid_license();
+                $this->handle_invalid_license('invalid');
             }
             
             return false;
@@ -655,6 +658,16 @@ class SecureUpdater {
                     '</a>'
                 )
                 . '</p></div>';
+        } elseif (get_transient('kursagenten_license_limit_exceeded')) {
+            delete_transient('kursagenten_license_limit_exceeded');
+            $url = esc_url(admin_url('options-general.php?page=kursagenten-license'));
+            echo '<div class="notice notice-error is-dismissible"><p>'
+                . sprintf(
+                    __('Kursagenten: Denne lisensen er allerede i bruk på en annen side. Gi oss beskjed på post@kursagenten.no, så skal vi hjelpe deg. %sLegg inn ny lisens her%s.', 'kursagenten'),
+                    '<a href="' . $url . '">',
+                    '</a>'
+                )
+                . '</p></div>';
         } elseif (empty($this->api_key) && $screen && in_array($screen->base, ['plugins', 'options-general'])) {
             $url = esc_url(admin_url('options-general.php?page=kursagenten-license'));
             echo '<div class="notice notice-warning"><p>'
@@ -748,7 +761,7 @@ class SecureUpdater {
     /**
      * Handle invalid license by deleting API key and showing notice
      */
-    private function handle_invalid_license() {
+    private function handle_invalid_license($reason = 'invalid') {
         // Delete the API key
         delete_option('kursagenten_api_key');
         $this->api_key = '';
@@ -757,11 +770,15 @@ class SecureUpdater {
         delete_option('kursagenten_last_register');
         delete_option('kursagenten_site_registered');
         
-        // Set a transient to show notice to admin
-        set_transient('kursagenten_license_invalid', 1, 300); // 5 minutes
+        // Set a transient to show notice to admin with appropriate message
+        if ($reason === 'limit_exceeded') {
+            set_transient('kursagenten_license_limit_exceeded', 1, 300); // 5 minutes
+        } else {
+            set_transient('kursagenten_license_invalid', 1, 300); // 5 minutes
+        }
         
         if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('Kursagenten: API key deleted due to invalid license (401 response)');
+            error_log('Kursagenten: API key deleted due to ' . $reason . ' license');
         }
     }
 }

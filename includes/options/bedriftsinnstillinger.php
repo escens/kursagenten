@@ -27,7 +27,8 @@ class Bedriftsinformasjon {
         <form method="post" action="options.php">
         <?php kursagenten_sticky_admin_menu(); ?>
         <h2>Bedriftsinformasjon</h2>
-        <p>Her kan du skrive inn informasjon som vil bli brukt ulike steder på nettsiden. Dette inkluderer navn på hovedkontakt (personvernerklæring), samt firmanavn og adresse (kontaktside og bunnfelt).</p>
+        <p>Her kan du skrive inn informasjon som vil bli brukt ulike steder på nettsiden. Dette inkluderer navn på hovedkontakt (personvernerklæring), samt firmanavn og adresse (kontaktside og bunnfelt).<br>
+        Du kan også legge inn informasjon om bedriften som kan vises på med kortkode. Se alle kortkoder <a href="#kortkoder">her</a>.</p>
 
         <?php
         settings_fields('bedriftsinfo_option_group');
