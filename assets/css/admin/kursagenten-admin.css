@@ -207,7 +207,7 @@ input[type=textarea] {
 }
 
 /* Responsivt for mindre skjermer */
-@media screen and (max-width: 782px) {
+@media screen and (max-width: 950px) {
     .ka-flex-2 > *,
     .ka-flex-3 > * {
         flex: 0 0 100%;
@@ -290,22 +290,9 @@ pre, code {
 }
 /* Oversiktside */
 /*****************************/
-.ka-wrap .welcome-panel-content {
-    min-height: 100px;
-}
-.ka-wrap .welcome-panel-column {
-    grid-template-columns: 1fr;
-    gap: 0;
-}
-.ka-wrap .welcome-panel .welcome-panel-column-container {
-    align-items: start;
-}
 h4.welcome-panel-title {
     margin: 0 0 1em 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1em;
     line-height: 1.4;
-    font-size: 1.3em;
 }
 
 /* Versjonslogg Modal */
