@@ -98,14 +98,14 @@ function kursagenten_admin_landing_page() {
             
 
                 
-                <div id="kom-igang" class="options-card">
+            <div id="kom-igang" class="options-card">
                 <h3>Kom i gang</h3>
                     <div class="ka-grid ka-grid-3">
                         <div class="kort">
                             <h4 class="welcome-panel-title">Hent kursene</h4>
                             <p>Legg inn innstillinger for å automatisk hente kurs fra Kursagenten. Når du har lagt inn innstillinger, kan du klikke på "Hent alle kurs fra Kursagenten" så blir alt hentet ved første gangs installering.</p>
                             <ul>
-                                <li><a href="admin.php?page=bedriftsinformasjon">Bedriftsinformasjon</a></li>
+                                <li><a href="admin.php?page=kursinnstillinger"><strong>Synkronisering</strong></a></li>
                             </ul>
                         </div>
                         
@@ -113,7 +113,7 @@ function kursagenten_admin_landing_page() {
                             <h4 class="welcome-panel-title">Legg inn bedriftsinformasjon</h4>
                             <p>Her kan du skrive inn informasjon som vil bli brukt ulike steder på nettsiden. Dette inkluderer navn på hovedkontakt (personvernerklæring), samt firmanavn og adresse (kontaktside og bunnfelt).</p>
                             <ul>
-                                <li><a href="admin.php?page=bedriftsinformasjon">Bedriftsinformasjon</a></li>
+                                <li><a href="admin.php?page=bedriftsinformasjon"><strong>Bedriftsinformasjon</strong></a></li>
                             </ul>
                         </div>
                         
@@ -121,7 +121,7 @@ function kursagenten_admin_landing_page() {
                             <h4 class="welcome-panel-title">Juster design og maler</h4>
                             <p>Opprett nødvendige sider for kurs, kurskategorier, kurssteder og instruktører. Velg design på kursliste, enkeltkurs, kategorier, steder og instruktører. Velg hovedfarger.</p>
                             <ul>
-                                <li><a href="admin.php?page=design">Designvalg</a></li>
+                                <li><a href="admin.php?page=design"><strong>Designvalg</strong></a></li>
                             </ul>
                         </div>
                     </div>

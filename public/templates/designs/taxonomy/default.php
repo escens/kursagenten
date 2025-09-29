@@ -52,6 +52,10 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                     echo esc_html($term->name);
                 }
                 ?></h1>
+                <?php
+                // Hook immediately after the H1 title in header block
+                do_action('ka_taxonomy_after_title', $term);
+                ?>
                 <?php if (!empty($term->description)): ?>
                     <div class="taxonomy-description">
                         <?php echo wp_kses_post($term->description); ?>
@@ -60,6 +64,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
             </div>
         </div>
     </header>
+
+    <?php
+    // Hook right after the taxonomy header/title
+    do_action('ka_taxonomy_header_after', $term);
+    ?>
 
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
@@ -73,22 +82,16 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                     <?php endif; ?>
 
                     <?php
-                    // Hook for venstre kolonne basert på taksonomitype
-                    switch ($taxonomy) {
-                        case 'instructors':
-                            do_action('ka_instructors_left_column', $term);
-                            break;
-                        case 'coursecategory':
-                            do_action('ka_coursecategory_left_column', $term);
-                            break;
-                        case 'course_location':
-                            do_action('ka_courselocation_left_column', $term);
-                            break;
-                    }
+                    // Felles hook for venstre kolonne på taksonomi-sider
+                    do_action('ka_taxonomy_left_column', $term);
                     ?>
                 </div>
 
                 <div class="right-column">
+                    <?php
+                    // Hook at the top of the right column
+                    do_action('ka_taxonomy_right_column_top', $term);
+                    ?>
                     <?php if (!empty($rich_description)): ?>
                         <div class="taxonomy-rich-description">
                             <?php 
@@ -97,9 +100,17 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             ?>
                         </div>
                     <?php endif; ?>
+                    <?php
+                    // Hook at the bottom of the right column
+                    do_action('ka_taxonomy_right_column_bottom', $term);
+                    ?>
                 </div>
             </div>
 
+            <?php
+            // Hook below main image and extended description, before course list
+            do_action('ka_taxonomy_below_description', $term);
+            ?>
             <?php if ($taxonomy === 'course_location'): ?>
                     <?php 
                     $specific_locations = get_term_meta($term_id, 'specific_locations', true);
@@ -169,6 +180,10 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
             <?php if ($query->have_posts()): ?>
                 <div class="taxonomy-coursedates">
                     <h2>Tilgjengelige kurs</h2>
+                    <?php
+                    // Hook before the course list (above filters and pagination)
+                    do_action('ka_courselist_before', $term);
+                    ?>
                     
                     <?php
                     // Hent toppnivå kurskategorier for filtrering
@@ -251,6 +266,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             </div>
                         </div>
                     <?php endif; ?>
+
+                    <?php
+                    // Hook after pagination controls
+                    do_action('ka_taxonomy_pagination_after', $term);
+                    ?>
                 </div>
             <?php else: ?>
                 <div class="no-courses-message">
@@ -258,6 +278,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 </div>
             <?php endif; ?>
             <?php wp_reset_postdata(); ?>
+
+            <?php
+            // Hook below the course list (taxonomy footer)
+            do_action('ka_taxonomy_footer', $term);
+            ?>
         </div>
     </section>
 </article>

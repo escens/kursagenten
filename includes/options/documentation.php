@@ -335,25 +335,33 @@ class KA_Documentation_Page {
                 <div class="ka-grid ka-grid-3">
                     <div class="kort">
                             <h4>Taksonomi-sider</h4>
-                            <p><strong>Instruktører</strong><br><span class="copytext">ka_instructors_left_column</span></p>
-                            <p><strong>Kurskategorier</strong><br><span class="copytext">ka_coursecategory_left_column</span></p>
-                            <p><strong>Kurssted</strong><br><span class="copytext">ka_courselocation_left_column</span></p>
+                            <p style="line-height: 1.8;">
+                                <strong>Header etter tittel</strong> <span class="copytext">ka_taxonomy_after_title</span><br><span style="color:#777;font-style:italic"> – Vises rett etter H1 i toppseksjonen.</span><br>
+                                <strong>Header etter seksjon</strong> <span class="copytext">ka_taxonomy_header_after</span><br><span style="color:#777;font-style:italic"> – Vises rett under hele header-blokken.</span><br>
+                                <strong>Venstre kolonne</strong> <span class="copytext">ka_taxonomy_left_column</span><br><span style="color:#777;font-style:italic"> – Plassering for innhold i venstre kolonne.</span><br>
+                                <strong>Høyre kolonne topp</strong> <span class="copytext">ka_taxonomy_right_column_top</span><br><span style="color:#777;font-style:italic"> – Øverst i høyre kolonne.</span><br>
+                                <strong>Høyre kolonne bunn</strong> <span class="copytext">ka_taxonomy_right_column_bottom</span><br><span style="color:#777;font-style:italic"> – Nederst i høyre kolonne.</span><br>
+                                <strong>Under bilde og beskrivelse</strong> <span class="copytext">ka_taxonomy_below_description</span><br><span style="color:#777;font-style:italic"> – Like under hovedbilde/utvidet beskrivelse, før kurslisten.</span><br>
+                                <strong>Før kursliste</strong> <span class="copytext">ka_courselist_before</span><br><span style="color:#777;font-style:italic"> – Under overskrift, over filter/paginering og liste.</span><br>
+                                <strong>Etter paginering</strong> <span class="copytext">ka_taxonomy_pagination_after</span><br><span style="color:#777;font-style:italic"> – Rett under pagineringskontroller i mal "Standard".</span><br>
+                                <strong>Footer</strong> <span class="copytext">ka_taxonomy_footer</span><br><span style="color:#777;font-style:italic"> – Helt nederst, etter kurslisten (bunnseksjon).</span>
+                            </p>
                     </div>
                     <div class="kort">
                         <h4>Enkeltkurs</h4>
                         <p style="line-height: 1.8;">
-                            <span class="copytext">ka_singel_header_links_after</span><br>
-                            <span class="copytext">ka_singel_header_after</span><br>
-                            <span class="copytext">ka_singel_courselist_after</span><br>
-                            <span class="copytext">ka_singel_nextcourse_after</span><br>
-                            <span class="copytext">ka_singel_content_intro_before</span><br>
-                            <span class="copytext">ka_singel_content_intro_after</span><br>
-                            <span class="copytext">ka_singel_content_before</span><br>
-                            <span class="copytext">ka_singel_content_after</span><br>
-                            <span class="copytext">ka_singel_aside_before</span><br>
-                            <span class="copytext">ka_singel_aside_after</span><br>
-                            <span class="copytext">ka_singel_footer_before</span><br>
-                            <span class="copytext">ka_singel_footer_after</span><br>
+                        <strong>Header etter tittel</strong> <span class="copytext">ka_singel_header_links_after</span><br><span style="color:#777;font-style:italic"> – Etter lenkene i header-seksjonen.</span><br>
+                        <strong>Header etter</strong> <span class="copytext">ka_singel_header_after</span><br><span style="color:#777;font-style:italic"> – Rett under hele header-blokken.</span><br>
+                        <strong>Kursliste etter</strong> <span class="copytext">ka_singel_courselist_after</span><br><span style="color:#777;font-style:italic"> – Etter eventuell kursliste-seksjon på detaljsiden.</span><br>
+                        <strong>Neste kurs</strong> <span class="copytext">ka_singel_nextcourse_after</span><br><span style="color:#777;font-style:italic"> – Etter modulen “Neste kurs”.</span><br>
+                        <strong>Introtekst før</strong> <span class="copytext">ka_singel_content_intro_before</span><br><span style="color:#777;font-style:italic"> – Før introtekst.</span><br>
+                        <strong>Introtekst etter</strong> <span class="copytext">ka_singel_content_intro_after</span><br><span style="color:#777;font-style:italic"> – Etter introtekst.</span><br>
+                        <strong>Hovedinnhold før</strong> <span class="copytext">ka_singel_content_before</span><br><span style="color:#777;font-style:italic"> – Før hovedinnholdet.</span><br>
+                        <strong>Hovedinnhold etter</strong> <span class="copytext">ka_singel_content_after</span><br><span style="color:#777;font-style:italic"> – Etter hovedinnholdet.</span><br>
+                        <strong>Sidekolonne før</strong> <span class="copytext">ka_singel_aside_before</span><br><span style="color:#777;font-style:italic"> – Før sidekolonne/aside.</span><br>
+                        <strong>Sidekolonne etter</strong> <span class="copytext">ka_singel_aside_after</span><br><span style="color:#777;font-style:italic"> – Etter sidekolonne/aside.</span><br>
+                        <strong>Footer før</strong> <span class="copytext">ka_singel_footer_before</span><br><span style="color:#777;font-style:italic"> – Rett før footer.</span><br>
+                        <strong>Footer etter</strong> <span class="copytext">ka_singel_footer_after</span><br><span style="color:#777;font-style:italic"> – Rett etter footer-seksjonen.</span><br>
                         </p>
                     </div>
 
