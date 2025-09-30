@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for kursadministrasjon med automatisk henting av kurs fra Kursagenten.
- * Version:           1.0.0
+ * Version:           1.0.1
  * Author:            Tone B. Hagen
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -16,7 +16,7 @@
 
  
 // Plugin versjon
-define('KURSAG_VERSION', '1.0.0');
+define('KURSAG_VERSION', '1.0.1');
 
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
 if (!defined('KURSAG_DESCRIPTION')) {

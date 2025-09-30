@@ -121,6 +121,13 @@ function kursagenten_run_sync_kurs() {
     error_log("Oppdaterer hovedkurs statuser etter fullført synkronisering");
     kursagenten_update_main_course_status();
 
+    // Kjør opprydding for kurs som ikke lenger finnes i API
+    // Dette sikrer at kurs som er slettet i Kursagenten fjernes helt (ikke bare settes som kladd)
+    if (function_exists('cleanup_courses_on_demand')) {
+        error_log("Starter opprydding etter synk");
+        cleanup_courses_on_demand();
+    }
+
     wp_send_json_success([
         'success_count' => $success_count,
         'error_count' => $error_count

@@ -55,6 +55,25 @@ function process_webhook_data($request) {
     ];
     set_transient($webhook_data_key, $stored_webhooks, 3);
     
+    // Slett kurs umiddelbart hvis Deleted=true
+    if (isset($body['Deleted']) && $body['Deleted'] === true) {
+        error_log("Webhook indicates deletion for CourseId: $location_id");
+        if (function_exists('kursagenten_delete_course_by_location_id')) {
+            $deleted = kursagenten_delete_course_by_location_id($location_id);
+            if ($deleted) {
+                // Oppdater hovedkurs etter sletting
+                // Finn main_course_id via eksisterende liste, hvis mulig
+                $course_data = get_main_course_id_by_location_id($location_id);
+                $main_course_id = $course_data['main_course_id'] ?? null;
+                if ($main_course_id && function_exists('kursagenten_update_main_course_status')) {
+                    kursagenten_update_main_course_status($main_course_id);
+                }
+                return new WP_REST_Response('Course deleted successfully.', 200);
+            }
+        }
+        return new WP_REST_Response('Course not found or already deleted.', 200);
+    }
+
     // Prosesser webhook hvis:
     // 1. Den har Enabled parameter (kurs-oppdatering)
     // 2. Det er første webhook for dette kurset (instruktør-oppdatering)

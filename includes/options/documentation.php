@@ -1,4 +1,3 @@
-
 <?php
 // Documentation admin page for Kursagenten
 // Comments in English; UI text in Norwegian

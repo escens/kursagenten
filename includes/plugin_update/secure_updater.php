@@ -21,7 +21,8 @@ class SecureUpdater {
         $this->version = KURSAG_VERSION;
         $this->api_key = get_option('kursagenten_api_key', '');
         // Server-plugin endepunkter bruker /kursagenten-api/{action}
-        $this->api_url = 'https://admin.lanseres.no/kursagenten-api/';
+        // Use local server if available, otherwise fallback to external
+        $this->api_url = $this->get_api_url();
         $this->cache_key = 'kursagenten_secure_updater';
 
         // Hooks
@@ -49,6 +50,19 @@ class SecureUpdater {
         // Sørg for fersk update-info når Plugins/Update-sider lastes (unngå gammel cache med feil URL)
         add_action('load-plugins.php', function() { delete_transient($this->cache_key); });
         add_action('load-update.php', function() { delete_transient($this->cache_key); });
+    }
+
+    /**
+     * Get API URL - use local server if available, otherwise external
+     */
+    private function get_api_url() {
+        // Check if local server plugin is active
+        if (class_exists('\\KursagentenServer\\Server')) {
+            return home_url('/kursagenten-api/');
+        }
+        
+        // Fallback to external server
+        return 'https://admin.lanseres.no/kursagenten-api/';
     }
 
     /**
@@ -206,31 +220,38 @@ class SecureUpdater {
             if (isset($body['update_available']) && $body['update_available'] === true && isset($body['update_info'])) {
                 // Hvis det er oppdatering tilgjengelig, returner update_info
                 return (object) $body['update_info'];
-            } else {
-                // Hvis ingen oppdatering, returner komplett plugin info
-                return (object) [
-                    'name' => 'Kursagenten',
-                    'slug' => 'kursagenten',
-                    'version' => $this->version,
-                    'tested' => defined('KURSAG_WP_TESTED') ? KURSAG_WP_TESTED : '6.6',
-                    'requires' => defined('KURSAG_WP_REQUIRES') ? KURSAG_WP_REQUIRES : '6.0',
-                    'author' => defined('KURSAG_AUTHOR') ? KURSAG_AUTHOR : 'Tone B. Hagen',
-                    'author_profile' => defined('KURSAG_AUTHOR_URI') ? KURSAG_AUTHOR_URI : 'https://kursagenten.no',
-                    'homepage' => defined('KURSAG_HOMEPAGE') ? KURSAG_HOMEPAGE : 'https://deltagersystem.no/wp-plugin',
-                    'download_url' => '',
-                    'requires_php' => defined('KURSAG_PHP_REQUIRES') ? KURSAG_PHP_REQUIRES : '7.4',
-                    'last_updated' => date('Y-m-d'),
-                    'sections' => [
-                        'description' => defined('KURSAG_DESCRIPTION') ? KURSAG_DESCRIPTION : 'Dine kurs hentet og oppdatert fra Kursagenten.',
-                        'installation' => defined('KURSAG_INSTALLATION') ? KURSAG_INSTALLATION : 'Installasjonssteg kommer her.',
-                        'changelog' => $changelog_text
-                    ],
-                    'banners' => [
-                        'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp',
-                        'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp'
-                    ]
-                ];
             }
+
+            // Ingen oppdatering: bygg komplett plugin-info objekt (unngå udefinert variabel)
+            // Hent changelog fra server-plugin (public endpoint)
+            $changelog_text = 'Changelog er ikke tilgjengelig.';
+            $changelog_data = $this->get_public_changelog();
+            if (is_array($changelog_data) && isset($changelog_data['changelog']) && !empty($changelog_data['changelog'])) {
+                $changelog_text = $changelog_data['changelog'];
+            }
+
+            return (object) [
+                'name' => 'Kursagenten',
+                'slug' => 'kursagenten',
+                'version' => $this->version,
+                'tested' => defined('KURSAG_WP_TESTED') ? KURSAG_WP_TESTED : '6.6',
+                'requires' => defined('KURSAG_WP_REQUIRES') ? KURSAG_WP_REQUIRES : '6.0',
+                'author' => defined('KURSAG_AUTHOR') ? KURSAG_AUTHOR : 'Tone B. Hagen',
+                'author_profile' => defined('KURSAG_AUTHOR_URI') ? KURSAG_AUTHOR_URI : 'https://kursagenten.no',
+                'homepage' => defined('KURSAG_HOMEPAGE') ? KURSAG_HOMEPAGE : 'https://deltagersystem.no/wp-plugin',
+                'download_url' => '',
+                'requires_php' => defined('KURSAG_PHP_REQUIRES') ? KURSAG_PHP_REQUIRES : '7.4',
+                'last_updated' => date('Y-m-d'),
+                'sections' => [
+                    'description' => defined('KURSAG_DESCRIPTION') ? KURSAG_DESCRIPTION : 'Dine kurs hentet og oppdatert fra Kursagenten.',
+                    'installation' => defined('KURSAG_INSTALLATION') ? KURSAG_INSTALLATION : 'Installasjonssteg kommer her.',
+                    'changelog' => $changelog_text
+                ],
+                'banners' => [
+                    'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp',
+                    'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp'
+                ]
+            ];
         }
         return false;
     }
@@ -312,7 +333,7 @@ class SecureUpdater {
         $changelog_text = 'Changelog er ikke tilgjengelig.';
         try {
             $changelog_data = $this->get_public_changelog();
-            if ($changelog_data && isset($changelog_data['changelog'])) {
+            if (is_array($changelog_data) && isset($changelog_data['changelog']) && !empty($changelog_data['changelog'])) {
                 $changelog_text = $changelog_data['changelog'];
             }
         } catch (Exception $e) {
@@ -326,6 +347,7 @@ class SecureUpdater {
         if (!$remote) {
             
             // Provide fallback plugin information when API fails
+            // But still include the changelog we fetched earlier
             $response = new \stdClass();
             $response->name = 'Kursagenten';
             $response->slug = $this->plugin_slug;
@@ -342,8 +364,9 @@ class SecureUpdater {
             $response->sections = [
                 'description' => defined('KURSAG_DESCRIPTION') ? KURSAG_DESCRIPTION : 'Dine kurs hentet og oppdatert fra Kursagenten.',
                 'installation' => defined('KURSAG_INSTALLATION') ? KURSAG_INSTALLATION : 'Installasjonssteg kommer her.',
-                'changelog' => $changelog_text
+                'changelog' => $changelog_text  // Use the changelog we fetched earlier
             ];
+            
             $response->banners = [
                 'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp',
                 'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp'
@@ -381,6 +404,7 @@ class SecureUpdater {
         if (empty($response->sections['changelog'])) {
             $response->sections['changelog'] = $changelog_text;
         }
+        
         
         // Ensure banners are properly populated
         $response->banners = isset($remote->banners) ? (array) $remote->banners : [];

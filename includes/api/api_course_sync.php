@@ -1538,3 +1538,129 @@ function get_locations_for_area($location_id, $municipality, $county) {
     error_log("=== SLUTT: get_locations_for_area ===");
     return $all_locations;
 }
+
+/**
+ * Delete course and coursedates by location_id
+ * Deletes:
+ * - All coursedates with meta location_id
+ * - All course posts (parent/sub) with meta location_id
+ * - If no sub-courses remain for the main_course_id, delete the parent course
+ */
+function kursagenten_delete_course_by_location_id($location_id) {
+    error_log("=== START: kursagenten_delete_course_by_location_id for location_id: $location_id ===");
+
+    $location_id = (int) $location_id;
+    if (!$location_id) {
+        return false;
+    }
+
+    // Find course posts with this location_id (could be parent or sub)
+    $courses = get_posts([
+        'post_type' => 'course',
+        'posts_per_page' => -1,
+        'post_status' => ['publish', 'draft'],
+        'meta_query' => [
+            [
+                'key' => 'location_id',
+                'value' => $location_id,
+                'compare' => '='
+            ]
+        ]
+    ]);
+
+    // Always delete coursedates for this location_id first
+    $coursedates = get_posts([
+        'post_type' => 'coursedate',
+        'posts_per_page' => -1,
+        'post_status' => ['publish', 'draft'],
+        'meta_query' => [
+            [ 'key' => 'location_id', 'value' => $location_id ]
+        ]
+    ]);
+
+    foreach ($coursedates as $date) {
+        // Try to clean relationships if helper exists
+        $related_courses = get_post_meta($date->ID, 'course_related_course', true);
+        if (!empty($related_courses) && is_array($related_courses)) {
+            foreach ($related_courses as $related_course_id) {
+                if (function_exists('remove_coursedate_from_related_course')) {
+                    remove_coursedate_from_related_course($date->ID, (int) $related_course_id);
+                }
+            }
+        }
+        wp_delete_post($date->ID, true);
+        error_log("Slettet kursdato ID: {$date->ID} for location_id: {$location_id}");
+    }
+
+    $deleted_any_course = false;
+    $affected_main_course_ids = [];
+
+    foreach ($courses as $course_post) {
+        $main_course_id = get_post_meta($course_post->ID, 'main_course_id', true);
+        if (!empty($main_course_id)) {
+            $affected_main_course_ids[] = (int) $main_course_id;
+        }
+
+        wp_delete_post($course_post->ID, true);
+        $deleted_any_course = true;
+        error_log("Slettet kurs ID: {$course_post->ID} (location_id: {$location_id})");
+    }
+
+    // If we deleted a sub-course, check if the parent should be deleted too
+    $affected_main_course_ids = array_unique(array_filter($affected_main_course_ids));
+    foreach ($affected_main_course_ids as $main_course_id) {
+        // Remaining sub-courses for this main_course_id
+        $remaining_sub = get_posts([
+            'post_type' => 'course',
+            'posts_per_page' => 1,
+            'post_status' => ['publish', 'draft'],
+            'meta_query' => [
+                [ 'key' => 'main_course_id', 'value' => $main_course_id, 'compare' => '=' ],
+                [ 'key' => 'is_parent_course', 'compare' => 'NOT EXISTS' ]
+            ]
+        ]);
+
+        if (empty($remaining_sub)) {
+            // Delete parent course (is_parent_course = yes)
+            $parent_course = get_posts([
+                'post_type' => 'course',
+                'posts_per_page' => 1,
+                'post_status' => ['publish', 'draft'],
+                'meta_query' => [
+                    [ 'key' => 'main_course_id', 'value' => $main_course_id, 'compare' => '=' ],
+                    [ 'key' => 'is_parent_course', 'value' => 'yes', 'compare' => '=' ]
+                ]
+            ]);
+
+            if (!empty($parent_course)) {
+                // Also remove any coursedates that might be tied to the main_course_id (if any)
+                $parent_location_id = (int) get_post_meta($parent_course[0]->ID, 'location_id', true);
+                if ($parent_location_id) {
+                    $parent_dates = get_posts([
+                        'post_type' => 'coursedate',
+                        'posts_per_page' => -1,
+                        'post_status' => ['publish', 'draft'],
+                        'meta_query' => [
+                            [ 'key' => 'location_id', 'value' => $parent_location_id ]
+                        ]
+                    ]);
+                    foreach ($parent_dates as $pd) {
+                        wp_delete_post($pd->ID, true);
+                        error_log("Slettet hovedkurs-dato ID: {$pd->ID} for main_course_id: {$main_course_id}");
+                    }
+                }
+
+                wp_delete_post($parent_course[0]->ID, true);
+                error_log("Slettet hovedkurs ID: {$parent_course[0]->ID} (main_course_id: {$main_course_id}) fordi ingen subkurs gjenstår");
+            }
+        } else {
+            // Sync parent status after deletion
+            if (function_exists('kursagenten_update_main_course_status')) {
+                kursagenten_update_main_course_status((int) $main_course_id);
+            }
+        }
+    }
+
+    error_log("=== SLUTT: kursagenten_delete_course_by_location_id ===");
+    return $deleted_any_course;
+}
