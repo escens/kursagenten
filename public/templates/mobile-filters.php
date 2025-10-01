@@ -69,6 +69,21 @@ error_log('Available filters: ' . print_r($available_filters, true));
 // Spesiell håndtering for coursecategory taksonomi-sider
 $category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : (function_exists('get_filtered_terms') ? get_filtered_terms('coursecategory') : get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]));
 
+// Pre-prosessere kategorier for å identifisere foreldre (de som har barn)
+$parent_term_ids = [];
+foreach ($category_terms as $term) {
+    if (isset($term->parent_id) && $term->parent_id > 0) {
+        $parent_term_ids[] = $term->parent_id;
+    }
+}
+$parent_term_ids = array_unique($parent_term_ids);
+
+// Legg til has_children og is_parent metadata på hver kategori
+foreach ($category_terms as $term) {
+    $term->has_children = in_array($term->term_id, $parent_term_ids);
+    $term->is_parent = ($term->parent_id == 0 || !isset($term->parent_id));
+}
+
 // Definer taxonomy og meta felt data struktur for filtre
 $taxonomy_data = [
     'categories' => [
@@ -196,9 +211,18 @@ ob_start();
                                     $parent_id_value = isset($category->parent_id) ? $category->parent_id : ($category->parent > 0 ? $category->parent : 0);
                                     $parent_id_attr = $parent_id_value ? ' data-parent-id="' . esc_attr($parent_id_value) . '"' : '';
 
+                                    // Legg til klasser basert på parent/child-status
+                                    $hierarchy_classes = '';
+                                    if (isset($category->has_children) && $category->has_children) {
+                                        $hierarchy_classes .= ' ka-parent';
+                                    }
+                                    if (isset($category->parent_id) && $category->parent_id > 0) {
+                                        $hierarchy_classes .= ' ka-child';
+                                    }
+
                                     $empty_class = ' filter-available';
 
-                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . $empty_class . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
+                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . $hierarchy_classes . $empty_class . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
                                     echo '<label class="filter-list-item checkbox">';
                                     echo '<input type="checkbox" 
                                         class="filter-checkbox"

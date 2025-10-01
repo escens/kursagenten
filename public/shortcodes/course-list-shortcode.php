@@ -256,6 +256,21 @@ function kursagenten_course_list_shortcode($atts) {
     // Spesiell håndtering for coursecategory taksonomi-sider
     $category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : get_filtered_terms('coursecategory');
 
+    // Pre-prosessere kategorier for å identifisere foreldre (de som har barn)
+    $parent_term_ids = [];
+    foreach ($category_terms as $term) {
+        if (isset($term->parent_id) && $term->parent_id > 0) {
+            $parent_term_ids[] = $term->parent_id;
+        }
+    }
+    $parent_term_ids = array_unique($parent_term_ids);
+    
+    // Legg til has_children og is_parent metadata på hver kategori
+    foreach ($category_terms as $term) {
+        $term->has_children = in_array($term->term_id, $parent_term_ids);
+        $term->is_parent = ($term->parent_id == 0 || !isset($term->parent_id));
+    }
+
     $taxonomy_data = [
         'categories' => [
             'taxonomy' => 'coursecategory',
@@ -485,11 +500,20 @@ function kursagenten_course_list_shortcode($atts) {
                                                                     $parent_class = isset($category->parent_class) ? $category->parent_class : '';
                                                                     $parent_id_attr = isset($category->parent_id) ? ' data-parent-id="' . esc_attr($category->parent_id) . '"' : '';
                                                                     
+                                                                    // Legg til klasser basert på parent/child-status
+                                                                    $hierarchy_classes = '';
+                                                                    if (isset($category->has_children) && $category->has_children) {
+                                                                        $hierarchy_classes .= ' ka-parent';
+                                                                    }
+                                                                    if (isset($category->parent_id) && $category->parent_id > 0) {
+                                                                        $hierarchy_classes .= ' ka-child';
+                                                                    }
+                                                                    
                                                                     // Sjekk om denne kategorien har 0 kurs
                                                                     $count = $taxonomy_data['categories']['counts'][$category->slug] ?? 0;
                                                                     $empty_class = ($count === 0) ? ' filter-empty' : ' filter-available';
                                                                     
-                                                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
+                                                                    echo '<div class="filter-category' . ($parent_class ? ' ' . $parent_class : '') . $hierarchy_classes . '" data-term-id="' . esc_attr($category->term_id) . '"' . $parent_id_attr . '>';
                                                                     echo '<label class="filter-list-item checkbox' . $empty_class . '">';
                                                                     echo '<input type="checkbox" 
                                                                         class="filter-checkbox"
@@ -690,6 +714,16 @@ function kursagenten_course_list_shortcode($atts) {
                                                                     $parent_class = isset($term->parent_class) ? $term->parent_class : '';
                                                                     $parent_id_attr = isset($term->parent_id) ? ' data-parent-id="' . esc_attr($term->parent_id) . '"' : '';
                                                                     
+                                                                    // Legg til klasser basert på parent/child-status
+                                                                    $hierarchy_classes = '';
+                                                                    if (is_object($term)) {
+                                                                        if (isset($term->has_children) && $term->has_children) {
+                                                                            $hierarchy_classes .= ' ka-parent';
+                                                                        }
+                                                                        if (isset($term->parent_id) && $term->parent_id > 0) {
+                                                                            $hierarchy_classes .= ' ka-child';
+                                                                        }
+                                                                    }
                                                                 }
                                                                 $url_key = $taxonomy_data[$filter]['url_key'];
                                                                 
@@ -697,7 +731,7 @@ function kursagenten_course_list_shortcode($atts) {
                                                                 $count = $taxonomy_data[$filter]['counts'][$term_value] ?? 0;
                                                                 $empty_class = ($count === 0) ? ' filter-empty' : ' filter-available';
                                                                 ?>
-                                                                <div class="filter-category<?php echo $parent_class ? ' ' . esc_attr($parent_class) : ''; ?>" data-term-id="<?php echo is_object($term) ? esc_attr($term->term_id) : ''; ?>"<?php echo $parent_id_attr; ?>>
+                                                                <div class="filter-category<?php echo $parent_class ? ' ' . esc_attr($parent_class) : ''; ?><?php echo $hierarchy_classes; ?>" data-term-id="<?php echo is_object($term) ? esc_attr($term->term_id) : ''; ?>"<?php echo $parent_id_attr; ?>>
                                                                 <label class="filter-list-item checkbox<?php echo $empty_class; ?>">
                                                                     <input type="checkbox" class="filter-checkbox"
                                                                         value="<?php echo esc_attr($term_value); ?>"
@@ -1782,30 +1816,48 @@ function kursagenten_course_list_shortcode($atts) {
         function initHierarchyToggles(context) {
             const $ctx = context ? $(context) : $(document);
             if ($ctx.data('kaHierarchyInit')) { return; }
-            // Legg til toggle-ikon på alle toppnoder (de som har barn)
-            const parents = new Set();
-            $ctx.find('.filter-category[data-parent-id]').each(function() {
-                const parentId = Number($(this).data('parent-id'));
-                if (parentId && parentId > 0) parents.add(parentId);
-            });
-            $ctx.find('.filter-category').each(function() {
+            
+            // Legg til toggle-ikon på alle kategorier som har barn (ka-parent klasse)
+            $ctx.find('.filter-category.ka-parent').each(function() {
                 const $item = $(this);
-                const termId = $item.data('term-id');
-                if (termId && parents.has(Number(termId))) {
-                    if (!$item.data('toggle-initialized')) {
-                        const label = $item.find('label.filter-list-item');
-                        const toggle = $('<span class="ka-toggle" aria-hidden="true"><i class="ka-icon icon-chevron-right"></i></span>');
-                        toggle.insertAfter(label);
-                        $item.addClass('toggle-parent');
-                        $item.data('toggle-initialized', true);
-                    }
+                if (!$item.data('toggle-initialized')) {
+                    const label = $item.find('label.filter-list-item');
+                    const toggle = $('<span class="ka-toggle" aria-hidden="true"><i class="ka-icon icon-chevron-right"></i></span>');
+                    toggle.insertAfter(label);
+                    $item.addClass('toggle-parent');
+                    $item.data('toggle-initialized', true);
                 }
             });
             // Grupper barn under en container pr forelder
-            parents.forEach(function(pid) {
-                const $parent = $ctx.find('.filter-category').filter(function() { return Number($(this).data('term-id')) === pid; }).first();
-                if ($parent.length && !$parent.data('children-wrapped')) {
-                    const $children = $ctx.find('.filter-category').filter(function() { return Number($(this).data('parent-id')) === pid; }).detach();
+            // Tell antall SYNLIGE hovedkategorier (ekskluder skjulte med .filter-empty)
+            const allMainCategories = $ctx.find('.filter-category').filter(function() {
+                const $this = $(this);
+                // Må være hovedkategori (ikke barn) og synlig (ikke filter-empty eller display:none)
+                return !$this.hasClass('ka-child') && 
+                       !$this.hasClass('filter-empty') && 
+                       $this.css('display') !== 'none';
+            });
+            const mainCategoryCount = allMainCategories.length;
+            
+            // Tell antall SYNLIGE hovedkategorier som har barn
+            const mainCategoriesWithChildren = $ctx.find('.filter-category.ka-parent').filter(function() {
+                const $this = $(this);
+                return !$this.hasClass('ka-child') && 
+                       !$this.hasClass('filter-empty') && 
+                       $this.css('display') !== 'none';
+            }).length;
+            
+            const shouldAutoExpand = mainCategoryCount === 1 || mainCategoriesWithChildren === 1;
+            
+            // Finn alle foreldre og grupper deres barn
+            $ctx.find('.filter-category.ka-parent').each(function() {
+                const $parent = $(this);
+                const parentId = $parent.data('term-id');
+                
+                if (!$parent.data('children-wrapped') && parentId) {
+                    // Finn alle barn som tilhører denne forelderen
+                    const $children = $ctx.find('.filter-category.ka-child[data-parent-id="' + parentId + '"]').detach();
+                    
                     if ($children.length) {
                         const $wrap = $('<div class="ka-children"></div>');
                         $children.appendTo($wrap);
@@ -1816,11 +1868,13 @@ function kursagenten_course_list_shortcode($atts) {
                         const parentChecked = $parent.find('input.filter-checkbox').is(':checked');
                         const anyChildChecked = $children.find('input.filter-checkbox:checked').length > 0;
                         
-                        // log(`Parent ${pid}: parentChecked=${parentChecked}, anyChildChecked=${anyChildChecked}`);
+                        // Sjekk om dette er en hovedkategori (har ka-parent men ikke ka-child)
+                        const isMainCategory = !$parent.hasClass('ka-child');
                         
-                        // Åpne hvis forelderen er avkrysset eller noen barn er avkrysset
-                        if (parentChecked || anyChildChecked) {
-                            // log(`Åpner parent ${pid} fordi den eller barna er avkrysset`);
+                        // Åpne hvis:
+                        // 1. Forelderen eller noen av barna er avkrysset
+                        // 2. Det kun finnes 1 synlig hovedkategori og dette er den
+                        if (parentChecked || anyChildChecked || (shouldAutoExpand && isMainCategory)) {
                             $wrap.addClass('open').show();
                             $parent.find('.ka-toggle').addClass('expanded');
                         }
@@ -1906,6 +1960,10 @@ function kursagenten_course_list_shortcode($atts) {
         /* Hierarkisk filter UI */
         .filter-category { position: relative; display: flex; align-items: center; }
         .filter-category.toggle-parent { display: flex; align-items: center; }
+        /* Skjul barn-kategorier som standard før JavaScript har gruppert dem */
+        .filter-category.ka-child { display: none; }
+        /* Vis barn-kategorier når de er inne i ka-children wrapperen */
+        .ka-children .filter-category.ka-child { display: flex; }
         .filter-list-item { position: relative; padding-right: 0; z-index: 1; }
                  .ka-toggle { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; cursor: pointer; color: #666; position: relative; z-index: 2; pointer-events: auto; margin-left: 10px; }
          .ka-toggle i { transition: transform .2s ease; }
@@ -1921,6 +1979,10 @@ function kursagenten_course_list_shortcode($atts) {
         /* Mobilfilter hierarkisk støtte */
         .mobile-filter-content .filter-category { position: relative; display: flex; align-items: center; }
         .mobile-filter-content .filter-category.toggle-parent { display: flex; align-items: center; }
+        /* Skjul barn-kategorier som standard før JavaScript har gruppert dem */
+        .mobile-filter-content .filter-category.ka-child { display: none; }
+        /* Vis barn-kategorier når de er inne i ka-children wrapperen */
+        .mobile-filter-content .ka-children .filter-category.ka-child { display: flex; }
         .mobile-filter-content .filter-list-item { position: relative; padding-right: 0; z-index: 1; }
         .mobile-filter-content .ka-toggle { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; cursor: pointer; color: #666; position: relative; z-index: 2; pointer-events: auto; margin-left: 10px; }
         .mobile-filter-content .ka-toggle i { transition: transform .2s ease; }

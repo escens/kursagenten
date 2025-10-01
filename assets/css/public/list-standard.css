@@ -182,7 +182,7 @@
     }
 
     #ka .courselist-main .meta-area.iconlist.horizontal {
-        flex-direction: row;
+        flex-direction: column;
         align-items: flex-start;
         gap: 0.5em;
     }
@@ -198,7 +198,7 @@
     }
 
     #ka .courselist-main .details-area.iconlist.horizontal {
-        flex-direction: row;
+        flex-direction: column;
         align-items: flex-start;
         gap: 0.3em 0.5em
     }
