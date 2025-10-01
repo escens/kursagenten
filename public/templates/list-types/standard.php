@@ -227,7 +227,14 @@ $category_slugs = array_unique($category_slugs);
                             <?php if (!empty($coursetime)) : ?><div class="coursetime"><i class="ka-icon icon-time"></i> <?php echo esc_html($coursetime); ?></div><?php endif; ?>
                         <?php endif; ?>
                         <?php if (!empty($location)) : ?>
-                            <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?> <?php if (!empty($location_freetext)) : ?>(<?php echo esc_html($location_freetext); ?>)<?php endif; ?></div>
+                            <div class="location">
+                                <div class="location-text"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                                <?php if (!empty($location_freetext)) : ?>
+                                    <div class="location_freetext">
+                                        &nbsp;(<?php echo esc_html($location_freetext); ?>)
+                                    </div>
+                                <?php endif; ?>
+                            </div>
                         <?php endif; ?>
                         
                     <?php else : ?>
@@ -237,7 +244,7 @@ $category_slugs = array_unique($category_slugs);
                     
                         <?php if (!empty($location)) : ?>
                             <div class="location">
-                                <i class="ka-icon icon-location"></i><?php echo esc_html($location); ?>
+                                <div class="location-text"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                                 <?php if (!empty($location_freetext)) : ?>
                                     <div class="location_freetext">
                                         &nbsp;(<?php echo esc_html($location_freetext); ?>)

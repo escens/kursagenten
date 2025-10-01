@@ -180,6 +180,12 @@
         align-items: flex-start;
         gap: 0.5em;
     }
+    #ka .iconlist .location {
+        flex-wrap: wrap;
+    }
+    #ka .iconlist > div, #ka .iconlist.horizontal a {
+        align-items: flex-start;
+    }
 
     #ka .courselist-main .meta-area.iconlist.horizontal {
         flex-direction: column;
