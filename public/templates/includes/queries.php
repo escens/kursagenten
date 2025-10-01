@@ -1337,6 +1337,7 @@ function get_course_dates_query_for_count($filters) {
         'post_status' => 'publish', // Kun publiserte coursedates
         'posts_per_page' => -1, // Hent alle for å telle
         'fields' => 'ids', // Kun ID-er for raskere telling
+
         'meta_query' => [
             'relation' => 'AND',
             // Ekskluder skjulte coursedates

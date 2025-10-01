@@ -53,15 +53,17 @@ class SecureUpdater {
     }
 
     /**
-     * Get API URL - use local server if available, otherwise external
+     * Get API URL - only use local server on central host; otherwise use external
      */
     private function get_api_url() {
-        // Check if local server plugin is active
-        if (class_exists('\\KursagentenServer\\Server')) {
+        // Determine current host
+        $host = wp_parse_url(home_url(), PHP_URL_HOST);
+        $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+        // Use local endpoint only on central server instance
+        if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
             return home_url('/kursagenten-api/');
         }
-        
-        // Fallback to external server
+        // Otherwise always use external API
         return 'https://admin.lanseres.no/kursagenten-api/';
     }
 
@@ -90,21 +92,41 @@ class SecureUpdater {
         ];
 
         // Post til /kursagenten-api/register_site
-        $response = wp_remote_post($this->api_url . 'register_site', [
+        $endpoint = $this->api_url . 'register_site';
+        $response = wp_remote_post($endpoint, [
             'body' => $data,
             'timeout' => 5
         ]);
 
-        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+        $is_error = is_wp_error($response);
+        $code = $is_error ? 0 : (int) wp_remote_retrieve_response_code($response);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Kursagenten register_site endpoint: ' . $endpoint);
+            error_log('Kursagenten register_site response code: ' . $code);
+            if (!$is_error) {
+                error_log('Kursagenten register_site response body: ' . wp_remote_retrieve_body($response));
+            } else {
+                error_log('Kursagenten register_site error: ' . $response->get_error_message());
+            }
+        }
+
+        if (!$is_error && $code === 200) {
             update_option('kursagenten_last_register', time());
             update_option('kursagenten_site_registered', true);
             set_transient('kursagenten_register_success', 1, 60);
-        } elseif (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 401) {
+            // Clear invalid flag if previously set
+            delete_option('kursagenten_api_key_invalid');
+        } elseif (!$is_error && $code === 401) {
             // License is invalid - delete API key to force re-entry
             $this->handle_invalid_license('invalid');
-        } elseif (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 403) {
+        } elseif (!$is_error && $code === 403) {
             // License limit exceeded - treat as invalid license and delete API key
             $this->handle_invalid_license('limit_exceeded');
+        } else {
+            // Transient/network or server error: do not invalidate key; allow retry later
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten register_site transient/server error, keeping key for retry');
+            }
         }
     }
 
@@ -786,7 +808,7 @@ class SecureUpdater {
      * Handle invalid license by deleting API key and showing notice
      */
     private function handle_invalid_license($reason = 'invalid') {
-        // Delete the API key
+        // Delete the API key to force re-entry on license validation page
         delete_option('kursagenten_api_key');
         $this->api_key = '';
         

@@ -14,10 +14,15 @@
  * Requires at least: 6.0
  */
 
- 
+ define('KURSAG_VERSION', '1.0.1');
 // Plugin versjon
-define('KURSAG_VERSION', '1.0.1');
-
+/*
+if (defined('WP_DEBUG') && WP_DEBUG) {
+    define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
+} else {
+    define('KURSAG_VERSION', '1.0.1');
+}
+*/
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
 if (!defined('KURSAG_DESCRIPTION')) {
     define('KURSAG_DESCRIPTION', 'Komplett løsning for kursadministrasjon med automatisk henting av kurs fra Kursagenten.');
@@ -95,8 +100,6 @@ define('KURSAG_PLUGIN_URL',  plugin_dir_url(KURSAG_PLUGIN_FILE));
 register_activation_hook(__FILE__, 'kursagenten_activate');
 register_deactivation_hook(__FILE__, 'kursagenten_deactivate');
 
-// Last inn hooks
-//require_once plugin_dir_path(__FILE__) . 'includes/hooks.php';
 
 /**
  * Fikser queried object for alle kursrelaterte taksonomier
@@ -257,12 +260,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/course_days_helper.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
-// Include test file for development (remove in production)
-/*
-if (defined('WP_DEBUG') && WP_DEBUG) {
-    require_once KURSAG_PLUGIN_DIR . '/test_course_days.php';
-}
-*/
+
 // Last inn hovedklassen og CSS output
 require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten-css-output.php';
@@ -369,15 +367,22 @@ add_action('admin_init', function() {
             // Ikke last tunge admin-scripts hvis lisensnøkkel mangler
             if ($enqueue_plugin_pages && !empty($api_key)) {
                 wp_enqueue_media();// Enqueue media scripts for file uploads
-                wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), '1.0.3',  true  );
-                wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), '1.0.317',  true  );  
-                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), '1.0.6094' );
+                wp_enqueue_script( 'custom-admin-upload-script', plugin_dir_url(__FILE__) . 'assets/js/admin/image-upload.js', array('jquery'), KURSAG_VERSION,  true  );
+                wp_enqueue_script( 'custom-admin-utilities-script', plugin_dir_url(__FILE__) . 'assets/js/admin/admin-utilities.js', array('jquery'), KURSAG_VERSION,  true  );  
+                wp_enqueue_style( 'custom-admin-style', plugin_dir_url(__FILE__) . 'assets/css/admin/kursagenten-admin.css', array(), KURSAG_VERSION );
             }
         }
     }
     add_action('admin_enqueue_scripts', 'enqueue_custom_admin_script');
 
 
+
+/* FRONTEND/SHARED */
+// AJAX handlers and their dependencies must be available in both admin (admin-ajax.php) and frontend contexts
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template-functions.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
+require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
 
 /* FRONT END */
 if (!is_admin()) {
@@ -387,7 +392,6 @@ if (!is_admin()) {
     // Sørg for at funksjonen er inkludert
     require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template-functions.php';
     require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
-    require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
     require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
 
     // Shortcodes content blocks
@@ -488,17 +492,6 @@ if (!is_admin()) {
                 );
             }
 
-            // Last inn layout-spesifikk CSS
-            /*
-            if ($layout !== 'default') {
-                wp_enqueue_style(
-                    'kursagenten-taxonomy-layout-' . $layout,
-                    KURSAG_PLUGIN_URL . '/assets/css/layout-' . $layout . '.css',
-                    array('kursagenten-taxonomy-base'),
-                    KURSAG_VERSION
-                );
-            }
-            */
 
             // Last inn list-type-spesifikk CSS
             wp_enqueue_style(
@@ -530,17 +523,6 @@ if (!is_admin()) {
             );
         }
 
-        // Instructor styling (beholdt som den er)
-        /*
-        if (is_singular('instructor') || is_post_type_archive('instructor')) {
-            wp_enqueue_style(
-                'kursagenten-instructor-style',
-                KURSAG_PLUGIN_URL . '/assets/css/public/instructor-style.css',
-                array(),
-                KURSAG_VERSION
-            );
-        }
-        */
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_styles');
 
@@ -625,12 +607,6 @@ if (!is_admin()) {
         );
 
         
-       /* wp_enqueue_script(
-            'kursagenten-filter-mobile',
-            KURSAG_PLUGIN_URL . '/assets/js/public/course-filter-mobile.js',
-            array(),
-            KURSAG_VERSION
-        );*/
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
    

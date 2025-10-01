@@ -321,11 +321,12 @@ function filter_courses_handler() {
 
     try {
         // Debug: Log måned-filter data
-        if (isset($_POST['mnd'])) {
-            error_log('MONTH DEBUG: POST mnd data: ' . print_r($_POST['mnd'], true));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            if (isset($_POST['mnd'])) {
+                error_log('MONTH DEBUG: POST mnd data: ' . print_r($_POST['mnd'], true));
+            }
+            error_log('AJAX DEBUG: Starting filter_courses_handler');
         }
-        
-        error_log('AJAX DEBUG: Starting filter_courses_handler');
         
         // Håndter datofilteret
         $date_param = $_POST['dato'] ?? $_REQUEST['dato'] ?? null;
@@ -356,9 +357,13 @@ function filter_courses_handler() {
         $sort = $_POST['sort'] ?? $_REQUEST['sort'] ?? null;
         $order = $_POST['order'] ?? $_REQUEST['order'] ?? null;
 
-        error_log('AJAX DEBUG: About to call get_course_dates_query()');
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJAX DEBUG: About to call get_course_dates_query()');
+        }
         $query = get_course_dates_query();
-        error_log('AJAX DEBUG: Query completed, found_posts: ' . $query->found_posts);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJAX DEBUG: Query completed, found_posts: ' . $query->found_posts);
+        }
         
         if ($query->have_posts()) {
             ob_start();
@@ -388,17 +393,25 @@ function filter_courses_handler() {
             wp_reset_postdata();
 
             // Hent gjeldende forespørsels-URL som base for paginering
+            // Determine base URL for pagination
             $current_url = '';
-
-            if (!empty($_SERVER['HTTP_REFERER'])) {
+            // Prefer explicit current_url sent from client (AJAX)
+            if (!empty($_POST['current_url']) && is_string($_POST['current_url'])) {
+                $parsed = wp_parse_url(sanitize_text_field(wp_unslash($_POST['current_url'])));
+                if (!empty($parsed['scheme']) && !empty($parsed['host'])) {
+                    $path = isset($parsed['path']) ? $parsed['path'] : '';
+                    $current_url = home_url($path);
+                }
+            }
+            // Fallbacks
+            if (empty($current_url) && !empty($_SERVER['HTTP_REFERER'])) {
                 $referer = wp_parse_url($_SERVER['HTTP_REFERER']);
                 if ($referer && isset($referer['path'])) {
                     $current_url = home_url($referer['path']);
                 }
             }
-
             if (empty($current_url)) {
-                $request_uri = $_SERVER['REQUEST_URI'];
+                $request_uri = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
                 $path = strtok($request_uri, '?');
                 $current_url = home_url($path);
             }
@@ -417,7 +430,9 @@ function filter_courses_handler() {
 
             $pagination = paginate_links($pagination_args);
 
-            error_log('AJAX DEBUG: About to send success response');
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('AJAX DEBUG: About to send success response');
+            }
             wp_send_json_success([
                 'html' => ob_get_clean(),
                 'html_pagination' => $pagination,
@@ -441,8 +456,10 @@ function filter_courses_handler() {
             ]);
         }
     } catch (Exception $e) {
-        error_log('AJAX DEBUG: Exception caught: ' . $e->getMessage());
-        error_log('AJAX DEBUG: Exception trace: ' . $e->getTraceAsString());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('AJAX DEBUG: Exception caught: ' . $e->getMessage());
+            error_log('AJAX DEBUG: Exception trace: ' . $e->getTraceAsString());
+        }
         wp_send_json_error([
             'message' => 'En feil oppstod under filtreringen.'
         ]);
@@ -514,7 +531,9 @@ function ka_load_mobile_filters() {
         if (!function_exists('get_course_languages')) {
             $queries_path = KURSAG_PLUGIN_DIR . 'public/templates/includes/queries.php';
             if (!file_exists($queries_path)) {
-                error_log('Could not find queries.php at: ' . $queries_path);
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Could not find queries.php at: ' . $queries_path);
+                }
                 wp_send_json_error(['message' => 'Required files not found']);
                 return;
             }
@@ -524,10 +543,14 @@ function ka_load_mobile_filters() {
         // Last inn mobilfilter-malen
         $template_path = KURSAG_PLUGIN_DIR . 'public/templates/mobile-filters.php';
         
-        error_log('Looking for template at: ' . $template_path);
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Looking for template at: ' . $template_path);
+        }
         
         if (!file_exists($template_path)) {
-            error_log('Template file not found at: ' . $template_path);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Template file not found at: ' . $template_path);
+            }
             wp_send_json_error(['message' => 'Template file not found: ' . $template_path]);
             return;
         }
@@ -538,16 +561,22 @@ function ka_load_mobile_filters() {
         $html = ob_get_clean();
         
         if (empty($html)) {
-            error_log('Empty template content from: ' . $template_path);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Empty template content from: ' . $template_path);
+            }
             wp_send_json_error(['message' => 'Empty template content']);
             return;
         }
         
-        error_log('Successfully loaded mobile filters template. Content length: ' . strlen($html));
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Successfully loaded mobile filters template. Content length: ' . strlen($html));
+        }
         wp_send_json_success(['html' => $html]);
         
     } catch (Exception $e) {
-        error_log('Error in ka_load_mobile_filters: ' . $e->getMessage());
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Error in ka_load_mobile_filters: ' . $e->getMessage());
+        }
         wp_send_json_error(['message' => 'En feil oppstod: ' . $e->getMessage()]);
     }
 }

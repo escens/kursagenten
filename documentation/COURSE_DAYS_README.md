@@ -28,7 +28,6 @@ Funksjonen validerer at `coursetime` har riktig format:
 ### Filer
 - `includes/helpers/course_days_helper.php` - Hovedfunksjonalitet
 - `includes/api/api_course_sync.php` - Integrering i API-synkronisering
-- `test_course_days.php` - Test-fil for utvikling
 
 ### Hovedfunksjoner
 - `get_course_days_from_coursetime($coursetime, $firstCourseDate)` - Hovedfunksjon

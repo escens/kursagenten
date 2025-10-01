@@ -259,12 +259,11 @@
 	}
 
 	function fetchCourses(data) {
-		console.log('=== START: fetchCourses ===');
-		console.log('AJAX-kall med data:', data);
-		
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
 		data.nonce = kurskalender_data.filter_nonce;
+		// Send current URL so server can build correct pagination links
+		try { data.current_url = window.location.href; } catch(e) {}
 
 		// Behold side-parameteren fra URL hvis den finnes og ingen ny side er spesifisert
 		if (!data.side) {
@@ -272,30 +271,22 @@
 			const urlSide = urlParams.get('side');
 			if (urlSide) {
 				data.side = urlSide;
-				console.log('Bruker side-parameter fra URL:', urlSide);
 			}
 		}
 
 		// Vis loading indikator
 		$('.course-loading').show();
-		console.log('Sender AJAX-forespørsel til:', kurskalender_data.ajax_url);
 
 		$.ajax({
 			url: kurskalender_data.ajax_url,
 			type: 'POST',
 			data: data,
 			success: function(response) {
-				console.log('Svar fra server:', response);
 				if (response.success) {
-					console.log('Antall kurs funnet:', response.data['course-count']);
-					console.log('HTML-lengde:', response.data.html.length);
-					
 					// Legg til null-sjekk for html_pagination
 					if (response.data.html_pagination) {
-						// console.log('Paginering HTML-lengde:', response.data.html_pagination.length);
 						updatePagination(response.data.html_pagination);
 					} else {
-						// console.log('Ingen paginering HTML mottatt');
 						updatePagination('');
 					}
 					
@@ -307,8 +298,6 @@
 					// Scroll til toppen av resultatene med bedre offset
 					const $filterResults = $('#filter-results');
 					if ($filterResults.length) {
-						// console.log('Scroller til filter-results');
-						
 						// Finn den beste scroll-posisjonen
 						let scrollTarget;
 						
@@ -334,7 +323,6 @@
 
 					// Update dropdown states based on current URL filters
 					const currentFilters = getCurrentFiltersFromURL();
-					// console.log('Filtre etter oppdatering:', currentFilters);
 					
 					// Oppdater filter counts etter at kurs er hentet
 					setTimeout(updateFilterCounts, 100);
@@ -344,7 +332,6 @@
 						const languages = Array.isArray(currentFilters.sprak) ?
 							currentFilters.sprak :
 							[currentFilters.sprak];
-						// console.log('Oppdaterer språkfilter:', languages);
 						updateDropdownText('language', languages);
 					}
 
@@ -353,7 +340,6 @@
 						const locations = Array.isArray(currentFilters.sted) ?
 							currentFilters.sted :
 							[currentFilters.sted];
-						// console.log('Oppdaterer lokasjonsfilter:', locations);
 						updateDropdownText('locations', locations);
 					}
 
@@ -362,7 +348,6 @@
 						const instructors = Array.isArray(currentFilters.i) ?
 							currentFilters.i :
 							[currentFilters.i];
-						// console.log('Oppdaterer instruktørfilter:', instructors);
 						updateDropdownText('instructors', instructors);
 					}
 
@@ -371,8 +356,6 @@
 						const months = Array.isArray(currentFilters.mnd) ?
 							currentFilters.mnd :
 							currentFilters.mnd.split(',').map(m => m.trim());
-						
-						// console.log('Oppdaterer månedsfilter:', months);
 						
 						// Konverter måneder til riktig format (MMYYYY)
 						const formattedMonths = months.map(month => {
@@ -389,7 +372,6 @@
 							return month;
 						});
 						
-						// console.log('Formaterte måneder:', formattedMonths);
 						updateDropdownText('months', formattedMonths);
 					}
 				} else {
@@ -408,10 +390,8 @@
 				});
 			},
 			complete: function() {
-				console.log('AJAX request completed');
 				// Skjul loading indikator
 				$('.course-loading').hide();
-				// console.log('=== END: fetchCourses ===');
 			}
 		});
 
@@ -523,7 +503,7 @@
 		// Create chips for each active filter
 		Object.keys(filters).forEach(key => {
 			// Ekskluder sorteringsparametere og andre systemparametere
-			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'per_page' && key !== 'order' && key !== 'side' &&
+			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'per_page' && key !== 'order' && key !== 'side' && key !== 'current_url' &&
 				filters[key] && filters[key].length > 0) {
 				
 				// Ekskluder kortkode-parametere fra aktive filtre
@@ -690,7 +670,7 @@
 		const $resetButton = $('#reset-filters');
         const $activeFiltersContainer = $('#active-filters-container');
 		const hasActiveFilters = Object.keys(filters).some(key =>
-			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' &&
+			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' && key !== 'side' && key !== 'current_url' &&
 			filters[key] && filters[key].length > 0 &&
 			// Ekskluder kortkode-parametere fra aktive filtre
 			!(typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && 
@@ -803,8 +783,6 @@
 		
 		if (sideParam) {
 			const currentFilters = getCurrentFiltersFromURL();
-			// console.log('Direkte tilgang til side:', sideParam);
-			// console.log('Nåværende filtre:', currentFilters);
 			fetchCourses(currentFilters);
 		}
 	});
@@ -945,7 +923,6 @@
 	function initializeSorting() {
 		const $sortDropdown = $('.sort-dropdown');
 		if (!$sortDropdown.length) {
-			console.log('Sort dropdown not found');
 			return;
 		}
 
@@ -976,14 +953,11 @@
 			const sortBy = $(this).data('sort');
 			const order = $(this).data('order');
 
-			// console.log('Sortering startet:', { sortBy, order });
-
 			// Oppdater selected text
 			$('.sort-dropdown .selected-text').text($(this).text());
 
 			// Hent eksisterende filtre
 			const currentFilters = getCurrentFiltersFromURL();
-			// console.log('Eksisterende filtre før sortering:', currentFilters);
 			
 			// Konverter datoformat hvis nødvendig
 			if (currentFilters.dato && currentFilters.dato.includes(',')) {
@@ -1000,8 +974,6 @@
 				order: order,
 				side: 1  // Reset til side 1 ved ny sortering
 			};
-
-			// console.log('Filtre som sendes til server:', updatedFilters);
 
 			// Utfør filtrering med sortering
 			updateFiltersAndFetch(updatedFilters);
@@ -1270,7 +1242,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					});
 				}
 			} catch (error) {
-				console.debug('Ignorerer event fra caleran date picker');
+				// Ignore caleran-related events silently
 			}
 		}
 	});

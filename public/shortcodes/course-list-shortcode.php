@@ -164,6 +164,14 @@ function kursagenten_course_list_shortcode($atts) {
     if ( ! wp_script_is('kursagenten-slidein-panel', 'enqueued') ) {
         wp_enqueue_script('kursagenten-slidein-panel', KURSAG_PLUGIN_URL . '/assets/js/public/course-slidein-panel.js', ['jquery', 'kursagenten-iframe-resizer'], KURSAG_VERSION, true);
     }
+    // Datepicker dependencies first
+    if ( ! wp_script_is('kursagenten-datepicker-moment', 'enqueued') ) {
+        wp_enqueue_script('kursagenten-datepicker-moment', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/moment.min.js', array(), KURSAG_VERSION);
+    }
+    if ( ! wp_script_is('kursagenten-datepicker-script', 'enqueued') ) {
+        wp_enqueue_script('kursagenten-datepicker-script', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/caleran.min.js', ['kursagenten-datepicker-moment'], KURSAG_VERSION);
+    }
+    // Main AJAX filter script after deps
     wp_enqueue_script('kursagenten-ajax-filter', 
         KURSAG_PLUGIN_URL . '/assets/js/public/course-ajax-filter.js', 
         array(
@@ -174,8 +182,6 @@ function kursagenten_course_list_shortcode($atts) {
         KURSAG_VERSION, 
         true
     );
-    wp_enqueue_script('kursagenten-datepicker-moment', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/moment.min.js', array(), KURSAG_VERSION);
-    wp_enqueue_script('kursagenten-datepicker-script', KURSAG_PLUGIN_URL . '/assets/js/public/datepicker/caleran.min.js', ['kursagenten-datepicker-moment'], KURSAG_VERSION);
     wp_enqueue_script('kursagenten-expand-content', KURSAG_PLUGIN_URL . '/assets/js/public/course-expand-content.js', array(), KURSAG_VERSION);
 
     // Localize script with necessary data

@@ -1247,18 +1247,33 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     $upload_dir = wp_upload_dir();
     $file_path = $upload_dir['path'] . '/' . $filename;
 
-    // Download the image from the URL
-    $ch = curl_init($image_url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30); // Sett timeout til 30 sekunder
-    $image_data = curl_exec($ch);
-    $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $curl_error = curl_error($ch);
-    curl_close($ch);
+    // Download the image from the URL using WordPress HTTP API (safer and respects WP config)
+    $response = wp_remote_get($image_url, array(
+        'timeout'   => 30,
+        'redirection' => 5,
+        'sslverify' => true,
+    ));
 
-    if ($http_code !== 200) {
-        error_log("FEIL: HTTP status $http_code ved nedlasting av bilde fra: $image_url");
+    if (is_wp_error($response)) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FEIL: wp_remote_get feil ved nedlasting av bilde: ' . $response->get_error_message() . ' URL: ' . $image_url);
+        }
+        return false;
+    }
+
+    $http_code = wp_remote_retrieve_response_code($response);
+    if ((int) $http_code !== 200) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FEIL: HTTP status ' . $http_code . ' ved nedlasting av bilde fra: ' . $image_url);
+        }
+        return false;
+    }
+
+    $image_data = wp_remote_retrieve_body($response);
+    if ($image_data === '' || $image_data === null) {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('FEIL: Tomt bildeinnhold ved nedlasting fra: ' . $image_url);
+        }
         return false;
     }
 

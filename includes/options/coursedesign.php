@@ -1042,7 +1042,7 @@ class Designmaler {
             'ka-admin-script',
             plugins_url('/assets/js/admin-script.js', dirname(dirname(__FILE__))),
             array('jquery', 'wp-color-picker'),
-            '1.0.0',
+            (defined('KURSAG_VERSION') ? KURSAG_VERSION : '1.0.0'),
             true
         );
 
@@ -1050,7 +1050,7 @@ class Designmaler {
             'ka-admin-style',
             plugins_url('/assets/css/admin/kursagenten-admin.css', dirname(dirname(__FILE__))),
             array(),
-            '1.0.0'
+            (defined('KURSAG_VERSION') ? KURSAG_VERSION : '1.0.0')
         );
 
         // Legg til inline JavaScript for fargevalg-toggle, seksjons-kollaps og filter-sortable
