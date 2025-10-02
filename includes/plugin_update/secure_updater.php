@@ -28,6 +28,8 @@ class SecureUpdater {
         // Hooks
         add_filter('plugins_api', [$this, 'info'], 20, 3);
         add_filter('site_transient_update_plugins', [$this, 'update']);
+        // Ensure update-core.php also gets proper data by updating the transient before it's saved
+        add_filter('pre_set_site_transient_update_plugins', [$this, 'pre_set_update']);
         add_action('upgrader_process_complete', [$this, 'purge'], 10, 2);
         add_filter('plugin_row_meta', [$this, 'add_update_check_link'], 10, 2);
         add_filter('plugin_action_links_' . $this->plugin_slug . '/' . $this->plugin_slug . '.php', [$this, 'add_settings_link']);
@@ -475,6 +477,64 @@ class SecureUpdater {
 
             $transient->response[$response->plugin] = $response;
         }
+
+        return $transient;
+    }
+
+    /**
+     * Ensure update data is present when WordPress saves the plugins update transient
+     * This affects the update-core.php page which relies on the stored transient
+     */
+    public function pre_set_update($transient) {
+        // WordPress may pass null initially
+        if (!is_object($transient)) {
+            $transient = new \stdClass();
+        }
+        if (empty($transient->checked) || !is_array($transient->checked)) {
+            return $transient;
+        }
+
+        $remote = $this->request();
+        if (!$remote) {
+            return $transient;
+        }
+        if (is_array($remote)) { $remote = (object) $remote; }
+        if (empty($remote->version)) { return $transient; }
+
+        $plugin_file = "{$this->plugin_slug}/{$this->plugin_slug}.php";
+
+        // Set/update response for our plugin
+        if (version_compare($this->version, $remote->version, '<')) {
+            $response = new \stdClass();
+            $response->slug = $this->plugin_slug;
+            $response->plugin = $plugin_file;
+            $response->new_version = $remote->version;
+            $response->tested = $remote->tested ?? '';
+            $response->package = $remote->download_url ?? '';
+            $response->id = $plugin_file;
+            $response->url = $remote->homepage ?? '';
+            $response->compatibility = new \stdClass();
+            if (!empty($remote->tested)) {
+                $response->compatibility->{$remote->tested} = new \stdClass();
+                $response->compatibility->{$remote->tested}->{$remote->version} = new \stdClass();
+            }
+            if (isset($remote->upgrade_notice)) {
+                $response->upgrade_notice = $remote->upgrade_notice;
+            }
+
+            if (!isset($transient->response) || !is_array($transient->response)) {
+                $transient->response = [];
+            }
+            $transient->response[$plugin_file] = $response;
+        } else {
+            // No update available: ensure there's no stale response entry
+            if (isset($transient->response[$plugin_file])) {
+                unset($transient->response[$plugin_file]);
+            }
+        }
+
+        // Help core know when we last checked
+        $transient->last_checked = time();
 
         return $transient;
     }

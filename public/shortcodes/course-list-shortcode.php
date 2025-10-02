@@ -1958,20 +1958,20 @@ function kursagenten_course_list_shortcode($atts) {
     </script>
     <style>
         /* Hierarkisk filter UI */
-        .filter-category { position: relative; display: flex; align-items: center; }
-        .filter-category.toggle-parent { display: flex; align-items: center; }
+        #filter-list-categories .filter-category { position: relative; display: flex; align-items: center; }
+        #filter-list-categories .filter-category.toggle-parent { display: flex; align-items: center; }
         /* Skjul barn-kategorier som standard før JavaScript har gruppert dem */
-        .filter-category.ka-child { display: none; }
+        #filter-list-categories .filter-category.ka-child { display: none; }
         /* Vis barn-kategorier når de er inne i ka-children wrapperen */
-        .ka-children .filter-category.ka-child { display: flex; }
-        .filter-list-item { position: relative; padding-right: 0; z-index: 1; }
-                 .ka-toggle { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; cursor: pointer; color: #666; position: relative; z-index: 2; pointer-events: auto; margin-left: 10px; }
-         .ka-toggle i { transition: transform .2s ease; }
-         .ka-toggle i.ka-icon { background-color: #9e9e9e; }
-         .ka-toggle.expanded i { transform: rotate(90deg); }
-        .ka-children { display: none; margin-left: 8px; margin-bottom: 8px; border-left: 1px solid #75757517; padding: 3px 8px 0 8px; }
-        .ka-children.open { display: block; }
-        .filter-list .filter-category.child-of { opacity: 1; }
+        #filter-list-categories .ka-children .filter-category.ka-child { display: flex; }
+        #filter-list-categories .filter-list-item { position: relative; padding-right: 0; z-index: 1; }
+        #filter-list-categories .ka-toggle { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; cursor: pointer; color: #666; position: relative; z-index: 2; pointer-events: auto; margin-left: 10px; }
+        #filter-list-categories .ka-toggle i { transition: transform .2s ease; }
+        #filter-list-categories .ka-toggle i.ka-icon { background-color: #9e9e9e; }
+        #filter-list-categories .ka-toggle.expanded i { transform: rotate(90deg); }
+        #filter-list-categories .ka-children { display: none; margin-left: 8px; margin-bottom: 8px; border-left: 1px solid #75757517; padding: 3px 8px 0 8px; }
+        #filter-list-categories .ka-children.open { display: block; }
+        #filter-list-categories .filter-list .filter-category.child-of { opacity: 1; }
         .kag .mobile-filter-overlay .filter-list { font-size: 17px; }
         .kag .mobile-filter-overlay .filter-list-item .checkbox-label { margin-top: -4px; }
         #ka .filter-dropdown-content .ka-toggle { margin-bottom: 5px;}
