@@ -58,7 +58,7 @@ class Designmaler {
                 <!-- System-sider -->
                 <div class="options-card" id="section-systemsider" data-section="systemsider">
                     <h3>Wordpress sider</h3>
-                    <p>Generer sider for kurs, kurskategorier, kurssteder og instruktører. Sidene opprettes som vanlige WordPress-sider, og du kan endre tittel og innhold. En kortkode legges inn automatisk. Sidene er merket som Kursagenten-systemsider i sideoversikten.</p>
+                    <p>Generer sider for kurs, kurskategorier, kurssteder og instruktører. Sidene opprettes som vanlige WordPress-sider, og du kan endre tittel og innhold. En <a href="/wp-admin/admin.php?page=ka_documentation#kortkoder">kortkode</a> legges inn automatisk. Sidene er merket med "Kursagenten" i sideoversikten.</p>
                     <?php $this->render_system_pages_section(); ?>
                 </div>
 

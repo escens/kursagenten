@@ -41,15 +41,20 @@ class KA_Documentation_Page {
                 </div>
 
                 <div id="anbefalte-sider" class="options-card">
-                    <h3>Anbefalte sider som bør opprettes</h3>
-                    <p>Under "Kursdesign" kan du opprette anbefalte sider med lister for kurs, kategorier, steder og instruktører. Disse inneholder kortkoder som blir generert automatisk. Anbefalte sider:</p>
+                    <h3>Sider som opprettes automatisk</h3>
+                    <p>Under "Kursdesign" blir det opprettet anbefalte sider med lister for kurs, kategorier, steder og instruktører. Disse inneholder kortkoder som blir generert automatisk. Anbefalte sider:</p>
                     <ul>
                         <li><strong>Kurs</strong> – Inneholder <code class="copytext">[kursliste]</code>.</li>
                         <li><strong>Kurskategorier</strong> – Inneholder <code class="copytext">[kurskategorier]</code>.</li>
                         <li><strong>Kurssteder</strong> – Inneholder <code class="copytext">[kurssteder]</code>.</li>
                         <li><strong>Instruktører</strong> – Inneholder <code class="copytext">[instruktorer]</code>.</li>
                     </ul>
-                    <p>Klikk på "Opprett sider" for å opprette sider automatisk. Fra oversikten kan du slette sidene, gå direkte til redigering, eller tilbakestille innholdet. 
+                    <p>Designet på listene kan endres med attributter i kortkoden. Se <a href="#section-kortkoder">oversikt</a> for å se hvilke valg du kan gjøre.</p>
+                    <p><br>Det blir også opprettet en side for betaling. Den innholder kode som generer betalingsboksen. Nødvendig sider:</p>
+                    <ul>
+                        <li><strong>Betaling</strong> – Inneholder <code class="copytext">kode for betalingsboksen</code>.</li>
+                    </ul>
+                    <p>Fra oversikten kan du slette sidene, gå direkte til redigering, eller tilbakestille innholdet. Du kan også opprette sider om det mangler.
                         Sidene vil bli merket med "Kursagenten" i sideoversikten. 
                         <br>Du kan gi sidene valgfrie tittler og innhold. Det eneste som ikke bør fjernes er kortkoden. Du kan også justere visningen av innholdet som blir generert med kortkoden. Se oversikt for å se hvilke valg du kan gjøre.
                         <br>Oppretter du sidene manuelt, må du lime inn riktig kortkode. Du kan fritt legge til ekstra tekst over/under.</p>
@@ -66,20 +71,7 @@ class KA_Documentation_Page {
                     </ul>
                 </div>
 
-                <div id="kortkoder-oversikt" class="options-card">
-                    <h3>Kortkoder- rask oversikt</h3>
-                    <p><strong>Hva er kortkoder?</strong> Kortkoder er små koder du plasserer i innhold (sider/innlegg) for å vise dynamiske lister og komponenter fra pluginen.</p>
-                    <ul>
-                        <li><code class="copytext">[kursliste]</code> – Viser kursliste med filter.</li>
-                        <li><code class="copytext">[kurskategorier]</code> – Viser kategorier som liste eller grid.</li>
-                        <li><code class="copytext">[kurssteder]</code> – Viser kurssteder.</li>
-                        <li><code class="copytext">[instruktorer]</code> – Viser instruktører.</li>
-                    </ul>
-                    <p><strong>Hvor brukes de?</strong> Vanligvis på egne sider i menyen (f.eks. «Kurs», «Kurskategorier», «Kurssteder», «Instruktører»). Du kan også bruke dem i innlegg eller widgets.</p>
-                    <p><strong>Eget innhold over/under:</strong> Du kan legge inn vanlig innhold i editoren over og under kortkoden for å gi introduksjon, SEO-tekst eller annen informasjon.</p>
-                </div>
-
-
+ 
                 <div id="designmaler" class="options-card">
                     <h3>Designmaler for kurs og taksonomi</h3>
                     <p>I <a href="admin.php?page=design">Kursdesign</a> velger du mal for kursdetaljer og for taksonomier. Å bytte mal påvirker oppsett, rekkefølge på elementer og visuelle detaljer.</p>
@@ -111,7 +103,11 @@ class KA_Documentation_Page {
 
                 <div id="kortkoder" class="options-card">
                 <h3>Kortkoder</h3>
+                <p><strong>Hva er kortkoder?</strong> Kortkoder er små koder du plasserer i innhold (sider/innlegg) for å vise dynamiske lister og komponenter fra pluginen.</p>
+                <p><strong>Hvor brukes de?</strong> Vanligvis på egne sider i menyen (f.eks. «Kurs», «Kurskategorier», «Kurssteder», «Instruktører»). Du kan også bruke dem i innlegg eller widgets.</p>
+                <p><strong>Eget innhold over/under:</strong> Du kan legge inn vanlig innhold i editoren over og under kortkoden for å gi introduksjon, SEO-tekst eller annen informasjon.</p>
                 <div class="ka-grid ka-grid-3">
+                
                     <div class="kort">
                         <h4>Design: Lister og grid <span class="small"><a href="#lister">mer info</a></span></h4>
                         <p><span class="copytext">[kurskategorier]</span><br><span class="copytext">[kurssteder]</span><br><span class="copytext">[instruktorer]</span></p>
