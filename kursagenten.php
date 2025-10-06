@@ -6,7 +6,7 @@
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
  * Version:           1.0.2
- * Author:            Tone B. Hagen
+ * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
  * Domain Path:       /lang
@@ -31,7 +31,7 @@ if (!defined('KURSAG_INSTALLATION')) {
     define('KURSAG_INSTALLATION', '1. Installer plugin<br>2. Legg inn tilsendt API-nøkkel i Innstillinger<br>3. Gå til Oversikt for å videre instruksjoner');
 }
 if (!defined('KURSAG_AUTHOR')) {
-    define('KURSAG_AUTHOR', 'Tone B. Hagen');
+    define('KURSAG_AUTHOR', 'Kursagenten Team');
 }
 if (!defined('KURSAG_AUTHOR_URI')) {
     define('KURSAG_AUTHOR_URI', 'https://kursagenten.no');

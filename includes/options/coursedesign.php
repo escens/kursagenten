@@ -532,9 +532,10 @@ class Designmaler {
                                 <?php
                                 $current_design = get_option('kursagenten_taxonomy_design', 'default');
                                 $designs = [
-                                    'default' => 'Standard',
+                                    'default' => 'Standard - enkel kursliste',
+                                    'default-courselist-shortcode' => 'Standard - komplett kursliste',
+                                    'simple' => 'Uten bilde og beskrivelse - enkel kursliste',
                                     'default-2' => 'Standard 2',
-                                    'default-courselist-shortcode' => 'Standard - kursliste med filter',
                                     'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {

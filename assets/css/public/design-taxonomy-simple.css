@@ -7,8 +7,8 @@
 
 /* Header Styles */
 #ka .ka-taxonomy-header {
-    padding: 3rem 0;
-    margin-bottom: 2rem;
+    padding: 2rem 0 0;
+    margin-bottom: 1rem;
 }
 
 #ka .taxonomy-header-content {
@@ -24,11 +24,29 @@
     margin-left: -45px;/* --Page back link */
 }
 
-#ka .taxonomy-description {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #666;
+#ka .ka-footer-content {
+    margin-top: 3rem;
 }
+
+#ka .ka-footer-content h2 {
+    margin-top: 3rem;
+    text-align: center;
+    opacity: 0.8;
+}
+#ka .ka-footer-content #kag1.kort .box{
+    -webkit-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
+    -moz-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
+}
+#ka .ka-footer-content #kag1.kort:hover .box{
+    -webkit-box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1);
+    -moz-box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1);
+}
+#ka .ka-footer-content #kag1.rad .text a.title {
+    justify-content: center;
+}
+
 @media (max-width: 767px) {
     #ka .taxonomy-container {
         padding: 0;
@@ -407,8 +425,9 @@
 #ka .category-filter-wrapper {
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background-color: var(--ka-alt-background);
+    background-color: #f8f9fa;
     border-radius: 8px;
+    border: 1px solid #e9ecef;
 }
 
 #ka .category-filter {
@@ -429,7 +448,9 @@
     gap: 0.75rem;
 }
 
-
+#ka .category-btn {
+    background: white;
+}
 /*
 #ka .category-btn {
     padding: 0.5rem 1rem;
