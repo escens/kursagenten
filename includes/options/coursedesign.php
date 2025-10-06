@@ -1536,7 +1536,21 @@ if (queryString) {
                         ?>
                         <tr>
                             <td><?php echo esc_html($page['title']); ?></td>
-                            <td><?php echo esc_html($page['description']); ?></td>
+                            <td>
+                                <?php echo esc_html($page['description']); ?>
+                                <?php 
+                                if ($key === 'betaling' && $exists) {
+                                    $payment_url = get_permalink($page_id);
+                                    if (!empty($payment_url)) {
+                                        $payment_url_with_pid = esc_url($payment_url) . '?pid={pid}';
+                                        echo '<div style="color: #939393; font-size: .95em; font-style: italic;">Legg inn betalingslenke '
+                                            . '<span class="copytext" title="Klikk for å kopiere">' . esc_html($payment_url_with_pid) . '</span>'
+                                            . ' i <a href="https://kursadmin.kursagenten.no/IframeSetting" target="_blank" rel="noopener">Kursagenten</a>'
+                                            . '</div>';
+                                    }
+                                }
+                                ?>
+                            </td>
                             <td>
                                 <?php if ($exists): ?>
                                     <span class="status-indicator <?php echo $post_status; ?>">
@@ -1706,12 +1720,33 @@ if (queryString) {
         }
         
         $page_data = $pages[$page_key];
+        $desired_slug = isset($page_data['slug']) ? $page_data['slug'] : sanitize_title($page_data['title']);
+        $post_title = $page_data['title'];
+
+        // If a page already exists with the desired slug and it's not our system page,
+        // avoid WP auto-adding -2 by using a conflict-free slug for Betaling.
+        $existing = get_page_by_path($desired_slug, OBJECT, 'page');
+        if ($existing instanceof \WP_Post) {
+            $existing_key = get_post_meta($existing->ID, '_ka_system_page', true);
+            if ($existing_key !== $page_key) {
+                if ($page_key === 'betaling') {
+                    $desired_slug = 'kurs-betaling';
+                    $post_title = 'Betaling for kurs';
+                }
+            } else {
+                // Already our system page, just update option and return
+                update_option('ka_page_' . $page_key, $existing->ID);
+                update_post_meta($existing->ID, '_ka_system_page', $page_key);
+                return (int) $existing->ID;
+            }
+        }
+
         $page_id = wp_insert_post([
-            'post_title' => $page_data['title'],
+            'post_title' => $post_title,
             'post_content' => $page_data['content'],
             'post_status' => 'publish',
             'post_type' => 'page',
-            'post_name' => $page_data['slug'],
+            'post_name' => $desired_slug,
             'comment_status' => 'closed'
         ]);
         

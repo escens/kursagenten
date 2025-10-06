@@ -233,6 +233,13 @@ function kursagenten_activate() {
             }
 
             if ($needs_create) {
+                // Hvis Betaling finnes som vanlig side med slug 'betaling', opprett vår som konfliktfri
+                if ($page_key === 'betaling') {
+                    $existing = get_page_by_path('betaling', OBJECT, 'page');
+                    if ($existing instanceof WP_Post && get_post_meta($existing->ID, '_ka_system_page', true) !== 'betaling') {
+                        // create_system_page håndterer selv konflikt og setter 'kurs-betaling'
+                    }
+                }
                 Designmaler::create_system_page($page_key);
             }
         }
