@@ -37,6 +37,10 @@ class KA_Admin_Bar_Links {
                 'option_key' => 'ka_page_kurs',
                 'label' => 'Se importerte kurs',
                 'admin_url' => 'edit.php?post_type=course'
+            ],
+            'betaling' => [
+                'option_key' => 'ka_page_betaling',
+                'label' => 'Betaling'
             ]
         ];
     }

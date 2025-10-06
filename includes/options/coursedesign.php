@@ -1474,6 +1474,37 @@ class Designmaler {
                                     <!-- /wp:shortcode -->',
                     'description' => 'Oversiktsside for alle instruktører',
                     'slug' => 'instruktorer'
+                ],
+                'betaling' => [
+                    'title' => 'Betaling',
+                    'content' => '<!-- wp:html -->
+<iframe title="Betal for kurs" id="kursagentenIframe" allowfullscreen frameBorder="0" style="overflow:hidden;height:900px;width:100%;border-radius: 8px;"></iframe>
+
+<script type="text/javascript">
+var queryString = window.location.search;
+
+if (queryString) {
+    var urlParams = new URLSearchParams(queryString);
+    var pid = urlParams.get("pid");
+    if (pid) {
+        var theme = urlParams.get("theme");
+        if (theme) {
+            pid += "?theme=" + theme;
+        }
+        var myIframe = document.getElementById("kursagentenIframe");
+        if(myIframe){
+            myIframe.src = "https://embed.kursagenten.no/Betaling/" + pid;
+        }
+        else{
+            console.log("iframe with id kursagentenIframe not found");
+        }
+    }
+}
+</script>
+<script type="text/javascript" src="https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js"></script>
+<!-- /wp:html -->',
+                    'description' => 'Betalingsside for kurs',
+                    'slug' => 'betaling'
                 ]
             ];
         }

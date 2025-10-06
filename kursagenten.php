@@ -212,13 +212,29 @@ function kursagenten_activate() {
     // Then flush rewrite rules
     flush_rewrite_rules();
 
-    // Opprett systemsider ved aktivering hvis ønskelig
-    $create_pages = apply_filters('kursagenten_create_system_pages_on_activation', false);
-    if ($create_pages) {
-        require_once KURSAG_PLUGIN_DIR . '/includes/options/kursinnstillinger.php';
-        $pages = Kursinnstillinger::get_required_pages();
+    // Opprett alle systemsider ved aktivering hvis de mangler eller peker til slettet/trashet side
+    require_once KURSAG_PLUGIN_DIR . '/includes/options/coursedesign.php';
+    if (class_exists('Designmaler')) {
+        $pages = Designmaler::get_required_pages();
         foreach (array_keys($pages) as $page_key) {
-            Kursinnstillinger::create_system_page($page_key);
+            $option_key = 'ka_page_' . $page_key;
+            $page_id = (int) get_option($option_key);
+            $needs_create = true;
+
+            if ($page_id > 0) {
+                $post = get_post($page_id);
+                if ($post && $post->post_type === 'page' && $post->post_status !== 'trash') {
+                    // Gyldig side finnes allerede
+                    $needs_create = false;
+                } else {
+                    // Rydd opp foreldreløs option
+                    delete_option($option_key);
+                }
+            }
+
+            if ($needs_create) {
+                Designmaler::create_system_page($page_key);
+            }
         }
     }
 }
