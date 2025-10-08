@@ -358,7 +358,7 @@ function kursagenten_course_list_shortcode($atts) {
 
             <div class="mobile-filter-overlay">
                 <div class="mobile-filter-header">
-                    <h4>Filter</h4>
+                    <h3>Filter</h3>
                     <button class="close-filter-button">
                         <i class="ka-icon icon-close"></i>
                     </button>
@@ -577,30 +577,7 @@ function kursagenten_course_list_shortcode($atts) {
                         </div>
                     </div>
 
-                    <?php if ($has_shortcode_filters) : ?>
-                    <div class="ka-content-container inner-container shortcode-filters-info">
-                        <div class="shortcode-active-filters">
-                            <h4>Aktive filtre:</h4>
-                            <ul>
-                                <?php if (!empty($atts['kategori'])) : ?>
-                                    <li><strong>Kategori:</strong> <?php echo esc_html($atts['kategori']); ?></li>
-                                <?php endif; ?>
-                                <?php if (!empty($atts['sted'])) : ?>
-                                    <li><strong>Sted:</strong> <?php echo esc_html($atts['sted']); ?></li>
-                                <?php endif; ?>
-                                <?php if (!empty($atts['instruktør'])) : ?>
-                                    <li><strong>Instruktør:</strong> <?php echo esc_html($atts['instruktør']); ?></li>
-                                <?php endif; ?>
-                                <?php if (!empty($atts['språk'])) : ?>
-                                    <li><strong>Språk:</strong> <?php echo esc_html($atts['språk']); ?></li>
-                                <?php endif; ?>
-                                <?php if (!empty($atts['måned'])) : ?>
-                                    <li><strong>Måned:</strong> <?php echo esc_html($atts['måned']); ?></li>
-                                <?php endif; ?>
-                            </ul>
-                        </div>
-                    </div>
-                    <?php endif; ?>
+
 
                     <!-- Main Content Container with Columns -->
                     <div class="ka-content-container inner-container main-section">

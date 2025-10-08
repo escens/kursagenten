@@ -166,24 +166,50 @@ class RelatedCourses {
         return $output;
     }
 
-    private function get_thumbnail_data($post): string {
+    private function get_thumbnail_data($post): array {
         $thumbnail_id = get_post_thumbnail_id($post->ID);
         
         if (empty($thumbnail_id)) {
-            return $this->placeholder_image;
+            return [
+                'url' => $this->placeholder_image,
+                'width' => 300,
+                'height' => 300
+            ];
         }
 
-        $thumbnail_url = wp_get_attachment_image_url($thumbnail_id, 'thumbnail');
-        return !empty($thumbnail_url) ? $thumbnail_url : $this->placeholder_image;
+        $image_data = wp_get_attachment_image_src($thumbnail_id, 'thumbnail');
+        
+        if (!empty($image_data)) {
+            return [
+                'url' => $image_data[0],
+                'width' => $image_data[1],
+                'height' => $image_data[2]
+            ];
+        }
+        
+        return [
+            'url' => $this->placeholder_image,
+            'width' => 300,
+            'height' => 300
+        ];
     }
 
-    private function generate_course_html($post, string $thumbnail, array $a): string {
+    private function generate_course_html($post, array $thumbnail, array $a): string {
         $title = get_the_title($post->ID);
+        $thumbnail_url = esc_url($thumbnail['url']);
+        $thumbnail_width = esc_attr($thumbnail['width']);
+        $thumbnail_height = esc_attr($thumbnail['height']);
+        
         return "
             <div class='box term-{$post->ID}'>
                 <a class='image box-inner' href='" . get_permalink($post->ID) . "' title='{$title}'>
                     <picture>
-                        <img src='{$thumbnail}' alt='Bilde av kurs i {$title}' class='wp-image-{$post->ID}' decoding='async'>
+                        <img src='{$thumbnail_url}' 
+                             width='{$thumbnail_width}' 
+                             height='{$thumbnail_height}' 
+                             alt='Bilde av kurs i {$title}' 
+                             class='wp-image-{$post->ID}' 
+                             decoding='async'>
                     </picture>
                 </a>
                 <div class='text box-inner'>

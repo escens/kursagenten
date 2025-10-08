@@ -44,8 +44,25 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 }
                 ?>
                 <?php if (!empty($ka_image_url)): ?>
+                    <?php
+                    // Get image dimensions for header image
+                    $header_image_width = 300;
+                    $header_image_height = 300;
+                    $header_attachment_id = attachment_url_to_postid($ka_image_url);
+                    if ($header_attachment_id) {
+                        $header_image_data = wp_get_attachment_image_src($header_attachment_id, 'thumbnail');
+                        if ($header_image_data) {
+                            $header_image_width = $header_image_data[1];
+                            $header_image_height = $header_image_data[2];
+                        }
+                    }
+                    ?>
                     <div class="taxonomy-header-image">
-                        <img src="<?php echo esc_url($ka_image_url); ?>" alt="<?php echo esc_attr($term->name); ?>">
+                        <img src="<?php echo esc_url($ka_image_url); ?>" 
+                             width="<?php echo esc_attr($header_image_width); ?>" 
+                             height="<?php echo esc_attr($header_image_height); ?>" 
+                             alt="<?php echo esc_attr($term->name); ?>"
+                             title="<?php echo esc_attr($term->name); ?>">
                     </div>
                 <?php endif; ?>
                 <div class="taxonomy-header-text">
@@ -87,9 +104,24 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 $alt_image_url = get_term_meta($term_id, 'image_instructor', true);
                 
                 if (!empty($alt_image_url)): 
+                    // Get image dimensions for content image
+                    $content_image_width = 500;
+                    $content_image_height = 500;
+                    $content_attachment_id = attachment_url_to_postid($alt_image_url);
+                    if ($content_attachment_id) {
+                        $content_image_data = wp_get_attachment_image_src($content_attachment_id, 'medium');
+                        if ($content_image_data) {
+                            $content_image_width = $content_image_data[1];
+                            $content_image_height = $content_image_data[2];
+                        }
+                    }
                 ?>
                     <div class="taxonomy-image">
-                        <img src="<?php echo esc_url($alt_image_url); ?>" alt="<?php echo esc_attr($term->name); ?>">
+                        <img src="<?php echo esc_url($alt_image_url); ?>" 
+                             width="<?php echo esc_attr($content_image_width); ?>" 
+                             height="<?php echo esc_attr($content_image_height); ?>" 
+                             alt="<?php echo esc_attr($term->name); ?>"
+                             title="<?php echo esc_attr($term->name); ?>">
                     </div>
                 <?php endif; ?>
 

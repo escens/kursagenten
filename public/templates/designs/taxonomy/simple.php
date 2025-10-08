@@ -32,6 +32,7 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 <h1>
                 <a href="javascript:history.back()" class="back-link" title="Gå tilbake">
                     <i class="ka-icon icon-circle-left-regular page-back-link"></i>
+                    <span class="sr-only">Tilbake til forrige side</span>
                 </a><?php 
                 // Håndter navnevisning for instruktører
                 if ($taxonomy === 'instructors') {

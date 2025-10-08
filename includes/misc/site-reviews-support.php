@@ -14,7 +14,7 @@ add_filter('rank_math/snippet/rich_snippet_course_entity', function ($entity) {
         'ratingValue' => $score,
         'ratingCount' => $count,
         'bestRating' => '5',
-        'worstRating' => '0'
+        'worstRating' => '1'
     ];
     return $entity;
 });

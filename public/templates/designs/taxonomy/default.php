@@ -32,6 +32,7 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 <h1>
                 <a href="javascript:history.back()" class="back-link" title="Gå tilbake">
                     <i class="ka-icon icon-circle-left-regular page-back-link"></i>
+                    <span class="sr-only">Tilbake til forrige side</span>
                 </a><?php 
                 // Håndter navnevisning for instruktører
                 if ($taxonomy === 'instructors') {
@@ -76,8 +77,25 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
             <div class="taxonomy-content-grid">
                 <div class="left-column">
                     <?php if (!empty($image_url)): ?>
+                        <?php
+                        // Get image dimensions if it's from media library
+                        $image_width = 500;
+                        $image_height = 500;
+                        $attachment_id = attachment_url_to_postid($image_url);
+                        if ($attachment_id) {
+                            $image_data = wp_get_attachment_image_src($attachment_id, 'medium');
+                            if ($image_data) {
+                                $image_width = $image_data[1];
+                                $image_height = $image_data[2];
+                            }
+                        }
+                        ?>
                         <div class="taxonomy-image">
-                            <img src="<?php echo esc_url($image_url); ?>" alt="<?php echo esc_attr($term->name); ?>">
+                            <img src="<?php echo esc_url($image_url); ?>" 
+                                 width="<?php echo esc_attr($image_width); ?>" 
+                                 height="<?php echo esc_attr($image_height); ?>" 
+                                 alt="<?php echo esc_attr($term->name); ?>"
+                                 title="<?php echo esc_attr($term->name); ?>">
                         </div>
                     <?php endif; ?>
 

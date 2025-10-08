@@ -48,7 +48,18 @@
   --ka-shadow-darker4: 0px 20px 70px 0px rgba(15, 107, 92, 0.2);  
 }
 
-
+/* Screen reader only class - hides content visually but keeps it for SEO and accessibility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
 
 /* MAIN wrapper */
 /***************/

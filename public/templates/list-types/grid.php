@@ -159,7 +159,8 @@ $category_slugs = array_unique($category_slugs);
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
         <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
-            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
+            <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>" aria-label="Se kurs: <?php echo esc_attr($course_title); ?>">
+                <span class="sr-only">Se kurs: <?php echo esc_html($course_title); ?></span>
             </a>
             <?php if ($is_full === 'true' || $is_full === 1) : ?>
                 <span class="card-availability course-available full">Fullt</span>

@@ -59,7 +59,7 @@ class Avansert {
                         <label for="ka_sitereviews">
                         <?php $this->ka_sitereviews_callback(); ?>
                         Støtte for "Site Reviews"-plugin, anmeldelser</label>
-                        <p class="description">Dette legger inn rating i Course schema via Rank Math på kurssidene. Det legger også inn redirect basert på querystrings i eposter fra Kursagenten, til rating skjema på korrekt kursside.<br><br></p>
+                        <p class="description">Dette legger inn rating i Course schema på kurssidene. Det legger også inn redirect basert på querystrings i eposter fra Kursagenten, til rating-skjema på korrekt kursside.<br><br></p>
                     </td>
                 </tr>
                 <tr valign="top">

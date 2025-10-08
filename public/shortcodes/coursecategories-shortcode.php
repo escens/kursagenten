@@ -273,11 +273,30 @@ class CourseCategories {
         // Short description (WP term description)
         $short_description = wpautop(wp_kses_post($term->description));
 
+        // Get image dimensions if it's from media library
+        $width = 300;
+        $height = 300;
+        
+        // Try to get actual dimensions if it's an attachment
+        $attachment_id = attachment_url_to_postid($thumbnail);
+        if ($attachment_id) {
+            $image_data = wp_get_attachment_image_src($attachment_id, 'thumbnail');
+            if ($image_data) {
+                $width = $image_data[1];
+                $height = $image_data[2];
+            }
+        }
+
         return "
             <div class='box term-{$term->term_id}'>
                 <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
                     <picture>
-                        <img src='{$thumbnail}' alt='Bilde av kurs i {$term->name}' class='wp-image-{$term->term_id}' decoding='async'>
+                        <img src='{$thumbnail}' 
+                             width='" . esc_attr($width) . "' 
+                             height='" . esc_attr($height) . "' 
+                             alt='Bilde av kurs i {$term->name}' 
+                             class='wp-image-{$term->term_id}' 
+                             decoding='async'>
                     </picture>
                 </a>
                 <div class='text box-inner'>

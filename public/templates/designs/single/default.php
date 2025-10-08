@@ -4,29 +4,12 @@
  *
  * @package kursagenten
  */
-    // Add meta tags to single course pages    
-    function kursagenten_add_meta_tags() {
-        global $post;
-        $title = get_post_meta($post->ID, 'custom_title', true) ?: get_the_title($post->ID);
-        $description = get_post_meta($post->ID, 'meta_description', true) ?: get_the_excerpt($post->ID);
 
-        // Meta-tags
-        echo '<meta name="title" content="' . esc_attr($title) . '">' . PHP_EOL;
-        echo '<meta name="description" content="' . esc_attr($description) . '">' . PHP_EOL;
-
-        // Open Graph
-        echo '<meta property="og:title" content="' . esc_attr($title) . '">' . PHP_EOL;
-        echo '<meta property="og:description" content="' . esc_attr($description) . '">' . PHP_EOL;
-        echo '<meta property="og:type" content="website">' . PHP_EOL;
-        echo '<meta property="og:url" content="' . esc_url(get_permalink($post->ID)) . '">' . PHP_EOL;
-        echo '<meta property="og:image" content="' . esc_url(get_the_post_thumbnail_url($post->ID, 'full')) . '">' . PHP_EOL;
-    }
-    add_action('wp_head', 'kursagenten_add_meta_tags');
-
-    if (current_user_can('editor') || current_user_can('administrator')) {
-        $admin_view_class = ' admin-view';
-        $admin_view = 'true';
-    }
+// Admin view settings
+if (current_user_can('editor') || current_user_can('administrator')) {
+    $admin_view_class = ' admin-view';
+    $admin_view = 'true';
+}
 
 ?>
 
@@ -208,8 +191,10 @@
                 <?php if ($is_parent_course === 'yes') : ?>
                     <h1><?php the_title(); ?></h1>
                 <?php else : ?>
-                    <h1><?php echo esc_html($main_course_title); ?></h1>
-                    <h2 style="margin-top: -.6em;"><?php echo esc_html($sub_course_location); ?></h2>
+                    <h1><?php echo esc_html($main_course_title); ?>
+                    <span style="margin-top: .2em; display: block; font-size: .8em;"><span style="font-size: 1px; color: transparent;">- </span><?php echo esc_html($sub_course_location); ?></span>
+                </h1>
+                    
                 <?php endif; ?>
                 <div class="header-links iconlist horizontal uppercase small">
                     <div><a href="<?php echo esc_url(Designmaler::get_system_page_url('kurs')); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
@@ -452,8 +437,21 @@
                 </div>
                 <!-- Course image -->
                 <?php if (has_post_thumbnail()): ?>
+                    <?php
+                    // Get image data with dimensions for SEO
+                    $thumbnail_id = get_post_thumbnail_id(get_the_ID());
+                    $image_data = wp_get_attachment_image_src($thumbnail_id, 'large');
+                    $image_url = $image_data[0];
+                    $image_width = $image_data[1];
+                    $image_height = $image_data[2];
+                    ?>
                 <picture class="course-image">
-                    <img src="<?php echo esc_url(get_the_post_thumbnail_url(get_the_ID(), 'large')); ?>" alt="Bilde for kurs i <?php the_title(); ?>" decoding="async">
+                    <img src="<?php echo esc_url($image_url); ?>" 
+                         width="<?php echo esc_attr($image_width); ?>" 
+                         height="<?php echo esc_attr($image_height); ?>" 
+                         alt="Bilde for kurs i <?php the_title(); ?>" 
+                         title="<?php the_title(); ?>" 
+                         decoding="async">
                 </picture>
                 <?php endif; ?>
                 <!-- Sidebar -->

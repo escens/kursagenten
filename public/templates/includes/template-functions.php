@@ -5,6 +5,9 @@
 
 if (!defined('ABSPATH')) exit;
 
+// Load SEO functions
+require_once(dirname(__FILE__) . '/template-seo-functions.php');
+
 /**
  * Laster inn riktig template basert på kontekst og innstillinger
  *
