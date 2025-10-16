@@ -7,8 +7,22 @@ function kursagenten_sync_courses_button() {
 
     ob_start();
     ?>
-    <a href="#" class="button sync-api-to-posts" id="sync-all-courses">Hent alle kurs fra Kursagenten</a>
-    <div id="sync-status-message" style="margin-top: 10px;"></div>
+    <div style="margin-bottom: 15px;">
+        <a href="#" class="button sync-api-to-posts" id="sync-all-courses">Hent alle kurs fra Kursagenten</a>
+        
+        <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-left: 4px solid #2271b1; max-width: 650px;">
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="run-cleanup-checkbox" style="margin-right: 8px;">
+                <span style="font-weight: 500;">Rydd opp i kurs etter synkronisering</span>
+            </label>
+            <p style="margin: 8px 0 0 24px; font-size: 12px; color: #666; line-height: 1.5;">
+                Kryss av på "Rydd opp i kurs" om det er mange utløpte kursdatoer som vises på websiden. 
+                Det blir kjørt en nattlig opprydning, så det kan være unødvendig å gjøre dette nå. 
+                <strong>NB:</strong> Opprydding tar 3-5 minutter ekstra.
+            </p>
+        </div>
+    </div>
+    <div id="sync-status-message" style="margin: 2em 0;"></div>
     <?php
     return ob_get_clean();
 }
@@ -17,7 +31,7 @@ function kursagenten_sync_courses_button() {
 function kursagenten_cleanup_courses_button() {
     ob_start();
     ?>
-    <a href="#" class="button" id="cleanup-courses">Rydd opp i kurs</a>
+    <a href="#" class="button" id="cleanup-courses">Rydd opp i kurs</a><span style="font-size: 12px; color: #666; line-height: 2.5; padding-left: 1em; font-style: italic;"> Rydd vekk utløpte kursdatoer, og slettede kurs som ikke finnes i Kursagenten</span>
     <div id="cleanup-status-message" style="margin-top: 10px;"></div>
     <?php
     return ob_get_clean();
@@ -27,46 +41,40 @@ function kursagenten_get_course_ids() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
 
     // Increase PHP limits for large sync operations
-    @set_time_limit(300); // 5 minutes
-    @ini_set('memory_limit', '512M');
+    @set_time_limit(120); // 2 minutes to check sync status
+    @ini_set('memory_limit', '256M');
 
     $courses = kursagenten_get_course_list();
     if (empty($courses)) {
         error_log("FEIL: Kunne ikke hente kursliste fra API");
         wp_send_json_error(['message' => 'Failed to fetch course data.']);
     }
-        // Først rydd opp i alle specific_locations
-        cleanup_all_specific_locations();
 
-    error_log("=== START: Prosessering av kursliste ===");
+    // Cleanup specific_locations before sync
+    cleanup_all_specific_locations();
+
+    error_log("=== START: Bygger kursliste ===");
+    
     $course_data = [];
+    $index = 0;
+    
     foreach ($courses as $course) {
-        error_log("Prosesserer kurs: " . $course['name']);
-        
         foreach ($course['locations'] as $location) {
-            //error_log("Prosesserer lokasjon: " . $location['municipality'] . " - " . $location['courseId']);
             $is_active = false;
             if (isset($location['active'])) {
                 $is_active = filter_var($location['active'], FILTER_VALIDATE_BOOLEAN);
             } elseif (isset($course['active'])) {
                 $is_active = filter_var($course['active'], FILTER_VALIDATE_BOOLEAN);
             } else {
-                // Hvis ingen active-verdi er satt, anta at kurset er inaktivt
-                // Dette forhindrer at inaktive kurs blir aktivert som standard
                 $is_active = false;
             }
             
-            // Hent enkeltkursdata for denne lokasjonen
-            $single_course = kursagenten_get_course_details($location['courseId']);
+            $location_id = (int) $location['courseId'];
             
-            if (empty($single_course)) {
-                error_log("ADVARSEL: Kunne ikke hente enkeltkursdata for location_id: " . $location['courseId']);
-                continue;
-            }
-            
-            // Bruk single_course data direkte
+            // Only send basic info - detailed data will be fetched per batch
             $course_data[] = [
-                'location_id' => $location['courseId'],
+                'index' => $index,
+                'location_id' => $location_id,
                 'main_course_id' => $course['id'],
                 'course_name' => $location['courseName'],
                 'municipality' => $location['municipality'],
@@ -74,15 +82,22 @@ function kursagenten_get_course_ids() {
                 'language' => $course['language'],
                 'is_active' => $is_active,
                 'image_url_cms' => $location['cmsLogo'] ?? null,
-                'single_course_data' => $single_course // Send med hele single_course data
             ];
+            
+            $index++;
         }
     }
-    error_log("=== SLUTT: Prosessering av kursliste ===");
+    
+    $total_courses = count($course_data);
+    
+    error_log("=== SLUTT: Bygget liste med $total_courses kurs ===");
 
-    kursagenten_update_main_course_status();
-
-    wp_send_json_success(['courses' => $course_data]);
+    wp_send_json_success([
+        'courses' => $course_data,
+        'stats' => [
+            'total' => $total_courses,
+        ]
+    ]);
 }
 add_action('wp_ajax_get_course_ids', 'kursagenten_get_course_ids');
 
@@ -90,7 +105,8 @@ function kursagenten_run_sync_kurs() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
     
     // Increase PHP limits for large sync operations
-    @set_time_limit(180); // 3 minutes per batch
+    // Some courses have images that take 30+ seconds to download
+    @set_time_limit(600); // 10 minutes per batch (to handle slow image downloads)
     @ini_set('memory_limit', '512M');
     
     error_log("================================================");
@@ -104,40 +120,80 @@ function kursagenten_run_sync_kurs() {
     error_log("--Antall kurs å synkronisere: " . count($_POST['courses']));
     $success_count = 0;
     $error_count = 0;
+    $failed_courses = []; // Track failed courses with details
 
     foreach ($_POST['courses'] as $course) {
         try {
-            error_log("--Synkroniserer kurs: " . ($course['course_name'] ?? 'Ukjent navn'));
+            error_log("--Synkroniserer kurs: " . ($course['course_name'] ?? 'Ukjent navn') . " (ID: " . $course['location_id'] . ")");
+            
+            // Fetch detailed course data for this location
+            $single_course = kursagenten_get_course_details($course['location_id']);
+            
+            if (empty($single_course)) {
+                $error_msg = "Kunne ikke hente detaljert kursdata fra API";
+                error_log("FEIL: $error_msg for location_id: " . $course['location_id']);
+                $error_count++;
+                $failed_courses[] = [
+                    'location_id' => $course['location_id'],
+                    'course_name' => $course['course_name'] ?? 'Ukjent navn',
+                    'error_type' => 'api_fetch_failed',
+                    'error_message' => $error_msg
+                ];
+                continue;
+            }
+            
+            // Add the detailed course data to the course array
+            $course['single_course_data'] = $single_course;
             $course['is_active'] = filter_var($course['is_active'], FILTER_VALIDATE_BOOLEAN) ? '1' : '';
             
-            if (create_or_update_course_and_schedule($course)) {
+            $sync_result = create_or_update_course_and_schedule($course);
+            
+            // Function returns post_id (integer) on success, false on failure
+            if ($sync_result !== false && $sync_result !== null) {
                 $success_count++;
             } else {
                 $error_count++;
-                error_log("FEIL: Kunne ikke synkronisere kurs: " . ($course['course_name'] ?? 'Ukjent navn'));
+                $error_msg = is_string($sync_result) ? $sync_result : "Ukjent feil under synkronisering";
+                error_log("FEIL: $error_msg - kurs: " . ($course['course_name'] ?? 'Ukjent navn'));
+                $failed_courses[] = [
+                    'location_id' => $course['location_id'],
+                    'course_name' => $course['course_name'] ?? 'Ukjent navn',
+                    'error_type' => 'sync_failed',
+                    'error_message' => $error_msg
+                ];
             }
         } catch (Exception $e) {
             $error_count++;
-            error_log("FEIL under synkronisering: " . $e->getMessage());
+            $error_msg = $e->getMessage();
+            error_log("FEIL under synkronisering (Exception): $error_msg");
+            $failed_courses[] = [
+                'location_id' => $course['location_id'] ?? 'Ukjent ID',
+                'course_name' => $course['course_name'] ?? 'Ukjent navn',
+                'error_type' => 'exception',
+                'error_message' => $error_msg
+            ];
         }
     }
 
     error_log("Synkronisering fullført. Suksess: $success_count, Feil: $error_count");
+    
+    // Log failed courses summary
+    if (!empty($failed_courses)) {
+        error_log("❌ FEILEDE KURS I DENNE BATCHEN:");
+        foreach ($failed_courses as $failed) {
+            error_log("  - {$failed['course_name']} (kursID: {$failed['location_id']}) - {$failed['error_message']}");
+        }
+    }
+    
     error_log("=== SLUTT: Synkronisering av kurs ===");
 
     error_log("Oppdaterer hovedkurs statuser etter fullført synkronisering");
     kursagenten_update_main_course_status();
 
-    // Kjør opprydding for kurs som ikke lenger finnes i API
-    // Dette sikrer at kurs som er slettet i Kursagenten fjernes helt (ikke bare settes som kladd)
-    if (function_exists('cleanup_courses_on_demand')) {
-        error_log("Starter opprydding etter synk");
-        cleanup_courses_on_demand();
-    }
-
     wp_send_json_success([
         'success_count' => $success_count,
-        'error_count' => $error_count
+        'error_count' => $error_count,
+        'failed_courses' => $failed_courses // Include detailed failure info
     ]);
 }
 add_action('wp_ajax_run_sync_kurs', 'kursagenten_run_sync_kurs');
@@ -151,7 +207,7 @@ function kursagenten_enqueue_admin_scripts($hook) {
         'kursagenten-admin-sync', 
         KURSAG_PLUGIN_URL . '/assets/js/admin/kursagenten-admin-sync.js', 
         array('jquery'), 
-        '1.0.1', 
+        '1.3.3', // Simplified stats - just shows total courses found
         true
     );
    
@@ -272,6 +328,10 @@ register_deactivation_hook(KURSAG_PLUGIN_FILE, 'kursagenten_deactivate_nightly_s
  * This function can be called manually or via cron
  */
 function cleanup_courses_on_demand() {
+    // Increase PHP limits for cleanup operations
+    @set_time_limit(300); // 5 minutes for cleanup
+    @ini_set('memory_limit', '512M');
+    
     error_log("=== START: Opprydding av kurs og kursdatoer ===");
     
     // Hent alle kurs fra API

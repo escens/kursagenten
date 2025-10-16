@@ -1235,13 +1235,18 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     
     // Check if the image already exists and is the same to avoid re-downloading
     if ($existing_thumbnail_id && $stored_image_name === $filename) {
-        //error_log("** Image already exists for post ID: $post_id, skipping new import.");
-        return false;
+        error_log("⏩ Bilde allerede opplastet for kurs ID $post_id (kursID: $location_id), hopper over nedlasting");
+        return false; // Image unchanged, no need to re-download
     }
+
+    // Log when we need to download a new image
+    error_log("📥 Starter nedlasting av bilde for kurs ID $post_id (kursID: $location_id)");
+    $download_start = microtime(true);
 
     // Delete the existing image if it's different
     if ($existing_thumbnail_id) {
         wp_delete_attachment($existing_thumbnail_id, true);
+        error_log("🗑️ Slettet gammelt bilde for kurs ID $post_id (kursID: $location_id)");
     }
 
     $upload_dir = wp_upload_dir();
@@ -1249,37 +1254,43 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
 
     // Download the image from the URL using WordPress HTTP API (safer and respects WP config)
     $response = wp_remote_get($image_url, array(
-        'timeout'   => 30,
+        'timeout'   => 90, // Increased timeout for very large images
         'redirection' => 5,
         'sslverify' => true,
+        'stream' => false, // Don't stream to memory for now
     ));
 
     if (is_wp_error($response)) {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('FEIL: wp_remote_get feil ved nedlasting av bilde: ' . $response->get_error_message() . ' URL: ' . $image_url);
+        $error_msg = 'Nedlasting av bilde feilet: ' . $response->get_error_message();
+        error_log("❌ $error_msg for kurs ID $post_id (kursID: $location_id) - URL: $image_url");
+        
+        // Check if it's a timeout error
+        if (strpos($response->get_error_message(), 'timed out') !== false || 
+            strpos($response->get_error_message(), 'timeout') !== false) {
+            throw new Exception("Bilde-nedlasting timeout (bilde for stort eller treg forbindelse)");
         }
-        return false;
+        
+        throw new Exception($error_msg);
     }
 
     $http_code = wp_remote_retrieve_response_code($response);
     if ((int) $http_code !== 200) {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('FEIL: HTTP status ' . $http_code . ' ved nedlasting av bilde fra: ' . $image_url);
-        }
-        return false;
+        $error_msg = "HTTP status $http_code ved nedlasting av bilde";
+        error_log("❌ $error_msg for kurs ID $post_id (kursID: $location_id) - URL: $image_url");
+        throw new Exception($error_msg);
     }
 
     $image_data = wp_remote_retrieve_body($response);
-    if ($image_data === '' || $image_data === null) {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('FEIL: Tomt bildeinnhold ved nedlasting fra: ' . $image_url);
-        }
-        return false;
+    if ($image_data === '' || $image_data === null || $image_data === false) {
+        $error_msg = "Tomt eller ugyldig bildeinnhold mottatt";
+        error_log("❌ $error_msg for kurs ID $post_id (kursID: $location_id) - URL: $image_url");
+        throw new Exception($error_msg);
     }
-
-    if ($image_data === false) {
-        error_log("FEIL: Kunne ikke laste ned bilde fra: $image_url. Curl feil: $curl_error");
-        return false;
+    
+    // Check image size
+    $image_size_mb = strlen($image_data) / (1024 * 1024);
+    if ($image_size_mb > 10) { // Warn if image is larger than 10MB
+        error_log("⚠️ Stort bilde lastet ned: " . round($image_size_mb, 2) . "MB for kurs ID $post_id (kursID: $location_id)");
     }
 
     // Ensure the upload directory exists
@@ -1332,7 +1343,9 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     update_post_meta($post_id, 'course_image_name', $filename_original);
     update_post_meta($attach_id, 'is_course_image', true);
 
-    error_log("** Image successfully downloaded and set as featured image for post ID: $post_id - kurs: " . $data['name']);
+    // Log download time
+    $download_time = round(microtime(true) - $download_start, 2);
+    error_log("✅ Bilde ferdig lastet ned for kurs ID $post_id (kursID: $location_id) - Tid: {$download_time}s");
 
     error_log("=== SLUTT: set_featured_image_from_url ===");
     return true;
