@@ -1,3 +1,6 @@
+## 1.0.4 - 2025-10-16
+- Stabilisert henting av filer fra Kursagenten. Ved mange kurs har det hendt at synk feiler.
+
 ## 1.0.3 - 2025-10-08
 - Endret: Navn på designmaler for taksonomisider
 - Lagt til: Flere designmaler for taksonomi (Enkel mal, uten bilde og tekst)
@@ -16,4 +19,3 @@
 ## 1.0.0 - 2025-09-22
 - Første versjon
 
-// Husk pluginversjon
