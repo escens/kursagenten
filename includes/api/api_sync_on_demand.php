@@ -26,6 +26,10 @@ function kursagenten_cleanup_courses_button() {
 function kursagenten_get_course_ids() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
 
+    // Increase PHP limits for large sync operations
+    @set_time_limit(300); // 5 minutes
+    @ini_set('memory_limit', '512M');
+
     $courses = kursagenten_get_course_list();
     if (empty($courses)) {
         error_log("FEIL: Kunne ikke hente kursliste fra API");
@@ -84,10 +88,13 @@ add_action('wp_ajax_get_course_ids', 'kursagenten_get_course_ids');
 
 function kursagenten_run_sync_kurs() {
     check_ajax_referer('sync_kurs_nonce', 'nonce');
+    
+    // Increase PHP limits for large sync operations
+    @set_time_limit(180); // 3 minutes per batch
+    @ini_set('memory_limit', '512M');
+    
     error_log("================================================");
     error_log("=== START: Synkronisering av kurs ===");
-
-
 
     if (!isset($_POST['courses']) || !is_array($_POST['courses'])) {
         error_log("FEIL: Ugyldig kursdata mottatt");
@@ -162,6 +169,10 @@ add_action( 'admin_enqueue_scripts', 'kursagenten_enqueue_admin_scripts' );
 function kursagenten_nightly_sync() {
     error_log("=== START: Nattlig synkronisering av kurs ===");
     
+    // Increase PHP limits for large sync operations
+    @set_time_limit(3600); // 1 hour for nightly sync
+    @ini_set('memory_limit', '512M');
+    
     // Get course data
     $courses = kursagenten_get_course_list();
     if (empty($courses)) {
@@ -221,18 +232,9 @@ function kursagenten_nightly_sync() {
 
     error_log("Nattlig synkronisering av kurs fullført. Suksess: $success_count, Feil: $error_count");
 
-    // Synkroniser lokasjoner for alle kurssteder
-    error_log("Starter synkronisering av lokasjoner");
-    $terms = get_terms([
-        'taxonomy' => 'course_location',
-        'hide_empty' => false,
-    ]);
-
-    if (!is_wp_error($terms)) {
-        foreach ($terms as $term) {
-            sync_term_locations($term->term_id);
-        }
-    }
+    // Note: sync_term_locations() was removed as it was not implemented
+    // Location data is already synced via update_course_taxonomies() during course sync
+    // No additional location sync is needed here
 
     // Update main course statuses
     error_log("Oppdaterer hovedkurs statuser");

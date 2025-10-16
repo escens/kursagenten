@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.0.2
+ * Version:           1.0.3
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -14,7 +14,8 @@
  * Requires at least: 6.0
  */
 
- define('KURSAG_VERSION', '1.0.2');
+ // Husk changelog
+ define('KURSAG_VERSION', '1.0.3');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {

@@ -1,19 +1,21 @@
 jQuery(document).ready(function ($) {
     var courseData = []; // Lagre kursdata globalt
-    var batchSize = 10; // Antall kurs å prosessere samtidig
+    var batchSize = 20; // Antall kurs å prosessere samtidig (økt fra 10 til 20)
     var offset = 0; // Start offset
+    var totalCourses = 0; // Total antall kurs
 
     $("#sync-all-courses").on("click", function (e) {
         e.preventDefault();
 
         var $button = $(this);
         $button.addClass("processing");
-        $("#sync-status-message").text("Synkronisering pågår...");
+        $("#sync-status-message").html("Henter kursdata fra Kursagenten API...");
 
         // Første AJAX-kall for å hente kursdata
         $.ajax({
             url: sync_kurs.ajax_url,
             type: "POST",
+            timeout: 300000, // 5 minutter timeout
             data: {
                 action: "get_course_ids",
                 nonce: sync_kurs.nonce,
@@ -21,14 +23,17 @@ jQuery(document).ready(function ($) {
             success: function (response) {
                 if (response.success) {
                     courseData = response.data.courses;
+                    totalCourses = courseData.length;
+                    $("#sync-status-message").html("Fant " + totalCourses + " kurs. Starter synkronisering...");
                     processBatch($button); // Start batch-prosessering
                 } else {
                     alert("Kunne ikke hente kursdata.");
                     resetSyncButton($button);
                 }
             },
-            error: function () {
-                alert("Kunne ikke hente kursdata.");
+            error: function (xhr, status, error) {
+                console.error("AJAX Error:", status, error);
+                alert("Kunne ikke hente kursdata. Timeout eller nettverksfeil.");
                 resetSyncButton($button);
             },
         });
@@ -39,13 +44,25 @@ jQuery(document).ready(function ($) {
 
         if (batch.length === 0) {
             $button.removeClass("processing");
-            $("#sync-status-message").text("Alle kurs er synkronisert.");
+            $("#sync-status-message").html('<strong style="color: green;">✓ Alle kurs er synkronisert!</strong>');
+            offset = 0; // Reset offset for neste gang
             return;
         }
+
+        var currentBatch = Math.floor(offset / batchSize) + 1;
+        var totalBatches = Math.ceil(totalCourses / batchSize);
+        var processed = offset;
+        var percentage = Math.round((processed / totalCourses) * 100);
+        
+        $("#sync-status-message").html(
+            "Synkroniserer batch " + currentBatch + " av " + totalBatches + 
+            " (" + processed + " av " + totalCourses + " kurs - " + percentage + "%)"
+        );
 
         $.ajax({
             url: sync_kurs.ajax_url,
             type: "POST",
+            timeout: 180000, // 3 minutter timeout per batch
             data: {
                 action: "run_sync_kurs",
                 nonce: sync_kurs.nonce,
@@ -60,8 +77,9 @@ jQuery(document).ready(function ($) {
                     resetSyncButton($button);
                 }
             },
-            error: function () {
-                alert("Kunne ikke synkronisere en batch.");
+            error: function (xhr, status, error) {
+                console.error("Batch sync error:", status, error);
+                alert("Kunne ikke synkronisere en batch. Feil: " + status);
                 resetSyncButton($button);
             },
         });
@@ -69,7 +87,8 @@ jQuery(document).ready(function ($) {
 
     function resetSyncButton($button) {
         $button.removeClass("processing");
-        $("#sync-status-message").text("En feil oppstod under synkronisering.");
+        $("#sync-status-message").html('<strong style="color: red;">✗ En feil oppstod under synkronisering.</strong>');
+        offset = 0; // Reset offset slik at bruker kan prøve igjen fra starten
     }
 
     // Oppdatert kode for opprydding
