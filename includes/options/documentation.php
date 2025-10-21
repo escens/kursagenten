@@ -138,10 +138,10 @@ class KA_Documentation_Page {
                 <h3  id="lister">Kortkoder for lister og grid</h3>
                 <p>Kortkoder kan legges inn i teksten på sider og blogginnlegg. Du kan legge inn hele kurslisten, eller lister med enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, med samtlige valg, samt en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den. <br>Merk at du må fjerne eventuelle valg du ikke trenger, og deler der flere valg er listet opp (feks som stablet/rad/liste).</p>
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
-                    <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk"]</span></p>
-                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small" style="color:#666">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" utdrag="ja"]</span></p>
-                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="spesifikke-lokasjoner"]</span></p>
-                    <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small" style="color:#666">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja"]</span></p>
+                    <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk" klasse="min-klasse"]</span></p>
+                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small" style="color:#666">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" utdrag="ja" klasse="min-klasse"]</span></p>
+                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="spesifikke-lokasjoner" klasse="min-klasse"]</span></p>
+                    <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small" style="color:#666">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja" klasse="min-klasse"]</span></p>
                 </div>
                 <p>&nbsp;</p>
                 
@@ -218,10 +218,10 @@ class KA_Documentation_Page {
                             </tr>
                             <tr>
                                 <td>Bildestr</td>
-                                <td>Skriv inn størrelse på bildet du ønsker, i pixler. Ønsker du ikke bilde, skriv 0.</td>
+                                <td>Skriv inn størrelse på bildet du ønsker, i pixler. Ønsker du ikke bilde, skriv 0. Når bildestr settes til 0, lastes ikke bildene inn i det hele tatt.</td>
                                 <td><strong>Standard:</strong> 100px</td>
                                 <td>Alle</td>
-                                <td><span class="copytext">[kurskategorier bildestr=80px]</span></td>
+                                <td><span class="copytext">[kurskategorier bildestr=80px]</span><br><span class="copytext">[kurskategorier bildestr=0]</span></td>
                             </tr>
                             <tr>
                                 <td>Radavstand</td>
@@ -320,6 +320,13 @@ class KA_Documentation_Page {
                                 <td>ja<br><strong>Standard</strong>: viser ikke</td>
                                 <td>Instruktører</td>
                                 <td><span class="copytext">[instruktorer beskrivelse=ja]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Klasse</td>
+                                <td>Legg til egendefinert CSS-klasse til wrapper-elementet. Nyttig for custom styling eller tema-spesifikke behov.</td>
+                                <td>tekst<br><strong>Standard</strong>: tom (ingen klasse)</td>
+                                <td>Alle</td>
+                                <td><span class="copytext">[kurskategorier klasse="min-egen-klasse"]</span></td>
                             </tr>
                         </tbody>
                     </table>

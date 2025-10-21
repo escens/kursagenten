@@ -32,9 +32,11 @@ class GridStyles {
             
             /* Box */
             .kursagenten-grid.rad .wrapper .box { display: flex; column-gap: 0; max-width: 100%; }
-            .kursagenten-grid.kort .box { border-radius: 5px;  max-width: {$a['bildestr']}; width: 100%; background-color: #fff; -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); }
+            .kursagenten-grid.kort .box { border-radius: 5px; width: 100%; max-width: 100%; width: 100%; background-color: #fff; -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); }
+            .kursagenten-grid.kort .box:has(picture) { max-width: {$a['bildestr']}; }
             .kursagenten-grid.kort.rund .box { max-width: calc({$a['bildestr']} * 5.5)!important; }
-            .kursagenten-grid.stablet.kort .box { width: 100%; max-width: {$a['bildestr']};  margin: 0 auto; box-sizing: border-box;}
+            .kursagenten-grid.stablet.kort .box { width: 100%; max-width: 100%;  margin: 0 auto; box-sizing: border-box;}
+            .kursagenten-grid.stablet.kort .box:has(picture) { max-width: {$a['bildestr']};}
             .kursagenten-grid.skygge.kort .box:hover { -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.3); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.3); box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.3); transition: transform ease 0.3s, box-shadow ease 0.3s; }
             .kursagenten-grid.rad.beskrivelse .box,
             .kursagenten-grid.rad.utdrag .box,
@@ -60,7 +62,8 @@ class GridStyles {
             .kursagenten-grid:not(.utdrag) .text a { width: 100%; height: 100%; }
             .kursagenten-grid.stablet .text { flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding-left: 0; }
             .kursagenten-grid.stablet .text a { padding-top: .5em; }
-            .kursagenten-grid.stablet.kort .text { padding: 0.5em .8em 1.3em .8em; }
+            .kursagenten-grid.stablet.kort .text { padding: 0.9em .8em 0.9em .8em; }
+            .kursagenten-grid.stablet.kort .text:has(picture) { padding: 0.5em .8em 1.3em .8em; }
             .kursagenten-grid.rad .text { flex-direction: column; align-items: flex-start; justify-content: center;}
             .kursagenten-grid.rad.kort .text { padding: 1em 1em 1em 0;}
             .kursagenten-grid.rad .text a.title,
@@ -173,7 +176,8 @@ class GridStyles {
             {$class_id}.kort .box { border-radius: 5px;  max-width: {$a['bildestr']}; width: 100%; background-color: #fff; -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); }
             {$class_id}.kort.rund .box { max-width: calc({$a['bildestr']} * 5.5)!important; }
             /*{$class_id}.rad.kort .box { max-width: calc({$a['bildestr']} * 4); }*/
-            {$class_id}.stablet.kort .box { width: 100%; max-width: {$a['bildestr']};  margin: 0 auto; box-sizing: border-box;}
+            {$class_id}.stablet.kort .box { width: 100%; max-width: 100%;  margin: 0 auto; box-sizing: border-box;}
+            {$class_id}.stablet.kort .box:has(picture) { max-width: {$a['bildestr']};}
             {$class_id}.skygge.kort .box:hover { -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.3); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.3); box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.3); transition: transform ease 0.3s, box-shadow ease 0.3s; }
             {$class_id}.rad.beskrivelse .box,
             {$class_id}.rad.utdrag .box,
@@ -207,7 +211,8 @@ class GridStyles {
             {$class_id}:not(.utdrag) .text a { width: 100%; height: 100%; }
             {$class_id}.stablet .text { flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding-left: 0; }
             {$class_id}.stablet .text a { padding-top: .5em; }
-            {$class_id}.stablet.kort .text { padding: 0.5em .8em 1.3em .8em; }
+            {$class_id}.stablet.kort .text { padding: 0.9em .8em 0.9em .8em; }
+            {$class_id}.stablet.kort .text:has(picture) { padding: 0.5em .8em 1.3em .8em; }
             {$class_id}.rad .text { flex-direction: column; align-items: flex-start; justify-content: center;}
             {$class_id}.rad.kort .text { padding: 1em 1em 1em 0;}
             {$class_id}.rad .text a.title,
@@ -235,7 +240,7 @@ class GridStyles {
             /* Picture and Image */
             {$class_id} picture {aspect-ratio: {$a['bildeformat']}; border-radius: {$a['bildeform']}; display: block;  width:100%; max-width:{$a['bildestr']}; overflow: hidden; }
             {$class_id}.rund picture { aspect-ratio: 1/1;  max-width:{$a['bildestr']}; max-height:{$a['bildestr']}; }
-            {$class_id}.stablet.kort picture { padding: 0; width: 100%; max-width: {$a['bildestr']};}
+            {$class_id}.stablet.kort picture { padding: 0; width: 100%; max-width: {$a['bildestr']}; border-radius: {$a['bildeform']} {$a['bildeform']} 0 0;}
             {$class_id}.rad.kort:not(.rund) picture { max-width: calc({$a['bildestr']} * 0.85); padding: 0; border-radius: {$a['bildeform']} 0 0 {$a['bildeform']}; height: 100%;}
             {$class_id}.rad.kort.rund picture { max-width: calc({$a['bildestr']} * 0.85); padding: 0; }
             {$class_id} img {

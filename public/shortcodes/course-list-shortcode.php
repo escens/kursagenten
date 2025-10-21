@@ -77,7 +77,8 @@ function kursagenten_course_list_shortcode($atts) {
         'instruktør' => '',
         'språk' => '',
         'måned' => '',
-        'force_standard_view' => 'false'
+        'force_standard_view' => 'false',
+        'klasse' => ''
     ), $atts, 'kursliste');
 
     // Load required dependencies
@@ -350,8 +351,11 @@ function kursagenten_course_list_shortcode($atts) {
 
     // Start output buffering
     ob_start();
+    
+    // Add custom class if provided
+    $custom_class = !empty($atts['klasse']) ? ' ' . esc_attr($atts['klasse']) : '';
     ?>
-    <div id="ka" class="kursagenten-wrapper">
+    <div id="ka" class="kursagenten-wrapper<?php echo $custom_class; ?>">
     <main id="ka-m" class="kursagenten-main" role="main">
         <div class="ka-container">
             <!-- Mobile Filter Overlay -->

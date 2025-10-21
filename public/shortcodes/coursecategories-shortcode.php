@@ -50,7 +50,8 @@ class CourseCategories {
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
-            'vis' => 'standard'
+            'vis' => 'standard',
+            'klasse' => ''
         ];
 
         $a = shortcode_atts($defaults, $atts);
@@ -214,6 +215,7 @@ class CourseCategories {
         $utdrag = $a['utdrag'];
         $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
+        $custom_class = !empty($a['klasse']) ? ' ' . esc_attr($a['klasse']) : '';
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
@@ -221,7 +223,7 @@ class CourseCategories {
             $bildeformen = '';
         }
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
+        $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
         $output .= "<div class='wrapper'>";
 
         foreach ($terms as $term) {
@@ -273,22 +275,26 @@ class CourseCategories {
         // Short description (WP term description)
         $short_description = wpautop(wp_kses_post($term->description));
 
-        // Get image dimensions if it's from media library
-        $width = 300;
-        $height = 300;
+        // Check if images should be displayed
+        $show_image = !empty($a['bildestr']) && $a['bildestr'] !== '0' && $a['bildestr'] !== 0;
         
-        // Try to get actual dimensions if it's an attachment
-        $attachment_id = attachment_url_to_postid($thumbnail);
-        if ($attachment_id) {
-            $image_data = wp_get_attachment_image_src($attachment_id, 'thumbnail');
-            if ($image_data) {
-                $width = $image_data[1];
-                $height = $image_data[2];
+        $image_html = '';
+        if ($show_image) {
+            // Get image dimensions if it's from media library
+            $width = 300;
+            $height = 300;
+            
+            // Try to get actual dimensions if it's an attachment
+            $attachment_id = attachment_url_to_postid($thumbnail);
+            if ($attachment_id) {
+                $image_data = wp_get_attachment_image_src($attachment_id, 'thumbnail');
+                if ($image_data) {
+                    $width = $image_data[1];
+                    $height = $image_data[2];
+                }
             }
-        }
 
-        return "
-            <div class='box term-{$term->term_id}'>
+            $image_html = "
                 <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
                     <picture>
                         <img src='{$thumbnail}' 
@@ -298,7 +304,12 @@ class CourseCategories {
                              class='wp-image-{$term->term_id}' 
                              decoding='async'>
                     </picture>
-                </a>
+                </a>";
+        }
+
+        return "
+            <div class='box term-{$term->term_id}'>
+                {$image_html}
                 <div class='text box-inner'>
                     <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>

@@ -128,6 +128,16 @@ function kursagenten_admin_landing_page() {
                 </div>
 
 
+                <div id="meld-feil" class="options-card">
+                <h3>Meld feil og forbedringer</h3>
+                        <div class="kort">
+                            <p>Har du funnet feil eller har du forbedringsforslag? Vi hører gjerne fra deg. Vi jobber for å gjøre Kursagenten bedre for deg.<br>
+                                Send en epost rett til inboksen i Trello:</p>
+                            <p><a href="mailto:tonebhagen+p3gzydq7w8klqykuvdjs@app.trello.com?subject=WP%20Plugin%20tilbakemelding"><strong>Send til Trello</strong></a></p>
+                        </div>
+                    
+                </div>
+
             
         
 
