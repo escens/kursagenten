@@ -1,13 +1,14 @@
 <?php
 
-// Sjekk om vi er på en taksonomi-side
-$is_taxonomy_page = is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors');
+// Sjekk visningstype fra args
+$view_type = isset($args['view_type']) ? $args['view_type'] : 'all_coursedates';
+$is_taxonomy_page = isset($args['is_taxonomy_page']) && $args['is_taxonomy_page'];
 
 // Sjekk om vi skal tvinge standard visning (fra kortkode)
 $force_standard_view = isset($args['force_standard_view']) && $args['force_standard_view'] === true;
 
-// Hvis vi er på en taksonomi-side og ikke tvinger standard visning, hent kurs-informasjon
-if ($is_taxonomy_page && !$force_standard_view) {
+// Hvis visningstype er 'main_courses', vis hovedkurs med første tilgjengelige dato
+if ($view_type === 'main_courses' && !$force_standard_view) {
     $course_id = get_the_ID();
     $course_title = get_the_title();
     $excerpt = get_the_excerpt();
@@ -138,8 +139,8 @@ $item_class = $course_count === 1 ? ' single-item' : '';
 // Sjekk om bilder skal vises
 $show_images = get_option('kursagenten_show_images', 'yes');
 
-// Sjekk om vi er på en taksonomi-side
-if ((is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) && !$force_standard_view) {
+// Sjekk om vi er på en taksonomi-side med main_courses visning
+if ($is_taxonomy_page && $view_type === 'main_courses' && !$force_standard_view) {
     $taxonomy = get_queried_object()->taxonomy;
     $taxonomy_show_images = get_option("kursagenten_taxonomy_{$taxonomy}_show_images", '');
     
@@ -222,7 +223,7 @@ $category_slugs = array_unique($category_slugs);
                 </div>
                 <!-- Details area - date and location -->
                 <div class="details-area iconlist horizontal">
-                    <?php if ($is_taxonomy_page && !$force_standard_view) : ?>
+                    <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                         <?php if (!empty($first_course_date)) : ?>
                             <div class="startdate"><i class="ka-icon icon-calendar"></i> <strong>Neste kurs: &nbsp;</strong> <?php echo esc_html($first_course_date); ?></div>
                             <?php if (!empty($coursetime)) : ?><div class="coursetime"><i class="ka-icon icon-time"></i> <?php echo esc_html($coursetime); ?></div><?php endif; ?>
@@ -257,7 +258,7 @@ $category_slugs = array_unique($category_slugs);
                 </div>
                 <!-- Meta area -->
                 <div class="meta-area iconlist horizontal">
-                    <?php if ($is_taxonomy_page && !$force_standard_view) : ?>
+                    <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
 
                         <div class="all-courses"><a href="<?php echo esc_url($course_link); ?>">Se alle tilgjengelige kurssteder og datoer</a></div>
                     <?php else : ?>
@@ -289,7 +290,7 @@ $category_slugs = array_unique($category_slugs);
                     <?php if (!empty($excerpt)) : ?>
                         <p><strong>Kort beskrivelse: </strong><br><?php echo wp_kses_post($excerpt); ?></p>
                     <?php endif; ?>
-                    <?php if ($is_taxonomy_page && !$force_standard_view) : ?>
+                    <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                         <?php 
                         // Finn hovedkurset og alle tilgjengelige lokasjoner
                         $main_course_id = get_post_meta($course_id, 'main_course_id', true);
@@ -365,7 +366,7 @@ $category_slugs = array_unique($category_slugs);
             </div>
             
             <div class="links-area column">
-                <?php if ($is_taxonomy_page && !$force_standard_view) : ?>
+                <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                     <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
                         <?php echo esc_html($button_text ?: 'Påmelding'); ?>
                     </button>

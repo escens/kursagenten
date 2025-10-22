@@ -1,7 +1,11 @@
 <?php
 /**
- * Standard taksonomi-rammeverk
+ * Standard 2 taksonomi-design
  * Brukes for course_location, coursecategory og instructors
+ * Dette designet viser headerbildet i toppen og alternativt bilde i innholdet
+ * 
+ * Dette er et design-rammeverk som inneholder layout og struktur.
+ * Selve kurslistevisningen kommer fra list-types filene (standard.php, grid.php, compact.php)
  */
 
 if (!defined('ABSPATH')) exit;
@@ -21,13 +25,32 @@ $term_id = $term->term_id;
 $taxonomy = $term->taxonomy;
 $rich_description = get_term_meta($term_id, 'rich_description', true);
 $image_url = get_taxonomy_image($term_id, $taxonomy);
-$query = get_taxonomy_courses($term_id, $taxonomy);
 
-// Logg informasjon om termen vi bruker
-//error_log('Taxonomy template: Using term ID: ' . $term_id);
-//error_log('Taxonomy template: Using taxonomy: ' . $taxonomy);
-//error_log('Taxonomy template: Using term name: ' . $term->name);
-//error_log('Taxonomy template: Using term slug: ' . $term->slug);
+// Sjekk visningstype-innstilling
+$view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
+
+// Hent kurs basert på visningstype
+if ($view_type === 'all_coursedates') {
+    // Vis alle kursdatoer - bruk [kursliste] kortkoden
+    $shortcode_atts = [];
+    
+    if ($taxonomy === 'coursecategory') {
+        $shortcode_atts[] = 'kategori="' . esc_attr($term->slug) . '"';
+    } elseif ($taxonomy === 'course_location') {
+        $shortcode_atts[] = 'sted="' . esc_attr($term->name) . '"';
+    } elseif ($taxonomy === 'instructors') {
+        $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
+    }
+    
+    $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+    $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
+    
+    $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
+    $query = null;
+} else {
+    // Vis hovedkurs (standard)
+    $query = get_taxonomy_courses($term_id, $taxonomy);
+}
 ?>
 
 <article class="ka-outer-container taxonomy-container">
@@ -86,6 +109,10 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                         echo esc_html($term->name);
                     }
                     ?></h1>
+                    <?php
+                    // Hook immediately after the H1 title in header block
+                    do_action('ka_taxonomy_after_title', $term);
+                    ?>
                     <?php if (!empty($term->description)): ?>
                         <div class="taxonomy-description">
                             <?php echo wp_kses_post($term->description); ?>
@@ -95,6 +122,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
             </div>
         </div>
     </header>
+
+    <?php
+    // Hook right after the taxonomy header/title
+    do_action('ka_taxonomy_header_after', $term);
+    ?>
 
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
@@ -135,19 +167,42 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 <?php endif; ?>
             </div>
 
-            <?php if ($query->have_posts()): ?>
+            <?php
+            // Hook below main image and extended description, before course list
+            do_action('ka_taxonomy_below_description', $term);
+            ?>
+
+            <?php if ($view_type === 'all_coursedates'): ?>
+                <!-- Bruk [kursliste] shortcode -->
                 <div class="taxonomy-coursedates">
                     <h2>Tilgjengelige kurs</h2>
+                    <?php
+                    do_action('ka_courselist_before', $term);
+                    echo do_shortcode($shortcode);
+                    do_action('ka_courselist_after', $term);
+                    ?>
+                </div>
+            <?php elseif ($query && $query->have_posts()): ?>
+                <!-- Vis hovedkurs -->
+                <div class="taxonomy-coursedates">
+                    <h2>Tilgjengelige kurs</h2>
+                    <?php
+                    do_action('ka_courselist_before', $term);
+                    ?>
                     
-                    <!-- Bruk samme system som i archive/default.php -->
+                    <!-- Kursliste - bruker valgt list-type -->
                     <div class="courselist-items" id="filter-results">
                         <?php
                         $args = [
                             'course_count' => $query->found_posts,
-                            'query' => $query
+                            'query' => $query,
+                            'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null,
+                            'view_type' => $view_type,
+                            'is_taxonomy_page' => true
                         ];
 
                         while ($query->have_posts()) : $query->the_post();
+                            // Inkluder valgt list-type (standard, grid, compact)
                             get_course_template_part($args);
                         endwhile;
                         ?>
@@ -159,8 +214,9 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             <div class="pagination">
                             <?php
                             // Generate pagination links
+                            $base_url = $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : get_term_link($term);
                             echo paginate_links([
-                                'base' => get_term_link($term) . '?%_%',
+                                'base' => $base_url . '?%_%',
                                 'current' => max(1, $query->get('paged')),
                                 'format' => 'side=%#%',
                                 'total' => $query->max_num_pages,
@@ -174,6 +230,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             </div>
                         </div>
                     <?php endif; ?>
+
+                    <?php
+                    // Hook after pagination controls
+                    do_action('ka_taxonomy_pagination_after', $term);
+                    ?>
                 </div>
             <?php else: ?>
                 <div class="no-courses-message">
@@ -181,7 +242,11 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 </div>
             <?php endif; ?>
             <?php wp_reset_postdata(); ?>
+
+            <?php
+            // Hook below the course list (taxonomy footer)
+            do_action('ka_taxonomy_footer', $term);
+            ?>
         </div>
     </section>
 </article>
-

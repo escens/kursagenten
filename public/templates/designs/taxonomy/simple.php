@@ -1,7 +1,10 @@
 <?php
 /**
- * Standard taksonomi-rammeverk
+ * Simple taksonomi-design (uten bilde og beskrivelse)
  * Brukes for course_location, coursecategory og instructors
+ * 
+ * Dette er et design-rammeverk som inneholder layout og struktur.
+ * Selve kurslistevisningen kommer fra list-types filene (standard.php, grid.php, compact.php)
  */
 
 if (!defined('ABSPATH')) exit;
@@ -19,9 +22,32 @@ if (!isset($term->term_id) || !isset($term->taxonomy)) {
 // Hent nødvendig data
 $term_id = $term->term_id;
 $taxonomy = $term->taxonomy;
-$rich_description = get_term_meta($term_id, 'rich_description', true);
-$image_url = get_taxonomy_image($term_id, $taxonomy);
-$query = get_taxonomy_courses($term_id, $taxonomy);
+
+// Sjekk visningstype-innstilling
+$view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
+
+// Hent kurs basert på visningstype
+if ($view_type === 'all_coursedates') {
+    // Vis alle kursdatoer - bruk [kursliste] kortkoden
+    $shortcode_atts = [];
+    
+    if ($taxonomy === 'coursecategory') {
+        $shortcode_atts[] = 'kategori="' . esc_attr($term->slug) . '"';
+    } elseif ($taxonomy === 'course_location') {
+        $shortcode_atts[] = 'sted="' . esc_attr($term->name) . '"';
+    } elseif ($taxonomy === 'instructors') {
+        $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
+    }
+    
+    $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+    $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
+    
+    $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
+    $query = null;
+} else {
+    // Vis hovedkurs (standard)
+    $query = get_taxonomy_courses($term_id, $taxonomy);
+}
 ?>
 
 <article class="ka-outer-container taxonomy-container">
@@ -74,7 +100,7 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
         
-                <!-- Without content in left and right column -->
+                <!-- Uten innhold i venstre og høyre kolonne -->
 
             <?php
             // Hook below main image and extended description, before course list
@@ -146,24 +172,29 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                 <?php endif; ?>
 
 
-            <?php if ($query->have_posts()): ?>
+            <?php if ($view_type === 'all_coursedates'): ?>
+                <!-- Bruk [kursliste] shortcode -->
                 <div class="taxonomy-coursedates">
-                    <!-- <h2>Tilgjengelige kurs</h2> -->
                     <?php
-                    // Hook before the course list (above filters and pagination)
+                    do_action('ka_courselist_before', $term);
+                    echo do_shortcode($shortcode);
+                    do_action('ka_courselist_after', $term);
+                    ?>
+                </div>
+            <?php elseif ($query && $query->have_posts()): ?>
+                <!-- Vis hovedkurs -->
+                <div class="taxonomy-coursedates">
+                    <?php
                     do_action('ka_courselist_before', $term);
                     ?>
                     
+                    <!-- Enkelt kategorifilter (for hovedkurs) -->
                     <?php
-                    // Hent toppnivå kurskategorier for filtrering
                     $top_categories = get_top_level_categories_from_query($query);
-                    
-                    // Filtrer bort kategorier med teller 0
                     $top_categories = array_filter($top_categories, function($category) {
                         return $category['count'] > 0;
                     });
                     
-                    // Vis kun filteret hvis det er mer enn én kategori
                     if (count($top_categories) > 1): ?>
                         <div class="category-filter-wrapper">
                             <div class="category-filter">
@@ -182,12 +213,15 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                         </div>
                     <?php endif; ?>
                     
+                    <!-- Kursliste - bruker valgt list-type -->
                     <div class="courselist-items" id="filter-results">
                         <?php
                         $args = [
                             'course_count' => $query->found_posts,
                             'query' => $query,
-                            'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null
+                            'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null,
+                            'view_type' => $view_type,
+                            'is_taxonomy_page' => true
                         ];
 
                         while ($query->have_posts()) : $query->the_post();
@@ -195,6 +229,8 @@ $query = get_taxonomy_courses($term_id, $taxonomy);
                             $location_freetext = get_post_meta(get_the_ID(), 'course_location_freetext', true);
                             // Legg til data-location attributt i args
                             $args['data_location'] = $location_freetext;
+                            
+                            // Inkluder valgt list-type (standard, grid, compact)
                             get_course_template_part($args);
                         endwhile;
                         ?>

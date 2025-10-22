@@ -502,7 +502,34 @@ class Designmaler {
                 <div class="options-card" data-section="taksonomi">
                     <h3>Taksonomi-sider</h3>
                     <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</p>
+                    <p><strong>Design</strong> bestemmer layouten (header, kolonner, hooks). <strong>Listevisning</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). <strong>Visningstype</strong> bestemmer om du vil vise hovedkurs eller alle kursdatoer.</p>
                     <p>&nbsp;</p>
+                    
+                    <!-- Visningstype -->
+                    <div class="option-row">
+                        <label class="option-label">Visningstype:</label>
+                        <div class="option-input">
+                            <?php
+                            $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
+                            ?>
+                            <label class="radio-label">
+                                <input type="radio" 
+                                       name="kursagenten_taxonomy_view_type" 
+                                       value="main_courses" 
+                                       <?php checked($view_type, 'main_courses'); ?>>
+                                Vis hovedkurs (med neste tilgjengelige dato)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" 
+                                       name="kursagenten_taxonomy_view_type" 
+                                       value="all_coursedates" 
+                                       <?php checked($view_type, 'all_coursedates'); ?>>
+                                Vis alle kursdatoer (med filtre - som [kursliste])
+                            </label>
+                            <p class="description">Hovedkurs viser ett kurs per kursnavn med neste tilgjengelige dato. Alle kursdatoer viser hver enkelt kursdato som et eget element.</p>
+                        </div>
+                    </div>
+                    
                     <!-- Layoutbredde -->
                     <div class="option-row">
                         <label class="option-label">Bredde:</label>
@@ -532,10 +559,10 @@ class Designmaler {
                                 <?php
                                 $current_design = get_option('kursagenten_taxonomy_design', 'default');
                                 $designs = [
-                                    'default' => 'Standard - enkel kursliste',
-                                    'default-courselist-shortcode' => 'Standard - komplett kursliste',
-                                    'simple' => 'Uten bilde og beskrivelse - enkel kursliste',
-                                    'default-2' => 'Standard 2',
+                                    'default' => 'Standard - med bilde og beskrivelse',
+                                    'default-courselist-shortcode' => 'Med [kursliste] - kursdatoer og filtre (legacy - bruk Visningstype i stedet)',
+                                    'simple' => 'Enkel - uten bilde og beskrivelse',
+                                    'default-2' => 'Standard 2 - header bilde + innholdsbilde',
                                     'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {
@@ -885,6 +912,17 @@ class Designmaler {
                 'type' => 'integer',
                 'sanitize_callback' => 'absint',
                 'default' => 5
+            )
+        );
+
+        // Registrer visningstype for taksonomi
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_view_type',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'main_courses'
             )
         );
 

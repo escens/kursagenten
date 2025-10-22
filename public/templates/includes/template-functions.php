@@ -224,8 +224,11 @@ function get_course_template_part($args = []) {
     // Sjekk om vi skal tvinge standard visning (fra kortkode)
     $force_standard_view = isset($args['force_standard_view']) && $args['force_standard_view'] === true;
     
-    // Bestem hvilken listevisning som skal brukes basert på kontekst
-    if ($force_standard_view) {
+    // Sjekk om list_type er sendt som parameter (fra shortcode)
+    // Bruk isset() og sjekk at det ikke er tom string
+    if (isset($args['list_type']) && $args['list_type'] !== '' && $args['list_type'] !== null) {
+        $style = $args['list_type'];
+    } elseif ($force_standard_view) {
         // Tving standard visning uansett kontekst
         $style = get_option('kursagenten_archive_list_type', 'standard');
     } elseif (is_post_type_archive('course')) {

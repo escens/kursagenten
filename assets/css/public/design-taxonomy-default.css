@@ -403,7 +403,7 @@
     }
 }*/
 
-/* Kategori-filter styling */
+/* Kategori-filter styling - hovedkurs visning*/
 #ka .category-filter-wrapper {
     margin-bottom: 2rem;
     padding: 1.5rem;
@@ -429,6 +429,26 @@
     gap: 0.75rem;
 }
 
+/* Kategori-filter styling - kursdato og filter visning*/
+#ka .reset-filters-btn,
+#ka .reset-filters-btn:hover {
+background: transparent;
+box-shadow: none;
+}
+
+.filter-empty,
+.filter-category:has(.filter-empty) {
+    display: none!important;
+}
+
+
+.tax-coursecategory #ka .filter-category.has-parent .checkbox-label {
+    font-size: 1em;
+    opacity: 1;
+}
+.filter-item:not(:has(.filter-available,.filter-search )) {
+    display: none;
+  }
 
 /*
 #ka .category-btn {

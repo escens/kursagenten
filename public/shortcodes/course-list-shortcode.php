@@ -78,7 +78,8 @@ function kursagenten_course_list_shortcode($atts) {
         'språk' => '',
         'måned' => '',
         'force_standard_view' => 'false',
-        'klasse' => ''
+        'klasse' => '',
+        'list_type' => '' // standard, grid, compact
     ), $atts, 'kursliste');
 
     // Load required dependencies
@@ -142,8 +143,8 @@ function kursagenten_course_list_shortcode($atts) {
         $has_shortcode_filters = true;
     }
 
-    // Hent valgt listetype fra innstillinger
-    $list_type = get_option('kursagenten_archive_list_type', 'standard');
+    // Hent valgt listetype fra innstillinger eller shortcode parameter
+    $list_type = !empty($atts['list_type']) ? $atts['list_type'] : get_option('kursagenten_archive_list_type', 'standard');
 
     // Last inn riktig CSS-fil basert på listetype
     if ($list_type === 'grid') {
@@ -793,7 +794,10 @@ function kursagenten_course_list_shortcode($atts) {
                                         $args = [
                                             'course_count' => $query->found_posts,
                                             'query' => $query,
-                                            'force_standard_view' => $atts['force_standard_view'] === 'true'
+                                            'force_standard_view' => $atts['force_standard_view'] === 'true',
+                                            'list_type' => $list_type,
+                                            'view_type' => 'all_coursedates',
+                                            'is_taxonomy_page' => false
                                         ];
 
                                         
