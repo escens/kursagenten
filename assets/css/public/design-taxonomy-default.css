@@ -4,6 +4,9 @@
     margin: 0 auto;
     padding: 2rem 1rem;
 }
+#ka.ka-full-width .taxonomy-container {
+    max-width: 100%;
+}
 
 /* Header Styles */
 #ka .ka-taxonomy-header {
@@ -177,6 +180,19 @@
     margin-top: 2rem;
 }
 
+#ka .courselist-content.open p.locations-list a{
+    color: #666;
+    font-size: var(--ka-font-xs);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    padding: 0.1em 0;
+}
+
+#ka .courselist-content.open p.locations-list a:hover {
+    text-decoration: underline;
+    text-decoration-color: #e6e6e6;
+}
+
 /* Paginering */
 #ka .pagination-wrapper {
     margin-top: 2rem;
@@ -262,6 +278,34 @@
     border: 2px solid var(--ka-color-lighter);
 }
 
+/* Location card as Google Maps link */
+#ka .location-card.location-map-link {
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+#ka .location-card.location-map-link:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+}
+
+#ka .location-card.location-map-link .map-link-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    color: var(--ka-color, #eb2599);
+    font-size: 0.9rem;
+}
+
+#ka .location-card.location-map-link .map-link-indicator i {
+    font-size: 1.2em;
+}
+
 #ka .location-card::after {
     content: '';
     position: absolute;
@@ -302,9 +346,6 @@
 
 #ka .location-address .street {
     font-weight: 500;
-}
-
-#ka .location-address .postal {
 }
 
 /* Kart-ikon styling */

@@ -1,66 +1,7 @@
-/* Taxonomy Template Styles */
-#ka .taxonomy-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-}
+/* Default-2 Taxonomy Design - Kun unike overrides */
+/* Dette designet har header-bilde + innholdsbilde */
 
-/* Header Styles */
-#ka .ka-taxonomy-header {
-    padding: 3rem 0;
-    margin-bottom: 2rem;
-}
-
-#ka .taxonomy-header-content {
-    text-align: center;
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-#ka .taxonomy-header-content h1 {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-#ka .taxonomy-description {
-    font-size: 1.1rem;
-    line-height: 1.6;
-    color: #666;
-}
-
-/* Main Content Styles */
-#ka .taxonomy-content-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-bottom: 3rem;
-}
-
-@media (min-width: 768px) {
-    #ka .taxonomy-content-grid {
-        grid-template-columns: 1fr 2fr;
-    }
-}
-
-#ka .taxonomy-image img {
-    width: 100%;
-    height: auto;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-#ka .taxonomy-rich-description {
-    font-size: 1.1rem;
-    line-height: 1.7;
-    color: #333;
-}
-#ka .taxonomy-rich-description h3{
-    margin-top: 1rem;
-}
-
-/* Ny css for bilder og oppsett*/
-
+/* Unikt oppsett for header med bilde */
 .taxonomy-header-content {
     display: flex;
     align-items: flex-start;
@@ -91,7 +32,7 @@
     margin-bottom: 1rem;
 }
 
-/* Eksisterende grid-layout for hovedinnholdet */
+/* Override content grid for dette designet */
 .taxonomy-content-grid {
     display: grid;
     grid-template-columns: 1fr 2fr;
@@ -105,7 +46,7 @@
     border-radius: 8px;
 }
 
-/* Responsivt design */
+/* Responsive design */
 @media (max-width: 768px) {
     .taxonomy-header-content {
         flex-direction: column;
@@ -116,159 +57,4 @@
     .taxonomy-content-grid {
         grid-template-columns: 1fr;
     }
-} 
-
-
-
-
-
-
-
-
-
-/* Course Dates Grid */
-#ka .taxonomy-coursedates {
-    margin-top: 3rem;
-}
-
-#ka .taxonomy-coursedates h2 {
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    color: #333;
-}
-
-#ka .coursedates-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-}
-
-#ka .coursedate-card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    overflow: hidden;
-    transition: transform 0.2s ease;
-}
-
-#ka .coursedate-card:hover {
-    transform: translateY(-4px);
-}
-
-#ka .coursedate-image {
-    height: 200px;
-    overflow: hidden;
-}
-
-#ka .coursedate-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-#ka .coursedate-content {
-    padding: 1.5rem;
-}
-
-#ka .coursedate-content h3 {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    color: #333;
-}
-
-#ka .coursedate-meta {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    color: #666;
-}
-
-#ka .coursedate-meta i {
-    margin-right: 0.5rem;
-}
-
-#ka .ka-button {
-    display: inline-block;
-    padding: 0.5rem 1.5rem;
-    background-color: #007bff;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background-color 0.2s ease;
-}
-
-#ka .ka-button:hover {
-    background-color: #0056b3;
-    color: white;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 767px) {
-    #ka .taxonomy-header-content {
-        padding: 0 1rem;
-    }
-    
-    #ka .coursedates-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    #ka .taxonomy-content-grid {
-        gap: 1.5rem;
-    }
-}
-
-/* Kurslistevisning */
-#ka .courselist-items {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 2rem;
-    margin-top: 2rem;
-}
-
-/* Paginering */
-#ka .pagination-wrapper {
-    margin-top: 2rem;
-    text-align: center;
-}
-
-#ka .pagination {
-    display: inline-flex;
-    gap: 0.5rem;
-}
-
-#ka .pagination a,
-#ka .pagination span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    background-color: #f5f5f5;
-    color: #333;
-    text-decoration: none;
-    transition: background-color 0.2s ease;
-}
-
-#ka .pagination a:hover {
-    background-color: #e0e0e0;
-}
-
-#ka .pagination .current {
-    background-color: #007bff;
-    color: white;
-}
-
-/* Melding når ingen kurs er tilgjengelige */
-#ka .no-courses-message {
-    padding: 2rem;
-    background-color: #f8f9fa;
-    border-radius: 8px;
-    text-align: center;
-    margin-top: 2rem;
-}
-
-#ka .no-courses-message p {
-    font-size: 1.1rem;
-    color: #666;
 }

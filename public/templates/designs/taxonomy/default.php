@@ -173,7 +173,31 @@ if ($view_type === 'all_coursedates') {
                             <h3>Spesifikke lokasjoner</h3>
                             <div class="specific-locations-grid">
                                 <?php foreach ($specific_locations as $location): ?>
-                                    <div class="location-card" title="Vis kurs i <?php echo esc_attr($location['description']); ?>" data-location="<?php echo esc_attr($location['description']); ?>">
+                                    <?php
+                                    // Bygg Google Maps-lenke
+                                    $maps_link = '';
+                                    if (!empty($location['address'])) {
+                                        $address_parts = array_filter([
+                                            $location['address']['street'] ?? '',
+                                            $location['address']['number'] ?? '',
+                                            $location['address']['zipcode'] ?? '',
+                                            $location['address']['place'] ?? ''
+                                        ]);
+                                        $full_address = implode(' ', $address_parts);
+                                        if (!empty($full_address)) {
+                                            $maps_link = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($full_address);
+                                        }
+                                    }
+                                    
+                                    // Hvis "Alle kursdatoer", gjør hele boksen til Maps-link
+                                    $is_map_link = ($view_type === 'all_coursedates' && !empty($maps_link));
+                                    $card_tag = $is_map_link ? 'a' : 'div';
+                                    $card_attrs = $is_map_link 
+                                        ? 'href="' . esc_url($maps_link) . '" target="_blank" rel="noopener noreferrer" title="Åpne ' . esc_attr($location['description']) . ' i Google Maps"'
+                                        : 'title="Vis kurs i ' . esc_attr($location['description']) . '" data-location="' . esc_attr($location['description']) . '"';
+                                    $card_class = $is_map_link ? 'location-card location-map-link' : 'location-card';
+                                    ?>
+                                    <<?php echo $card_tag; ?> class="<?php echo $card_class; ?>" <?php echo $card_attrs; ?>>
                                         <div class="location-content">
                                             <h4><?php echo esc_html($location['description']); ?></h4>
                                             <?php if (!empty($location['address'])): ?>
@@ -184,18 +208,7 @@ if ($view_type === 'all_coursedates') {
                                                             <?php if (!empty($location['address']['number'])): ?>
                                                                 <?php echo esc_html($location['address']['number']); ?>
                                                             <?php endif; ?>
-                                                            <?php 
-                                                            // Bygg Google Maps-lenke
-                                                            $address_parts = array_filter([
-                                                                $location['address']['street'],
-                                                                $location['address']['number'],
-                                                                $location['address']['zipcode'],
-                                                                $location['address']['place']
-                                                            ]);
-                                                            $full_address = implode(' ', $address_parts);
-                                                            if (!empty($full_address)): 
-                                                                $maps_link = 'https://www.google.com/maps/search/?api=1&query=' . urlencode($full_address);
-                                                            ?>
+                                                            <?php if (!$is_map_link && !empty($maps_link)): ?>
                                                                 <a href="<?php echo esc_url($maps_link); ?>" 
                                                                    target="_blank" 
                                                                    rel="noopener noreferrer" 
@@ -221,8 +234,14 @@ if ($view_type === 'all_coursedates') {
                                                     <?php endif; ?>
                                                 </div>
                                             <?php endif; ?>
+                                            <?php if ($is_map_link): ?>
+                                                <div class="map-link-indicator">
+                                                    <i class="ka-icon icon-map-marker"></i>
+                                                    <span>Åpne i Google Maps</span>
+                                                </div>
+                                            <?php endif; ?>
                                         </div>
-                                    </div>
+                                    </<?php echo $card_tag; ?>>
                                 <?php endforeach; ?>
                             </div>
                         </div>
@@ -371,6 +390,11 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentCategory = 'all';
 
     locationCards.forEach(card => {
+        // Skip location-cards som er Google Maps-linker
+        if (card.classList.contains('location-map-link')) {
+            return;
+        }
+        
         card.addEventListener('click', function(e) {
             // Ikke trigger hvis man klikker på kart-ikonet
             if (e.target.closest('.maps-link')) {

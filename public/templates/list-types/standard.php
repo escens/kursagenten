@@ -260,7 +260,7 @@ $category_slugs = array_unique($category_slugs);
                 <div class="meta-area iconlist horizontal">
                     <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
 
-                        <div class="all-courses"><a href="<?php echo esc_url($course_link); ?>">Se alle tilgjengelige kurssteder og datoer</a></div>
+                        <div class="all-courses"><span class="clickopen show-locations-link">Se alle tilgjengelige kurssteder og datoer</span></div>
                     <?php else : ?>
                         <?php if (!empty($coursetime) || !empty($course_days)) : ?>
                             <div class="coursetime">
@@ -292,15 +292,15 @@ $category_slugs = array_unique($category_slugs);
                     <?php endif; ?>
                     <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                         <?php 
-                        // Finn hovedkurset og alle tilgjengelige lokasjoner
+                        // Find main course and all available locations
                         $main_course_id = get_post_meta($course_id, 'main_course_id', true);
                         
-                        // Hvis dette er et hovedkurs, bruk course_id som main_course_id
+                        // If this is a main course, use course_id as main_course_id
                         if (empty($main_course_id)) {
                             $main_course_id = $course_id;
                         }
                         
-                        // Hent alle kursdatoer som tilhører hovedkurset
+                        // Get all coursedates for the main course
                         $all_coursedates = get_posts([
                             'post_type' => 'coursedate',
                             'posts_per_page' => -1,
@@ -309,39 +309,215 @@ $category_slugs = array_unique($category_slugs);
                             ],
                         ]);
                         
-                        // Samle inn alle unike lokasjoner
-                        $location_list = [];
-                        $location_count = 0;
+                        // Collect all location data with dates
+                        $locations_with_dates = [];
+                        $locations_without_dates = [];
                         
                         if (!empty($all_coursedates)) {
                             foreach ($all_coursedates as $coursedate) {
-                                $coursedate_location = get_post_meta($coursedate->ID, 'course_location', true);
-                                $coursedate_location_freetext = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+                                // Get location_id (API ID) to find the related course subpage
+                                $coursedate_location_id = get_post_meta($coursedate->ID, 'location_id', true);
+                                $coursedate_main_course_id = get_post_meta($coursedate->ID, 'main_course_id', true);
                                 
-                                // Bygg lokasjonstekst
-                                $location_text = '';
-                                if (!empty($coursedate_location) && !empty($coursedate_location_freetext)) {
-                                    $location_text = $coursedate_location . ' - ' . $coursedate_location_freetext;
-                                } elseif (!empty($coursedate_location)) {
-                                    $location_text = $coursedate_location;
-                                } elseif (!empty($coursedate_location_freetext)) {
-                                    $location_text = $coursedate_location_freetext;
-                                }
+                                // Get location terms for this coursedate
+                                $location_terms = get_the_terms($coursedate->ID, 'course_location');
                                 
-                                // Legg til unike lokasjoner
-                                if (!empty($location_text) && !in_array($location_text, $location_list)) {
-                                    $location_list[] = esc_html($location_text);
-                                    $location_count++;
+                                if (!empty($location_terms) && !is_wp_error($location_terms) && !empty($coursedate_location_id)) {
+                                    foreach ($location_terms as $location_term) {
+                                        $location_slug = $location_term->slug;
+                                        $location_name = $location_term->name;
+                                        
+                                        // Find the WordPress post (subcourse) for this location
+                                        $sub_course = get_posts([
+                                            'post_type' => 'course',
+                                            'posts_per_page' => 1,
+                                            'meta_query' => [
+                                                'relation' => 'AND',
+                                                [
+                                                    'key' => 'location_id',
+                                                    'value' => $coursedate_location_id,
+                                                    'compare' => '='
+                                                ],
+                                                [
+                                                    'key' => 'main_course_id',
+                                                    'value' => $coursedate_main_course_id,
+                                                    'compare' => '='
+                                                ]
+                                            ]
+                                        ]);
+                                        
+                                        // Get URL to the course subpage
+                                        $location_url = !empty($sub_course) ? get_permalink($sub_course[0]->ID) : '';
+                                        
+                                        // Get freetext location
+                                        $location_freetext = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+                                        
+                                        // Get course date
+                                        $course_first_date = get_post_meta($coursedate->ID, 'course_first_date', true);
+                                        
+                                        if (!empty($course_first_date) && !empty($location_url)) {
+                                            $formatted_date = ka_format_date($course_first_date);
+                                            
+                                            // Store with date for sorting - use unique key with location_id
+                                            $unique_key = $location_slug . '_' . $coursedate_location_id;
+                                            if (!isset($locations_with_dates[$unique_key])) {
+                                                $locations_with_dates[$unique_key] = [
+                                                    'slug' => $location_slug,
+                                                    'location_id' => $coursedate_location_id,
+                                                    'location_name' => $location_name,
+                                                    'location_freetext' => $location_freetext,
+                                                    'url' => $location_url,
+                                                    'dates' => [],
+                                                ];
+                                            } else {
+                                                // Update freetext if we find a better one (non-empty)
+                                                if (!empty($location_freetext) && empty($locations_with_dates[$unique_key]['location_freetext'])) {
+                                                    $locations_with_dates[$unique_key]['location_freetext'] = $location_freetext;
+                                                }
+                                            }
+                                            
+                                            $locations_with_dates[$unique_key]['dates'][] = [
+                                                'date' => $formatted_date,
+                                                'date_raw' => $course_first_date,
+                                            ];
+                                        }
+                                    }
                                 }
                             }
                         }
                         
-                        // Vis lokasjonsinformasjon
-                        if ($location_count > 1) : ?>
-                            <p><strong>Dette kurset er tilgjengelig på flere steder:</strong><br>
-                            <?php echo implode('<br>', $location_list); ?></p>
-                        <?php elseif ($location_count === 1) : ?>
-                            <p><strong>Kurssted:</strong> <?php echo $location_list[0]; ?></p>
+                        // Find locations without dates by checking all coursedates for this course
+                        $all_location_ids = [];
+                        if (!empty($all_coursedates)) {
+                            foreach ($all_coursedates as $coursedate) {
+                                $coursedate_location_id = get_post_meta($coursedate->ID, 'location_id', true);
+                                $coursedate_main_course_id = get_post_meta($coursedate->ID, 'main_course_id', true);
+                                $location_terms = get_the_terms($coursedate->ID, 'course_location');
+                                
+                                if (!empty($location_terms) && !is_wp_error($location_terms) && !empty($coursedate_location_id)) {
+                                    foreach ($location_terms as $location_term) {
+                                        $location_slug = $location_term->slug;
+                                        $unique_key = $location_slug . '_' . $coursedate_location_id;
+                                        
+                                        // Check if this location already has dates in our list
+                                        if (!isset($locations_with_dates[$unique_key]) && !isset($all_location_ids[$coursedate_location_id])) {
+                                            // Check if this location has any coursedate with a date
+                                            $has_date_for_this_location = false;
+                                            $location_freetext_for_no_date = '';
+                                            
+                                            foreach ($all_coursedates as $check_coursedate) {
+                                                $check_location_id = get_post_meta($check_coursedate->ID, 'location_id', true);
+                                                if ($check_location_id == $coursedate_location_id) {
+                                                    $check_date = get_post_meta($check_coursedate->ID, 'course_first_date', true);
+                                                    
+                                                    // Collect freetext while checking
+                                                    if (empty($location_freetext_for_no_date)) {
+                                                        $location_freetext_for_no_date = get_post_meta($check_coursedate->ID, 'course_location_freetext', true);
+                                                    }
+                                                    
+                                                    if (!empty($check_date)) {
+                                                        $has_date_for_this_location = true;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                            
+                                            // If no dates found for this location, add to locations without dates
+                                            if (!$has_date_for_this_location) {
+                                                // Find the WordPress post (subcourse) for this location
+                                                $sub_course = get_posts([
+                                                    'post_type' => 'course',
+                                                    'posts_per_page' => 1,
+                                                    'meta_query' => [
+                                                        'relation' => 'AND',
+                                                        [
+                                                            'key' => 'location_id',
+                                                            'value' => $coursedate_location_id,
+                                                            'compare' => '='
+                                                        ],
+                                                        [
+                                                            'key' => 'main_course_id',
+                                                            'value' => $coursedate_main_course_id,
+                                                            'compare' => '='
+                                                        ]
+                                                    ]
+                                                ]);
+                                                
+                                                $location_url = !empty($sub_course) ? get_permalink($sub_course[0]->ID) : '';
+                                                
+                                                if (!empty($location_url)) {
+                                                    // Build display name with freetext if available
+                                                    $display_name = $location_term->name;
+                                                    if (!empty($location_freetext_for_no_date)) {
+                                                        $display_name .= ' (' . $location_freetext_for_no_date . ')';
+                                                    }
+                                                    
+                                                    $locations_without_dates[] = [
+                                                        'name' => $display_name,
+                                                        'url' => $location_url,
+                                                        'location_id' => $coursedate_location_id,
+                                                    ];
+                                                    $all_location_ids[$coursedate_location_id] = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Sort locations with dates by first date
+                        $sorted_locations_with_dates = [];
+                        foreach ($locations_with_dates as $unique_key => $location_data) {
+                            // Sort dates for this location
+                            usort($location_data['dates'], function($a, $b) {
+                                return strcmp($a['date_raw'], $b['date_raw']);
+                            });
+                            
+                            // Build display name with freetext if available
+                            $display_name = $location_data['location_name'];
+                            if (!empty($location_data['location_freetext'])) {
+                                $display_name .= ' (' . $location_data['location_freetext'] . ')';
+                            }
+                            
+                            // Add to sorted array with first date for sorting
+                            $sorted_locations_with_dates[] = [
+                                'name' => $display_name,
+                                'url' => $location_data['url'],
+                                'dates' => $location_data['dates'],
+                                'first_date_raw' => $location_data['dates'][0]['date_raw'],
+                            ];
+                        }
+                        
+                        // Sort by first date
+                        usort($sorted_locations_with_dates, function($a, $b) {
+                            return strcmp($a['first_date_raw'], $b['first_date_raw']);
+                        });
+                        
+                        // Sort locations without dates alphabetically
+                        usort($locations_without_dates, function($a, $b) {
+                            return strcmp($a['name'], $b['name']);
+                        });
+                        
+                        // Display location information
+                        $location_count = count($sorted_locations_with_dates) + count($locations_without_dates);
+                        
+                        if ($location_count > 0) : ?>
+                            <p class="locations-list"><strong>Kursteder og datoer:</strong><br>
+                            <?php 
+                            // Display locations with dates first
+                            foreach ($sorted_locations_with_dates as $location_data) {
+                                foreach ($location_data['dates'] as $date_info) {
+                                    echo '<a href="' . esc_url($location_data['url']) . '">' . esc_html($location_data['name']) . ' - ' . esc_html($date_info['date']) . '</a><br>';
+                                }
+                            }
+                            
+                            // Display locations without dates
+                            foreach ($locations_without_dates as $location_data) {
+                                echo '<a href="' . esc_url($location_data['url']) . '">' . esc_html($location_data['name']) . '</a><br>';
+                            }
+                            ?>
+                            </p>
                         <?php else : ?>
                             <p>Lokasjon for kurset er ikke satt opp ennå.</p>
                         <?php endif; ?>

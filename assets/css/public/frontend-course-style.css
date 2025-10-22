@@ -661,6 +661,13 @@ z-index: 10000;
   font-size: var(--ka-font-xs);
   color: #666;
 }
+#ka .courselist-main .meta-area .show-locations-link {
+  cursor: pointer;
+}
+#ka .courselist-main .meta-area .show-locations-link:hover {
+  color: var(--ka-color-dark);
+  text-decoration: none;
+}
 #ka .courselist-main .meta-area .accordion-icon{
   font-size: var(--ka-font-base);
   top: -2px;
@@ -699,6 +706,17 @@ z-index: 10000;
   }
   #ka .courselist-content.open p{
     margin-bottom: .6em;
+    }
+  #ka .courselist-content.open p a {
+    color: var(--ka-color);
+    text-decoration: none;
+    display: inline-block;
+    padding: 0.2em 0;
+    transition: color 0.2s ease;
+    }
+  #ka .courselist-content.open p a:hover {
+    color: var(--ka-color-dark);
+    text-decoration: underline;
     }
 
 /* --Course available */

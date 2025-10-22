@@ -501,34 +501,12 @@ class Designmaler {
                 <!-- Taxonomi -->
                 <div class="options-card" data-section="taksonomi">
                     <h3>Taksonomi-sider</h3>
-                    <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</p>
-                    <p><strong>Design</strong> bestemmer layouten (header, kolonner, hooks). <strong>Listevisning</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). <strong>Visningstype</strong> bestemmer om du vil vise hovedkurs eller alle kursdatoer.</p>
+                    <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</br>
+                    <strong>Design</strong> bestemmer layouten (header, kolonner, hooks).</br>
+                     <strong>Listevisning</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). </br>
+                     <strong>Visningstype</strong> bestemmer om du vil vise hovedkurs eller alle kursdatoer.</p>
                     <p>&nbsp;</p>
                     
-                    <!-- Visningstype -->
-                    <div class="option-row">
-                        <label class="option-label">Visningstype:</label>
-                        <div class="option-input">
-                            <?php
-                            $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
-                            ?>
-                            <label class="radio-label">
-                                <input type="radio" 
-                                       name="kursagenten_taxonomy_view_type" 
-                                       value="main_courses" 
-                                       <?php checked($view_type, 'main_courses'); ?>>
-                                Vis hovedkurs (med neste tilgjengelige dato)
-                            </label>
-                            <label class="radio-label">
-                                <input type="radio" 
-                                       name="kursagenten_taxonomy_view_type" 
-                                       value="all_coursedates" 
-                                       <?php checked($view_type, 'all_coursedates'); ?>>
-                                Vis alle kursdatoer (med filtre - som [kursliste])
-                            </label>
-                            <p class="description">Hovedkurs viser ett kurs per kursnavn med neste tilgjengelige dato. Alle kursdatoer viser hver enkelt kursdato som et eget element.</p>
-                        </div>
-                    </div>
                     
                     <!-- Layoutbredde -->
                     <div class="option-row">
@@ -548,6 +526,7 @@ class Designmaler {
                                        <?php checked(get_option('kursagenten_taxonomy_layout'), 'full-width'); ?>>
                                 Full bredde
                             </label>
+                            <span style="color: #666; font-style: italic;">Endrer sidebredde. Gå til <a href="/wp-admin/admin.php?page=design#section-designvariabler">Designvariabler</a> for å endre maks innholdbredde.</span>
                         </div>
                     </div>
 
@@ -560,8 +539,7 @@ class Designmaler {
                                 $current_design = get_option('kursagenten_taxonomy_design', 'default');
                                 $designs = [
                                     'default' => 'Standard - med bilde og beskrivelse',
-                                    'default-courselist-shortcode' => 'Med [kursliste] - kursdatoer og filtre (legacy - bruk Visningstype i stedet)',
-                                    'simple' => 'Enkel - uten bilde og beskrivelse',
+                                    'simple' => 'Enkel - Kun tittel og kort beskrivelse',
                                     'default-2' => 'Standard 2 - header bilde + innholdsbilde',
                                     'modern' => 'Moderne (kommer senere)'
                                 ];
@@ -603,6 +581,31 @@ class Designmaler {
                         </div>
                     </div>
                     
+                    <!-- Visningstype -->
+                    <div class="option-row">
+                        <label class="option-label">Visningstype:</label>
+                        <div class="option-input">
+                            <?php
+                            $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
+                            ?>
+                            <label class="radio-label">
+                                <input type="radio" 
+                                       name="kursagenten_taxonomy_view_type" 
+                                       value="main_courses" 
+                                       <?php checked($view_type, 'main_courses'); ?>>
+                                Vis hovedkurs (med neste tilgjengelige dato)
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" 
+                                       name="kursagenten_taxonomy_view_type" 
+                                       value="all_coursedates" 
+                                       <?php checked($view_type, 'all_coursedates'); ?>>
+                                Vis alle kursdatoer (med filtre - som [kursliste])
+                            </label>
+                            <p class="description" style="color: #666; font-style: italic;">Hovedkurs viser ett kurs per kursnavn, med neste tilgjengelige dato. Alle kursdatoer viser hver enkelt kursdato som et eget element.</p>
+                        </div>
+                    </div>
+
                     <!-- Vis bilder -->
                     <div class="option-row">
                         <label class="option-label">Vis bilder:</label>
