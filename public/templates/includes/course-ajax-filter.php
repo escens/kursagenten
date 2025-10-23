@@ -38,10 +38,11 @@ function get_filtered_terms_for_context($taxonomy) {
                 ]);
                 
                 if (!is_wp_error($child_categories) && !empty($child_categories)) {
-                    // Legg til parent-informasjon på barnekategoriene
+                    // IKKE legg til parent-informasjon når barnekategoriene skal vises som flat liste
+                    // Dette forhindrer at de får ka-child klassen og blir skjult av CSS
                     foreach ($child_categories as $child) {
-                        $child->parent_class = 'has-parent';
-                        $child->parent_id = $current_term->term_id;
+                        $child->parent_class = '';
+                        $child->parent_id = 0;
                     }
                     return $child_categories;
                 } else {
@@ -683,6 +684,11 @@ function ka_load_mobile_filters() {
             wp_send_json_error(['message' => 'Invalid nonce']);
             return;
         }
+        
+        // Hent active_shortcode_filters fra POST data
+        $active_shortcode_filters = isset($_POST['active_shortcode_filters']) && is_array($_POST['active_shortcode_filters']) 
+            ? $_POST['active_shortcode_filters'] 
+            : [];
         
         // Last inn nødvendige filer
         if (!function_exists('get_course_languages')) {

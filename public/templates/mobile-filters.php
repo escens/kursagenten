@@ -94,7 +94,7 @@ $taxonomy_data = [
     ],
     'locations' => [
         'taxonomy' => 'course_location',
-        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('course_location') : get_terms(['taxonomy' => 'course_location', 'hide_empty' => true]),
+        'terms' => function_exists('get_filtered_location_terms') ? get_filtered_location_terms() : (function_exists('get_filtered_terms') ? get_filtered_terms('course_location') : get_terms(['taxonomy' => 'course_location', 'hide_empty' => true])),
         'url_key' => 'sted',
         'filter_key' => 'locations',
     ],
@@ -132,6 +132,31 @@ foreach ($filter_params as $param) {
     }
 }
 
+// Hent active_shortcode_filters variabel hvis den ikke allerede er definert
+// Den kommer fra AJAX-handleren, men vi har en fallback for direktevisning
+if (!isset($active_shortcode_filters)) {
+    $active_shortcode_filters = [];
+}
+
+// Function to check if a filter should be hidden due to shortcode parameters or taxonomy page
+if (!function_exists('should_hide_filter_mobile')) {
+    function should_hide_filter_mobile($filter_key, $active_shortcode_filters) {
+        // Spesiell håndtering for coursecategory taksonomi-sider
+        if ($filter_key === 'categories' && is_tax('coursecategory')) {
+            // Sjekk om vi er på en foreldrekategori (som har barn)
+            $current_term = get_queried_object();
+            if ($current_term && $current_term->parent == 0) {
+                // Vi er på en foreldrekategori - vis barnekategorier
+                return false;
+            } else {
+                // Vi er på en underkategori - skjul hele kategori-filteret
+                return true;
+            }
+        }
+        return in_array($filter_key, $active_shortcode_filters);
+    }
+}
+
 // Start output buffering
 ob_start();
 ?>
@@ -145,6 +170,11 @@ ob_start();
             // Sjekk om filteret er gyldig
             if (!isset($available_filters[$filter])) {
                 error_log('Skipping invalid filter: ' . $filter);
+                continue;
+            }
+            
+            // Skip filters that are active in shortcode
+            if (should_hide_filter_mobile($filter, $active_shortcode_filters)) {
                 continue;
             }
             ?>

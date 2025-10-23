@@ -1287,7 +1287,8 @@ function kursagenten_course_list_shortcode($atts) {
                 type: 'POST',
                 data: {
                     action: 'load_mobile_filters',
-                    nonce: kurskalender_data.filter_nonce
+                    nonce: kurskalender_data.filter_nonce,
+                    active_shortcode_filters: kurskalender_data.active_shortcode_filters || []
                 },
                 success: function(response) {
                     // log('Mottok AJAX-respons:', response);

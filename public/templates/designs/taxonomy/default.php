@@ -519,6 +519,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const noCoursesMessage = document.getElementById('no-courses-filtered');
         const courseList = document.getElementById('filter-results');
         
+        // Sjekk om elementene eksisterer før vi prøver å aksessere dem
+        if (!noCoursesMessage || !courseList) {
+            return;
+        }
+        
         if (visibleCount === 0) {
             noCoursesMessage.style.display = 'block';
             courseList.classList.add('hidden');
