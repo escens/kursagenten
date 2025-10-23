@@ -27,6 +27,10 @@ $taxonomy = $term->taxonomy;
 // Sjekk visningstype-innstilling
 $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
 
+// Get list_type and show_images settings with proper override handling (used by both view types)
+$list_type = get_taxonomy_setting($taxonomy, 'list_type', 'standard');
+$show_images = get_taxonomy_setting($taxonomy, 'show_images', 'yes');
+
 // Hent kurs basert på visningstype
 if ($view_type === 'all_coursedates') {
     // Vis alle kursdatoer - bruk [kursliste] kortkoden
@@ -40,16 +44,7 @@ if ($view_type === 'all_coursedates') {
         $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
     }
     
-    $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
     $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
-    
-    // Legg til bildevisning fra taksonomi-innstillinger
-    $taxonomy_show_images = get_option("kursagenten_taxonomy_{$taxonomy}_show_images", '');
-    if (!empty($taxonomy_show_images)) {
-        $show_images = $taxonomy_show_images;
-    } else {
-        $show_images = get_option('kursagenten_show_images_taxonomy', 'yes');
-    }
     $shortcode_atts[] = 'bilder="' . esc_attr($show_images) . '"';
     
     $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
@@ -84,7 +79,8 @@ if ($view_type === 'all_coursedates') {
                         'query' => $query,
                         'view_type' => $view_type,
                         'is_taxonomy_page' => true,
-                        'list_type' => $list_type
+                        'list_type' => $list_type,
+                        'shortcode_show_images' => $show_images
                     ];
 
                     while ($query->have_posts()) : $query->the_post();

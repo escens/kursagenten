@@ -198,12 +198,22 @@ function get_taxonomy_setting($taxonomy, $setting, $default = '') {
         
         // If value is empty or not set, fall back to general taxonomy setting
         if ($value === '' || $value === false) {
-            $value = get_option("kursagenten_taxonomy_{$setting}", $default);
+            // Special handling for show_images - option name has different format
+            if ($setting === 'show_images') {
+                $value = get_option("kursagenten_show_images_taxonomy", $default);
+            } else {
+                $value = get_option("kursagenten_taxonomy_{$setting}", $default);
+            }
         }
         
         return $value;
     }
     
     // If override not enabled, use general taxonomy setting
+    // Special handling for show_images - option name has different format
+    if ($setting === 'show_images') {
+        return get_option("kursagenten_show_images_taxonomy", $default);
+    }
+    
     return get_option("kursagenten_taxonomy_{$setting}", $default);
 }

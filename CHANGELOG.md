@@ -18,7 +18,9 @@
 - Endret: Lagt inn mulighet for å legge inn egen klasse på kortkoder (lister) for custom styling
 - Endret: I kortkoder for lister vil ikke bilder lenger lastes inn om attributt bildestr blir satt til 0
 - Fix: Feil i taksonomi-maler. I malene var det ikke mulig å velge listetype (grid/standard). Nå er det mulig å velge listetype, samt å velge å vise kun hovedkurs i listen (med Neste kursdato) eller alle kursdatoer
-- Lagt til: Ny kursliste-mal - "Kompakt". Helt enkel, med mulighet for å vise kursbilde
+- Lagt til: Ny kursliste-mal - "Kompakt". Enkelt og kompakt, med mulighet for å vise kursbilde
+- Lagt til: Ny kursliste-mal - "Enkel". Enkelt og ren, med mulighet for å vise kursbilde
+- Lagt til: Attributter i [kursliste]. Nå kan det manuelt legges inn bilder=yes/no og list_type=grid/plain/compact/standard
 
 ## 1.0.4 - 2025-10-16
 - Stabilisert henting av filer fra Kursagenten. Ved mange kurs har det hendt at synk feiler.

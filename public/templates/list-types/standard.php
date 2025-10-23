@@ -138,10 +138,11 @@ $item_class = $course_count === 1 ? ' single-item' : '';
 
 // Sjekk om bilder skal vises
 // Prioritet: shortcode attributt > taksonomi-spesifikk innstilling > global innstilling
-$shortcode_show_images = isset($args['shortcode_show_images']) ? $args['shortcode_show_images'] : '';
+$shortcode_show_images = isset($args['shortcode_show_images']) ? $args['shortcode_show_images'] : null;
 
-if (!empty($shortcode_show_images)) {
-    // Bruk shortcode attributt hvis satt
+// If shortcode explicitly sets bilder parameter to 'yes' or 'no', use it
+if ($shortcode_show_images === 'yes' || $shortcode_show_images === 'no') {
+    // Bruk shortcode attributt hvis eksplisitt satt til yes eller no
     $show_images = $shortcode_show_images;
 } elseif ($is_taxonomy_page && !$force_standard_view) {
     // Taksonomi-side: bruk taksonomi-innstillinger med proper override handling

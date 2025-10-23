@@ -195,6 +195,7 @@ Write-Info "Oppretter ZIP-fil..."
 
 try {
     Add-Type -Assembly "System.IO.Compression.FileSystem"
+    Add-Type -Assembly "System.IO.Compression"
     
     # Slett eksisterende arkiv hvis det finnes
     if (Test-Path $ZipFilePath) {
