@@ -52,6 +52,7 @@ class SecureUpdater {
         // Sørg for fersk update-info når Plugins/Update-sider lastes (unngå gammel cache med feil URL)
         add_action('load-plugins.php', function() { delete_transient($this->cache_key); });
         add_action('load-update.php', function() { delete_transient($this->cache_key); });
+        add_action('load-update-core.php', function() { delete_transient($this->cache_key); });
     }
 
     /**
@@ -150,7 +151,10 @@ class SecureUpdater {
             $is_allowed_screen = $screen && in_array($screen->base, $allowed_bases, true);
             $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
             $is_our_ajax = $is_ajax && isset($_POST['action']) && $_POST['action'] === 'kursagenten_check_updates';
-            if (!$is_allowed_screen && !$is_our_ajax) {
+            // Allow during bulk updates and WordPress core update checks
+            $is_bulk_update = $is_ajax && isset($_POST['action']) && in_array($_POST['action'], array('update-plugin', 'update-selected'), true);
+            $is_update_check = isset($_GET['action']) && in_array($_GET['action'], array('check-plugin-updates', 'update-plugin'), true);
+            if (!$is_allowed_screen && !$is_our_ajax && !$is_bulk_update && !$is_update_check) {
                 return false;
             }
         }
@@ -496,6 +500,7 @@ class SecureUpdater {
 
         $remote = $this->request();
         if (!$remote) {
+            // Don't modify transient if request failed - keep existing update info
             return $transient;
         }
         if (is_array($remote)) { $remote = (object) $remote; }
@@ -526,8 +531,8 @@ class SecureUpdater {
                 $transient->response = [];
             }
             $transient->response[$plugin_file] = $response;
-        } else {
-            // No update available: ensure there's no stale response entry
+        } elseif (isset($remote->update_available) && $remote->update_available === false) {
+            // Only remove update entry if we explicitly know there's no update (not on API failure)
             if (isset($transient->response[$plugin_file])) {
                 unset($transient->response[$plugin_file]);
             }
