@@ -137,20 +137,19 @@ $course_count = $course_count ?? 0;
 $item_class = $course_count === 1 ? ' single-item' : '';
 
 // Sjekk om bilder skal vises
-$show_images = get_option('kursagenten_show_images', 'yes');
+// Prioritet: shortcode attributt > taksonomi-spesifikk innstilling > global innstilling
+$shortcode_show_images = isset($args['shortcode_show_images']) ? $args['shortcode_show_images'] : '';
 
-// Sjekk om vi er på en taksonomi-side med main_courses visning
-if ($is_taxonomy_page && $view_type === 'main_courses' && !$force_standard_view) {
+if (!empty($shortcode_show_images)) {
+    // Bruk shortcode attributt hvis satt
+    $show_images = $shortcode_show_images;
+} elseif ($is_taxonomy_page && !$force_standard_view) {
+    // Taksonomi-side: bruk taksonomi-innstillinger med proper override handling
     $taxonomy = get_queried_object()->taxonomy;
-    $taxonomy_show_images = get_option("kursagenten_taxonomy_{$taxonomy}_show_images", '');
-    
-    // Hvis det er satt en spesifikk innstilling for denne taksonomien, bruk den
-    if (!empty($taxonomy_show_images)) {
-        $show_images = $taxonomy_show_images;
-    } else {
-        // Ellers bruk den generelle taksonomi-innstillingen
-        $show_images = get_option('kursagenten_show_images_taxonomy', 'yes');
-    }
+    $show_images = get_taxonomy_setting($taxonomy, 'show_images', 'yes');
+} else {
+    // Standard: bruk global innstilling
+    $show_images = get_option('kursagenten_show_images', 'yes');
 }
 
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';

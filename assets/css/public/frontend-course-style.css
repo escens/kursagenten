@@ -12,7 +12,9 @@
   --ka-color-accent-disabled: hsl(310, 45%, 70%);
   --ka-color-accent-light: hsl(310, 45%, 90%);
   --ka-color-accent-dark: hsl(310, 45%, 30%);
-  --ka-alt-background: color-mix(in hsl, var(--ka-color), white 90%);
+  /*--ka-alt-background: color-mix(in hsl, var(--ka-color), white 90%);*/
+  --ka-alt-background: rgba(0, 0, 0, 0.02);
+  --ka-box-background: rgba(0, 0, 0, 0.02);
 
   --ka-color-filter: #494949;
   /* Base sizes - kan justeres etter behov */
@@ -191,7 +193,7 @@ button{
 /* --Box */
 /****************/
 #ka .ka-box {
-background: var(--ka-alt-background);
+background: var(--ka-box-background);
 margin: 1em 0;
 padding: 1em 1.5em;
 border-radius: 10px;
@@ -877,13 +879,15 @@ font-size: var(--ka-font-s);
   color: rgb(235, 121, 121);
   text-decoration: none;
   border-radius: 4px;
-  
+  background-color: transparent;
   font-size: 14px;
   display: none;
 }
 #ka a.reset-filters-btn:hover {
   color: rgb(241, 72, 72);
   font-weight: bold;
+  background-color: transparent;
+  box-shadow: none;
 }
 #ka .reset-filters-btn.active-filters {
 display: inline-block;

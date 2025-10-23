@@ -179,3 +179,31 @@ function get_taxonomy_courses($term_id, $taxonomy) {
     
     return $query;
 }
+
+/**
+ * Get taxonomy-specific setting with proper override handling
+ * 
+ * @param string $taxonomy The taxonomy name (coursecategory, course_location, instructors)
+ * @param string $setting The setting name (layout, design, list_type, show_images, name_display)
+ * @param string $default Default value if no setting is found
+ * @return string The setting value
+ */
+function get_taxonomy_setting($taxonomy, $setting, $default = '') {
+    // Check if override is enabled for this taxonomy
+    $override_enabled = get_option("kursagenten_taxonomy_{$taxonomy}_override", false);
+    
+    if ($override_enabled) {
+        // Get taxonomy-specific setting
+        $value = get_option("kursagenten_taxonomy_{$taxonomy}_{$setting}", '');
+        
+        // If value is empty or not set, fall back to general taxonomy setting
+        if ($value === '' || $value === false) {
+            $value = get_option("kursagenten_taxonomy_{$setting}", $default);
+        }
+        
+        return $value;
+    }
+    
+    // If override not enabled, use general taxonomy setting
+    return get_option("kursagenten_taxonomy_{$setting}", $default);
+}

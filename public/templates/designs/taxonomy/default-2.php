@@ -42,8 +42,12 @@ if ($view_type === 'all_coursedates') {
         $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
     }
     
-    $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+    // Get list_type and show_images settings with proper override handling
+    $list_type = get_taxonomy_setting($taxonomy, 'list_type', 'standard');
     $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
+    
+    $show_images = get_taxonomy_setting($taxonomy, 'show_images', 'yes');
+    $shortcode_atts[] = 'bilder="' . esc_attr($show_images) . '"';
     
     $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
     $query = null;
@@ -198,7 +202,8 @@ if ($view_type === 'all_coursedates') {
                             'query' => $query,
                             'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null,
                             'view_type' => $view_type,
-                            'is_taxonomy_page' => true
+                            'is_taxonomy_page' => true,
+                            'list_type' => $list_type
                         ];
 
                         while ($query->have_posts()) : $query->the_post();

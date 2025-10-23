@@ -233,6 +233,7 @@ class Designmaler {
                                 $list_types = [
                                     'standard' => 'Standard liste',
                                     'grid' => 'Rutenett',
+                                    'plain' => 'Ren og enkel liste',
                                     'compact' => 'Kompakt liste'
                                 ];
                                 foreach ($list_types as $value => $label) {
@@ -566,6 +567,7 @@ class Designmaler {
                                 $list_types = [
                                     'standard' => 'Standard liste',
                                     'grid' => 'Rutenett',
+                                    'plain' => 'Ren og enkel liste',
                                     'compact' => 'Kompakt liste'
                                 ];
                                 foreach ($list_types as $value => $label) {
@@ -602,7 +604,7 @@ class Designmaler {
                                        <?php checked($view_type, 'all_coursedates'); ?>>
                                 Vis alle kursdatoer (med filtre - som [kursliste])
                             </label>
-                            <p class="description" style="color: #666; font-style: italic;">Hovedkurs viser ett kurs per kursnavn, med neste tilgjengelige dato. Alle kursdatoer viser hver enkelt kursdato som et eget element.</p>
+                            <p class="description" style="color: #666; font-style: italic;">Hovedkurs viser ett kurs per kursnavn, med neste tilgjengelige dato. <br>Alle kursdatoer viser hver enkelt kursdato som et eget element. OBS! Adopterer filtre fra <a href="/wp-admin/admin.php?page=design&ka_open=filterinnstillinger%2Ctaksonomi#section-kursliste-med-filter">Kursliste</a>.</p>
                         </div>
                     </div>
 
@@ -639,6 +641,10 @@ class Designmaler {
                             ?>
                             <div class="taxonomy-override">
                                 <label class="checkbox-label">
+                                    <!-- Hidden input ensures value is always submitted -->
+                                    <input type="hidden" 
+                                           name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_override" 
+                                           value="0">
                                     <input type="checkbox" 
                                            name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_override" 
                                            value="1" 
@@ -652,9 +658,12 @@ class Designmaler {
                                         <label class="option-label">Bredde:</label>
                                         <div class="option-input">
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_layout">
-                                                <option value="">Bruk standard innstilling</option>
-                                                <option value="default" <?php selected(get_option("kursagenten_taxonomy_{$tax_name}_layout"), 'default'); ?>>Tema-standard</option>
-                                                <option value="full-width" <?php selected(get_option("kursagenten_taxonomy_{$tax_name}_layout"), 'full-width'); ?>>Full bredde</option>
+                                                <?php 
+                                                $current_tax_layout = get_option("kursagenten_taxonomy_{$tax_name}_layout", '');
+                                                ?>
+                                                <option value="" <?php selected($current_tax_layout, ''); ?>>Bruk standard innstilling</option>
+                                                <option value="default" <?php selected($current_tax_layout, 'default'); ?>>Tema-standard</option>
+                                                <option value="full-width" <?php selected($current_tax_layout, 'full-width'); ?>>Full bredde</option>
                                             </select>
                                         </div>
                                     </div>
@@ -664,10 +673,13 @@ class Designmaler {
                                         <label class="option-label">Design:</label>
                                         <div class="option-input">
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_design">
-                                                <option value="">Bruk standard innstilling</option>
+                                                <?php 
+                                                $current_tax_design = get_option("kursagenten_taxonomy_{$tax_name}_design", '');
+                                                ?>
+                                                <option value="" <?php selected($current_tax_design, ''); ?>>Bruk standard innstilling</option>
                                                 <?php foreach ($designs as $value => $label) : ?>
                                                     <option value="<?php echo esc_attr($value); ?>" 
-                                                            <?php selected(get_option("kursagenten_taxonomy_{$tax_name}_design"), $value); ?>>
+                                                            <?php selected($current_tax_design, $value); ?>>
                                                         <?php echo esc_html($label); ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -680,10 +692,13 @@ class Designmaler {
                                         <label class="option-label">Listevisning:</label>
                                         <div class="option-input">
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_list_type">
-                                                <option value="">Bruk standard innstilling</option>
+                                                <?php 
+                                                $current_tax_list_type = get_option("kursagenten_taxonomy_{$tax_name}_list_type", '');
+                                                ?>
+                                                <option value="" <?php selected($current_tax_list_type, ''); ?>>Bruk standard innstilling</option>
                                                 <?php foreach ($list_types as $value => $label) : ?>
                                                     <option value="<?php echo esc_attr($value); ?>" 
-                                                            <?php selected(get_option("kursagenten_taxonomy_{$tax_name}_list_type"), $value); ?>>
+                                                            <?php selected($current_tax_list_type, $value); ?>>
                                                         <?php echo esc_html($label); ?>
                                                     </option>
                                                 <?php endforeach; ?>
@@ -699,7 +714,7 @@ class Designmaler {
                                             $show_images_taxonomy_specific = get_option("kursagenten_taxonomy_{$tax_name}_show_images", '');
                                             ?>
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_show_images">
-                                                <option value="">Bruk standard innstilling</option>
+                                                <option value="" <?php selected($show_images_taxonomy_specific, ''); ?>>Bruk standard innstilling</option>
                                                 <option value="yes" <?php selected($show_images_taxonomy_specific, 'yes'); ?>>Ja</option>
                                                 <option value="no" <?php selected($show_images_taxonomy_specific, 'no'); ?>>Nei</option>
                                             </select>
@@ -715,7 +730,7 @@ class Designmaler {
                                             $name_display = get_option("kursagenten_taxonomy_{$tax_name}_name_display", '');
                                             ?>
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_name_display">
-                                                <option value="">Bruk standard innstilling</option>
+                                                <option value="" <?php selected($name_display, ''); ?>>Bruk standard innstilling</option>
                                                 <option value="full" <?php selected($name_display, 'full'); ?>>Fullt navn</option>
                                                 <option value="firstname" <?php selected($name_display, 'firstname'); ?>>Fornavn</option>
                                                 <option value="lastname" <?php selected($name_display, 'lastname'); ?>>Etternavn</option>
@@ -935,13 +950,13 @@ class Designmaler {
                       'instructors' => 'Instruktører'];
 
         foreach ($taxonomies as $tax_name => $tax_label) {
-            // Registrer override-innstilling
+            // Registrer override-innstilling med custom sanitize for å håndtere uskjekket checkbox
             register_setting(
                 'design_option_group',
                 "kursagenten_taxonomy_{$tax_name}_override",
                 array(
                     'type' => 'boolean',
-                    'sanitize_callback' => 'rest_sanitize_boolean',
+                    'sanitize_callback' => array($this, 'sanitize_checkbox_boolean'),
                     'default' => false
                 )
             );
@@ -1059,6 +1074,22 @@ class Designmaler {
         $css = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $css);
         
         return $css;
+    }
+
+    /**
+     * Sanitize boolean checkbox input
+     * Handles unchecked checkboxes by explicitly returning false
+     * 
+     * @param mixed $value The value to sanitize
+     * @return bool The sanitized boolean value
+     */
+    public function sanitize_checkbox_boolean($value) {
+        // If value is not set or empty, return false (checkbox not checked)
+        if (empty($value) || $value === '0' || $value === 0 || $value === false) {
+            return false;
+        }
+        // Otherwise return true (checkbox is checked)
+        return true;
     }
 
     public function enqueue_admin_scripts($hook) {

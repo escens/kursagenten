@@ -173,13 +173,14 @@
 }
 
 /* Kurslistevisning */
+/*
 #ka .courselist-items {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 2rem;
     margin-top: 2rem;
 }
-
+*/
 #ka .courselist-content.open p.locations-list a{
     color: #666;
     font-size: var(--ka-font-xs);
@@ -487,9 +488,10 @@ box-shadow: none;
     font-size: 1em;
     opacity: 1;
 }
-.filter-item:not(:has(.filter-available,.filter-search )) {
-    display: none;
-  }
+/* Skjul filter-item (både venstre kolonne og topp-dropdown) som ikke har tilgjengelige alternativer */
+.filter-item:not(:has(.filter-available, .filter-search)) {
+    display: none !important;
+}
 
 /*
 #ka .category-btn {
@@ -571,7 +573,7 @@ box-shadow: none;
     line-height: 1.6;
     margin-bottom: 2rem;
 }
-
+/*
 #ka .reset-filters-btn {
     display: inline-flex;
     align-items: center;
@@ -598,7 +600,7 @@ box-shadow: none;
     font-size: 1rem;
     margin: 0;
 }
-
+*/
 /* Responsive design for message */
 @media (max-width: 767px) {
     #ka .no-courses-filtered-message {

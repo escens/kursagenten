@@ -25,6 +25,19 @@ $taxonomy = $term->taxonomy;
 $rich_description = get_term_meta($term_id, 'rich_description', true);
 $image_url = get_taxonomy_image($term_id, $taxonomy);
 
+// Finn tilbake-lenke basert på taxonomy
+$back_link_mapping = [
+    'course_location' => 'kurssteder',
+    'coursecategory' => 'kurskategorier',
+    'instructors' => 'instruktorer'
+];
+$system_page_key = isset($back_link_mapping[$taxonomy]) ? $back_link_mapping[$taxonomy] : 'kurs';
+$back_link_url = Designmaler::get_system_page_url($system_page_key);
+
+// Hent sidetittel for tilbake-lenken
+$page_id = get_option('ka_page_' . $system_page_key);
+$back_link_title = $page_id && get_post($page_id) ? mb_strtolower(get_the_title($page_id)) : 'oversikten';
+
 // Sjekk visningstype-innstilling
 $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
 
@@ -43,9 +56,12 @@ if ($view_type === 'all_coursedates') {
         $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
     }
     
-    // Legg til list_type fra innstillinger
-    $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+    // Get list_type and show_images settings with proper override handling
+    $list_type = get_taxonomy_setting($taxonomy, 'list_type', 'standard');
     $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
+    
+    $show_images = get_taxonomy_setting($taxonomy, 'show_images', 'yes');
+    $shortcode_atts[] = 'bilder="' . esc_attr($show_images) . '"';
     
     // Bygg shortcode-string
     $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
@@ -64,10 +80,12 @@ if ($view_type === 'all_coursedates') {
             <div class="taxonomy-header-content">
                 
                 <h1>
-                <a href="javascript:history.back()" class="back-link" title="Gå tilbake">
+                <?php if (!empty($back_link_url)): ?>
+                <a href="<?php echo esc_url($back_link_url); ?>" class="back-link" title="Tilbake til <?php echo esc_attr($back_link_title); ?>">
                     <i class="ka-icon icon-circle-left-regular page-back-link"></i>
-                    <span class="sr-only">Tilbake til forrige side</span>
-                </a><?php 
+                    <span class="sr-only">Tilbake til <?php echo esc_html($back_link_title); ?></span>
+                </a>
+                <?php endif; ?><?php 
                 // Håndter navnevisning for instruktører
                 if ($taxonomy === 'instructors') {
                     $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
@@ -306,7 +324,8 @@ if ($view_type === 'all_coursedates') {
                             'query' => $query,
                             'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null,
                             'view_type' => $view_type,
-                            'is_taxonomy_page' => true
+                            'is_taxonomy_page' => true,
+                            'list_type' => $list_type
                         ];
 
                         while ($query->have_posts()) : $query->the_post();

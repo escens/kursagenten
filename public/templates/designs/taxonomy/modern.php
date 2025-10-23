@@ -43,6 +43,15 @@ if ($view_type === 'all_coursedates') {
     $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
     $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
     
+    // Legg til bildevisning fra taksonomi-innstillinger
+    $taxonomy_show_images = get_option("kursagenten_taxonomy_{$taxonomy}_show_images", '');
+    if (!empty($taxonomy_show_images)) {
+        $show_images = $taxonomy_show_images;
+    } else {
+        $show_images = get_option('kursagenten_show_images_taxonomy', 'yes');
+    }
+    $shortcode_atts[] = 'bilder="' . esc_attr($show_images) . '"';
+    
     $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
     $query = null;
 } else {
@@ -74,7 +83,8 @@ if ($view_type === 'all_coursedates') {
                         'course_count' => $query->found_posts,
                         'query' => $query,
                         'view_type' => $view_type,
-                        'is_taxonomy_page' => true
+                        'is_taxonomy_page' => true,
+                        'list_type' => $list_type
                     ];
 
                     while ($query->have_posts()) : $query->the_post();

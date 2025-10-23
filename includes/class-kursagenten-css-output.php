@@ -84,10 +84,7 @@ class Kursagenten_CSS_Output {
             $css .= '--ka-color-accent-dark: ' . "hsl($accent_h, {$accent_s}%, " . max(0, $base_accent_l - 8) . "%);";
         }
         
-        // Alt bakgrunn med color-mix
-        $css .= '--ka-alt-background: color-mix(in hsl, var(--ka-color), white 92%);';
-        $css .= '--ka-alt-background-darker: color-mix(in hsl, var(--ka-color-darker), white 90%);';
-        $css .= '--ka-alt-background-lighter: color-mix(in hsl, var(--ka-color-lighter), white 93%);';
+
         
         // Base skriftstørrelse
         $base_font = get_option('kursagenten_base_font', '16px');
@@ -214,18 +211,13 @@ class Kursagenten_CSS_Output {
                 $css .= '#ka { color: inherit; }';
             }
 
-            // Bakgrunn fremhevede områder
+            // Bakgrunn fremhevede områder - overskriver --ka-box-background
             $highlight_background = get_option('kursagenten_highlight_background', '');
             if ($highlight_background) {
-                $css .= '--ka-highlight-background: ' . esc_attr($highlight_background) . ';';
-                $css .= '--ka-highlight-background-lighter: ' . $this->adjust_lightness($highlight_background, 5) . ';';
-                $css .= '--ka-highlight-background-darker: ' . $this->adjust_lightness($highlight_background, -10) . ';';
-                
-                // Endre bakgrunn på fremhevede områder
-                $css .= '#ka .options-card { background-color: var(--ka-highlight-background); }';
-                $css .= '#ka .ka-box { background-color: var(--ka-highlight-background); }';
-                $css .= '#ka .course-container .details, #ka .course-container .ka-footer { background-color: var(--ka-highlight-background-lighter); }';
-                //$css .= '#ka .courselist-item { background-color: var(--ka-highlight-background); }';
+                // Override the default --ka-alt-background with custom color
+                $css .= '--ka-box-background: ' . esc_attr($highlight_background) . ';';
+                $css .= '--ka-box-background-lighter: ' . $this->adjust_lightness($highlight_background, 5) . ';';
+                $css .= '--ka-box-background-darker: ' . $this->adjust_lightness($highlight_background, -10) . ';';
             }
             
             // Hvis kun fremhevet bakgrunnsfarge er satt, bruk standard tekstfarge

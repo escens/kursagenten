@@ -79,7 +79,8 @@ function kursagenten_course_list_shortcode($atts) {
         'måned' => '',
         'force_standard_view' => 'false',
         'klasse' => '',
-        'list_type' => '' // standard, grid, compact
+        'list_type' => '', // standard, grid, compact
+        'bilder' => '' // yes, no - overstyr bildeinnstillinger
     ), $atts, 'kursliste');
 
     // Load required dependencies
@@ -146,12 +147,13 @@ function kursagenten_course_list_shortcode($atts) {
     // Hent valgt listetype fra innstillinger eller shortcode parameter
     $list_type = !empty($atts['list_type']) ? $atts['list_type'] : get_option('kursagenten_archive_list_type', 'standard');
 
-    // Last inn riktig CSS-fil basert på listetype
-    if ($list_type === 'grid') {
-        wp_enqueue_style('kursagenten-list-grid', KURSAG_PLUGIN_URL . '/assets/css/public/list-grid.css', array(), KURSAG_VERSION);
-    } else {
-        wp_enqueue_style('kursagenten-list-standard', KURSAG_PLUGIN_URL . '/assets/css/public/list-standard.css', array(), KURSAG_VERSION);
-    }
+    // Last inn riktig CSS-fil basert på listetype (dynamisk)
+    wp_enqueue_style(
+        'kursagenten-list-' . $list_type,
+        KURSAG_PLUGIN_URL . '/assets/css/public/list-' . $list_type . '.css',
+        array(),
+        KURSAG_VERSION
+    );
 
     // Enqueue required styles
     wp_enqueue_style('kursagenten-course-style', KURSAG_PLUGIN_URL . '/assets/css/public/frontend-course-style.css', array(), KURSAG_VERSION);
@@ -797,7 +799,8 @@ function kursagenten_course_list_shortcode($atts) {
                                             'force_standard_view' => $atts['force_standard_view'] === 'true',
                                             'list_type' => $list_type,
                                             'view_type' => 'all_coursedates',
-                                            'is_taxonomy_page' => false
+                                            'is_taxonomy_page' => false,
+                                            'shortcode_show_images' => $atts['bilder']
                                         ];
 
                                         
