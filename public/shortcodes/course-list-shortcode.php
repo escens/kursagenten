@@ -285,21 +285,7 @@ function kursagenten_course_list_shortcode($atts) {
         ],
         'locations' => [
             'taxonomy' => 'course_location',
-            'terms' => get_terms([
-                'taxonomy' => 'course_location',
-                'hide_empty' => true,
-                'meta_query' => [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'hide_in_course_list',
-                        'value' => 'Vis',
-                    ],
-                    [
-                        'key' => 'hide_in_course_list',
-                        'compare' => 'NOT EXISTS'
-                    ]
-                ]
-            ]),
+            'terms' => get_filtered_location_terms(),
             'url_key' => 'sted',
             'filter_key' => 'locations',
             'counts' => get_filter_value_counts('locations', $active_filters),

@@ -59,11 +59,25 @@ function get_filtered_terms_for_context($taxonomy) {
 
 // Funksjon for å hente filtrerte taksonomier
 function get_filtered_terms($taxonomy) {
-    // Hent alle synlige kurs
-    $visible_courses = get_posts([
-        'post_type' => 'course',
+    // Hent skjulte kategorier
+    $hidden_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Skjul',
+            ]
+        ],
+        'fields' => 'ids'
+    ]);
+
+    // Hent alle synlige coursedates (ikke courses!)
+    $coursedate_args = [
+        'post_type' => 'coursedate',
         'posts_per_page' => -1,
         'post_status' => 'publish',
+        'fields' => 'ids',
         'meta_query' => [
             'relation' => 'OR',
             [
@@ -75,7 +89,21 @@ function get_filtered_terms($taxonomy) {
                 'compare' => 'NOT EXISTS'
             ]
         ]
-    ]);
+    ];
+
+    // Ekskluder coursedates med skjulte kategorier
+    if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+        $coursedate_args['tax_query'] = [
+            [
+                'taxonomy' => 'coursecategory',
+                'field' => 'term_id',
+                'terms' => $hidden_categories,
+                'operator' => 'NOT IN'
+            ]
+        ];
+    }
+
+    $visible_coursedates = get_posts($coursedate_args);
 
     // Hent alle taksonomier med riktige parametre
     $args = [
@@ -104,33 +132,12 @@ function get_filtered_terms($taxonomy) {
 
     $all_terms = get_terms($args);
 
-    // Hent skjulte kategorier
-    $hidden_categories = get_terms([
-        'taxonomy' => 'coursecategory',
-        'hide_empty' => true,
-        'meta_query' => [
-            [
-                'key' => 'hide_in_course_list',
-                'value' => 'Skjul',
-            ]
-        ]
-    ]);
-
-    // Filtrer ut taksonomier som bare er knyttet til skjulte kurs eller kurs med skjulte kategorier
-    $filtered_terms = array_filter($all_terms, function($term) use ($visible_courses, $hidden_categories) {
-        foreach ($visible_courses as $course) {
-            if (has_term($term->term_id, $term->taxonomy, $course->ID)) {
-                $has_hidden_category = false;
-                foreach ($hidden_categories as $hidden_category) {
-                    if (has_term($hidden_category->term_id, 'coursecategory', $course->ID)) {
-                        $has_hidden_category = true;
-                        break;
-                    }
-                }
-                
-                if (!$has_hidden_category) {
-                    return true;
-                }
+    // Filtrer ut taksonomier som ikke har noen synlige coursedates
+    $filtered_terms = array_filter($all_terms, function($term) use ($visible_coursedates, $taxonomy) {
+        // Sjekk om minst én av de synlige coursedates har denne termen
+        foreach ($visible_coursedates as $coursedate_id) {
+            if (has_term($term->term_id, $taxonomy, $coursedate_id)) {
+                return true;
             }
         }
         return false;
@@ -166,11 +173,22 @@ function get_filtered_terms($taxonomy) {
             ]);
             
             if (!is_wp_error($child_terms)) {
+                // Filtrer også barnekategoriene mot synlige coursedates
                 foreach ($child_terms as $child) {
-                    // Legg til parent-informasjon på underkategoriene
-                    $child->parent_class = 'has-parent';
-                    $child->parent_id = $term->term_id;
-                    $final_terms[] = $child;
+                    $has_visible_coursedate = false;
+                    foreach ($visible_coursedates as $coursedate_id) {
+                        if (has_term($child->term_id, $taxonomy, $coursedate_id)) {
+                            $has_visible_coursedate = true;
+                            break;
+                        }
+                    }
+                    
+                    if ($has_visible_coursedate) {
+                        // Legg til parent-informasjon på underkategoriene
+                        $child->parent_class = 'has-parent';
+                        $child->parent_id = $term->term_id;
+                        $final_terms[] = $child;
+                    }
                 }
             }
         }
@@ -181,12 +199,58 @@ function get_filtered_terms($taxonomy) {
     return array_values($filtered_terms);
 }
 
-// Funksjon for å hente filtrerte språk
-function get_filtered_languages() {
-    $visible_courses = get_posts([
-        'post_type' => 'course',
+// Funksjon for å hente filtrerte lokasjoner
+function get_filtered_location_terms() {
+    // Hent skjulte kategorier
+    $hidden_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Skjul',
+            ]
+        ],
+        'fields' => 'ids'
+    ]);
+
+    // Hent alle synlige coursedates
+    $coursedate_args = [
+        'post_type' => 'coursedate',
         'posts_per_page' => -1,
         'post_status' => 'publish',
+        'fields' => 'ids',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ];
+
+    // Ekskluder coursedates med skjulte kategorier
+    if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+        $coursedate_args['tax_query'] = [
+            [
+                'taxonomy' => 'coursecategory',
+                'field' => 'term_id',
+                'terms' => $hidden_categories,
+                'operator' => 'NOT IN'
+            ]
+        ];
+    }
+
+    $visible_coursedates = get_posts($coursedate_args);
+
+    // Hent alle lokasjonstermer
+    $all_location_terms = get_terms([
+        'taxonomy' => 'course_location',
+        'hide_empty' => true,
         'meta_query' => [
             'relation' => 'OR',
             [
@@ -200,21 +264,42 @@ function get_filtered_languages() {
         ]
     ]);
 
-    $languages = [];
-    foreach ($visible_courses as $course) {
-        $language = get_post_meta($course->ID, 'course_language', true);
-        if (!empty($language)) {
-            $languages[$language] = $language;
-        }
+    if (is_wp_error($all_location_terms) || empty($all_location_terms)) {
+        return [];
     }
 
-    return array_values($languages);
+    // Filtrer ut lokasjoner som ikke har noen synlige coursedates
+    $filtered_locations = array_filter($all_location_terms, function($term) use ($visible_coursedates) {
+        // Sjekk om minst én av de synlige coursedates har denne lokasjonen
+        foreach ($visible_coursedates as $coursedate_id) {
+            $location = get_post_meta($coursedate_id, 'course_location', true);
+            if ($location === $term->name) {
+                return true;
+            }
+        }
+        return false;
+    });
+
+    return array_values($filtered_locations);
 }
 
-// Funksjon for å hente filtrerte måneder med årstall-støtte
-function get_filtered_months() {
-    // Hent kun coursedates siden månedene er lagret der
-    $visible_coursedates = get_posts([
+// Funksjon for å hente filtrerte språk
+function get_filtered_languages() {
+    // Hent skjulte kategorier
+    $hidden_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Skjul',
+            ]
+        ],
+        'fields' => 'ids'
+    ]);
+
+    // Hent alle synlige coursedates
+    $args = [
         'post_type' => 'coursedate',
         'posts_per_page' => -1,
         'post_status' => 'publish',
@@ -229,7 +314,79 @@ function get_filtered_months() {
                 'compare' => 'NOT EXISTS'
             ]
         ]
+    ];
+
+    // Ekskluder coursedates med skjulte kategorier
+    if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+        $args['tax_query'] = [
+            [
+                'taxonomy' => 'coursecategory',
+                'field' => 'term_id',
+                'terms' => $hidden_categories,
+                'operator' => 'NOT IN'
+            ]
+        ];
+    }
+
+    $visible_coursedates = get_posts($args);
+
+    $languages = [];
+    foreach ($visible_coursedates as $coursedate) {
+        $language = get_post_meta($coursedate->ID, 'course_language', true);
+        if (!empty($language)) {
+            $languages[strtolower($language)] = strtolower($language);
+        }
+    }
+
+    return array_values($languages);
+}
+
+// Funksjon for å hente filtrerte måneder med årstall-støtte
+function get_filtered_months() {
+    // Hent skjulte kategorier
+    $hidden_categories = get_terms([
+        'taxonomy' => 'coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Skjul',
+            ]
+        ],
+        'fields' => 'ids'
     ]);
+
+    // Hent kun coursedates siden månedene er lagret der
+    $args = [
+        'post_type' => 'coursedate',
+        'posts_per_page' => -1,
+        'post_status' => 'publish',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_course_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_course_list',
+                'compare' => 'NOT EXISTS'
+            ]
+        ]
+    ];
+
+    // Ekskluder coursedates med skjulte kategorier
+    if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
+        $args['tax_query'] = [
+            [
+                'taxonomy' => 'coursecategory',
+                'field' => 'term_id',
+                'terms' => $hidden_categories,
+                'operator' => 'NOT IN'
+            ]
+        ];
+    }
+
+    $visible_coursedates = get_posts($args);
 
     $months = [];
     $current_year = (int) date('Y');
