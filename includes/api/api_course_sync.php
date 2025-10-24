@@ -402,17 +402,26 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         $schedule_id = $schedule['id'] ?? 0;
 
         // Check if course date already exists based on schedule_id and location_id
-        $existing_post = get_posts([
+        $existing_posts = get_posts([
             'post_type' => 'coursedate',
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
                 ['key' => 'schedule_id', 'value' => $schedule_id],
                 ['key' => 'location_id', 'value' => $location_id],
             ],
-            'numberposts' => 1,
+            'numberposts' => -1, // Get ALL matches to detect duplicates
         ]);
 
-        $coursedate_id = $existing_post[0]->ID ?? null;
+        // If we have duplicates, delete all but the first one
+        if (count($existing_posts) > 1) {
+            error_log("⚠️ Fant " . count($existing_posts) . " duplikater av coursedate med schedule_id: $schedule_id og location_id: $location_id - sletter duplikater");
+            for ($i = 1; $i < count($existing_posts); $i++) {
+                wp_delete_post($existing_posts[$i]->ID, true);
+                error_log("🗑️ Slettet duplikat coursedate ID: " . $existing_posts[$i]->ID);
+            }
+        }
+
+        $coursedate_id = $existing_posts[0]->ID ?? null;
 
         // Get provider data
         // Create signup form url
@@ -553,10 +562,23 @@ function cleanup_coursedates($location_id, $schedules_from_api) {
         return $schedule['id'] ?? 0;
     }, $schedules_from_api);
 
+    // Track unique schedule_id combinations to detect duplicates
+    $seen_schedule_ids = [];
+
     // Sjekk hver kursdato
     foreach ($coursedates as $coursedate) {
         $schedule_id = get_post_meta($coursedate->ID, 'schedule_id', true);
         $related_post_id = get_post_meta($coursedate->ID, 'related_course', true);
+
+        // Check for duplicates - if we've seen this schedule_id before, delete this one
+        if (isset($seen_schedule_ids[$schedule_id])) {
+            error_log("⚠️ Fant duplikat coursedate med schedule_id: $schedule_id og location_id: $location_id - sletter duplikat ID: " . $coursedate->ID);
+            wp_delete_post($coursedate->ID, true);
+            continue; // Skip further checks for this duplicate
+        }
+        
+        // Mark this schedule_id as seen
+        $seen_schedule_ids[$schedule_id] = true;
 
         // Hvis schedule_id er 0, sjekk om det er en gyldig verdi
         if ($schedule_id === '0' || $schedule_id === 0) {

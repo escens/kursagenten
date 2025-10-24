@@ -440,8 +440,34 @@ function cleanup_courses_on_demand() {
                 ],
             ]);
             
+            // Track unique schedule_id + location_id combinations to detect duplicates
+            $seen_combinations = [];
+            
             foreach ($related_dates as $date) {
                 $schedule_id = get_post_meta($date->ID, 'schedule_id', true);
+                
+                // Create unique key for this combination
+                $unique_key = $location_id . '_' . $schedule_id;
+                
+                // Check for duplicates - if we've seen this combination before, delete this one
+                if (isset($seen_combinations[$unique_key])) {
+                    error_log("=== SLETTING AV DUPLIKAT KURSDATO ===");
+                    error_log("Kursdato ID: " . $date->ID);
+                    error_log("Tittel: " . $date->post_title);
+                    error_log("Location ID: " . $location_id);
+                    error_log("Schedule ID: " . $schedule_id);
+                    error_log("Dette er duplikat nummer " . ($seen_combinations[$unique_key] + 1));
+                    
+                    if (wp_delete_post($date->ID, true)) {
+                        $deleted_dates++;
+                        error_log("Slettet duplikat kursdato ID: " . $date->ID);
+                    }
+                    $seen_combinations[$unique_key]++;
+                    continue; // Skip further checks for this duplicate
+                }
+                
+                // Mark this combination as seen
+                $seen_combinations[$unique_key] = 1;
                 
                 // Sjekk om vi skal slette kursdatoen
                 $should_delete = false;
