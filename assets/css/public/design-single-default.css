@@ -96,8 +96,9 @@
         color: white;
         flex-wrap: wrap;
     }
-    #ka .iconlist.horizontal {
+    #ka .header-content .iconlist.horizontal {
         column-gap: 3em;
+        font-size: var(--ka-font-s-plus);
     }
     #ka .course-container .header-content i.ka-icon{
         background-color: var(--ka-color-lighter);
@@ -159,6 +160,7 @@
     #ka .courselist-item:last-child {
         border-bottom: none;
     }
+
     #ka .courselist-main .text-area {
         display: flex;
         flex-direction: row;
@@ -205,6 +207,21 @@
     #ka .location-tabs li {
         margin: 0;
     }
+
+    /* Next course */
+    #ka .nextcourse .iconlist{
+        row-gap: .7em;
+    }
+    #ka-main .nextcourse .iconlist i.ka-icon {
+        width: var(--ka-font-md);
+        height: var(--ka-font-md);
+    }
+    #ka .nextcourse .iconlist .signup-link i.ka-icon {
+        height: var(--ka-font-xs);
+    }
+    #ka .nextcourse .iconlist .signup-link {
+        margin-top: .5em;
+    }
     
         /*#ka .location-tabs li a {
         padding: 0.1em 0.8em;
@@ -246,6 +263,12 @@
   
 /* Course information */
 /**********************/
+    #ka .course-information {
+        padding-top: 3em;
+    }
+    #ka .course-information .excerpt {
+        font-size: 1.2em;
+    }
 
     #ka picture.course-image { aspect-ratio: 4/3; display: block; max-width: 100%; overflow: hidden; }
     #ka picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit: cover; object-position: center; border-radius: 10px; }

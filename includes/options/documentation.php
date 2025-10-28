@@ -389,7 +389,7 @@ class KA_Documentation_Page {
             <?php if (function_exists('kursagenten_icon_overview_shortcode')): ?>
                 <div id="tilgjengelige-ikoner" class="options-card">
                 <h3>Tilgjengelige ikoner</h3>
-                <p>Ikoner er tilgjengelige som html med css-klasser. Du kan bruke dem direkte i HTML-kode. Styr størrelse og farge med width, height og background-color på i.ka-icon. Eksempel:</p>
+                <p>Ikoner er tilgjengelige som html med css-klasser. Du kan bruke dem direkte i HTML-kode. Styr størrelse og farge med width, height og background-color på i.ka-icon. Husk å legge til <i>icon-</i> før navnet på ikonet. F.eks. icon-calendar. Eksempel:</p>
                 <pre><code class="copytext">&lt;i class="ka-icon icon-calendar"&gt;&lt;/i&gt;</code></pre> 
                 <style>
                     .ka-wrap i.ka-icon {

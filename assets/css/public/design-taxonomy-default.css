@@ -378,6 +378,9 @@
     }
 }
 
+
+
+
 /* Kurskort styling */
 /*#ka .ka-courses-grid {
     display: grid;
@@ -446,10 +449,10 @@
 }*/
 
 /* Kategori-filter styling - hovedkurs visning*/
+/**********************************************/
 #ka .category-filter-wrapper {
-    margin-bottom: 2rem;
     padding: 1.5rem;
-    background-color: var(--ka-alt-background);
+    /*background-color: var(--ka-alt-background);*/
     border-radius: 8px;
 }
 

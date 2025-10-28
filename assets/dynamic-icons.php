@@ -29,8 +29,8 @@ function kursagenten_dynamic_icons_css() {
 
     }
 }
-add_action('wp_head', 'kursagenten_dynamic_icons_css');
-add_action('admin_head', 'kursagenten_dynamic_icons_css');
+add_action('wp_head', 'kursagenten_dynamic_icons_css', 5);
+add_action('admin_head', 'kursagenten_dynamic_icons_css', 5);
 
 
 // Funksjon for å generere ikonoversikten

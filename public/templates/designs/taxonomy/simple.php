@@ -67,7 +67,7 @@ if ($view_type === 'all_coursedates') {
 }
 ?>
 
-<article class="ka-outer-container taxonomy-container">
+<article class="ka-outer-container taxonomy-container view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
     <header class="ka-section ka-taxonomy-header">
         <div class="ka-content-container">
             <div class="taxonomy-header-content">
@@ -236,7 +236,6 @@ if ($view_type === 'all_coursedates') {
                     if (count($top_categories) > 1): ?>
                         <div class="category-filter-wrapper">
                             <div class="category-filter">
-                                <span class="filter-label">Filtrer på kategori:</span>
                                 <div class="category-buttons">
                                     <button class="category-btn button-filter active" data-category="all">
                                         Alle (<?php echo $query->found_posts; ?>)
@@ -252,7 +251,7 @@ if ($view_type === 'all_coursedates') {
                     <?php endif; ?>
                     
                     <!-- Kursliste - bruker valgt list-type -->
-                    <div class="courselist-items" id="filter-results">
+                    <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results">
                         <?php
                         $args = [
                             'course_count' => $query->found_posts,

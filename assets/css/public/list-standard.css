@@ -14,9 +14,6 @@
     box-shadow: var(--ka-shadow-darker);
   }
 
-#ka .courselist-main {
-
-}
 #ka .courselist-main.with-image {
     display: flex;
     align-items: stretch;
@@ -119,6 +116,11 @@
 }
 #ka .courselist-main .links-area button {
     font-size: var(--ka-font-s);
+}
+/* View type styles */
+#ka .view-type-maincourses .courselist-main .links-area {
+    padding: 1.5em 1.5em 1.6em 0;
+    justify-content: center;
 }
 
 /* Meta area */

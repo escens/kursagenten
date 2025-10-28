@@ -192,11 +192,11 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                     <h1><?php the_title(); ?></h1>
                 <?php else : ?>
                     <h1><?php echo esc_html($main_course_title); ?>
-                    <span style="margin-top: .2em; display: block; font-size: .8em;"><span style="font-size: 1px; color: transparent;">- </span><?php echo esc_html($sub_course_location); ?></span>
+                    <span style="margin-top: .2em; display: block; font-size: var(--ka-font-lg); font-weight: 300;">- <?php echo esc_html($sub_course_location); ?></span>
                 </h1>
                     
                 <?php endif; ?>
-                <div class="header-links iconlist horizontal uppercase small">
+                <div class="header-links iconlist horizontal uppercase">
                     <div><a href="<?php echo esc_url(Designmaler::get_system_page_url('kurs')); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
                     <div class="taxonomy-list horizontal">
                         <?php if (!empty($coursecategory_links)) : ?>
@@ -393,9 +393,9 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                             <div><i class="ka-icon icon-bag"></i>Kurslokale: <?php echo esc_html($selected_coursedate_data['course_location_room']) ;?></div>
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
-                            <div><i class="ka-icon icon-chevron-right"></i>
-                                <a href="#" class="pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
-                                <strong><?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?></strong> 
+                            <div>
+                                <a href="#" class="pameldingskjema signup-link clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                                <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?> <i class="ka-icon icon-arrow-right-short"></i> 
                                 </a>
                             </div>
                     <?php endif; ?>
@@ -417,7 +417,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                     
                     <h2>Om kurset</h2>
                     <?php do_action('ka_singel_content_intro_before'); ?>
-                    <p><?php the_excerpt(); ?></p>
+                    <div class="excerpt"><?php the_excerpt(); ?></div>
                     <?php do_action('ka_singel_content_intro_after'); ?>
                     <?php do_action('ka_singel_content_before'); ?>
                     <!-- WP content -->

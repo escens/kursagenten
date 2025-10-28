@@ -134,9 +134,12 @@ if (!empty($course_categories) && !is_wp_error($course_categories)) {
     }
 }
 $category_slugs = array_unique($category_slugs);
+
+// Generate view type class
+$view_type_class = ' view-type-' . str_replace('_', '', $view_type);
 ?>
 
-<div class="courselist-item compact-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>" data-category="<?php echo esc_attr(implode(' ', $category_slugs)); ?>">
+<div class="courselist-item compact-item<?php echo $item_class . $view_type_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>" data-category="<?php echo esc_attr(implode(' ', $category_slugs)); ?>">
     <div class="compact-course-content">
         <div class="compact-course-info-wrapper">
             <?php if ($show_images === 'yes') : ?>

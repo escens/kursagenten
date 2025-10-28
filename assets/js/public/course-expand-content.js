@@ -136,7 +136,7 @@ function toggleAccordion(target) {
         icon.textContent = "+";
     } else {
         // Åpne denne seksjonen
-        content.style.height = content.scrollHeight + 10 + "px";
+        content.style.height = content.scrollHeight + 30 + "px";
         content.classList.add("open");
         accordionItem.classList.add("active");
         icon.textContent = "×";

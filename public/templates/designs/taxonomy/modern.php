@@ -55,7 +55,7 @@ if ($view_type === 'all_coursedates') {
 }
 ?>
 
-<article class="ka-outer-container taxonomy-container modern-design">
+<article class="ka-outer-container taxonomy-container modern-design view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
     <header class="ka-section ka-taxonomy-header">
         <div class="ka-content-container">
             <h1><?php echo esc_html($term->name); ?></h1>
@@ -72,7 +72,7 @@ if ($view_type === 'all_coursedates') {
                 <?php echo do_shortcode($shortcode); ?>
             <?php elseif ($query && $query->have_posts()): ?>
                 <!-- Vis hovedkurs -->
-                <div class="courselist-items" id="filter-results">
+                <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results">
                     <?php
                     $args = [
                         'course_count' => $query->found_posts,

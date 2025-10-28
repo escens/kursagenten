@@ -137,6 +137,8 @@
 .ka-text-lg { font-size: var(--ka-font-lg); }
 .ka-text-xl { font-size: var(--ka-font-xl); }
 
+.ka-main-color { color: var(--ka-color); }
+
 #ka-main p {
   margin: .5em 0 1em;
 }
@@ -198,6 +200,27 @@ margin: 1em 0;
 padding: 1em 1.5em;
 border-radius: 10px;
 }
+
+/* --Buttons and links */
+/**********/
+#ka .pameldingskjema {
+  padding-bottom: .5em;
+  padding-top: .5em;
+}
+
+#ka .signup-link {
+  color: var(--ka-color);
+  background: transparent;
+  text-decoration: none;
+  font-size: var(--ka-font-s);
+}
+#ka .signup-link:hover {
+  color: color-mix(in hsl, var(--ka-color), black 5%);
+}
+#ka .signup-link > i.ka-icon {
+  margin-left: 0.3em;
+}
+
 /* --Icons */
 /**********/
 .kag i.ka-icon {
@@ -399,7 +422,7 @@ border-radius: 8px;
 
 #ka .button-filter.active:hover,
 #ka .active .button-filter:hover {
-  background: var(--ka-color-hover, #0056b3);
+  background: var(--ka-color-darker, #0056b3);
   color: white;
 }
 

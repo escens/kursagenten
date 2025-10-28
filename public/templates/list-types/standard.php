@@ -193,8 +193,11 @@ if (!empty($course_categories) && !is_wp_error($course_categories)) {
     }
 }
 $category_slugs = array_unique($category_slugs);
+
+// Generate view type class
+$view_type_class = ' view-type-' . str_replace('_', '', $view_type);
 ?>
-<div class="courselist-item<?php echo $item_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>" data-category="<?php echo esc_attr(implode(' ', $category_slugs)); ?>">
+<div class="courselist-item<?php echo $item_class . $view_type_class; ?>" data-location="<?php echo esc_attr($location_freetext); ?>" data-category="<?php echo esc_attr(implode(' ', $category_slugs)); ?>">
     <div class="courselist-main<?php echo $with_image_class; ?>">
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
@@ -225,7 +228,7 @@ $category_slugs = array_unique($category_slugs);
                 <div class="details-area iconlist horizontal">
                     <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                         <?php if (!empty($first_course_date)) : ?>
-                            <div class="startdate"><i class="ka-icon icon-calendar"></i> <strong>Neste kurs: &nbsp;</strong> <?php echo esc_html($first_course_date); ?></div>
+                            <div class="startdate"><i class="ka-icon icon-calendar"></i> <span class="ka-main-color">Neste kurs: &nbsp;</span> <?php echo esc_html($first_course_date); ?></div>
                             <?php if (!empty($coursetime)) : ?><div class="coursetime"><i class="ka-icon icon-time"></i> <?php echo esc_html($coursetime); ?></div><?php endif; ?>
                         <?php endif; ?>
                         <?php if (!empty($location)) : ?>
@@ -543,15 +546,16 @@ $category_slugs = array_unique($category_slugs);
             
             <div class="links-area column">
                 <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
-                    <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
-                        <?php echo esc_html($button_text ?: 'Påmelding'); ?>
-                    </button>
+                    <a class="pamelding signup-link pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
+                        <?php echo esc_html($button_text ?: 'Påmelding'); ?>  <i class="ka-icon icon-arrow-right-short"></i>
+                    </a>
                 <?php else : ?>
                     <button class="courselist-button pamelding pameldingsknapp pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
                         <?php echo esc_html($button_text ?: 'Påmelding'); ?>
                     </button>
+                    <a href="<?php echo esc_url($course_link); ?>" class="course-link small">Mer informasjon</a>
                 <?php endif; ?>
-                <a href="<?php echo esc_url($course_link); ?>" class="course-link small">Mer informasjon</a>
+                
             </div>
         </div>
     </div>
