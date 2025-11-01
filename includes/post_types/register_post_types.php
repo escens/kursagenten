@@ -10,24 +10,24 @@ $kurs = !empty($url_options['ka_url_rewrite_kurs']) ? $url_options['ka_url_rewri
 $instruktor = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktor';
 
 // CPT Kurs
-register_post_type('course', array(
+register_post_type('ka_course', array(
     'labels' => array(
         'name' => 'Kurs',
-        'singular_name' => 'Kurs',
-        'menu_name' => 'Kurs',
-        'all_items' => 'Alle kurs',
+        'singular_name' => 'KA kurs',
+        'menu_name' => 'Kursagenten kurs',
+        'all_items' => 'Alle KA kurs',
         'edit_item' => 'Rediger kurs',
-        'view_item' => 'Vis kurs',
-        'view_items' => 'Vis kurs',
-        'add_new_item' => 'Legg til kurs',
-        'add_new' => 'Legg til kurs',
-        'new_item' => 'Nytt kurs',
-        'parent_item_colon' => 'Overordnet kurs:',
-        'search_items' => 'Søk kurs',
-        'not_found' => 'Ingen kurs funnet',
-        'not_found_in_trash' => 'Ingen kurs funnet i søppelkurven',
-        'archives' => 'kursliste',
-        'attributes' => 'kursattributter',
+        'view_item' => 'Vis KA kurs',
+        'view_items' => 'Vis KA kurs',
+        'add_new_item' => 'Legg til KA kurs',
+        'add_new' => 'Legg til KA kurs',
+        'new_item' => 'Nytt KA kurs',
+        'parent_item_colon' => 'Overordnet KA kurs:',
+        'search_items' => 'Søk KA kurs',
+        'not_found' => 'Ingen KA kurs funnet',
+        'not_found_in_trash' => 'Ingen KA kurs funnet i søppelkurven',
+        'archives' => 'KA kursliste',
+        'attributes' => 'KA kursattributter',
         'featured_image' => 'Hovedbilde',
         'set_featured_image' => 'Velg hovedbilde',
         'remove_featured_image' => 'Fjern',
@@ -38,11 +38,11 @@ register_post_type('course', array(
         'filter_by_date' => 'Filtrer på dato',
         'items_list_navigation' => 'naviger i kurs',
         'items_list' => 'Kursliste',
-        'item_published' => 'Kurs publisert',
-        'item_published_privately' => 'Kurs publisert privat',
-        'item_reverted_to_draft' => 'Kurs gjort om til kladd',
-        'item_scheduled' => 'Kurs planlagt',
-        'item_updated' => 'Kurs oppdatert',
+        'item_published' => 'KA kurs publisert',
+        'item_published_privately' => 'KA kurs publisert privat',
+        'item_reverted_to_draft' => 'KA kurs gjort om til kladd',
+        'item_scheduled' => 'KA kurs planlagt',
+        'item_updated' => 'KA kurs oppdatert',
         'item_link' => 'Link',
         'item_link_description' => 'Link til kurs',
     ),
@@ -51,7 +51,7 @@ register_post_type('course', array(
     'show_in_rest'  => true,
     'menu_icon'     => 'dashicons-welcome-learn-more',
     'supports'      => array('title', 'editor', 'excerpt', 'thumbnail','custom-fields','page-attributes'),
-    'taxonomies'    => array('coursecategory', 'course_location'),
+    'taxonomies'    => array('ka_coursecategory', 'ka_course_location'),
     'rewrite'       => array('slug' => $kurs, 'with_front' => false),
     'hierarchical'  => true,
     'parent_item_colon' => 'Hovedkurs:',
@@ -59,7 +59,7 @@ register_post_type('course', array(
 ));
 
 // CPT Kursdato
-register_post_type('coursedate', array(
+register_post_type('ka_coursedate', array(
     'labels' => array(
         'name' => 'Kursdatoer',
         'singular_name' => 'Kursdato',
@@ -100,7 +100,7 @@ register_post_type('coursedate', array(
     'show_in_rest'      => true,
     'menu_icon'         => 'dashicons-calendar-alt',
     'supports'          => array('title', 'custom-fields'),
-    'taxonomies'        => array('kurssted', 'kurskategori'),
+    'taxonomies'        => array('ka_course_location', 'ka_coursecategory'),
     'rewrite'           => false,
     'publicly_queryable'=> false,
     'query_var'         => false,

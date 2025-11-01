@@ -29,15 +29,15 @@ $button_text = get_post_meta($course_id, 'course_button_text', true);
 $signup_url = get_post_meta($course_id, 'course_signup_url', true);
 
 // Hent taksonomier
-$instructors = get_the_terms($course_id, 'instructors');
-$categories = get_the_terms($course_id, 'coursecategory');
-$locations = get_the_terms($course_id, 'course_location');
+$instructors = get_the_terms($course_id, 'ka_instructors');
+$categories = get_the_terms($course_id, 'ka_coursecategory');
+$locations = get_the_terms($course_id, 'ka_course_location');
 
 // Formater instruktører med nye URL-er
 $instructor_links = [];
 if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
-        $instructor_url = get_instructor_display_url($term, 'instructors');
+        $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
     }, $instructors);
 }
@@ -224,7 +224,7 @@ if (!empty($locations) && !is_wp_error($locations)) {
     <?php
     // Relaterte kurs
     $related_args = [
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'posts_per_page' => 3,
         'post__not_in' => [$course_id],
         'tax_query' => []
@@ -232,7 +232,7 @@ if (!empty($locations) && !is_wp_error($locations)) {
 
     if (!empty($category_links)) {
         $related_args['tax_query'][] = [
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'field' => 'term_id',
             'terms' => array_map('term_exists', $category_links)
         ];

@@ -29,4 +29,4 @@ global $query, $top_filters, $left_filters, $filter_types, $available_filters,
     </div>
 </div>
 
-<?php get_footer(); ?>  
+<?php get_footer(); ?>

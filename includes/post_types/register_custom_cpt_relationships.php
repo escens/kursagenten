@@ -8,8 +8,8 @@ if (!defined('ABSPATH')) {
  */
 function related_get_related_post_types($post_type) {
     $relationships = [
-        'course' => ['coursedate'],
-        'coursedate' => ['course']
+        'ka_course' => ['ka_coursedate'],
+        'ka_coursedate' => ['ka_course']
     ];
     return $relationships[$post_type] ?? [];
 }
@@ -21,7 +21,7 @@ function related_save_relationships($post_id) {
     if ('revision' === get_post_type($post_id)) return;
 
     $post_type = get_post_type($post_id);
-    if (!in_array($post_type, ['course', 'coursedate'])) return;
+    if (!in_array($post_type, ['ka_course', 'ka_coursedate'])) return;
 
     $related_post_types = related_get_related_post_types($post_type);
 

@@ -16,13 +16,13 @@ require_once(dirname(__FILE__) . '/template-seo-functions.php');
  */
 function kursagenten_template_loader($template) {
     // Sjekk om vi er på en kursrelatert side
-    if (!is_singular('course') && !is_post_type_archive('course') && 
-        !is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    if (!is_singular('ka_course') && !is_post_type_archive('ka_course') && 
+        !is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         return $template;
     }
 
     // Fikse queried object for taksonomier
-    if (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    if (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         // Hent term direkte fra URL
         $requested_slug = basename(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH));
         $current_taxonomy = get_query_var('taxonomy');
@@ -43,13 +43,13 @@ function kursagenten_template_loader($template) {
     $context = '';
     $layout = 'default';
     
-    if (is_singular('course')) {
+    if (is_singular('ka_course')) {
         $context = 'single';
         $layout = get_option('kursagenten_single_layout', 'default');
-    } elseif (is_post_type_archive('course')) {
+    } elseif (is_post_type_archive('ka_course')) {
         $context = 'archive';
         $layout = get_option('kursagenten_archive_layout', 'default');
-    } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         $context = 'taxonomy';
         
         // Sjekk om vi har spesifikke innstillinger for denne taksonomien
@@ -90,13 +90,13 @@ function kursagenten_get_design_template() {
     $context = '';
     
     // Bestem kontekst og hent riktig design-innstilling
-    if (is_singular('course')) {
+    if (is_singular('ka_course')) {
         $context = 'single';
         $design = get_option('kursagenten_single_design', 'default');
-    } elseif (is_post_type_archive('course')) {
+    } elseif (is_post_type_archive('ka_course')) {
         $context = 'archive';
         $design = get_option('kursagenten_archive_design', 'default');
-    } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         $context = 'taxonomy';
         
         $current_tax = get_queried_object();
@@ -134,9 +134,9 @@ function kursagenten_get_list_template() {
     $list_type = 'standard';
     
     // Bestem kontekst og hent riktig listevisning
-    if (is_post_type_archive('course')) {
+    if (is_post_type_archive('ka_course')) {
         $list_type = get_option('kursagenten_archive_list_type', 'standard');
-    } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         $current_tax = get_queried_object();
         if ($current_tax && isset($current_tax->taxonomy)) {
             $tax_name = $current_tax->taxonomy;
@@ -171,17 +171,17 @@ function kursagenten_get_list_template() {
  */
 function kursagenten_add_body_classes($classes) {
     // Layout-klasse
-    if (is_singular('course')) {
+    if (is_singular('ka_course')) {
         $layout = get_option('kursagenten_single_layout', 'default');
         $design = get_option('kursagenten_single_design', 'default');
         $classes[] = 'kursagenten-single-' . $design;
-    } elseif (is_post_type_archive('course')) {
+    } elseif (is_post_type_archive('ka_course')) {
         $layout = get_option('kursagenten_archive_layout', 'default');
         $list_type = get_option('kursagenten_archive_list_type', 'standard');
         $design = get_option('kursagenten_archive_design', 'default');
         $classes[] = 'kursagenten-archive-' . $design;
         $classes[] = 'kursagenten-list-' . $list_type;
-    } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         $current_tax = get_queried_object();
         if ($current_tax && isset($current_tax->taxonomy)) {
             $tax_name = $current_tax->taxonomy;
@@ -231,9 +231,9 @@ function get_course_template_part($args = []) {
     } elseif ($force_standard_view) {
         // Tving standard visning uansett kontekst
         $style = get_option('kursagenten_archive_list_type', 'standard');
-    } elseif (is_post_type_archive('course')) {
+    } elseif (is_post_type_archive('ka_course')) {
         $style = get_option('kursagenten_archive_list_type', 'standard');
-    } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+    } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
         $current_tax = get_queried_object();
         if ($current_tax && isset($current_tax->taxonomy)) {
             $tax_name = $current_tax->taxonomy;
@@ -283,14 +283,14 @@ function get_taxonomy_meta($term_id, $taxonomy) {
     
     // Hent bilde basert på taksonomi
     switch ($taxonomy) {
-        case 'coursecategory':
+        case 'ka_coursecategory':
             $meta['image'] = get_term_meta($term_id, 'image_coursecategory', true);
             $meta['icon'] = get_term_meta($term_id, 'icon_coursecategory', true);
             break;
-        case 'course_location':
+        case 'ka_course_location':
             $meta['image'] = get_term_meta($term_id, 'image_course_location', true);
             break;
-        case 'instructors':
+        case 'ka_instructors':
             $meta['image'] = get_term_meta($term_id, 'instructor_image', true);
             break;
     }
@@ -309,11 +309,11 @@ function kursagenten_get_layout_class($context = '') {
     
     if (empty($context)) {
         // Bestem kontekst automatisk
-        if (is_singular('course')) {
+        if (is_singular('ka_course')) {
             $context = 'single';
-        } elseif (is_post_type_archive('course')) {
+        } elseif (is_post_type_archive('ka_course')) {
             $context = 'archive';
-        } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+        } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
             $context = 'taxonomy';
         }
     }
@@ -367,11 +367,11 @@ function kursagenten_get_layout_class($context = '') {
 function kursagenten_show_sidebar($context = '') {
     // Bestem kontekst automatisk hvis ikke angitt
     if (empty($context)) {
-        if (is_singular('course')) {
+        if (is_singular('ka_course')) {
             $context = 'single';
-        } elseif (is_post_type_archive('course')) {
+        } elseif (is_post_type_archive('ka_course')) {
             $context = 'archive';
-        } elseif (is_tax(['coursecategory', 'course_location', 'instructors'])) {
+        } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
             $context = 'taxonomy';
         }
     }

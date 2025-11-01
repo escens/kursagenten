@@ -29,9 +29,9 @@ $button_text = get_post_meta($course_id, 'course_button_text', true);
 $signup_url = get_post_meta($course_id, 'course_signup_url', true);
 
 // Hent taksonomier
-$instructors = get_the_terms($course_id, 'instructors');
-$categories = get_the_terms($course_id, 'coursecategory');
-$locations = get_the_terms($course_id, 'course_location');
+$instructors = get_the_terms($course_id, 'ka_instructors');
+$categories = get_the_terms($course_id, 'ka_coursecategory');
+$locations = get_the_terms($course_id, 'ka_course_location');
 ?>
 
 <article id="post-<?php the_ID(); ?>" <?php post_class('kursagenten-single-course minimal-design'); ?>>

@@ -30,7 +30,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     if ($is_parent_course === 'yes') {
         // For foreldrekurs: Hent alle kursdatoer som har main_course_id lik dette kursets location_id
         $related_coursedate = get_posts([
-            'post_type' => 'coursedate',
+            'post_type' => 'ka_coursedate',
             'posts_per_page' => -1,
             'meta_query' => [
                 ['key' => 'main_course_id', 'value' => $course_id],
@@ -40,7 +40,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     } else {
         // For underkurs: Hent kursdatoer basert på course_location taksonomien
         // i stedet for location_id
-        $course_location_terms = wp_get_post_terms(get_the_ID(), 'course_location');
+        $course_location_terms = wp_get_post_terms(get_the_ID(), 'ka_course_location');
         
         if (!empty($course_location_terms) && !is_wp_error($course_location_terms)) {
             // Hent alle kursdatoer som tilhører samme course_location taksonomi
@@ -62,7 +62,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                 ];
                 
                 $related_coursedate = get_posts([
-                    'post_type' => 'coursedate',
+                    'post_type' => 'ka_coursedate',
                     'posts_per_page' => -1,
                     'meta_query' => $meta_query_main,
                     'fields' => 'ids'
@@ -83,7 +83,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                     ];
                     
                     $related_coursedate = get_posts([
-                        'post_type' => 'coursedate',
+                        'post_type' => 'ka_coursedate',
                         'posts_per_page' => -1,
                         'meta_query' => $meta_query_title,
                         'fields' => 'ids'
@@ -91,7 +91,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                 } else {
                     // Fallback: bruk kun lokasjon hvis begge er tomme
                     $related_coursedate = get_posts([
-                        'post_type' => 'coursedate',
+                        'post_type' => 'ka_coursedate',
                         'posts_per_page' => -1,
                         'meta_query' => [
                             'relation' => 'OR',
@@ -105,7 +105,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
         } else {
             // Fallback til original logikk hvis ingen course_location taksonomi er satt
             $related_coursedate = get_posts([
-                'post_type' => 'coursedate',
+                'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
                     ['key' => 'location_id', 'value' => $course_id],
@@ -140,9 +140,9 @@ if (current_user_can('editor') || current_user_can('administrator')) {
 
     // Get coursecategories - finner kategorier som brukes som lenker i header
     $excluded_terms = ['skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv'];
-    $coursecategories = wp_get_post_terms(get_the_ID(), 'coursecategory', [
+    $coursecategories = wp_get_post_terms(get_the_ID(), 'ka_coursecategory', [
         'exclude' => array_map(function ($term_slug) {
-            $term = get_term_by('slug', $term_slug, 'coursecategory');
+            $term = get_term_by('slug', $term_slug, 'ka_coursecategory');
             return $term ? $term->term_id : null;
         }, $excluded_terms)
     ]);
@@ -156,10 +156,10 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     }
 
     // Get instructors
-    $instructors = wp_get_post_terms(get_the_ID(), 'instructors');
+    $instructors = wp_get_post_terms(get_the_ID(), 'ka_instructors');
     if (!empty($instructors) && !is_wp_error($instructors)) {
         $instructor_links = array_map(function ($term) {
-            $instructor_url = get_instructor_display_url($term, 'instructors');
+            $instructor_url = get_instructor_display_url($term, 'ka_instructors');
             return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
         }, $instructors);
     }
@@ -291,7 +291,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                                     <div class="accordion-content courselist-content">
                                         <?php if ($coursedate['missing_first_date']) : ?>
                                             <?php 
-                                            $is_online = has_term('nettbasert', 'course_location', $coursedate['id']);
+                                            $is_online = has_term('nettbasert', 'ka_course_location', $coursedate['id']);
                                             $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
                                             if ($is_online) : ?>
                                                 <p>Etter påmelding vil du få en e-post med mer informasjon om kurset.</p>
@@ -500,7 +500,7 @@ add_action('wp_head', function() {
         //error_log('Related Coursedate: ' . get_post_meta(get_the_ID(), 'course_related_coursedate', true));
         
         // Sjekk coursecategories
-        $coursecategories = wp_get_post_terms(get_the_ID(), 'coursecategory');
+        $coursecategories = wp_get_post_terms(get_the_ID(), 'ka_coursecategory');
         error_log('Coursecategories: ' . print_r($coursecategories, true));
         
         // Sjekk selected_coursedate_data

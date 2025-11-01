@@ -30,7 +30,7 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     
     // Hent kursdatoer basert på location_id
     $related_coursedates = get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
             ['key' => 'location_id', 'value' => $location_id],
@@ -126,7 +126,7 @@ if ($shortcode_show_images === 'yes' || $shortcode_show_images === 'no') {
 }
 
 // Hent kurskategorier for data-category attributt
-$course_categories = get_the_terms($course_id, 'coursecategory');
+$course_categories = get_the_terms($course_id, 'ka_coursecategory');
 $category_slugs = [];
 if (!empty($course_categories) && !is_wp_error($course_categories)) {
     foreach ($course_categories as $category) {

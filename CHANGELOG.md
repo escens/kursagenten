@@ -1,18 +1,5 @@
-## 1.0.6 - 2025-10-22
-- Forbedret: Moderne design for kompakt listevisning med forbedret layout og visuelt hierarki
-- Lagt til: Påmeldingsknapp i kompakt listevisning
-- Lagt til: Thumbnail-bilde i kompakt listevisning (respekterer bildeinnstillinger)
-- Lagt til: "Neste kurs: " tekst i hovedkurs-visning på taksonomi-sider
-- Lagt til: Tilgjengelighetsmerker (Ledige plasser, Fullt, På forespørsel) i kompakt listevisning
-- Lagt til: `bilder` attributt i [kursliste] shortcode for å overstyre bildeinnstillinger (bilder="yes" eller bilder="no")
-- Forbedret: Responsivt design for kompakt listevisning på mobile enheter
-- Forbedret: Hover-effekter og animasjoner for bedre brukeropplevelse
-- Forbedret: Taksonomi-bildeinnstillinger sendes nå automatisk til [kursliste] shortcode ved "Vis alle kursdatoer"
-- Forbedret: Konsistent bildeinnstillings-logikk på tvers av alle listetyper (standard, grid, compact, plain)
-- Fix: CSS-fil for kompakt listevisning lastes nå inn korrekt i shortcodes
-- Fix: Kursbilder vises nå korrekt i shortcodes (bruker bilde fra hovedkurs, ikke coursedate)
-- Fix: Taksonomi-bildeinnstillinger respekteres nå på alle visningstyper (ikke kun hovedkurs)
-- Fix: Plain listevisning respekterer nå taksonomi-bildeinnstillinger og shortcode-attributter
+## 1.0.6 - 2025-10-29
+- Strukturelle endringer for unngå konflikt med andre kurs-utvidelser
 
 ## 1.0.5 - 2025-10-16
 - Endret: Lagt inn mulighet for å legge inn egen klasse på kortkoder (lister) for custom styling

@@ -66,8 +66,8 @@ if (in_array('search', $all_filters)) {
 error_log('Combined filters for mobile: ' . print_r($all_filters, true));
 error_log('Available filters: ' . print_r($available_filters, true));
 
-// Spesiell håndtering for coursecategory taksonomi-sider
-$category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : (function_exists('get_filtered_terms') ? get_filtered_terms('coursecategory') : get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]));
+// Spesiell håndtering for ka_coursecategory taksonomi-sider
+$category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('ka_coursecategory') : (function_exists('get_filtered_terms') ? get_filtered_terms('ka_coursecategory') : get_terms(['taxonomy' => 'ka_coursecategory', 'hide_empty' => true]));
 
 // Pre-prosessere kategorier for å identifisere foreldre (de som har barn)
 $parent_term_ids = [];
@@ -87,20 +87,20 @@ foreach ($category_terms as $term) {
 // Definer taxonomy og meta felt data struktur for filtre
 $taxonomy_data = [
     'categories' => [
-        'taxonomy' => 'coursecategory',
+        'taxonomy' => 'ka_coursecategory',
         'terms' => $category_terms,
         'url_key' => 'k',
         'filter_key' => 'categories',
     ],
     'locations' => [
-        'taxonomy' => 'course_location',
-        'terms' => function_exists('get_filtered_location_terms') ? get_filtered_location_terms() : (function_exists('get_filtered_terms') ? get_filtered_terms('course_location') : get_terms(['taxonomy' => 'course_location', 'hide_empty' => true])),
+        'taxonomy' => 'ka_course_location',
+        'terms' => function_exists('get_filtered_location_terms') ? get_filtered_location_terms() : (function_exists('get_filtered_terms') ? get_filtered_terms('ka_course_location') : get_terms(['taxonomy' => 'ka_course_location', 'hide_empty' => true])),
         'url_key' => 'sted',
         'filter_key' => 'locations',
     ],
     'instructors' => [
-        'taxonomy' => 'instructors',
-        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('instructors') : get_terms(['taxonomy' => 'instructors', 'hide_empty' => true]),
+        'taxonomy' => 'ka_instructors',
+        'terms' => function_exists('get_filtered_terms') ? get_filtered_terms('ka_instructors') : get_terms(['taxonomy' => 'ka_instructors', 'hide_empty' => true]),
         'url_key' => 'i',
         'filter_key' => 'instructors',
     ],
@@ -141,8 +141,8 @@ if (!isset($active_shortcode_filters)) {
 // Function to check if a filter should be hidden due to shortcode parameters or taxonomy page
 if (!function_exists('should_hide_filter_mobile')) {
     function should_hide_filter_mobile($filter_key, $active_shortcode_filters) {
-        // Spesiell håndtering for coursecategory taksonomi-sider
-        if ($filter_key === 'categories' && is_tax('coursecategory')) {
+        // Spesiell håndtering for ka_coursecategory taksonomi-sider
+        if ($filter_key === 'categories' && is_tax('ka_coursecategory')) {
             // Sjekk om vi er på en foreldrekategori (som har barn)
             $current_term = get_queried_object();
             if ($current_term && $current_term->parent == 0) {

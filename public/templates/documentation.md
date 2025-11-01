@@ -201,7 +201,7 @@ function filter_courses_handler()
 - Pagination handling
 
 #### Query Parameters:
-- **Taxonomies**: coursecategory, course_location, instructors
+- **Taxonomies**: ka_coursecategory, ka_course_location, ka_instructors
 - **Meta Fields**: course_language, course_first_date
 - **Search**: Supports text search across all fields
 

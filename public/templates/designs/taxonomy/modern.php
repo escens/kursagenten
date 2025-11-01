@@ -1,7 +1,7 @@
 <?php
 /**
  * Moderne taksonomi-design
- * Brukes for course_location, coursecategory og instructors
+ * Brukes for ka_course_location, ka_coursecategory og ka_instructors
  * 
  * Dette designet er fortsatt under utvikling.
  * Dette er et design-rammeverk som inneholder layout og struktur.
@@ -36,11 +36,11 @@ if ($view_type === 'all_coursedates') {
     // Vis alle kursdatoer - bruk [kursliste] kortkoden
     $shortcode_atts = [];
     
-    if ($taxonomy === 'coursecategory') {
+    if ($taxonomy === 'ka_coursecategory') {
         $shortcode_atts[] = 'kategori="' . esc_attr($term->slug) . '"';
-    } elseif ($taxonomy === 'course_location') {
+    } elseif ($taxonomy === 'ka_course_location') {
         $shortcode_atts[] = 'sted="' . esc_attr($term->name) . '"';
-    } elseif ($taxonomy === 'instructors') {
+    } elseif ($taxonomy === 'ka_instructors') {
         $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
     }
     

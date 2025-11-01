@@ -60,33 +60,33 @@ function add_taxonomy_image_field($term, $taxonomy, $field_name, $label_text, $b
 
 // Callback functions for each taxonomy, passing the correct parameters
 function add_coursecategory_image_field($term) {
-    add_taxonomy_image_field($term, 'coursecategory', 'image_coursecategory', 'Hovedbilde', 'bilde', 'Hovedbilde som brukes på kategorisiden og i kategorioversikter');
+    add_taxonomy_image_field($term, 'ka_coursecategory', 'image_coursecategory', 'Hovedbilde', 'bilde', 'Hovedbilde som brukes på kategorisiden og i kategorioversikter');
 }
-add_action('coursecategory_edit_form_fields', 'add_coursecategory_image_field');
+add_action('ka_coursecategory_edit_form_fields', 'add_coursecategory_image_field');
 
 function add_coursecategory_icon_field($term) {
-    add_taxonomy_image_field($term, 'coursecategory', 'icon_coursecategory', 'Ikon', 'bilde av ikon', 'Bruk en .png bildefil. Du kan laste ned ikoner på feks. https://thenounproject.com/');
+    add_taxonomy_image_field($term, 'ka_coursecategory', 'icon_coursecategory', 'Ikon', 'bilde av ikon', 'Bruk en .png bildefil. Du kan laste ned ikoner på feks. https://thenounproject.com/');
 }
-add_action('coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
+add_action('ka_coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
 
 function add_course_location_image_field($term) {
-    add_taxonomy_image_field($term, 'course_location', 'image_course_location', 'Bilde av kurssted', 'bilde');
+    add_taxonomy_image_field($term, 'ka_course_location', 'image_course_location', 'Bilde av kurssted', 'bilde');
 }
-add_action('course_location_edit_form_fields', 'add_course_location_image_field');
+add_action('ka_course_location_edit_form_fields', 'add_course_location_image_field');
 
 // Legg til instruktør-felt
 function add_instructor_image_field($term) {
-    add_taxonomy_image_field($term, 'instructors', 'image_instructor', 'Alternativt bilde', 'bilde', 
+    add_taxonomy_image_field($term, 'ka_instructors', 'image_instructor', 'Alternativt bilde', 'bilde', 
         'Dette bildet kan brukes som et alternativt bilde på instruktørprofilen.');
 }
-add_action('instructors_edit_form_fields', 'add_instructor_image_field');
+add_action('ka_instructors_edit_form_fields', 'add_instructor_image_field');
 
 // Legg til instruktør-felt
 function add_instructor_profile_image_field($term) {
-    add_taxonomy_image_field($term, 'instructors', 'image_instructor_ka', 'Profilbilde', 'bilde', 
+    add_taxonomy_image_field($term, 'ka_instructors', 'image_instructor_ka', 'Profilbilde', 'bilde', 
         'Dette bildet brukes som hovedbilde på instruktørprofilen.');
 }
-add_action('instructors_edit_form_fields', 'add_instructor_profile_image_field');
+add_action('ka_instructors_edit_form_fields', 'add_instructor_profile_image_field');
 
 
 
@@ -140,7 +140,7 @@ function add_taxonomy_visibility_field($term) {
             <p class="description">Velg om denne skal vises i autogenererte menyer.</p>
         </td>
     </tr>
-    <?php if ($taxonomy === 'coursecategory'): ?>
+    <?php if ($taxonomy === 'ka_coursecategory'): ?>
     <tr class="form-field">
         <th scope="row"><label for="hide_in_course_list">Kursliste</label></th>
         <td>
@@ -389,31 +389,31 @@ function save_taxonomy_field($term_id) {
     if (isset($_POST['instructor_name'])) {
         $new_name = sanitize_text_field($_POST['instructor_name']);
         if ($new_name !== get_term($term_id)->name) {
-            wp_update_term($term_id, 'instructors', array('name' => $new_name));
+            wp_update_term($term_id, 'ka_instructors', array('name' => $new_name));
         }
     }
 }
 
 // Register hooks
-add_action('coursecategory_edit_form_fields', 'custom_taxonomy_rich_text_editor');
-add_action('course_location_edit_form_fields', 'custom_taxonomy_rich_text_editor');
-add_action('instructors_edit_form_fields', 'custom_taxonomy_rich_text_editor');
+add_action('ka_coursecategory_edit_form_fields', 'custom_taxonomy_rich_text_editor');
+add_action('ka_course_location_edit_form_fields', 'custom_taxonomy_rich_text_editor');
+add_action('ka_instructors_edit_form_fields', 'custom_taxonomy_rich_text_editor');
 
-add_action('coursecategory_edit_form_fields', 'add_coursecategory_image_field');
-add_action('coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
-add_action('course_location_edit_form_fields', 'add_course_location_image_field');
-add_action('instructors_edit_form_fields', 'add_instructor_image_field');
-add_action('instructors_edit_form_fields', 'add_instructor_profile_image_field');
-add_action('coursecategory_edit_form_fields', 'add_taxonomy_visibility_field');
-add_action('course_location_edit_form_fields', 'add_taxonomy_visibility_field');
-add_action('instructors_edit_form_fields', 'add_taxonomy_visibility_field');
+add_action('ka_coursecategory_edit_form_fields', 'add_coursecategory_image_field');
+add_action('ka_coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
+add_action('ka_course_location_edit_form_fields', 'add_course_location_image_field');
+add_action('ka_instructors_edit_form_fields', 'add_instructor_image_field');
+add_action('ka_instructors_edit_form_fields', 'add_instructor_profile_image_field');
+add_action('ka_coursecategory_edit_form_fields', 'add_taxonomy_visibility_field');
+add_action('ka_course_location_edit_form_fields', 'add_taxonomy_visibility_field');
+add_action('ka_instructors_edit_form_fields', 'add_taxonomy_visibility_field');
 
-add_action('edited_coursecategory', 'save_taxonomy_field');
-add_action('edited_course_location', 'save_taxonomy_field');
-add_action('edited_instructors', 'save_taxonomy_field');
+add_action('edited_ka_coursecategory', 'save_taxonomy_field');
+add_action('edited_ka_course_location', 'save_taxonomy_field');
+add_action('edited_ka_instructors', 'save_taxonomy_field');
 
 // Registrer hooks for alle aktuelle taksonomier
-$taxonomies = ['coursecategory', 'instructors', 'course_location'];
+$taxonomies = ['ka_coursecategory', 'ka_instructors', 'ka_course_location'];
 
 foreach ($taxonomies as $taxonomy) {
     // Legg til kolonne
@@ -448,7 +448,7 @@ function add_quick_edit_javascript() {
                     var $visibilityCell = $row.find('td.column-visibility');
                     var visibilityText = $visibilityCell.text();
                     var $table = $row.closest('table');
-                    var isCourseCategory = $table.length > 0 && $table.attr('id') && $table.attr('id').indexOf('coursecategory') !== -1;
+                    var isCourseCategory = $table.length > 0 && $table.attr('id') && $table.attr('id').indexOf('ka_coursecategory') !== -1;
                     
                     // Hent verdiene fra meta-feltene
                     var list_visibility = visibilityText.includes('Skjult i lister') ? 'Skjul' : 'Vis';
@@ -488,9 +488,9 @@ function kursagenten_add_instructor_styles() {
     ?>
     <style type="text/css">
         @media (min-width: 950px) {
-            .taxonomy-coursecategory .edit-tag-actions,
-            .taxonomy-instructors .edit-tag-actions,
-            .taxonomy-course_location .edit-tag-actions {
+        .taxonomy-ka_coursecategory .edit-tag-actions,
+        .taxonomy-ka_instructors .edit-tag-actions,
+        .taxonomy-ka_course_location .edit-tag-actions {
                 position: fixed;
                 bottom: 40px;
                 left: 900px;
@@ -505,8 +505,8 @@ function kursagenten_add_instructor_styles() {
             margin-left: 20px;
         }
         /* Skjul originale felter med en gang */
-        .taxonomy-instructors:has(.instructor-contact-card) .term-name-wrap,
-        .taxonomy-instructors:has(.instructor-contact-card) .term-slug-wrap {
+        .taxonomy-ka_instructors:has(.instructor-contact-card) .term-name-wrap,
+        .taxonomy-ka_instructors:has(.instructor-contact-card) .term-slug-wrap {
             display: none !important;
         }
         
@@ -629,7 +629,7 @@ function kursagenten_add_instructor_styles() {
             display: none;
         }
         
-        body.taxonomy-coursecategory .course-list-visibility {
+        body.taxonomy-ka_coursecategory .course-list-visibility {
             display: block !important;
         }
     </style>
@@ -1337,7 +1337,7 @@ function save_quick_edit_visibility($term_id) {
     
     // Sjekk om dette er en kurskategori før vi oppdaterer kursliste-visning
     $term = get_term($term_id);
-    if ($term && $term->taxonomy === 'coursecategory') {
+    if ($term && $term->taxonomy === 'ka_coursecategory') {
         update_term_meta($term_id, 'hide_in_course_list', $hide_in_course_list);
     }
 }

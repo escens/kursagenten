@@ -396,17 +396,17 @@ function kursagenten_auto_menus_metabox(): void {
         'course_categories' => [
             'id' => -1001,
             'label' => 'Kurskategorier',
-            'type' => 'coursecategory'
+            'type' => 'ka_coursecategory'
         ],
         'course_locations' => [
             'id' => -1002,
             'label' => 'Kurssteder',
-            'type' => 'course_location'
+            'type' => 'ka_course_location'
         ],
         'course_instructors' => [
             'id' => -1003,
             'label' => 'Instruktører',
-            'type' => 'instructors'
+            'type' => 'ka_instructors'
         ]
     ];
 
@@ -534,7 +534,7 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
     
     // Behold alle originale items først
     foreach ($items as $item) {
-        if (!in_array($item->object, ['coursecategory', 'instructors', 'course_location'])) {
+        if (!in_array($item->object, ['ka_coursecategory', 'ka_instructors', 'ka_course_location'])) {
             $new_items[] = $item;
         }
     }
@@ -718,13 +718,13 @@ function kursagenten_update_nav_menu_item($menu_id, $menu_item_db_id, $args) {
             $taxonomy = '';
             switch ($menu_type) {
                 case 'course_categories':
-                    $taxonomy = 'coursecategory';
+                    $taxonomy = 'ka_coursecategory';
                     break;
                 case 'course_locations':
-                    $taxonomy = 'course_location';
+                    $taxonomy = 'ka_course_location';
                     break;
                 case 'course_instructors':
-                    $taxonomy = 'instructors';
+                    $taxonomy = 'ka_instructors';
                     break;
             }
             
@@ -843,13 +843,13 @@ function ensure_menu_item_taxonomy($menu_id) {
                 $taxonomy = '';
                 switch ($menu_type) {
                     case 'course_categories':
-                        $taxonomy = 'coursecategory';
+                        $taxonomy = 'ka_coursecategory';
                         break;
                     case 'course_locations':
-                        $taxonomy = 'course_location';
+                        $taxonomy = 'ka_course_location';
                         break;
                     case 'course_instructors':
-                        $taxonomy = 'instructors';
+                        $taxonomy = 'ka_instructors';
                         break;
                 }
                 
@@ -876,13 +876,13 @@ function ensure_new_menu_item_taxonomy($menu_id, $menu_item_db_id, $args) {
         
         switch ($menu_type) {
             case 'course_categories':
-                $taxonomy = 'coursecategory';
+                $taxonomy = 'ka_coursecategory';
                 break;
             case 'course_locations':
-                $taxonomy = 'course_location';
+                $taxonomy = 'ka_course_location';
                 break;
             case 'course_instructors':
-                $taxonomy = 'instructors';
+                $taxonomy = 'ka_instructors';
                 break;
         }
         

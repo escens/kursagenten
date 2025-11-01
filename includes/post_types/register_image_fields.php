@@ -91,7 +91,7 @@ function save_custom_image_meta_box_data($post_id) {
 function handle_course_deletion($post_id) {
     error_log("=== Starting handle_course_deletion for post_id: $post_id ===");
     
-    if (get_post_type($post_id) !== 'course') {
+    if (get_post_type($post_id) !== 'ka_course') {
         error_log("Not a course post type, skipping");
         return;
     }
@@ -106,7 +106,7 @@ function handle_course_deletion($post_id) {
         if ($is_course_image) {
             // Check if image is used by other courses
             $other_posts = get_posts([
-                'post_type' => 'course',
+                'post_type' => 'ka_course',
                 'meta_query' => [
                     [
                         'key' => '_thumbnail_id',

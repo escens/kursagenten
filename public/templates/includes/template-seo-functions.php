@@ -26,7 +26,7 @@ function kursagenten_add_meta_tags() {
     global $post;
     
     // Only run on single course posts
-    if (!is_singular('course') || !isset($post->ID)) {
+    if (!is_singular('ka_course') || !isset($post->ID)) {
         return;
     }
     
@@ -177,7 +177,7 @@ function kursagenten_add_course_schema() {
     $schema['inLanguage'] = 'no';
     
     // Add course categories as keywords
-    $categories = wp_get_post_terms($post->ID, 'coursecategory');
+    $categories = wp_get_post_terms($post->ID, 'ka_coursecategory');
     if (!empty($categories) && !is_wp_error($categories)) {
         $keywords = array();
         foreach ($categories as $cat) {
@@ -245,7 +245,7 @@ function kursagenten_get_next_course_data($post_id) {
     
     if ($is_parent_course === 'yes') {
         $related_coursedate = get_posts([
-            'post_type' => 'coursedate',
+            'post_type' => 'ka_coursedate',
             'posts_per_page' => -1,
             'meta_query' => [
                 ['key' => 'main_course_id', 'value' => $course_id],
@@ -254,7 +254,7 @@ function kursagenten_get_next_course_data($post_id) {
         ]);
     } else {
         $main_course_id = get_post_meta($post_id, 'main_course_id', true);
-        $course_location_terms = wp_get_post_terms($post_id, 'course_location');
+        $course_location_terms = wp_get_post_terms($post_id, 'ka_course_location');
         
         if (!empty($course_location_terms) && !is_wp_error($course_location_terms) && !empty($main_course_id)) {
             $location_names = array_map(function($term) {
@@ -262,7 +262,7 @@ function kursagenten_get_next_course_data($post_id) {
             }, $course_location_terms);
             
             $related_coursedate = get_posts([
-                'post_type' => 'coursedate',
+                'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
                     'relation' => 'AND',
@@ -458,7 +458,7 @@ function kursagenten_build_course_instance_from_data($coursedate_data) {
  * Handles SEO meta tags for course categories, locations, and instructor pages.
  * This function can be extended to support different taxonomies.
  * 
- * @param string $taxonomy The taxonomy name (e.g., 'coursecategory', 'course_location', 'instructors')
+ * @param string $taxonomy The taxonomy name (e.g., 'ka_coursecategory', 'ka_course_location', 'ka_instructors')
  * @return void
  */
 function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
@@ -504,13 +504,13 @@ function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
     
     // Try to get image based on taxonomy type
     switch ($current_taxonomy) {
-        case 'coursecategory':
+        case 'ka_coursecategory':
             $image_url = get_term_meta($term->term_id, 'image_coursecategory', true);
             break;
-        case 'course_location':
+        case 'ka_course_location':
             $image_url = get_term_meta($term->term_id, 'image_course_location', true);
             break;
-        case 'instructors':
+        case 'ka_instructors':
             // Try uploaded image first, then KA image
             $image_url = get_term_meta($term->term_id, 'image_instructor', true);
             if (empty($image_url)) {
@@ -523,9 +523,9 @@ function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
     if (empty($image_url)) {
         $options = get_option('design_option_name');
         $placeholder_key = match($current_taxonomy) {
-            'coursecategory' => 'ka_plassholderbilde_kurs',
-            'course_location' => 'ka_plassholderbilde_sted',
-            'instructors' => 'ka_plassholderbilde_instruktor',
+            'ka_coursecategory' => 'ka_plassholderbilde_kurs',
+            'ka_course_location' => 'ka_plassholderbilde_sted',
+            'ka_instructors' => 'ka_plassholderbilde_instruktor',
             default => 'ka_plassholderbilde_kurs'
         };
         
@@ -585,12 +585,12 @@ function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
  */
 function kursagenten_init_seo() {
     // Add meta tags for single course pages
-    if (is_singular('course')) {
+    if (is_singular('ka_course')) {
         add_action('wp_head', 'kursagenten_add_meta_tags', 1);
     }
     
     // Add meta tags for taxonomy archives
-    if (is_tax(array('coursecategory', 'course_location', 'instructors'))) {
+    if (is_tax(array('ka_coursecategory', 'ka_course_location', 'ka_instructors'))) {
         add_action('wp_head', 'kursagenten_add_taxonomy_meta_tags', 1);
     }
 }

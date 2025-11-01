@@ -1,6 +1,6 @@
 ## Kursagenten hooks (overview)
 
-This document lists available hooks for taxonomy pages (instructors, coursecategory, course_location) and how to use them safely.
+This document lists available hooks for taxonomy pages (ka_instructors, ka_coursecategory, ka_course_location) and how to use them safely.
 
 ### Taxonomy hooks
 
@@ -57,8 +57,8 @@ function my_plugin_taxonomy_content($term) {
         return;
     }
 
-    // Only render for coursecategory and course_location
-    $allowed = array('coursecategory', 'course_location');
+    // Only render for ka_coursecategory and ka_course_location
+    $allowed = array('ka_coursecategory', 'ka_course_location');
     if (!in_array($term->taxonomy, $allowed, true)) {
         return;
     }

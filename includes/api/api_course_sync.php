@@ -118,7 +118,7 @@ function prepare_location_data($course_data, $location_id) {
 
 function get_existing_main_course($main_course_id) {
     return get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'meta_query' => [
             'relation' => 'AND',
             [
@@ -141,7 +141,7 @@ function get_existing_sub_course($location_id, $main_course_id) {
     //error_log("Søker etter subkurs med location_id: $location_id og main_course_id: $main_course_id");
     
     return get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'meta_query' => [
             'relation' => 'AND',
             [
@@ -171,7 +171,7 @@ function create_new_course($data, $main_course_id, $location_id, $language, $is_
 
     $post_id = wp_insert_post([
         'post_title'   => sanitize_text_field($data['name']),
-        'post_type'    => 'course',
+        'post_type'    => 'ka_course',
         'post_status'  => $post_status,
         'post_excerpt' => sanitize_text_field($data['introText']),
     ]);
@@ -213,7 +213,7 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
     //error_log("Is Active: $is_active");
     // Check if parent course exists
     $parent_course = get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
@@ -251,7 +251,7 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
     // Create sub-course
     $post_id = wp_insert_post([
         'post_title'   => sanitize_text_field($data['name'] . ' - ' . get_course_location($data)),
-        'post_type'    => 'course',
+        'post_type'    => 'ka_course',
         'post_status'  => $post_status,
         'post_parent'  => (int) $parent_id,
         'post_excerpt' => sanitize_text_field($data['introText']),
@@ -363,8 +363,8 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
     
     if (!$is_active) {
         //error_log("Course is not active, deleting existing dates for location_id: $location_id");
-        $existing_dates = get_posts([
-            'post_type' => 'coursedate',
+    $existing_dates = get_posts([
+        'post_type' => 'ka_coursedate',
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
                 ['key' => 'location_id', 'value' => $location_id],
@@ -403,7 +403,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
 
         // Check if course date already exists based on schedule_id and location_id
         $existing_posts = get_posts([
-            'post_type' => 'coursedate',
+            'post_type' => 'ka_coursedate',
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
                 ['key' => 'schedule_id', 'value' => $schedule_id],
@@ -501,7 +501,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
             // Create new course date
             $coursedate_id = wp_insert_post([
                 'post_title' => $data['name'] . ' - ' . $location['county'],
-                'post_type' => 'coursedate',
+                'post_type' => 'ka_coursedate',
                 'post_status' => 'publish',
                 'meta_input' => $meta_input
             ]);
@@ -549,7 +549,7 @@ function cleanup_coursedates($location_id, $schedules_from_api) {
     
     // Hent alle kursdatoer for denne lokasjonen
     $coursedates = get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
             ['key' => 'location_id', 'value' => $location_id],
@@ -700,17 +700,17 @@ function update_course_taxonomies($post_id, $location_id, $data, $is_webhook = f
 
     if ($course_location) {
         // Sjekk om taxonomien finnes eller opprett den
-        $course_location_term = term_exists($course_location, 'course_location');
+        $course_location_term = term_exists($course_location, 'ka_course_location');
 
         if (!$course_location_term) {
-            $course_location_term = wp_insert_term($course_location, 'course_location');
+            $course_location_term = wp_insert_term($course_location, 'ka_course_location');
         }
 
         if (!is_wp_error($course_location_term)) {
             $term_id = (int)$course_location_term['term_id'];
             
             // Sett course_location taxonomien for kurset
-            wp_set_object_terms($post_id, $term_id, 'course_location', false);
+            wp_set_object_terms($post_id, $term_id, 'ka_course_location', false);
             
             // Oppdater spesifikke lokasjoner kun hvis denne term_id ikke allerede er oppdatert
             if (!isset($updated_terms[$term_id])) {
@@ -732,10 +732,10 @@ function update_course_taxonomies($post_id, $location_id, $data, $is_webhook = f
                 $course_category = sanitize_text_field($tag['title']);
 
                 // Sjekk om taxonomien finnes eller opprett den
-                $course_category_term = term_exists($course_category, 'coursecategory');
+                $course_category_term = term_exists($course_category, 'ka_coursecategory');
 
                 if (!$course_category_term) {
-                    $course_category_term = wp_insert_term($course_category, 'coursecategory');
+                    $course_category_term = wp_insert_term($course_category, 'ka_coursecategory');
                 }
 
                 if (!is_wp_error($course_category_term)) {
@@ -746,7 +746,7 @@ function update_course_taxonomies($post_id, $location_id, $data, $is_webhook = f
 
         if (!empty($course_categories)) {
             // Sett coursecategory taxonomier for kurset
-            wp_set_object_terms($post_id, $course_categories, 'coursecategory', false);
+            wp_set_object_terms($post_id, $course_categories, 'ka_coursecategory', false);
         }
     }
 }
@@ -929,7 +929,7 @@ function sanitize_specific_location_description($description) {
 function sync_main_course_data($main_course_id) {
     // Finn hovedkursets post-ID basert på $main_course_id som meta-verdi
     $main_course_post = get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
@@ -954,7 +954,7 @@ function sync_main_course_data($main_course_id) {
 
     // Hent alle child_course knyttet til hovedkurset
     $child_courses = get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
             'relation' => 'AND',
@@ -990,9 +990,9 @@ function sync_main_course_data($main_course_id) {
 
     foreach ($child_courses as $course) {
         // Hent taxonomier
-        $course_location_terms = wp_get_object_terms($course->ID, 'course_location', ['fields' => 'ids']);
-        $course_category_terms = wp_get_object_terms($course->ID, 'coursecategory', ['fields' => 'ids']);
-        $instructor_terms = wp_get_object_terms($course->ID, 'instructors', ['fields' => 'ids']);
+        $course_location_terms = wp_get_object_terms($course->ID, 'ka_course_location', ['fields' => 'ids']);
+        $course_category_terms = wp_get_object_terms($course->ID, 'ka_coursecategory', ['fields' => 'ids']);
+        $instructor_terms = wp_get_object_terms($course->ID, 'ka_instructors', ['fields' => 'ids']);
 
         // Hent relaterte kursdatoer
         $course_dates = get_post_meta($course->ID, 'course_related_coursedate', true);
@@ -1017,15 +1017,15 @@ function sync_main_course_data($main_course_id) {
 
     // Sett taxonomier på hovedkurset
     if (!empty($course_locations)) {
-        wp_set_object_terms($post_id, $course_locations, 'course_location', false);
+        wp_set_object_terms($post_id, $course_locations, 'ka_course_location', false);
     }
 
     if (!empty($course_categories)) {
-        wp_set_object_terms($post_id, $course_categories, 'coursecategory', false);
+        wp_set_object_terms($post_id, $course_categories, 'ka_coursecategory', false);
     }
 
     if (!empty($instructors)) {
-        wp_set_object_terms($post_id, $instructors, 'instructors', false);
+        wp_set_object_terms($post_id, $instructors, 'ka_instructors', false);
     }
 
     // Oppdater relaterte kursdatoer på hovedkurset
@@ -1049,7 +1049,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
             // 1. Søk etter eksisterende instruktør med samme ID
             if (!empty($instructor['userId'])) {
                 $existing_terms = get_terms([
-                    'taxonomy' => 'instructors',
+                    'taxonomy' => 'ka_instructors',
                     'meta_key' => 'instructor_id',
                     'meta_value' => $instructor['userId'],
                     'hide_empty' => false,
@@ -1062,7 +1062,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
                     
                     // Oppdater navn hvis det er endret
                     if ($existing_terms[0]->name !== $instructor['fullname']) {
-                        wp_update_term($term_id, 'instructors', [
+                        wp_update_term($term_id, 'ka_instructors', [
                             'name' => $instructor['fullname']
                         ]);
                         error_log("Oppdaterte navn på instruktør {$instructor['userId']} fra '{$existing_terms[0]->name}' til '{$instructor['fullname']}'");
@@ -1074,7 +1074,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
             if (!$term_id) {
                 // Bruk get_terms i stedet for term_exists for mer presis søking
                 $name_search = get_terms([
-                    'taxonomy' => 'instructors',
+                    'taxonomy' => 'ka_instructors',
                     'name' => $instructor['fullname'],
                     'hide_empty' => false,
                     'number' => 1
@@ -1099,7 +1099,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
             // 3. Opprett ny instruktør KUN hvis vi ikke fant noen eksisterende
             if (!$term_id) {
                 error_log("Ingen eksisterende instruktør funnet, oppretter ny for: {$instructor['fullname']}");
-                $new_term = wp_insert_term($instructor['fullname'], 'instructors');
+                $new_term = wp_insert_term($instructor['fullname'], 'ka_instructors');
                 
                 if (!is_wp_error($new_term)) {
                     $term_id = $new_term['term_id'];
@@ -1149,7 +1149,7 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
         }
 
         if (!empty($instructors)) {
-            wp_set_object_terms($post_id, $instructors, 'instructors', false);
+            wp_set_object_terms($post_id, $instructors, 'ka_instructors', false);
         }
     }
 }
@@ -1384,7 +1384,7 @@ function kursagenten_update_main_course_status($main_course_id = null) {
     
     // Hent alle hovedkurs eller et spesifikt hovedkurs
     $args = array(
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'posts_per_page' => -1,
         'post_status' => array('publish', 'draft'),
         'meta_query' => array(
@@ -1409,7 +1409,7 @@ function kursagenten_update_main_course_status($main_course_id = null) {
         
         // Hent alle subkurs for dette hovedkurset
         $sub_courses = get_posts(array(
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'posts_per_page' => -1,
             'post_status' => array('publish', 'draft'),
             'meta_query' => array(
@@ -1463,7 +1463,7 @@ function update_all_course_locations() {
     
     // Hent alle kurssteder
     $terms = get_terms([
-        'taxonomy' => 'course_location',
+        'taxonomy' => 'ka_course_location',
         'hide_empty' => false,
     ]);
 
@@ -1479,11 +1479,11 @@ function update_all_course_locations() {
         
         // Hent alle kurs for dette stedet
         $courses = get_posts([
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'posts_per_page' => -1,
             'tax_query' => [
                 [
-                    'taxonomy' => 'course_location',
+                    'taxonomy' => 'ka_course_location',
                     'field' => 'term_id',
                     'terms' => $term->term_id,
                 ]
@@ -1606,7 +1606,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
 
     // Find course posts with this location_id (could be parent or sub)
     $courses = get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'posts_per_page' => -1,
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
@@ -1620,7 +1620,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
 
     // Always delete coursedates for this location_id first
     $coursedates = get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
@@ -1661,7 +1661,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
     foreach ($affected_main_course_ids as $main_course_id) {
         // Remaining sub-courses for this main_course_id
         $remaining_sub = get_posts([
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'posts_per_page' => 1,
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
@@ -1673,7 +1673,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
         if (empty($remaining_sub)) {
             // Delete parent course (is_parent_course = yes)
             $parent_course = get_posts([
-                'post_type' => 'course',
+                'post_type' => 'ka_course',
                 'posts_per_page' => 1,
                 'post_status' => ['publish', 'draft'],
                 'meta_query' => [
@@ -1687,7 +1687,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
                 $parent_location_id = (int) get_post_meta($parent_course[0]->ID, 'location_id', true);
                 if ($parent_location_id) {
                     $parent_dates = get_posts([
-                        'post_type' => 'coursedate',
+                        'post_type' => 'ka_coursedate',
                         'posts_per_page' => -1,
                         'post_status' => ['publish', 'draft'],
                         'meta_query' => [

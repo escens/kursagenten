@@ -104,7 +104,7 @@ class InstructorGrid {
     private function get_terms(): array 
     {
         $args = [
-            'taxonomy' => 'instructors',
+            'taxonomy' => 'ka_instructors',
             'hide_empty' => false,
             'meta_query' => [
                 'relation' => 'OR',

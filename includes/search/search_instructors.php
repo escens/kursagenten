@@ -20,7 +20,7 @@ function kursagenten_modify_search_query($query) {
         if (!empty($search_term)) {
             // Find instructor terms matching the search term
             $instructor_terms = get_terms(array(
-                'taxonomy' => 'instructors',
+                'taxonomy' => 'ka_instructors',
                 'name__like' => $search_term,
                 'hide_empty' => false
             ));
@@ -29,7 +29,7 @@ function kursagenten_modify_search_query($query) {
             
             if (!empty($instructor_terms)) {
                 // Set post type and other query parameters
-                $query->set('post_type', array('post', 'page', 'course', 'coursedate'));
+                $query->set('post_type', array('post', 'page', 'ka_course', 'ka_coursedate'));
                 $query->set('posts_per_page', -1);
                 $query->set('orderby', 'title');
                 $query->set('order', 'ASC');
@@ -37,7 +37,7 @@ function kursagenten_modify_search_query($query) {
                 // Add tax_query to find related posts
                 $tax_query = array(
                     array(
-                        'taxonomy' => 'instructors',
+                        'taxonomy' => 'ka_instructors',
                         'field' => 'term_id',
                         'terms' => wp_list_pluck($instructor_terms, 'term_id'),
                         'operator' => 'IN'
@@ -125,7 +125,7 @@ add_filter('the_content', function($content) {
     global $post;
     if ($post->post_type === 'instructor_term') {
         // Get term
-        $term = get_term($post->term_id, 'instructors');
+        $term = get_term($post->term_id, 'ka_instructors');
         if ($term) {
             $output = '';
             
@@ -174,7 +174,7 @@ add_filter('the_content', function($content) {
 // Remove old display code and replace with excerpt support
 add_filter('get_the_excerpt', function($excerpt, $post) {
     if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'instructors');
+        $term = get_term($post->term_id, 'ka_instructors');
         if ($term) {
             return wp_strip_all_tags($term->description);
         }
@@ -185,9 +185,9 @@ add_filter('get_the_excerpt', function($excerpt, $post) {
 // Change link for instructors
 add_filter('the_permalink', function($permalink, $post) {
     if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'instructors');
+        $term = get_term($post->term_id, 'ka_instructors');
         if ($term) {
-            return get_instructor_display_url($term, 'instructors');
+            return get_instructor_display_url($term, 'ka_instructors');
         }
     }
     return $permalink;
@@ -195,9 +195,9 @@ add_filter('the_permalink', function($permalink, $post) {
 
 add_filter('post_link', function($permalink, $post) {
     if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'instructors');
+        $term = get_term($post->term_id, 'ka_instructors');
         if ($term) {
-            return get_instructor_display_url($term, 'instructors');
+            return get_instructor_display_url($term, 'ka_instructors');
         }
     }
     return $permalink;
@@ -205,9 +205,9 @@ add_filter('post_link', function($permalink, $post) {
 
 add_filter('post_type_link', function($permalink, $post) {
     if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'instructors');
+        $term = get_term($post->term_id, 'ka_instructors');
         if ($term) {
-            return get_instructor_display_url($term, 'instructors');
+            return get_instructor_display_url($term, 'ka_instructors');
         }
     }
     return $permalink;
@@ -251,7 +251,7 @@ add_filter('the_title', function($title, $post_id) {
         // Commented out logging
         // error_log('Kursagenten: Found instructor term post. Post ID: ' . $post->ID . ', post_title: "' . $post->post_title . '"');
         // Get term
-        $term = get_term($post->term_id, 'instructors');
+        $term = get_term($post->term_id, 'ka_instructors');
         if ($term) {
             // Commented out logging
             // error_log('Kursagenten: Retrieved term. Term ID: ' . $term->term_id . ', term name: "' . $term->name . '"');
@@ -286,7 +286,7 @@ add_filter('kursagenten_instructor_title', function($title, $term) {
  *     global $post;
  *     if ($post && $post->post_type === 'instructor_term') {
  *         // Get term
- *         $term = get_term($post->term_id, 'instructors');
+ *         $term = get_term($post->term_id, 'ka_instructors');
  *         if ($term) {
  *             // Get image
  *             $instructor_image = get_term_meta($term->term_id, 'image_instructor', true);

@@ -10,7 +10,7 @@ function filter_courses() {
     $search = isset($_POST['search']) ? sanitize_text_field($_POST['search']) : '';
 
     $args = [
-        'post_type'      => 'coursedate',
+    'post_type'      => 'ka_coursedate',
         'posts_per_page' => -1,
         's'              => $search,
         'tax_query'      => [],
@@ -19,7 +19,7 @@ function filter_courses() {
 
     if ($category) {
         $args['tax_query'][] = [
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'field'    => 'slug',
             'terms'    => $category,
         ];

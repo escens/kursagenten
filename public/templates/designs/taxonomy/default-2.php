@@ -1,7 +1,7 @@
 <?php
 /**
  * Standard 2 taksonomi-design
- * Brukes for course_location, coursecategory og instructors
+ * Brukes for ka_course_location, ka_coursecategory og ka_instructors
  * Dette designet viser headerbildet i toppen og alternativt bilde i innholdet
  * 
  * Dette er et design-rammeverk som inneholder layout og struktur.
@@ -38,11 +38,11 @@ if ($view_type === 'all_coursedates') {
     // Vis alle kursdatoer - bruk [kursliste] kortkoden
     $shortcode_atts = [];
     
-    if ($taxonomy === 'coursecategory') {
+    if ($taxonomy === 'ka_coursecategory') {
         $shortcode_atts[] = 'kategori="' . esc_attr($term->slug) . '"';
-    } elseif ($taxonomy === 'course_location') {
+    } elseif ($taxonomy === 'ka_course_location') {
         $shortcode_atts[] = 'sted="' . esc_attr($term->name) . '"';
-    } elseif ($taxonomy === 'instructors') {
+    } elseif ($taxonomy === 'ka_instructors') {
         $shortcode_atts[] = 'instruktør="' . esc_attr($term->slug) . '"';
     }
     
@@ -95,7 +95,7 @@ if ($view_type === 'all_coursedates') {
                 <div class="taxonomy-header-text">
                     <h1><?php 
                     // Håndter navnevisning for instruktører
-                    if ($taxonomy === 'instructors') {
+                    if ($taxonomy === 'ka_instructors') {
                         $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
                         switch ($name_display) {
                             case 'firstname':
@@ -200,7 +200,7 @@ if ($view_type === 'all_coursedates') {
                         $args = [
                             'course_count' => $query->found_posts,
                             'query' => $query,
-                            'instructor_url' => $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : null,
+                            'instructor_url' => $taxonomy === 'ka_instructors' ? get_instructor_display_url($term, $taxonomy) : null,
                             'view_type' => $view_type,
                             'is_taxonomy_page' => true,
                             'list_type' => $list_type,
@@ -220,7 +220,7 @@ if ($view_type === 'all_coursedates') {
                             <div class="pagination">
                             <?php
                             // Generate pagination links
-                            $base_url = $taxonomy === 'instructors' ? get_instructor_display_url($term, $taxonomy) : get_term_link($term);
+                            $base_url = $taxonomy === 'ka_instructors' ? get_instructor_display_url($term, $taxonomy) : get_term_link($term);
                             echo paginate_links([
                                 'base' => $base_url . '?%_%',
                                 'current' => max(1, $query->get('paged')),

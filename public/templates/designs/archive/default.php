@@ -32,20 +32,20 @@ $search_class = $is_search_only ? 'wide-search' : '';
 // Define taxonomy and meta field data structure for filters
 $taxonomy_data = [
     'categories' => [
-        'taxonomy' => 'coursecategory',
-        'terms' => get_terms(['taxonomy' => 'coursecategory', 'hide_empty' => true]),
+        'taxonomy' => 'ka_coursecategory',
+        'terms' => get_terms(['taxonomy' => 'ka_coursecategory', 'hide_empty' => true]),
         'url_key' => 'k',
         'filter_key' => 'categories',
     ],
     'locations' => [
-        'taxonomy' => 'course_location',
-        'terms' => get_terms(['taxonomy' => 'course_location', 'hide_empty' => true]),
+        'taxonomy' => 'ka_course_location',
+        'terms' => get_terms(['taxonomy' => 'ka_course_location', 'hide_empty' => true]),
         'url_key' => 'sted',
         'filter_key' => 'locations',
     ],
     'instructors' => [
-        'taxonomy' => 'instructors',
-        'terms' => get_terms(['taxonomy' => 'instructors', 'hide_empty' => true]),
+        'taxonomy' => 'ka_instructors',
+        'terms' => get_terms(['taxonomy' => 'ka_instructors', 'hide_empty' => true]),
         'url_key' => 'i',
         'filter_key' => 'instructors',
     ],
@@ -70,7 +70,7 @@ $taxonomy_data = [
 // Language
 // Get language from meta fields for course dates
 $args = [
-    'post_type'      => 'coursedate',
+    'post_type'      => 'ka_coursedate',
     'posts_per_page' => -1,
     'fields'         => 'ids',
 ];

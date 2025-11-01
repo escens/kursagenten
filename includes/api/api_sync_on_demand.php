@@ -388,7 +388,7 @@ function cleanup_courses_on_demand() {
     
     // Finn alle kurs i WordPress
     $wp_courses = get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'posts_per_page' => -1,
         'post_status' => ['publish', 'draft'],
     ]);
@@ -412,7 +412,7 @@ function cleanup_courses_on_demand() {
             
             // Finn og slett tilknyttede kursdatoer basert på location_id
             $related_dates = get_posts([
-                'post_type' => 'coursedate',
+                'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
                     ['key' => 'location_id', 'value' => $location_id],
@@ -433,7 +433,7 @@ function cleanup_courses_on_demand() {
         } else {
             // Sjekk kursdatoer for dette kurset basert på location_id
             $related_dates = get_posts([
-                'post_type' => 'coursedate',
+                'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
                     ['key' => 'location_id', 'value' => $location_id],
@@ -521,7 +521,7 @@ function cleanup_all_specific_locations() {
     error_log("=== START: Rydder opp i alle specific_locations ===");
     
     $terms = get_terms([
-        'taxonomy' => 'course_location',
+        'taxonomy' => 'ka_course_location',
         'hide_empty' => false,
     ]);
 

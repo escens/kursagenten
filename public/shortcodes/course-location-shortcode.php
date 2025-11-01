@@ -95,7 +95,7 @@ class CourseLocationGrid {
     private function get_terms(): array 
     {
         $args = [
-            'taxonomy' => 'course_location',
+            'taxonomy' => 'ka_course_location',
             'hide_empty' => false,
             'meta_query' => [
                 'relation' => 'OR',
@@ -139,12 +139,12 @@ class CourseLocationGrid {
     {
         // Sjekk etter publiserte 'course' knyttet til dette kursstedet
         $course_query = new \WP_Query([
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'post_status' => 'publish',
             'posts_per_page' => 1,
             'fields' => 'ids',
             'tax_query' => [[
-                'taxonomy' => 'course_location',
+                'taxonomy' => 'ka_course_location',
                 'field' => 'term_id',
                 'terms' => $term_id,
             ]],
@@ -158,7 +158,7 @@ class CourseLocationGrid {
 
         // Sjekk etter publiserte 'coursedate' som peker til dette kursstedet via meta 'location_id'
         $coursedate_ids = get_posts([
-            'post_type' => 'coursedate',
+            'post_type' => 'ka_coursedate',
             'post_status' => 'publish',
             'posts_per_page' => 1,
             'fields' => 'ids',
@@ -179,7 +179,7 @@ class CourseLocationGrid {
     {
         // Hent alle coursedates som er knyttet til dette kursstedet
         $coursedates = get_posts([
-            'post_type' => 'coursedate',
+            'post_type' => 'ka_coursedate',
             'posts_per_page' => -1,
             'meta_query' => [
                 [

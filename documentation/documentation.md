@@ -148,9 +148,9 @@ Courses are created as pages, with a parent course, and subpages for course loca
 - meta_description: Course introtext (sanitized)
 
 #### Taxonomies
-- coursecategory: Categories for courses. In Kursagenten: tags
-- course_location: Locations are municipalities, or county if municiplality doesn't exist
-- instructors: Instructor name
+- ka_coursecategory (tidligere coursecategory): Categories for courses. In Kursagenten: tags
+- ka_course_location (tidligere course_location): Locations are municipalities, or county if municiplality doesn't exist
+- ka_instructors (tidligere instructors): Instructor name
 
 ### Course Date (coursedate)
 ```php
@@ -196,9 +196,9 @@ Course dates are created as seperate posts, representing specific scheduled inst
 - course_address_place: City/Place name
 
 #### Taxonomies
-- coursecategory: Categories for courses. In Kursagenten: tags
-- course_location: Locations are municipalities, or county if municiplality doesn't exist
-- instructors: Instructor name
+- ka_coursecategory (tidligere coursecategory): Categories for courses. In Kursagenten: tags
+- ka_course_location (tidligere course_location): Locations are municipalities, or county if municiplality doesn't exist
+- ka_instructors (tidligere instructors): Instructor name
 
 ### Instructor (instructor)
 ```php
@@ -224,22 +224,22 @@ Instructors are created as separate posts, representing course instructors. They
 - meta_description: Instructor introduction text (sanitized)
 
 #### Taxonomies
-- coursecategory: Categories the instructor teaches
-- course_location: Locations where the instructor teaches
+- ka_coursecategory (tidligere coursecategory): Categories the instructor teaches
+- ka_course_location (tidligere course_location): Locations where the instructor teaches
 
 ## Taxonomies
 
-### Course category (coursecategory)
+### Course category (ka_coursecategory)
 
 #### Description
 Categories are collected from Kursagenten. In Kursagenten they are called tags, and are custom strings created by course provider. They are added to all CPT's.
 
-### Course location (course_location)
+### Course location (ka_course_location)
 
 #### Description
 Location is collected from Kursagenten. They are municipalities, or county if municiplality doesn't exist. It is added to all CPT's.
 
-### Instructors (instructors)
+### Instructors (ka_instructors)
 
 #### Description
 I wanted instructors to be searchable in WP, and also to use them for filtering. I was told taxonomies where best for filters, and CPT for search. They are added to all CPT's.

@@ -1,11 +1,11 @@
-﻿<?php
+<?php
 /**
  * Kursagenten courses
  *
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.0.5
+ * Version:           1.0.6
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -15,13 +15,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.0.5');
+ define('KURSAG_VERSION', '1.0.6');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.0.5');
+    define('KURSAG_VERSION', '1.0.6');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -131,9 +131,9 @@ function kursagenten_fix_all_taxonomy_queries() {
         
         // Bygg mapping basert på innstillinger
         $taxonomy_map = [
-            !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori' => 'coursecategory',
-            !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted' => 'course_location',
-            !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer' => 'instructors'
+            (!empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori') => 'ka_coursecategory',
+            (!empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted') => 'ka_course_location',
+            (!empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer') => 'ka_instructors'
         ];
         
         // Identifiser taksonomi basert på URL-sti
@@ -144,14 +144,14 @@ function kursagenten_fix_all_taxonomy_queries() {
             $term = null;
             
             // Spesiell håndtering for instruktører med navnevisning
-            if ($taxonomy === 'instructors') {
+            if ($taxonomy === 'ka_instructors') {
                 $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
                 if ($name_display === 'firstname' || $name_display === 'lastname') {
                     $meta_key = $name_display === 'firstname' ? 'instructor_firstname' : 'instructor_lastname';
                     
                     // Finn instruktør basert på fornavn/etternavn
                     $terms = get_terms(array(
-                        'taxonomy' => 'instructors',
+                        'taxonomy' => 'ka_instructors',
                         'meta_key' => $meta_key,
                         'meta_value' => $term_slug,
                         'hide_empty' => false
@@ -384,7 +384,7 @@ add_action('admin_init', function() {
             }
             
             // Sjekk om vi er på en taxonomi-redigeringsside
-            if ($screen && in_array($screen->taxonomy, array('coursecategory', 'course_location', 'instructors'))) {
+            if ($screen && in_array($screen->taxonomy, array('ka_coursecategory', 'ka_course_location', 'ka_instructors'))) {
                 $enqueue_plugin_pages = true;
             }
             
@@ -456,7 +456,7 @@ if (!is_admin()) {
         );
 
         // Last inn archive-course spesifikk CSS
-        if (is_post_type_archive('course')) {
+        if (is_post_type_archive('ka_course')) {
             // Oppdater variabelnavn for å matche nye innstillinger
             $design = get_option('kursagenten_archive_design', 'default');
             $layout = get_option('kursagenten_archive_layout', 'default');
@@ -480,7 +480,7 @@ if (!is_admin()) {
         }
 
         // CSS for taxonomy templates - oppdater for å bruke nye innstillinger
-        if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
+        if (is_tax('ka_coursecategory') || is_tax('ka_course_location') || is_tax('ka_instructors')) {
             $taxonomy = get_queried_object()->taxonomy;
             $override_enabled = get_option("kursagenten_taxonomy_{$taxonomy}_override", false);
             
@@ -527,7 +527,7 @@ if (!is_admin()) {
         }
 
         // Single course styling
-        if (is_singular('course')) {
+        if (is_singular('ka_course')) {
             $design = get_option('kursagenten_single_design', 'default');
 
             // Last inn base CSS først
@@ -555,14 +555,14 @@ if (!is_admin()) {
         // Define valid post types and their contexts
         $valid_pages = [
             'post_types' => [
-                'course' => ['singular', 'archive'],
+                'ka_course' => ['singular', 'archive'],
                 'instructor' => ['singular', 'archive'],
-                'coursedate' => ['singular']
+                'ka_coursedate' => ['singular']
             ],
             'taxonomies' => [
-                'coursecategory' => true,
-                'course_location' => true,
-                'instructors' => true
+                'ka_coursecategory' => true,
+                'ka_course_location' => true,
+                'ka_instructors' => true
             ]
         ];
         

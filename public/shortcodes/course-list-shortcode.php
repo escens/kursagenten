@@ -232,8 +232,8 @@ function kursagenten_course_list_shortcode($atts) {
     // Function to check if a filter should be hidden due to shortcode parameters
     if (!function_exists('should_hide_filter')) {
         function should_hide_filter($filter_key, $active_shortcode_filters) {
-            // Spesiell håndtering for coursecategory taksonomi-sider
-            if ($filter_key === 'categories' && is_tax('coursecategory')) {
+            // Spesiell håndtering for ka_coursecategory taksonomi-sider
+            if ($filter_key === 'categories' && is_tax('ka_coursecategory')) {
                 // Sjekk om vi er på en foreldrekategori (som har barn)
                 $current_term = get_queried_object();
                 if ($current_term && $current_term->parent == 0) {
@@ -257,8 +257,8 @@ function kursagenten_course_list_shortcode($atts) {
         }
     }
 
-    // Spesiell håndtering for coursecategory taksonomi-sider
-    $category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : get_filtered_terms('coursecategory');
+    // Spesiell håndtering for ka_coursecategory taksonomi-sider
+    $category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('ka_coursecategory') : get_filtered_terms('ka_coursecategory');
 
     // Pre-prosessere kategorier for å identifisere foreldre (de som har barn)
     $parent_term_ids = [];
@@ -277,22 +277,22 @@ function kursagenten_course_list_shortcode($atts) {
 
     $taxonomy_data = [
         'categories' => [
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'terms' => $category_terms,
             'url_key' => 'k',
             'filter_key' => 'categories',
             'counts' => get_filter_value_counts('categories', $active_filters),
         ],
         'locations' => [
-            'taxonomy' => 'course_location',
+            'taxonomy' => 'ka_course_location',
             'terms' => get_filtered_location_terms(),
             'url_key' => 'sted',
             'filter_key' => 'locations',
             'counts' => get_filter_value_counts('locations', $active_filters),
         ],
         'instructors' => [
-            'taxonomy' => 'instructors',
-            'terms' => get_filtered_terms('instructors'),
+            'taxonomy' => 'ka_instructors',
+            'terms' => get_filtered_terms('ka_instructors'),
             'url_key' => 'i',
             'filter_key' => 'instructors',
             'counts' => get_filter_value_counts('instructors', $active_filters),
@@ -862,9 +862,9 @@ function kursagenten_course_list_shortcode($atts) {
             </article>
         </div>
     </main>
-    <?php if ( ! is_tax(array('coursecategory','course_location','instructors')) 
-        && ! is_post_type_archive('course') 
-        && ! is_singular('course') ) : ?>
+    <?php if ( ! is_tax(array('ka_coursecategory','ka_course_location','ka_instructors')) 
+        && ! is_post_type_archive('ka_course') 
+        && ! is_singular('ka_course') ) : ?>
     <div id="slidein-overlay"></div>
     <div id="slidein-panel">
         <button class="close-btn" aria-label="Close">&times;</button>
@@ -2153,7 +2153,7 @@ add_shortcode('kursliste', 'kursagenten_course_list_shortcode');
 function display_category_hierarchy($parent_id = 0, $depth = 0, $selected_categories = []) {
     // Hent kategorier for denne parent
     $args = [
-        'taxonomy' => 'coursecategory',
+        'taxonomy' => 'ka_coursecategory',
         'hide_empty' => true,
         'orderby' => 'menu_order',
         'order' => 'ASC',
@@ -2185,12 +2185,12 @@ function display_category_hierarchy($parent_id = 0, $depth = 0, $selected_catego
             // Sjekk om kategorien har synlige kurs
             $has_visible_courses = false;
             $courses = get_posts([
-                'post_type' => 'course',
+                'post_type' => 'ka_course',
                 'posts_per_page' => -1,
                 'post_status' => 'publish',
                 'tax_query' => [
                     [
-                        'taxonomy' => 'coursecategory',
+                        'taxonomy' => 'ka_coursecategory',
                         'field' => 'term_id',
                         'terms' => $category->term_id
                     ]
@@ -2216,7 +2216,7 @@ function display_category_hierarchy($parent_id = 0, $depth = 0, $selected_catego
             // Sjekk om kategorien har synlige underkategorier
             $has_visible_children = false;
             $child_categories = get_terms([
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'hide_empty' => true,
                 'parent' => $category->term_id,
                 'meta_query' => [
@@ -2235,13 +2235,13 @@ function display_category_hierarchy($parent_id = 0, $depth = 0, $selected_catego
 
             if (!empty($child_categories) && !is_wp_error($child_categories)) {
                 foreach ($child_categories as $child) {
-                    $child_courses = get_posts([
-                        'post_type' => 'course',
+                        $child_courses = get_posts([
+                        'post_type' => 'ka_course',
                         'posts_per_page' => -1,
                         'post_status' => 'publish',
                         'tax_query' => [
                             [
-                                'taxonomy' => 'coursecategory',
+                                'taxonomy' => 'ka_coursecategory',
                                 'field' => 'term_id',
                                 'terms' => $child->term_id
                             ]

@@ -14,7 +14,7 @@ function capitalize_first_letter($string) {
 }
 
 // Registrering av taksonomien 'kurskategori'
-register_taxonomy('coursecategory', array('course', 'coursedate', 'instructor'), array(
+register_taxonomy('ka_coursecategory', array('ka_course', 'ka_coursedate', 'instructor'), array(
     'labels' => array(
         'name' => 'Kurskategorier',
         'singular_name' => capitalize_first_letter($kurskategori),
@@ -54,7 +54,7 @@ register_taxonomy('coursecategory', array('course', 'coursedate', 'instructor'),
 ));
 
 // Registrering av taksonomien 'kurssted'
-register_taxonomy('course_location', array('course', 'coursedate', 'instructor'), array(
+register_taxonomy('ka_course_location', array('ka_course', 'ka_coursedate', 'instructor'), array(
     'labels' => array(
         'name' => 'Kurssteder',
         'singular_name' => capitalize_first_letter($kurssted),
@@ -94,7 +94,7 @@ register_taxonomy('course_location', array('course', 'coursedate', 'instructor')
 ));
 
 // Registrering av taksonomien 'instruktorer'
-register_taxonomy('instructors', array('course', 'coursedate', 'instructor'), array(
+register_taxonomy('ka_instructors', array('ka_course', 'ka_coursedate', 'instructor'), array(
     'labels' => array(
         'name' => 'Instruktører',
         'singular_name' => 'Instruktør',

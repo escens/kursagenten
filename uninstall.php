@@ -61,7 +61,7 @@ delete_transient('kursagenten_register_success');
 global $wpdb;
 
 // 1. Håndter taxonomier og deres relasjoner først
-$taxonomies = array('coursecategory', 'course_location', 'instructors');
+$taxonomies = array('ka_coursecategory', 'ka_course_location', 'ka_instructors');
 
 // Hent alle term IDs for våre taxonomier
 $term_ids = $wpdb->get_col("
@@ -93,7 +93,7 @@ if (!empty($term_ids)) {
 }
 
 // 2. Håndter courses og coursedates
-$post_types = array('course', 'coursedate');
+$post_types = array('ka_course', 'ka_coursedate');
 
 // Hent alle post IDs for courses og coursedates
 $post_ids = $wpdb->get_col("

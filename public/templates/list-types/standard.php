@@ -18,7 +18,7 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     
     // Hent kursdatoer basert på location_id
     $related_coursedates = get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
             ['key' => 'location_id', 'value' => $location_id],
@@ -156,11 +156,11 @@ if ($shortcode_show_images === 'yes' || $shortcode_show_images === 'no') {
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
 // Hent instruktører for kurset
-$instructors = get_the_terms($course_id, 'instructors');
+$instructors = get_the_terms($course_id, 'ka_instructors');
 $instructor_links = [];
 if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
-        $instructor_url = get_instructor_display_url($term, 'instructors');
+        $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         // Bruk samme navnevisningslogikk som i default.php
         $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
         $display_name = $term->name;
@@ -184,7 +184,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
 ?>
 <?php
 // Hent kurskategorier for data-category attributt
-$course_categories = get_the_terms($course_id, 'coursecategory');
+$course_categories = get_the_terms($course_id, 'ka_coursecategory');
 $category_slugs = [];
 if (!empty($course_categories) && !is_wp_error($course_categories)) {
     foreach ($course_categories as $category) {
@@ -305,7 +305,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                         
                         // Get all coursedates for the main course
                         $all_coursedates = get_posts([
-                            'post_type' => 'coursedate',
+                            'post_type' => 'ka_coursedate',
                             'posts_per_page' => -1,
                             'meta_query' => [
                                 ['key' => 'main_course_id', 'value' => $main_course_id],
@@ -323,7 +323,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                                 $coursedate_main_course_id = get_post_meta($coursedate->ID, 'main_course_id', true);
                                 
                                 // Get location terms for this coursedate
-                                $location_terms = get_the_terms($coursedate->ID, 'course_location');
+                                $location_terms = get_the_terms($coursedate->ID, 'ka_course_location');
                                 
                                 if (!empty($location_terms) && !is_wp_error($location_terms) && !empty($coursedate_location_id)) {
                                     foreach ($location_terms as $location_term) {
@@ -332,7 +332,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                                         
                                         // Find the WordPress post (subcourse) for this location
                                         $sub_course = get_posts([
-                                            'post_type' => 'course',
+                                            'post_type' => 'ka_course',
                                             'posts_per_page' => 1,
                                             'meta_query' => [
                                                 'relation' => 'AND',
@@ -395,7 +395,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                             foreach ($all_coursedates as $coursedate) {
                                 $coursedate_location_id = get_post_meta($coursedate->ID, 'location_id', true);
                                 $coursedate_main_course_id = get_post_meta($coursedate->ID, 'main_course_id', true);
-                                $location_terms = get_the_terms($coursedate->ID, 'course_location');
+                                $location_terms = get_the_terms($coursedate->ID, 'ka_course_location');
                                 
                                 if (!empty($location_terms) && !is_wp_error($location_terms) && !empty($coursedate_location_id)) {
                                     foreach ($location_terms as $location_term) {
@@ -429,7 +429,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                                             if (!$has_date_for_this_location) {
                                                 // Find the WordPress post (subcourse) for this location
                                                 $sub_course = get_posts([
-                                                    'post_type' => 'course',
+                                                    'post_type' => 'ka_course',
                                                     'posts_per_page' => 1,
                                                     'meta_query' => [
                                                         'relation' => 'AND',
@@ -530,7 +530,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                             <p>Kurset varer fra <?php echo esc_html($first_course_date); ?><?php if (!empty($last_course_date)) : ?> til <?php echo esc_html($last_course_date); ?><?php endif; ?></p>
                         <?php else : ?>
                             <?php 
-                            $is_online = has_term('nettbasert', 'course_location', $course_id);
+                            $is_online = has_term('nettbasert', 'ka_course_location', $course_id);
                             if ($is_online) : ?>
                                 <p>Etter påmelding vil du få en e-post med mer informasjon om kurset, og hvordan det skal gjennomføres.</p>
                             <?php elseif ($show_registration === '1' || $show_registration === 1 || $show_registration === true || $show_registration === "true") : ?>

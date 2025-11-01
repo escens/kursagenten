@@ -24,14 +24,14 @@ function kurstagger($atts){
     $taxonomy = '';
     switch ($atts['type']) {
         case 'kurskategorier':
-            $taxonomy = 'coursecategory';
+            $taxonomy = 'ka_coursecategory';
             break;
         case 'instruktorer':
         case 'instruktører':
-            $taxonomy = 'instructors';
+            $taxonomy = 'ka_instructors';
             break;
         case 'kurssteder':
-            $taxonomy = 'course_location';
+            $taxonomy = 'ka_course_location';
             break;
         default:
             return '';
@@ -184,7 +184,7 @@ function ka_filter_terms_with_published_courses($terms, $taxonomy) {
 function ka_term_has_published_courses(int $term_id, string $taxonomy): bool {
     // For alle taksonomier her viser vi kurs, ikke coursedates, i meny
     $q = new WP_Query([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'post_status' => 'publish',
         'posts_per_page' => 1,
         'fields' => 'ids',

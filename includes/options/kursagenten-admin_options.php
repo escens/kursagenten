@@ -73,6 +73,10 @@ function kursagenten_admin_landing_page() {
                         if (function_exists('settings_fields')) {
                             settings_fields('kursagenten_license');
                         }
+                        // Ensure proper redirect back to this page
+                        if (empty($_POST)) {
+                            echo '<input type="hidden" name="_wp_http_referer" value="' . esc_attr(admin_url('admin.php?page=kursagenten')) . '" />';
+                        }
                     ?>
                     <table class="form-table">
                         <tr>

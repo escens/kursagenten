@@ -37,9 +37,9 @@ Kursliste-kortkoden `[kursliste]` har nå støtte for direkte filtrering via kor
 
 | Parameter | Beskrivelse | Eksempel |
 |-----------|-------------|----------|
-| `kategori` | Filtrer på kurskategori (coursecategory taxonomy) | `kategori="dans"` |
-| `sted` | Filtrer på kurssted (course_location taxonomy) | `sted="bærum"` |
-| `instruktør` | Filtrer på instruktør (instructors taxonomy) | `instruktør="john-doe"` |
+| `kategori` | Filtrer på kurskategori (ka_coursecategory taxonomy) | `kategori="dans"` |
+| `sted` | Filtrer på kurssted (ka_course_location taxonomy) | `sted="bærum"` |
+| `instruktør` | Filtrer på instruktør (ka_instructors taxonomy) | `instruktør="john-doe"` |
 | `språk` | Filtrer på kursets språk (course_language meta) | `språk="norsk"` |
 | `måned` | Filtrer på måned (course_month meta) | `måned="9"` |
 

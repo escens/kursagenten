@@ -1,5 +1,17 @@
 <?php
 
+if (!function_exists('ka_map_legacy_taxonomy')) {
+    function ka_map_legacy_taxonomy(string $taxonomy): string {
+        $map = [
+            'coursecategory'   => 'ka_coursecategory',
+            'course_location'  => 'ka_course_location',
+            'instructors'      => 'ka_instructors',
+        ];
+
+        return $map[$taxonomy] ?? $taxonomy;
+    }
+}
+
 /**
  * Retrieve data for the first available coursedate.
  * For use in single-course.php.
@@ -91,7 +103,7 @@ function get_selected_coursedate_data($related_coursedate) {
  */
 function has_hidden_terms($post_id) {
     
-    $terms = wp_get_post_terms($post_id, 'coursecategory', array('fields' => 'slugs'));
+    $terms = wp_get_post_terms($post_id, 'ka_coursecategory', array('fields' => 'slugs'));
     if (is_wp_error($terms)) {
         //error_log('Feil ved henting av termer for post_id ' . $post_id . ': ' . $terms->get_error_message());
         return false;
@@ -347,7 +359,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     
     // Hent skjulte kategorier
     $hidden_categories = get_terms([
-        'taxonomy' => 'coursecategory',
+        'taxonomy' => 'ka_coursecategory',
         'hide_empty' => true,
         'meta_query' => [
             [
@@ -361,7 +373,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     // Hvis vi har skjulte kategorier, legg til en enkel NOT IN query
     if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
         $tax_query[] = [
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'field' => 'term_id',
             'terms' => $hidden_categories,
             'operator' => 'NOT IN'
@@ -375,7 +387,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         
         if (!empty($hierarchical_categories)) {
             $tax_query[] = [
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field' => 'slug',
                 'terms' => $hierarchical_categories,
                 'operator' => 'IN'
@@ -386,7 +398,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     // Legg til instruktør filter
     if (!empty($instructors)) {
         $tax_query[] = [
-            'taxonomy' => 'instructors',
+            'taxonomy' => 'ka_instructors',
             'field' => 'slug',
             'terms' => $instructors,
             'operator' => 'IN'
@@ -395,7 +407,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     
     // Bygg WP_Query args
     $query_args = [
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => $per_page,
         'paged' => $current_page,
         'meta_query' => $meta_query,
@@ -499,7 +511,7 @@ function get_course_info_by_location($related_course_id) {
 
     // Søk etter course med matching location_id
     $args = [
-        'post_type'      => 'course',
+        'post_type'      => 'ka_course',
         'posts_per_page' => 1,
         'meta_query'     => [
             [
@@ -541,7 +553,7 @@ function get_course_info_by_location($related_course_id) {
 
 function get_course_languages() {
     $args = [
-        'post_type'      => 'coursedate',
+        'post_type'      => 'ka_coursedate',
         'posts_per_page' => -1,
         'fields'         => 'ids',
     ];
@@ -575,7 +587,7 @@ function get_course_languages() {
  */
 function get_course_months() {
     $args = [
-        'post_type'      => 'coursedate',
+        'post_type'      => 'ka_coursedate',
         'posts_per_page' => -1,
         'fields'         => 'ids',
     ];
@@ -670,10 +682,10 @@ function get_courses_for_taxonomy($args = []) {
         }
     }
 
-    // Spesiell håndtering for course_location taksonomi
-    if ($taxonomy === 'course_location') {
+    // Spesiell håndtering for ka_course_location taksonomi
+    if ($taxonomy === 'ka_course_location') {
         $default_args = [
-            'post_type'      => 'course',
+            'post_type'      => 'ka_course',
             'posts_per_page' => -1,
             'paged'          => $current_page,
             'tax_query'      => $args['tax_query'] ?? ['relation' => 'AND'],
@@ -708,9 +720,9 @@ function get_courses_for_taxonomy($args = []) {
         return $query;
     }
 
-    // Standard håndtering for andre taksonomier (coursecategory og instructors)
+    // Standard håndtering for andre taksonomier (ka_coursecategory og ka_instructors)
     $default_args = [
-        'post_type'      => 'course',
+        'post_type'      => 'ka_course',
         'posts_per_page' => -1,
         'paged'          => $current_page,
         'tax_query'      => ['relation' => 'AND'],
@@ -726,7 +738,7 @@ function get_courses_for_taxonomy($args = []) {
     // Legg til taksonomi-spørringen for andre taksonomier
     if (isset($args['tax_query']) && is_array($args['tax_query'])) {
         foreach ($args['tax_query'] as $tax_query) {
-            if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] !== 'course_location') {
+            if (isset($tax_query['taxonomy']) && $tax_query['taxonomy'] !== 'ka_course_location') {
                 $default_args['tax_query'][] = $tax_query;
             }
         }
@@ -757,7 +769,7 @@ function get_course_locations($post_id) {
     
     if ($is_parent_course === 'yes') {
         // For foreldrekurs, hent alle lokasjoner fra taxonomien
-        $location_terms = wp_get_object_terms($post_id, 'course_location');
+        $location_terms = wp_get_object_terms($post_id, 'ka_course_location');
         if (!is_wp_error($location_terms)) {
             foreach ($location_terms as $term) {
                 $locations[] = array(
@@ -770,7 +782,7 @@ function get_course_locations($post_id) {
         // For underkurs, hent hovedkurset og alle dets lokasjoner
         $main_course_id = get_post_meta($post_id, 'main_course_id', true);
         $main_course = get_posts(array(
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'meta_query' => array(
                 array(
                     'key' => 'main_course_id',
@@ -787,7 +799,7 @@ function get_course_locations($post_id) {
         ));
         
         if (!empty($main_course)) {
-            $location_terms = wp_get_object_terms($main_course[0]->ID, 'course_location');
+            $location_terms = wp_get_object_terms($main_course[0]->ID, 'ka_course_location');
             if (!is_wp_error($location_terms)) {
                 foreach ($location_terms as $term) {
                     $locations[] = array(
@@ -819,7 +831,7 @@ function display_course_locations($post_id) {
     if ($is_parent_course !== 'yes') {
         $main_course_id = get_post_meta($post_id, 'main_course_id', true);
         $main_course = get_posts(array(
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'meta_query' => array(
                 array(
                     'key' => 'main_course_id',
@@ -859,7 +871,7 @@ function display_course_locations($post_id) {
 
     if (!empty($parent_main_course_id)) {
         $child_courses = get_posts(array(
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'post_status' => array('publish', 'draft'),
             'posts_per_page' => -1,
             'meta_query' => array(
@@ -1005,7 +1017,7 @@ function get_top_level_categories_from_query($query) {
     
     foreach ($posts as $post) {
         // Hent kurskategorier for hvert kurs
-        $post_categories = wp_get_object_terms($post->ID, 'coursecategory');
+        $post_categories = wp_get_object_terms($post->ID, 'ka_coursecategory');
         
         if (!is_wp_error($post_categories) && !empty($post_categories)) {
             // For hvert kurs, legg til alle kategorier det tilhører
@@ -1051,7 +1063,7 @@ function get_hierarchical_category_filter($selected_categories) {
     
     // Hent alle kategorier med hierarki-informasjon
     $all_categories = get_terms([
-        'taxonomy' => 'coursecategory',
+        'taxonomy' => 'ka_coursecategory',
         'hide_empty' => false,
         'hierarchical' => true,
         'orderby' => 'menu_order',
@@ -1093,7 +1105,7 @@ function get_hierarchical_category_filter($selected_categories) {
             
             // Finn alle barn til denne forelderen
             $children = get_terms([
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'hide_empty' => false,
                 'parent' => $category_info['term_id']
             ]);
@@ -1117,8 +1129,8 @@ function get_hierarchical_category_filter($selected_categories) {
     $include_child_with_descendants = function(string $child_slug) use (&$categories_to_include, $category_map) {
         $categories_to_include[] = $child_slug;
         if (isset($category_map[$child_slug])) {
-            $child_children = get_terms([
-                'taxonomy' => 'coursecategory',
+                $child_children = get_terms([
+                'taxonomy' => 'ka_coursecategory',
                 'hide_empty' => false,
                 'parent' => $category_map[$child_slug]['term_id']
             ]);
@@ -1215,11 +1227,11 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
     $terms = [];
     switch ($filter_type) {
         case 'categories':
-            $terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('coursecategory') : get_filtered_terms('coursecategory');
+            $terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('ka_coursecategory') : get_filtered_terms('ka_coursecategory');
             break;
         case 'locations':
             $terms = get_terms([
-                'taxonomy' => 'course_location',
+                'taxonomy' => 'ka_course_location',
                 'hide_empty' => true,
                 'meta_query' => [
                     'relation' => 'OR',
@@ -1235,7 +1247,7 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
             ]);
             break;
         case 'instructors':
-            $terms = get_filtered_terms('instructors');
+            $terms = get_filtered_terms('ka_instructors');
             break;
         case 'language':
             $terms = get_filtered_languages();
@@ -1333,7 +1345,7 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
 function get_course_dates_query_for_count($filters) {
     // Lag en direkte spørring uten å bruke $_REQUEST
     $args = [
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'post_status' => 'publish', // Kun publiserte coursedates
         'posts_per_page' => -1, // Hent alle for å telle
         'fields' => 'ids', // Kun ID-er for raskere telling
@@ -1393,7 +1405,7 @@ function get_course_dates_query_for_count($filters) {
         
         // Hent skjulte kategorier
         $hidden_categories = get_terms([
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'hide_empty' => true,
             'meta_query' => [
                 [
@@ -1409,7 +1421,7 @@ function get_course_dates_query_for_count($filters) {
         // Hvis vi har skjulte kategorier, legg til en enkel NOT IN query
         if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
             $args['tax_query'][] = [
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field' => 'term_id',
                 'terms' => $hidden_categories,
                 'operator' => 'NOT IN'
@@ -1418,7 +1430,7 @@ function get_course_dates_query_for_count($filters) {
         
         // Legg til valgte kategorier
         $args['tax_query'][] = [
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'field' => 'slug',
             'terms' => $categories,
             'operator' => 'IN'
@@ -1426,7 +1438,7 @@ function get_course_dates_query_for_count($filters) {
     } else {
         // Hvis ingen kategori-filter er spesifisert, ekskluder skjulte kategorier
         $hidden_categories = get_terms([
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'hide_empty' => true,
             'meta_query' => [
                 [
@@ -1441,7 +1453,7 @@ function get_course_dates_query_for_count($filters) {
             $args['tax_query'] = [
                 'relation' => 'AND',
                 [
-                    'taxonomy' => 'coursecategory',
+                    'taxonomy' => 'ka_coursecategory',
                     'field' => 'term_id',
                     'terms' => $hidden_categories,
                     'operator' => 'NOT IN'
@@ -1471,7 +1483,7 @@ function get_course_dates_query_for_count($filters) {
             $args['tax_query'] = ['relation' => 'AND'];
         }
         $args['tax_query'][] = [
-            'taxonomy' => 'instructors',
+            'taxonomy' => 'ka_instructors',
             'field' => 'slug',
             'terms' => $instructors,
             'operator' => 'IN'

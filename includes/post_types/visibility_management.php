@@ -14,7 +14,7 @@ if (!defined('KURSAG_HIDDEN_TERMS')) {
 }
 
 /**
- * Hide posts with specific terms in 'coursecategory' from the main query
+ * Hide posts with specific terms in 'ka_coursecategory' from the main query
  * This needs to run FIRST to ensure posts are filtered before other operations
  */
 function exclude_hidden_kurs_posts($query) {
@@ -39,8 +39,8 @@ function exclude_hidden_kurs_posts($query) {
         }
         
         // For ikke-søk spørringer, apply filter bare hvis det er course eller coursedate
-        if ($post_types === 'course' || $post_types === 'coursedate' ||
-            (is_array($post_types) && (in_array('course', $post_types) || in_array('coursedate', $post_types)))) {
+        if ($post_types === 'ka_course' || $post_types === 'ka_coursedate' ||
+            (is_array($post_types) && (in_array('ka_course', $post_types) || in_array('ka_coursedate', $post_types)))) {
             apply_course_visibility_filter($query);
         }
     }
@@ -51,7 +51,7 @@ function exclude_hidden_kurs_posts($query) {
  */
 function apply_course_visibility_filter($query) {
     $all_terms = get_terms([
-        'taxonomy' => 'coursecategory',
+        'taxonomy' => 'ka_coursecategory',
         'fields' => 'slugs',
         'hide_empty' => false
     ]);
@@ -69,7 +69,7 @@ function apply_course_visibility_filter($query) {
             
             // Legg til vår nye tax query
             $existing_tax_query[] = [
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field'    => 'slug',
                 'terms'    => $visible_terms,
                 'operator' => 'IN'
@@ -92,7 +92,7 @@ function exclude_hidden_terms_from_list($args, $taxonomies) {
         return $args;
     }
     
-    if (in_array('coursecategory', (array) $taxonomies)) {
+    if (in_array('ka_coursecategory', (array) $taxonomies)) {
         global $wpdb;
         $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
         $hidden_terms_string = "'" . implode("','", array_map('esc_sql', $hidden_terms)) . "'";
@@ -123,8 +123,8 @@ function add_course_visibility_column($columns) {
     }
     return $new_columns;
 }
-add_filter('manage_course_posts_columns', 'add_course_visibility_column');
-add_filter('manage_coursedate_posts_columns', 'add_course_visibility_column');
+add_filter('manage_ka_course_posts_columns', 'add_course_visibility_column');
+add_filter('manage_ka_coursedate_posts_columns', 'add_course_visibility_column');
 
 /**
  * Add content to custom column
@@ -144,7 +144,7 @@ function course_visibility_column_content($column, $post_id) {
             return;
         }
 
-        $terms = wp_get_post_terms($post_id, 'coursecategory');
+        $terms = wp_get_post_terms($post_id, 'ka_coursecategory');
         $hidden_terms = array('skjult', 'skjul', 'usynlig', 'inaktiv', 'ikke-aktiv');
         $is_hidden = false;
         
@@ -176,8 +176,8 @@ function course_visibility_column_content($column, $post_id) {
         }
     }
 }
-add_action('manage_course_posts_custom_column', 'course_visibility_column_content', 10, 2);
-add_action('manage_coursedate_posts_custom_column', 'course_visibility_column_content', 10, 2);
+add_action('manage_ka_course_posts_custom_column', 'course_visibility_column_content', 10, 2);
+add_action('manage_ka_coursedate_posts_custom_column', 'course_visibility_column_content', 10, 2);
 
 /**
  * Make the visibility column sortable
@@ -186,15 +186,15 @@ function make_visibility_column_sortable($columns) {
     $columns['visibility'] = 'visibility';
     return $columns;
 }
-add_filter('manage_edit-course_sortable_columns', 'make_visibility_column_sortable');
-add_filter('manage_edit-coursedate_sortable_columns', 'make_visibility_column_sortable');
+add_filter('manage_edit-ka_course_sortable_columns', 'make_visibility_column_sortable');
+add_filter('manage_edit-ka_coursedate_sortable_columns', 'make_visibility_column_sortable');
 
 /**
  * Add custom filtering for visibility status
  */
 function add_visibility_filter() {
     global $typenow;
-    if ($typenow === 'course' || $typenow === 'coursedate') {
+    if ($typenow === 'ka_course' || $typenow === 'ka_coursedate') {
         $current = isset($_GET['course_visibility']) ? sanitize_text_field($_GET['course_visibility']) : '';
         ?>
         <select name="course_visibility" id="course_visibility">
@@ -216,7 +216,7 @@ function handle_visibility_filter($query) {
     }
 
     global $typenow;
-    if (($typenow === 'course' || $typenow === 'coursedate') && 
+    if (($typenow === 'ka_course' || $typenow === 'ka_coursedate') && 
         isset($_GET['course_visibility'])) {
         
         // Sanitize input
@@ -228,7 +228,7 @@ function handle_visibility_filter($query) {
         $hidden_terms = unserialize(KURSAG_HIDDEN_TERMS);
         $tax_query = array(
             array(
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field'    => 'slug',
                 'terms'    => $hidden_terms,
                 'operator' => $visibility === 'hidden' ? 'IN' : 'NOT IN'
@@ -243,7 +243,7 @@ add_action('pre_get_posts', 'handle_visibility_filter');
 // Legg til CSS i admin
 function add_admin_visibility_styles() {
     global $post_type;
-    if ($post_type === 'course' || $post_type === 'coursedate') {
+    if ($post_type === 'ka_course' || $post_type === 'ka_coursedate') {
         ?>
         <style>
             .column-visibility {
@@ -274,7 +274,7 @@ function modify_course_dates_query($args) {
         // Add tax query to exclude hidden terms
         $tax_query = array(
             array(
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field'    => 'slug',
                 'terms'    => $hidden_terms,
                 'operator' => 'NOT IN'

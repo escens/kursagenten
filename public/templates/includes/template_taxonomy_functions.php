@@ -41,9 +41,9 @@ function map_taxonomy_slug($taxonomy_slug) {
     
     // Bygg mapping basert på innstillinger
     $taxonomy_map = [
-        !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori' => 'coursecategory',
-        !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted' => 'course_location',
-        !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer' => 'instructors'
+        !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori' => 'ka_coursecategory',
+        !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted' => 'ka_course_location',
+        !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer' => 'ka_instructors'
     ];
     
     return isset($taxonomy_map[$taxonomy_slug]) ? $taxonomy_map[$taxonomy_slug] : '';
@@ -69,12 +69,16 @@ function get_taxonomy_term($taxonomy, $term_slug) {
 }
 
 function get_taxonomy_image($term_id, $taxonomy) {
+    if (function_exists('ka_map_legacy_taxonomy')) {
+        $taxonomy = ka_map_legacy_taxonomy($taxonomy);
+    }
+
     switch ($taxonomy) {
-        case 'coursecategory':
+        case 'ka_coursecategory':
             return get_term_meta($term_id, 'image_coursecategory', true);
-        case 'course_location':
+        case 'ka_course_location':
             return get_term_meta($term_id, 'image_course_location', true);
-        case 'instructors':
+        case 'ka_instructors':
             return get_instructor_image($term_id);
         default:
             return '';
@@ -115,7 +119,11 @@ function get_instructor_image($term_id) {
  * @return string The URL for the instructor
  */
 function get_instructor_display_url($term, $taxonomy) {
-    if ($taxonomy !== 'instructors') {
+    if (function_exists('ka_map_legacy_taxonomy')) {
+        $taxonomy = ka_map_legacy_taxonomy($taxonomy);
+    }
+
+    if ($taxonomy !== 'ka_instructors') {
         return get_term_link($term);
     }
     
@@ -162,7 +170,7 @@ function get_taxonomy_courses($term_id, $taxonomy) {
     }
     
     $args = array(
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'posts_per_page' => -1,
         'tax_query' => array(
             array(
@@ -183,7 +191,7 @@ function get_taxonomy_courses($term_id, $taxonomy) {
 /**
  * Get taxonomy-specific setting with proper override handling
  * 
- * @param string $taxonomy The taxonomy name (coursecategory, course_location, instructors)
+ * @param string $taxonomy The taxonomy name (ka_coursecategory, ka_course_location, ka_instructors)
  * @param string $setting The setting name (layout, design, list_type, show_images, name_display)
  * @param string $default Default value if no setting is found
  * @return string The setting value

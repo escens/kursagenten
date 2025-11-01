@@ -631,9 +631,9 @@ class Designmaler {
                         <h4>Overstyr innstillinger for spesifikke taksonomier</h4>
                         <?php
                         $taxonomies = [
-                            'coursecategory' => 'Kurskategorier',
-                            'course_location' => 'Kurssteder',
-                            'instructors' => 'Instruktører'
+                            'ka_coursecategory' => 'Kurskategorier',
+                            'ka_course_location' => 'Kurssteder',
+                            'ka_instructors' => 'Instruktører'
                         ];
                         
                         foreach ($taxonomies as $tax_name => $tax_label) :
@@ -721,7 +721,7 @@ class Designmaler {
                                         </div>
                                     </div>
 
-                                    <?php if ($tax_name === 'instructors'): ?>
+                            <?php if ($tax_name === 'ka_instructors'): ?>
                                     <!-- Navnevisning -->
                                     <div class="option-row">
                                         <label class="option-label">Navnevisning:</label>
@@ -748,7 +748,7 @@ class Designmaler {
                 <!-- Standardbilder -->
                 <div class="options-card" data-section="valg-for-bilder">
                     <h3 id="valg-for-bilder">Valg for bilder</h3>
-                    <p>Standarbilder brukes som en backupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsbilder om nødvendig. Du kan også sette inn url til plassholderbilder via <a href="/wp-admin/admin.php?page=kursagenten#kortkoder">kortkoder</a>.</p>
+                    <p>Standarbilder brukes som en bakupløsning for å hindre ødelagte design. Disse brukes som plassholdere om et bilde mangler. Velger du ingen bilder, bruker vi Kursagentens standard erstatningsbilder om nødvendig. Du kan også sette inn url til plassholderbilder via <a href="/wp-admin/admin.php?page=kursagenten#kortkoder">kortkoder</a>.</p>
                     <table class="form-table">
                         <tr>
                             <th scope="row">Generelt plassholderbilde</th>
@@ -945,9 +945,9 @@ class Designmaler {
         );
 
         // Registrer taksonomi-spesifikke innstillinger
-        $taxonomies = ['coursecategory' => 'Kurskategorier', 
-                      'course_location' => 'Kurssteder', 
-                      'instructors' => 'Instruktører'];
+        $taxonomies = ['ka_coursecategory' => 'Kurskategorier', 
+                      'ka_course_location' => 'Kurssteder', 
+                      'ka_instructors' => 'Instruktører'];
 
         foreach ($taxonomies as $tax_name => $tax_label) {
             // Registrer override-innstilling med custom sanitize for å håndtere uskjekket checkbox
@@ -975,7 +975,7 @@ class Designmaler {
             }
 
             // Registrer navnevisning for instruktører
-            if ($tax_name === 'instructors') {
+            if ($tax_name === 'ka_instructors') {
                 register_setting(
                     'design_option_group',
                     "kursagenten_taxonomy_{$tax_name}_name_display",
@@ -1029,7 +1029,7 @@ class Designmaler {
         }
 
         // Sanitize taxonomy-specific settings
-        $taxonomies = ['coursecategory', 'course_location', 'instructors'];
+        $taxonomies = ['ka_coursecategory', 'ka_course_location', 'ka_instructors'];
         foreach ($taxonomies as $taxonomy) {
             $tax_keys = [
                 "taxonomy_{$taxonomy}_override",
@@ -1486,17 +1486,17 @@ class Designmaler {
             $is_kursagenten_page = false;
             
             // Sjekk om vi er på en enkeltkurs-side
-            if (is_singular('course')) {
+            if (is_singular('ka_course')) {
                 $is_kursagenten_page = true;
             }
             
             // Sjekk om vi er på en kursarkiv-side
-            if (is_post_type_archive('course')) {
+            if (is_post_type_archive('ka_course')) {
                 $is_kursagenten_page = true;
             }
             
             // Sjekk om vi er på en taksonomi-side
-            if (is_tax('coursecategory') || is_tax('course_location') || is_tax('instructors')) {
+            if (is_tax('ka_coursecategory') || is_tax('ka_course_location') || is_tax('ka_instructors')) {
                 $is_kursagenten_page = true;
             }
             
@@ -1629,10 +1629,10 @@ if (queryString) {
                                         <?php 
                                         switch ($post_status) {
                                             case 'publish':
-                                                echo '✓ Publisert';
+                                                echo 'âœ“ Publisert';
                                                 break;
                                             case 'draft':
-                                                echo '⚠ Kladd';
+                                                echo 'âš  Kladd';
                                                 break;
                                             default:
                                                 echo '? ' . ucfirst($post_status);
@@ -1645,7 +1645,7 @@ if (queryString) {
                                         <a href="<?php echo get_permalink($page_id); ?>" target="_blank">Vis</a>
                                     </div>
                                 <?php else: ?>
-                                    <span class="status-indicator not-created">✗ Ikke opprettet</span>
+                                    <span class="status-indicator not-created">âœ— Ikke opprettet</span>
                                 <?php endif; ?>
                             </td>
                             <td class="actions">
@@ -1872,7 +1872,7 @@ if (queryString) {
         
         // Fallback til arkiv-URL for kurs
         if ($page_key === 'kurs') {
-            return get_post_type_archive_link('course');
+            return get_post_type_archive_link('ka_course');
         }
         
         return '';
@@ -1890,7 +1890,7 @@ if (queryString) {
         if ($name_display === 'firstname' || $name_display === 'lastname') {
             add_rewrite_rule(
                 $instructor_slug . '/([^/]+)/?$',
-                'index.php?instructors=$matches[1]',
+                'index.php?ka_instructors=$matches[1]',
                 'top'
             );
         }
@@ -1900,7 +1900,7 @@ if (queryString) {
      * Modifiser term_link for instruktører
      */
     public function modify_instructor_term_link($termlink, $term, $taxonomy) {
-        if ($taxonomy !== 'instructors') {
+        if ($taxonomy !== 'ka_instructors') {
             return $termlink;
         }
 
@@ -1944,8 +1944,8 @@ if (queryString) {
      * Håndter rewrite request for instruktører
      */
     public function handle_instructor_rewrite_request($query_vars) {
-        if (isset($query_vars['instructors'])) {
-            $requested_slug = $query_vars['instructors'];
+        if (isset($query_vars['ka_instructors'])) {
+            $requested_slug = $query_vars['ka_instructors'];
             
             // Hent URL-innstillinger
             $url_options = get_option('kag_seo_option_name');
@@ -1958,7 +1958,7 @@ if (queryString) {
                 
                 // Finn alle instruktører med dette navnet
                 $terms = get_terms(array(
-                    'taxonomy' => 'instructors',
+                    'taxonomy' => 'ka_instructors',
                     'meta_key' => $meta_key,
                     'meta_value' => $requested_slug,
                     'hide_empty' => false
@@ -1966,7 +1966,7 @@ if (queryString) {
 
                 if (!empty($terms)) {
                     // Bruk den første matchende instruktøren
-                    $query_vars['instructors'] = $terms[0]->slug;
+                    $query_vars['ka_instructors'] = $terms[0]->slug;
                 }
             }
         }
@@ -1980,7 +1980,7 @@ if (queryString) {
      * @return string Navnet som skal vises
      */
     private function get_instructor_display_name($term) {
-        if (!($term instanceof WP_Term) || $term->taxonomy !== 'instructors') {
+        if (!($term instanceof WP_Term) || $term->taxonomy !== 'ka_instructors') {
             return '';
         }
 
@@ -2003,7 +2003,7 @@ if (queryString) {
      * @return array
      */
     public function filter_document_title_parts($title_parts) {
-        if (is_tax('instructors')) {
+        if (is_tax('ka_instructors')) {
             $term = get_queried_object();
             if ($term instanceof WP_Term) {
                 $display = $this->get_instructor_display_name($term);
@@ -2022,7 +2022,7 @@ if (queryString) {
      * @return string
      */
     public function filter_wpseo_title($title) {
-        if (is_tax('instructors')) {
+        if (is_tax('ka_instructors')) {
             $term = get_queried_object();
             if ($term instanceof WP_Term) {
                 $display = $this->get_instructor_display_name($term);
@@ -2041,7 +2041,7 @@ if (queryString) {
      * @return string
      */
     public function filter_rank_math_title($title) {
-        if (is_tax('instructors')) {
+        if (is_tax('ka_instructors')) {
             $term = get_queried_object();
             if ($term instanceof WP_Term) {
                 $display = $this->get_instructor_display_name($term);

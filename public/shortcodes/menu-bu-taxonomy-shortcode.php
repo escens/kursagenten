@@ -68,14 +68,14 @@ function kursagenten_taxonomy_menu_shortcode($atts) {
     $taxonomy = '';
     switch ($atts['type']) {
         case 'kurskategorier':
-            $taxonomy = 'coursecategory';
+            $taxonomy = 'ka_coursecategory';
             break;
         case 'instruktorer':
         case 'instruktører':
-            $taxonomy = 'instructors';
+            $taxonomy = 'ka_instructors';
             break;
         case 'kurssteder':
-            $taxonomy = 'course_location';
+            $taxonomy = 'ka_course_location';
             break;
         default:
             return '';
@@ -112,7 +112,7 @@ function kursagenten_taxonomy_menu_shortcode($atts) {
         $has_published = [];
         foreach ($terms as $t) {
             $q = new WP_Query([
-                'post_type' => 'course',
+                'post_type' => 'ka_course',
                 'post_status' => 'publish',
                 'posts_per_page' => 1,
                 'fields' => 'ids',

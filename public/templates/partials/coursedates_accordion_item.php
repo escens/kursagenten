@@ -1,8 +1,8 @@
 <?php
 // Hent taxonomiene
-/*$instructors = get_the_terms($course_id, 'instructors');
-$course_categories = get_the_terms($course_id, 'coursecategory');
-$course_locations = get_the_terms($course_id, 'course_location');
+/*$instructors = get_the_terms($course_id, 'ka_instructors');
+$course_categories = get_the_terms($course_id, 'ka_coursecategory');
+$course_locations = get_the_terms($course_id, 'ka_course_location');
 
 // Funksjon for å formatere taxonomilisten som kommaseparert
 function format_taxonomy_list($terms) {
@@ -50,11 +50,11 @@ if (!$course_link) {
 $item_class = $course_count === 1 ? 'course-item courselist-item single-item' : 'course-item courselist-item';
 
 // Hent instruktører for kurset
-$instructors = get_the_terms($course_id, 'instructors');
+$instructors = get_the_terms($course_id, 'ka_instructors');
 $instructor_links = [];
 if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
-        $instructor_url = get_instructor_display_url($term, 'instructors');
+        $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
     }, $instructors);
 }

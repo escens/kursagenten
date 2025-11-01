@@ -159,7 +159,7 @@ function cleanup_invalid_relationships() {
 
     // Finn alle kurs med relasjoner
     $courses = get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'posts_per_page' => -1,
         'meta_query' => [
             [
@@ -187,7 +187,7 @@ function cleanup_invalid_relationships() {
 
     // Finn alle kursdatoer med relasjoner
     $coursedates = get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
             [
@@ -229,7 +229,7 @@ function get_course_coursedates($course_id) {
     }
 
     return get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'post__in' => $coursedate_ids,
         'posts_per_page' => -1,
         'orderby' => 'meta_value',
@@ -251,7 +251,7 @@ function get_coursedate_courses($coursedate_id) {
     }
 
     return get_posts([
-        'post_type' => 'course',
+        'post_type' => 'ka_course',
         'post__in' => $course_ids,
         'posts_per_page' => -1
     ]);

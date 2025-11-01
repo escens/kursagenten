@@ -97,7 +97,7 @@ class RelatedCourses {
         global $post;
 
         // Sjekk om gjeldende innlegg har terms i 'kurskategori' taksonomien
-        $terms = get_the_terms($post->ID, 'coursecategory');
+        $terms = get_the_terms($post->ID, 'ka_coursecategory');
 
         if (!$terms || is_wp_error($terms)) {
             return [];
@@ -108,10 +108,10 @@ class RelatedCourses {
 
         // Hent alle publiserte kurs i samme 'kurskategori'
         return get_posts([
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'post_status' => 'publish',
             'tax_query' => [[
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field' => 'term_id',
                 'terms' => $current_term->term_id,
             ]],

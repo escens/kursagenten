@@ -19,24 +19,24 @@ class KA_Admin_Bar_Links {
     private function init_system_pages() {
         $this->system_pages = [
             'instruktorer' => [
-                'taxonomy' => 'instructors',
+                'taxonomy' => 'ka_instructors',
                 'option_key' => 'ka_page_instruktorer',
                 'label' => 'Rediger instruktører'
             ],
             'kurskategorier' => [
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'option_key' => 'ka_page_kurskategorier',
                 'label' => 'Rediger kurskategorier'
             ],
             'kurssteder' => [
-                'taxonomy' => 'course_location',
+                'taxonomy' => 'ka_course_location',
                 'option_key' => 'ka_page_kurssteder',
                 'label' => 'Rediger kurssteder'
             ],
             'kurs' => [
                 'option_key' => 'ka_page_kurs',
                 'label' => 'Se importerte kurs',
-                'admin_url' => 'edit.php?post_type=course'
+                'admin_url' => 'edit.php?post_type=ka_course'
             ],
             'betaling' => [
                 'option_key' => 'ka_page_betaling',

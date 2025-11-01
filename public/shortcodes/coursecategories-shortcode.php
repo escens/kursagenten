@@ -103,7 +103,7 @@ class CourseCategories {
 
     private function get_filtered_terms(string $vis): array {
         $terms = get_terms([
-            'taxonomy' => 'coursecategory',
+            'taxonomy' => 'ka_coursecategory',
             'hide_empty' => true,
             'meta_query' => [
                 'relation' => 'OR',
@@ -134,7 +134,7 @@ class CourseCategories {
         $known_modes = ['subkategorier', 'hovedkategorier', 'standard'];
         if (!in_array($vis, $known_modes, true)) {
             $slug = sanitize_title($vis);
-            $parent_term = get_term_by('slug', $slug, 'coursecategory');
+            $parent_term = get_term_by('slug', $slug, 'ka_coursecategory');
             if ($parent_term && !is_wp_error($parent_term)) {
                 $parent_term_id = (int) $parent_term->term_id;
             }
@@ -188,13 +188,13 @@ class CourseCategories {
     // Check if a term has at least one published course
     private function term_has_published_courses(int $term_id): bool {
         // Query only published posts to avoid drafts keeping categories visible
-        $q = new \WP_Query([
-            'post_type' => 'course',
+            $q = new \WP_Query([
+            'post_type' => 'ka_course',
             'post_status' => 'publish',
             'posts_per_page' => 1,
             'fields' => 'ids',
-            'tax_query' => [[
-                'taxonomy' => 'coursecategory',
+                'tax_query' => [[
+                'taxonomy' => 'ka_coursecategory',
                 'field' => 'term_id',
                 'terms' => $term_id,
             ]],
@@ -247,9 +247,9 @@ class CourseCategories {
 
         // Hvis ingen term-bilde funnet, prøv å hente fra tilknyttet kurs
         $posts = get_posts([
-            'post_type' => 'course',
+            'post_type' => 'ka_course',
             'tax_query' => [[
-                'taxonomy' => 'coursecategory',
+                'taxonomy' => 'ka_coursecategory',
                 'field' => 'term_id',
                 'terms' => $term->term_id,
             ]],

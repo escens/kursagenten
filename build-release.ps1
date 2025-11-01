@@ -49,7 +49,7 @@ if (-not (Test-Path $OutputDir)) {
 # Steg 1: Oppdater versjonsnummer i kursagenten.php
 Write-Info "Steg 1: Oppdaterer versjonsnummer i kursagenten.php..."
 $MainFile = Join-Path $PluginDir "kursagenten.php"
-$Content = Get-Content $MainFile -Raw -Encoding UTF8
+$Content = Get-Content $MainFile -Raw
 
 # Oppdater Plugin Version i header
 $Content = $Content -replace "(\* Version:\s+)\d+\.\d+\.\d+", "`${1}$Version"
@@ -57,15 +57,25 @@ $Content = $Content -replace "(\* Version:\s+)\d+\.\d+\.\d+", "`${1}$Version"
 # Oppdater KURSAG_VERSION konstant
 $Content = $Content -replace "(define\('KURSAG_VERSION',\s*')\d+\.\d+\.\d+('\);)", "`${1}$Version`$2"
 
-Set-Content -Path $MainFile -Value $Content -Encoding UTF8 -NoNewline
+# Write with UTF8 without BOM (critical to avoid "unexpected output" errors)
+$Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($MainFile, $Content, $Utf8NoBomEncoding)
 
 # Force flush to disk
 Start-Sleep -Milliseconds 500
 
 # Verifiser at oppdateringen ble skrevet til disk
-$VerifyContent = Get-Content $MainFile -Raw -Encoding UTF8
+$VerifyContent = Get-Content $MainFile -Raw
 if ($VerifyContent -match "Version:\s+$Version" -and $VerifyContent -match "define\('KURSAG_VERSION',\s*'$Version'\)") {
     Write-Success "Versjonsnummer oppdatert til $Version"
+    
+    # Verify no BOM
+    $Bytes = [System.IO.File]::ReadAllBytes($MainFile)
+    if ($Bytes.Length -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF) {
+        Write-Error "ADVARSEL: Filen har BOM! Dette vil forårsake 'unexpected output' feil."
+        exit 1
+    }
+    Write-Success "Verifisert: Ingen BOM i filen"
 } else {
     Write-Error "FEIL: Versjonsnummer ble ikke oppdatert korrekt!"
     Write-Error "Sjekk at filen ikke er skrivebeskyttet eller apnet i en annen editor."
@@ -166,12 +176,21 @@ Get-ChildItem -Path $PluginDir -Recurse -Force | ForEach-Object {
 
 Write-Success "Filer kopiert ($FileCount filer)"
 
-# Verifiser at kopiert kursagenten.php har riktig versjon
+# Verifiser at kopiert kursagenten.php har riktig versjon og ingen BOM
 $CopiedMainFile = Join-Path $TempPluginDir "kursagenten.php"
 if (Test-Path $CopiedMainFile) {
-    $CopiedContent = Get-Content $CopiedMainFile -Raw -Encoding UTF8
+    $CopiedContent = Get-Content $CopiedMainFile -Raw
     if ($CopiedContent -match "Version:\s+$Version" -and $CopiedContent -match "define\('KURSAG_VERSION',\s*'$Version'\)") {
         Write-Success "Verifisert: Kopiert fil har versjon $Version"
+        
+        # Verify no BOM in copied file
+        $Bytes = [System.IO.File]::ReadAllBytes($CopiedMainFile)
+        if ($Bytes.Length -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF) {
+            Write-Error "KRITISK FEIL: Kopiert fil har BOM! Dette vil forårsake 'unexpected output' feil."
+            Remove-Item $TempDir -Recurse -Force
+            exit 1
+        }
+        Write-Success "Verifisert: Ingen BOM i kopiert fil"
     } else {
         Write-Error "ADVARSEL: Kopiert fil har ikke riktig versjon!"
         Write-Error "Dette kan skyldes at filen var apnet i en editor under bygging."

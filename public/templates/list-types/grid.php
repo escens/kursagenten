@@ -18,7 +18,7 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     
     // Hent kursdatoer basert på location_id
     $related_coursedates = get_posts([
-        'post_type' => 'coursedate',
+        'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
             ['key' => 'location_id', 'value' => $location_id],
@@ -133,11 +133,11 @@ if ($shortcode_show_images === 'yes' || $shortcode_show_images === 'no') {
 $with_image_class = $show_images === 'yes' ? ' with-image' : '';
 
 // Hent instruktører for kurset
-$instructors = get_the_terms($course_id, 'instructors');
+$instructors = get_the_terms($course_id, 'ka_instructors');
 $instructor_links = [];
 if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
-        $instructor_url = get_instructor_display_url($term, 'instructors');
+        $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
     }, $instructors);
 }
@@ -145,7 +145,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
 ?>
 <?php
 // Hent kurskategorier for data-category attributt
-$course_categories = get_the_terms($course_id, 'coursecategory');
+$course_categories = get_the_terms($course_id, 'ka_coursecategory');
 $category_slugs = [];
 if (!empty($course_categories) && !is_wp_error($course_categories)) {
     foreach ($course_categories as $category) {
