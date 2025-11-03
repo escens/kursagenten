@@ -2,7 +2,7 @@
 
 ## Oversikt
 
-Denne funksjonaliteten legger til et nytt metafelt `course_days` på post type `coursedate` som automatisk fylles med informasjon om hvilken ukedag første kursdato er på.
+Denne funksjonaliteten legger til et nytt metafelt `course_days` på post type `ka_coursedate` som automatisk fylles med informasjon om hvilken ukedag første kursdato er på.
 
 ## Hvordan det fungerer
 

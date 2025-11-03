@@ -276,7 +276,7 @@
 }
 
 #ka .location-card.active {
-    border: 2px solid var(--ka-color-lighter);
+    border: 2px solid var(--ka-color-light);
 }
 
 /* Location card as Google Maps link */

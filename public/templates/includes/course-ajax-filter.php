@@ -289,7 +289,7 @@ function get_filtered_location_terms() {
     $filtered_locations = array_filter($all_location_terms, function($term) use ($visible_coursedates) {
         // Sjekk om minst én av de synlige coursedates har denne lokasjonen
         foreach ($visible_coursedates as $coursedate_id) {
-            $location = get_post_meta($coursedate_id, 'course_location', true);
+            $location = get_post_meta($coursedate_id, 'ka_course_location', true);
             if ($location === $term->name) {
                 return true;
             }
@@ -349,7 +349,7 @@ function get_filtered_languages() {
 
     $languages = [];
     foreach ($visible_coursedates as $coursedate) {
-        $language = get_post_meta($coursedate->ID, 'course_language', true);
+        $language = get_post_meta($coursedate->ID, 'ka_course_language', true);
         if (!empty($language)) {
             $languages[strtolower($language)] = strtolower($language);
         }
@@ -409,8 +409,8 @@ function get_filtered_months() {
     $current_year = (int) date('Y');
     
     foreach ($visible_coursedates as $coursedate) {
-        $month = get_post_meta($coursedate->ID, 'course_month', true);
-        $first_date = get_post_meta($coursedate->ID, 'course_first_date', true);
+        $month = get_post_meta($coursedate->ID, 'ka_course_month', true);
+        $first_date = get_post_meta($coursedate->ID, 'ka_course_first_date', true);
         
         if (!empty($month)) {
             $month_num = (int) $month;
@@ -590,7 +590,8 @@ function filter_courses_handler() {
                 $current_url = home_url($path);
             }
 
-            $current_url = remove_query_arg('side', $current_url);
+            // Fjern ALLE query parametere fra URL-en - de skal kun komme fra add_args
+            $current_url = strtok($current_url, '?');
 
             $pagination_args = [
                 'base' => $current_url . '%_%',
@@ -599,7 +600,19 @@ function filter_courses_handler() {
                 'total' => $query->max_num_pages,
                 'add_args' => array_map(function ($item) {
                     return is_array($item) ? join(',', $item) : $item;
-                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'coursedate' => true, 'course' => true]))
+                }, array_diff_key(
+                    $_REQUEST,
+                    [
+                        'side' => true,
+                        'action' => true,
+                        'nonce' => true,
+                        'current_url' => true,
+                        'ka_coursedate' => true,
+                        'ka_course' => true,
+                        'coursedate' => true,
+                        'course' => true,
+                    ]
+                ))
             ];
 
             $pagination = paginate_links($pagination_args);

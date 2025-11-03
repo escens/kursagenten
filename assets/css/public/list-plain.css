@@ -254,7 +254,7 @@
 #ka .compact-btn-secondary {
     background: transparent;
     color: var(--ka-color, #3b82f6);
-    border: 1px solid var(--ka-color-lighter, #3b82f6);
+    border: 1px solid var(--ka-color-light, #3b82f6);
 }
 
 #ka .compact-btn-secondary:hover {

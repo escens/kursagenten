@@ -1629,10 +1629,10 @@ if (queryString) {
                                         <?php 
                                         switch ($post_status) {
                                             case 'publish':
-                                                echo 'âœ“ Publisert';
+                                                echo 'Publisert';
                                                 break;
                                             case 'draft':
-                                                echo 'âš  Kladd';
+                                                echo 'Kladd';
                                                 break;
                                             default:
                                                 echo '? ' . ucfirst($post_status);

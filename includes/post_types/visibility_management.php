@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) {
 }
 
 /**
- * Visibility management for courses and coursedates
+ * Visibility management for courses and course dates
  * Handles admin columns, filters and visibility logic for hidden posts
  */
 
@@ -25,12 +25,11 @@ function exclude_hidden_kurs_posts($query) {
         
         // Hvis dette er en søkespørring, må vi håndtere det spesielt
         if ($query->is_search()) {
-            // Hvis post_type ikke er spesifisert i søket, eller hvis det inkluderer course/coursedate
+            // Hvis post_type ikke er spesifisert i søket, eller hvis det inkluderer ka_course/ka_coursedate
             if (!empty($post_types)) {
-                // Hvis post_types er spesifisert, sjekk om den inneholder course eller coursedate
-                if (is_array($post_types) && (in_array('course', $post_types) || in_array('coursedate', $post_types)) ||
-                    $post_types === 'course' || 
-                    $post_types === 'coursedate') {
+                // Hvis post_types er spesifisert, sjekk om den inneholder ka_course eller ka_coursedate
+                $post_types_array = (array) $post_types;
+                if (in_array('ka_course', $post_types_array, true) || in_array('ka_coursedate', $post_types_array, true)) {
                     apply_course_visibility_filter($query);
                 }
             }
@@ -38,9 +37,9 @@ function exclude_hidden_kurs_posts($query) {
             return;
         }
         
-        // For ikke-søk spørringer, apply filter bare hvis det er course eller coursedate
+        // For ikke-søk spørringer, apply filter bare hvis det er ka_course eller ka_coursedate
         if ($post_types === 'ka_course' || $post_types === 'ka_coursedate' ||
-            (is_array($post_types) && (in_array('ka_course', $post_types) || in_array('ka_coursedate', $post_types)))) {
+            (is_array($post_types) && (in_array('ka_course', $post_types, true) || in_array('ka_coursedate', $post_types, true)))) {
             apply_course_visibility_filter($query);
         }
     }

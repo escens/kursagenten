@@ -132,12 +132,12 @@ class CourseLocationGrid {
 
     /**
      * Determine if a location term has any associated published content
-     * either via 'course' posts with the taxonomy or via 'coursedate' posts
+     * either via 'ka_course' posts with the taxonomy or via 'ka_coursedate' posts
      * referencing the term id in meta 'location_id'.
      */
     private function has_associated_content(int $term_id): bool
     {
-        // Sjekk etter publiserte 'course' knyttet til dette kursstedet
+        // Check for published 'ka_course' posts linked to this location
         $course_query = new \WP_Query([
             'post_type' => 'ka_course',
             'post_status' => 'publish',
@@ -156,7 +156,7 @@ class CourseLocationGrid {
             return true;
         }
 
-        // Sjekk etter publiserte 'coursedate' som peker til dette kursstedet via meta 'location_id'
+        // Check for published 'ka_coursedate' posts pointing to this location via meta 'location_id'
         $coursedate_ids = get_posts([
             'post_type' => 'ka_coursedate',
             'post_status' => 'publish',
@@ -177,7 +177,7 @@ class CourseLocationGrid {
 
     private function get_specific_locations_for_term(int $term_id): array 
     {
-        // Hent alle coursedates som er knyttet til dette kursstedet
+        // Retrieve all ka_coursedate posts related to this location
         $coursedates = get_posts([
             'post_type' => 'ka_coursedate',
             'posts_per_page' => -1,

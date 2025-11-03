@@ -180,7 +180,7 @@ function ka_filter_terms_with_published_courses($terms, $taxonomy) {
     return array_values($filtered);
 }
 
-// Hjelpefunksjon: har term minst ett publisert course/coursedate avhengig av taksonomi
+// Helper: verify that the term has at least one published ka_course/ka_coursedate depending on the taxonomy
 function ka_term_has_published_courses(int $term_id, string $taxonomy): bool {
     // For alle taksonomier her viser vi kurs, ikke coursedates, i meny
     $q = new WP_Query([

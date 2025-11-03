@@ -101,7 +101,7 @@
         font-size: var(--ka-font-s-plus);
     }
     #ka .course-container .header-content i.ka-icon{
-        background-color: var(--ka-color-lighter);
+        background-color: var(--ka-color-light);
     }
     #ka .course-container .header-content h1{
         font-size: 32px;

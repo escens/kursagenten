@@ -132,7 +132,8 @@ jQuery(document).ready(function ($) {
                         var courses = errorGroups[errorType];
                         var errorLabel = errorType === 'api_fetch_failed' ? 'API-feil' : 
                                        errorType === 'sync_failed' ? 'Synkroniseringsfeil' :
-                                       errorType === 'image_timeout' ? 'Bilde timeout' : 'Ukjent feil';
+                                       errorType === 'image_timeout' ? 'Bilde timeout' :
+                                       errorType === 'image_too_large' ? 'For stort bilde' : 'Ukjent feil';
                         
                         successHtml += "<strong>" + errorLabel + " (" + courses.length + "):</strong><br>";
                         courses.forEach(function(course) {
@@ -279,7 +280,8 @@ jQuery(document).ready(function ($) {
                             var courses = errorGroups[errorType];
                             var errorLabel = errorType === 'api_fetch_failed' ? 'API-feil' : 
                                            errorType === 'sync_failed' ? 'Synkroniseringsfeil' :
-                                           errorType === 'image_timeout' ? 'Bilde timeout' : 'Ukjent feil';
+                                           errorType === 'image_timeout' ? 'Bilde timeout' :
+                                           errorType === 'image_too_large' ? 'For stort bilde' : 'Ukjent feil';
                             
                             successHtml += "<strong>" + errorLabel + " (" + courses.length + "):</strong><br>";
                             courses.forEach(function(course) {

@@ -124,7 +124,7 @@ if (!empty($course_images)) {
     $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN (" . implode(',', $course_images) . ")");
 }
 
-// 4. Slett selve course og coursedate postene
+// 4. Delete ka_course and ka_coursedate posts
 if (!empty($post_ids)) {
     $wpdb->query("DELETE FROM {$wpdb->posts} WHERE ID IN (" . implode(',', $post_ids) . ")");
 }

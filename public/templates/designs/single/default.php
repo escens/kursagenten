@@ -16,16 +16,16 @@ if (current_user_can('editor') || current_user_can('administrator')) {
 
 <?php
     // Get post meta data
-    $course_id = get_post_meta(get_the_ID(), 'location_id', true);
-    $content = htmlspecialchars_decode(get_post_meta(get_the_ID(), 'course_content', true));
-    $price = get_post_meta(get_the_ID(), 'course_price', true);
-    $price_posttext = get_post_meta(get_the_ID(), 'course_text_after_price', true);
-    $difficulty = get_post_meta(get_the_ID(), 'course_difficulty_level', true);
-    $button_text = get_post_meta(get_the_ID(), 'button-text', true);
-    $main_course_id = get_post_meta(get_the_ID(), 'main_course_id', true); // Added this line
+    $course_id = get_post_meta(get_the_ID(), 'ka_location_id', true);
+    $content = htmlspecialchars_decode(get_post_meta(get_the_ID(), 'ka_course_content', true));
+    $price = get_post_meta(get_the_ID(), 'ka_course_price', true);
+    $price_posttext = get_post_meta(get_the_ID(), 'ka_course_text_after_price', true);
+    $difficulty = get_post_meta(get_the_ID(), 'ka_course_difficulty_level', true);
+    $button_text = get_post_meta(get_the_ID(), 'ka_button_text', true);
+    $main_course_id = get_post_meta(get_the_ID(), 'ka_main_course_id', true); // Added this line
     
     // Hent kursdatoer basert på om det er et foreldrekurs eller underkurs
-    $is_parent_course = get_post_meta(get_the_ID(), 'is_parent_course', true);
+    $is_parent_course = get_post_meta(get_the_ID(), 'ka_is_parent_course', true);
     
     if ($is_parent_course === 'yes') {
         // For foreldrekurs: Hent alle kursdatoer som har main_course_id lik dette kursets location_id
@@ -33,7 +33,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
             'post_type' => 'ka_coursedate',
             'posts_per_page' => -1,
             'meta_query' => [
-                ['key' => 'main_course_id', 'value' => $course_id],
+                ['key' => 'ka_main_course_id', 'value' => $course_id],
             ],
             'fields' => 'ids'
         ]);
@@ -55,10 +55,10 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                     'relation' => 'AND',
                     [
                         'relation' => 'OR',
-                        ['key' => 'course_location', 'value' => $location_names, 'compare' => 'IN'],
-                        ['key' => 'course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
+                        ['key' => 'ka_course_location', 'value' => $location_names, 'compare' => 'IN'],
+                        ['key' => 'ka_course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
                     ],
-                    ['key' => 'main_course_id', 'value' => $main_course_id, 'compare' => '=']
+                    ['key' => 'ka_main_course_id', 'value' => $main_course_id, 'compare' => '=']
                 ];
                 
                 $related_coursedate = get_posts([
@@ -69,17 +69,17 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                 ]);
             } else {
                 // Fallback: bruk course_title hvis main_course_id ikke er tilgjengelig
-                $course_title = get_post_meta(get_the_ID(), 'course_title', true);
+                $course_title = get_post_meta(get_the_ID(), 'ka_course_title', true);
                 
                 if (!empty($course_title)) {
                     $meta_query_title = [
                         'relation' => 'AND',
                         [
                             'relation' => 'OR',
-                            ['key' => 'course_location', 'value' => $location_names, 'compare' => 'IN'],
-                            ['key' => 'course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
+                            ['key' => 'ka_course_location', 'value' => $location_names, 'compare' => 'IN'],
+                            ['key' => 'ka_course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
                         ],
-                        ['key' => 'course_title', 'value' => $course_title, 'compare' => '=']
+                        ['key' => 'ka_course_title', 'value' => $course_title, 'compare' => '=']
                     ];
                     
                     $related_coursedate = get_posts([
@@ -95,8 +95,8 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                         'posts_per_page' => -1,
                         'meta_query' => [
                             'relation' => 'OR',
-                            ['key' => 'course_location', 'value' => $location_names, 'compare' => 'IN'],
-                            ['key' => 'course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
+                            ['key' => 'ka_course_location', 'value' => $location_names, 'compare' => 'IN'],
+                            ['key' => 'ka_course_location_freetext', 'value' => $location_names, 'compare' => 'IN']
                         ],
                         'fields' => 'ids'
                     ]);
@@ -108,7 +108,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                 'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
-                    ['key' => 'location_id', 'value' => $course_id],
+                    ['key' => 'ka_main_course_id', 'value' => $course_id],
                 ],
                 'fields' => 'ids'
             ]);
@@ -118,12 +118,12 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     if (empty($related_coursedate) || !is_array($related_coursedate)) {
         $related_coursedate = [];
     }
-    $main_course_title = get_post_meta(get_the_ID(), 'main_course_title', true);
-    $sub_course_location = get_post_meta(get_the_ID(), 'sub_course_location', true);
-    $is_full = get_post_meta(get_the_ID(), 'course_isFull', true);
-    $contact_name = get_post_meta(get_the_ID(), 'course_contactperson_name', true);
-    $contact_phone = get_post_meta(get_the_ID(), 'course_contactperson_phone', true);
-    $contact_email = get_post_meta(get_the_ID(), 'course_contactperson_email', true);
+    $main_course_title = get_post_meta(get_the_ID(), 'ka_main_course_title', true);
+    $sub_course_location = get_post_meta(get_the_ID(), 'ka_sub_course_location', true);
+    $is_full = get_post_meta(get_the_ID(), 'ka_course_isFull', true);
+    $contact_name = get_post_meta(get_the_ID(), 'ka_course_contactperson_name', true);
+    $contact_phone = get_post_meta(get_the_ID(), 'ka_course_contactperson_phone', true);
+    $contact_email = get_post_meta(get_the_ID(), 'ka_course_contactperson_email', true);
 
     // Get placeholder image from settings
     $kursinnst_options = get_option('design_option_name');
@@ -234,13 +234,14 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                             $totalCourses = count($all_coursedates);
                             foreach ($all_coursedates as $index => $coursedate) : 
                                 $item_class = $totalCourses === 1 ? 'courselist-item single-item' : 'courselist-item';
-                                if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === 'true') {
+                                // Check if course is full (normalized boolean value from queries.php)
+                                if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === true) {
                                     $item_class .= ' full';
                                     $available_text = 'Kurset er fullt';
                                     $available_class = 'full';  
                                 } else {
                                     // Sjekk om påmelding er tillatt
-                                    $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
+                                    $show_registration = get_post_meta($coursedate['id'], 'ka_course_showRegistrationForm', true);
                                     if (empty($show_registration) || $show_registration === 'false') {
                                         $item_class .= ' on-demand';
                                         $available_text = 'På forespørsel';
@@ -292,7 +293,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                                         <?php if ($coursedate['missing_first_date']) : ?>
                                             <?php 
                                             $is_online = has_term('nettbasert', 'ka_course_location', $coursedate['id']);
-                                            $show_registration = get_post_meta($coursedate['id'], 'course_showRegistrationForm', true);
+                                            $show_registration = get_post_meta($coursedate['id'], 'ka_course_showRegistrationForm', true);
                                             if ($is_online) : ?>
                                                 <p>Etter påmelding vil du få en e-post med mer informasjon om kurset.</p>
                                             <?php elseif ($show_registration == '1' || $show_registration === 1 || $show_registration === "true" || $show_registration === true) : ?>
@@ -301,7 +302,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                                                 <p>Det er ikke satt opp dato for nye kurs. Meld din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                             <?php endif; ?>
                                         <?php endif; ?>
-                                        <?php if (isset($coursedate['course_isFull']) && ($coursedate['course_isFull'] === 'true' || $coursedate['course_isFull'] === 1)) : ?>
+                                        <?php if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === true) : ?>
                                             <p>Kurset er fullt. Du kan melde din interesse for å få mer informasjon eller å sette deg på venteliste.</p>
                                         <?php endif ?>
                                         <div class="course-grid col-1-1" style="padding-left: 2vw; padding-right: 2vw;">
@@ -493,11 +494,11 @@ if (current_user_can('editor') || current_user_can('administrator')) {
 // Debug-utskrift
 /*
 add_action('wp_head', function() {
-    if (is_single() && get_post_type() === 'course') {
+    if (is_single() && get_post_type() === 'ka_course') {
         //error_log('Debug Course Data:');
         //error_log('Post ID: ' . get_the_ID());
         //error_log('Course ID: ' . get_post_meta(get_the_ID(), 'location_id', true));
-        //error_log('Related Coursedate: ' . get_post_meta(get_the_ID(), 'course_related_coursedate', true));
+        //error_log('Related ka_coursedate: ' . get_post_meta(get_the_ID(), 'course_related_coursedate', true));
         
         // Sjekk coursecategories
         $coursecategories = wp_get_post_terms(get_the_ID(), 'ka_coursecategory');

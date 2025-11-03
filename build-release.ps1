@@ -49,7 +49,7 @@ if (-not (Test-Path $OutputDir)) {
 # Steg 1: Oppdater versjonsnummer i kursagenten.php
 Write-Info "Steg 1: Oppdaterer versjonsnummer i kursagenten.php..."
 $MainFile = Join-Path $PluginDir "kursagenten.php"
-$Content = Get-Content $MainFile -Raw
+$Content = Get-Content $MainFile -Raw -Encoding UTF8
 
 # Oppdater Plugin Version i header
 $Content = $Content -replace "(\* Version:\s+)\d+\.\d+\.\d+", "`${1}$Version"
@@ -65,7 +65,7 @@ $Utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
 Start-Sleep -Milliseconds 500
 
 # Verifiser at oppdateringen ble skrevet til disk
-$VerifyContent = Get-Content $MainFile -Raw
+$VerifyContent = Get-Content $MainFile -Raw -Encoding UTF8
 if ($VerifyContent -match "Version:\s+$Version" -and $VerifyContent -match "define\('KURSAG_VERSION',\s*'$Version'\)") {
     Write-Success "Versjonsnummer oppdatert til $Version"
     
@@ -179,7 +179,7 @@ Write-Success "Filer kopiert ($FileCount filer)"
 # Verifiser at kopiert kursagenten.php har riktig versjon og ingen BOM
 $CopiedMainFile = Join-Path $TempPluginDir "kursagenten.php"
 if (Test-Path $CopiedMainFile) {
-    $CopiedContent = Get-Content $CopiedMainFile -Raw
+    $CopiedContent = Get-Content $CopiedMainFile -Raw -Encoding UTF8
     if ($CopiedContent -match "Version:\s+$Version" -and $CopiedContent -match "define\('KURSAG_VERSION',\s*'$Version'\)") {
         Write-Success "Verifisert: Kopiert fil har versjon $Version"
         

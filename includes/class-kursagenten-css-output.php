@@ -37,18 +37,20 @@ class Kursagenten_CSS_Output {
         if ($base_l < 50) {
             $light_s = max(floatval($s) * 0.7, 30); // Reduser metning med 30%, men ikke under 30%
             $css .= '--ka-color-darker: ' . "hsl($h, {$s}%, " . max(0, $base_l - 10) . "%);";
-            $css .= '--ka-color-lighter: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 30) . "%);";
-            $css .= '--ka-color-light: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 55) . "%);";
-            $css .= '--ka-color-light-hover: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 45) . "%);";
-            $css .= '--ka-color-light-active: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 48) . "%);";
+            $css .= '--ka-color-lighter: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 11) . "%);";
+            $css .= '--ka-color-light: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 30) . "%);";
+            $css .= '--ka-color-lightest: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 47) . "%);";
+            $css .= '--ka-color-light-hover: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 35) . "%);";
+            $css .= '--ka-color-light-active: ' . "hsl($h, {$light_s}%, " . min(100, $base_l + 40) . "%);";
         } 
         // For lysere farger, behold mer av metningen
         else {
             $css .= '--ka-color-darker: ' . "hsl($h, {$s}%, " . max(0, $base_l - 10) . "%);";
-            $css .= '--ka-color-lighter: ' . "hsl($h, {$s}%, " . min(100, $base_l + 16) . "%);";
-            $css .= '--ka-color-light: ' . "hsl($h, {$s}%, " . min(100, $base_l + 25) . "%);";
-            $css .= '--ka-color-light-hover: ' . "hsl($h, {$s}%, " . min(100, $base_l + 30) . "%);";
-            $css .= '--ka-color-light-active: ' . "hsl($h, {$s}%, " . min(100, $base_l + 35) . "%);";
+            $css .= '--ka-color-lighter: ' . "hsl($h, {$s}%, " . min(100, $base_l + 11) . "%);";
+            $css .= '--ka-color-light: ' . "hsl($h, {$s}%, " . min(100, $base_l + 30) . "%);";
+            $css .= '--ka-color-lightest: ' . "hsl($h, {$s}%, " . min(100, $base_l + 47) . "%);";
+            $css .= '--ka-color-light-hover: ' . "hsl($h, {$s}%, " . min(100, $base_l + 35) . "%);";
+            $css .= '--ka-color-light-active: ' . "hsl($h, {$s}%, " . min(100, $base_l + 40) . "%);";
         }
         
         // Aksentfarge og avledede farger (samme logikk som over)
@@ -89,6 +91,30 @@ class Kursagenten_CSS_Output {
         // Base skriftstørrelse
         $base_font = get_option('kursagenten_base_font', '16px');
         $css .= '--ka-base-font: ' . esc_attr($base_font) . ';';
+        
+        // Font size levels (calculated based on base font)
+        $css .= '--ka-font-xxs: calc(var(--ka-base-font) * 0.68);';
+        $css .= '--ka-font-xs: calc(var(--ka-base-font) * 0.75);';
+        $css .= '--ka-font-s: calc(var(--ka-base-font) * 0.875);';
+        $css .= '--ka-font-s-plus: calc(var(--ka-base-font) * 0.9375);';
+        $css .= '--ka-font-base: var(--ka-base-font);';
+        $css .= '--ka-font-md: calc(var(--ka-base-font) * 1.125);';
+        $css .= '--ka-font-lg: calc(var(--ka-base-font) * 1.375);';
+        $css .= '--ka-font-xl: calc(var(--ka-base-font) * 1.625);';
+        $css .= '--ka-font-xxl: calc(var(--ka-base-font) * 2);';
+        
+        // Line heights
+        $css .= '--ka-line-height-tight: 1.2;';
+        $css .= '--ka-line-height-normal: 1.5;';
+        $css .= '--ka-line-height-relaxed: 1.75;';
+        
+        // Additional CSS variables
+        $css .= '--ka-alt-background: rgba(0, 0, 0, 0.02);';
+        $css .= '--ka-box-background: rgba(0, 0, 0, 0.02);';
+        $css .= '--ka-color-filter: #494949;';
+        $css .= '--ka-filter-font-size: 14px;';
+        $css .= '--ka-font-size-small: 0.775rem;';
+        $css .= '--ka-font-size-medium: 1rem;';
         
         // Hovedoverskrift font
         $heading_font = get_option('kursagenten_heading_font', 'inherit');

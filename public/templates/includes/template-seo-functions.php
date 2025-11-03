@@ -212,7 +212,7 @@ function kursagenten_add_course_schema() {
         }
     } else {
         // Fallback: Add general offer if no specific date is available
-        $price = get_post_meta($post->ID, 'course_price', true);
+        $price = get_post_meta($post->ID, 'ka_course_price', true);
         if (!empty($price) && $price !== '0') {
             $schema['offers'] = array(
                 '@type' => 'Offer',
@@ -322,8 +322,8 @@ function kursagenten_build_course_instance_from_data($coursedate_data) {
     }
     
     // Get location name from coursedate post meta (NOT in get_selected_coursedate_data!)
-    $location_name = get_post_meta($coursedate_id, 'course_location', true);
-    $location_freetext = get_post_meta($coursedate_id, 'course_location_freetext', true);
+    $location_name = get_post_meta($coursedate_id, 'ka_course_location', true);
+    $location_freetext = get_post_meta($coursedate_id, 'ka_course_location_freetext', true);
     
     // Add courseMode based on location
     if (!empty($location_name)) {
@@ -350,9 +350,9 @@ function kursagenten_build_course_instance_from_data($coursedate_data) {
         }
         
         // Add address data
-        $address_street = get_post_meta($coursedate_id, 'course_address_street', true);
-        $postal_code = get_post_meta($coursedate_id, 'course_address_zipcode', true);
-        $city = get_post_meta($coursedate_id, 'course_address_place', true);
+        $address_street = get_post_meta($coursedate_id, 'ka_course_address_street', true);
+        $postal_code = get_post_meta($coursedate_id, 'ka_course_address_zipcode', true);
+        $city = get_post_meta($coursedate_id, 'ka_course_address_place', true);
         
         if (!empty($address_street) || !empty($postal_code) || !empty($city)) {
             $location['address'] = array(
@@ -420,7 +420,7 @@ function kursagenten_build_course_instance_from_data($coursedate_data) {
     }
     
     // Add instructor if available
-    $instructor_name = get_post_meta($coursedate_id, 'course_instructor', true);
+    $instructor_name = get_post_meta($coursedate_id, 'ka_course_instructor', true);
     if (!empty($instructor_name)) {
         $instance['instructor'] = array(
             '@type' => 'Person',

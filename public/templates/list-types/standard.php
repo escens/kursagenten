@@ -13,15 +13,23 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $course_title = get_the_title();
     $excerpt = get_the_excerpt();
     
-    // Hent location_id for å finne relaterte kursdatoer
-    $location_id = get_post_meta($course_id, 'location_id', true);
+    // Hent location_id (API-ID) for å finne relaterte kursdatoer
+    // Kursdatoer har main_course_id som matcher kursets main_course_id (ikke location_id)
+    $is_parent = get_post_meta($course_id, 'ka_is_parent_course', true);
     
-    // Hent kursdatoer basert på location_id
+    if ($is_parent === 'yes') {
+        // For hovedkurs: bruk ka_location_id (som er samme som ka_main_course_id)
+        $search_id = get_post_meta($course_id, 'ka_location_id', true);
+    } else {
+        // For underkurs: bruk ka_main_course_id
+        $search_id = get_post_meta($course_id, 'ka_main_course_id', true);
+    }
+    
     $related_coursedates = get_posts([
         'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
-            ['key' => 'location_id', 'value' => $location_id],
+            ['key' => 'ka_main_course_id', 'value' => $search_id],
         ],
     ]);
     
@@ -33,35 +41,10 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     // Hent data fra første tilgjengelige kursdato
     $selected_coursedate_data = get_selected_coursedate_data($related_coursedate_ids);
     
-    // Hent lokasjonsinformasjon fra coursedates
-    $location_freetext = get_post_meta($course_id, 'course_location_freetext', true);
-    
-    // Hvis location_freetext ikke er satt direkte på kurset, prøv å hente fra coursedates
-    if (empty($location_freetext)) {
-        foreach ($related_coursedates as $coursedate) {
-            $coursedate_location = get_post_meta($coursedate->ID, 'course_location_freetext', true);
-            if (!empty($coursedate_location)) {
-                $location_freetext = $coursedate_location;
-                break;
-            }
-        }
-    }
-    
-    // Hent resten av lokasjonsinformasjonen
-    $location = get_post_meta($course_id, 'course_location', true);
-    
-    // Hvis location ikke er satt direkte på kurset, prøv å hente fra coursedates
-    if (empty($location)) {
-        foreach ($related_coursedates as $coursedate) {
-            $coursedate_location = get_post_meta($coursedate->ID, 'course_location', true);
-            if (!empty($coursedate_location)) {
-                $location = $coursedate_location;
-                break;
-            }
-        }
-    }
-    
-    $location_room = get_post_meta($course_id, 'course_location_room', true);
+    // Hent lokasjonsinformasjon fra den valgte kursdatoen
+    $location = $selected_coursedate_data['location'] ?? '';
+    $location_freetext = $selected_coursedate_data['location_freetext'] ?? '';
+    $location_room = $selected_coursedate_data['course_location_room'] ?? '';
     
     // Hent bilde
     // Hent plassholderbilde fra innstillinger
@@ -91,25 +74,25 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     // Original kode for coursedates
     $course_id = get_the_ID();
 
-    $course_title =             get_post_meta($course_id, 'course_title', true);
-    $first_course_date =        ka_format_date(get_post_meta($course_id, 'course_first_date', true));
-    $last_course_date =         ka_format_date(get_post_meta($course_id, 'course_last_date', true));
-    $registration_deadline =    ka_format_date(get_post_meta($course_id, 'course_registration_deadline', true));
-    $duration =                 get_post_meta($course_id, 'course_duration', true);
-    $coursetime =               get_post_meta($course_id, 'course_time', true);
-    $course_days =              get_post_meta($course_id, 'course_days', true);
-    $price =                    get_post_meta($course_id, 'course_price', true);
-    $after_price =              get_post_meta($course_id, 'course_text_after_price', true);
-    $location =                 get_post_meta($course_id, 'course_location', true);
-    $location_freetext =        get_post_meta($course_id, 'course_location_freetext', true);
-    $location_room =            get_post_meta($course_id, 'course_location_room', true);
-    $is_full =                  get_post_meta($course_id, 'course_isFull', true);
-    $show_registration =        get_post_meta($course_id, 'course_showRegistrationForm', true);
+    $course_title =             get_post_meta($course_id, 'ka_course_title', true);
+    $first_course_date =        ka_format_date(get_post_meta($course_id, 'ka_course_first_date', true));
+    $last_course_date =         ka_format_date(get_post_meta($course_id, 'ka_course_last_date', true));
+    $registration_deadline =    ka_format_date(get_post_meta($course_id, 'ka_course_registration_deadline', true));
+    $duration =                 get_post_meta($course_id, 'ka_course_duration', true);
+    $coursetime =               get_post_meta($course_id, 'ka_course_time', true);
+    $course_days =              get_post_meta($course_id, 'ka_course_days', true);
+    $price =                    get_post_meta($course_id, 'ka_course_price', true);
+    $after_price =              get_post_meta($course_id, 'ka_course_text_after_price', true);
+    $location =                 get_post_meta($course_id, 'ka_course_location', true);
+    $location_freetext =        get_post_meta($course_id, 'ka_course_location_freetext', true);
+    $location_room =            get_post_meta($course_id, 'ka_course_location_room', true);
+    $is_full =                  get_post_meta($course_id, 'ka_course_isFull', true);
+    $show_registration =        get_post_meta($course_id, 'ka_course_showRegistrationForm', true);
 
-    $button_text =              get_post_meta($course_id, 'course_button_text', true);
-    $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
+    $button_text =              get_post_meta($course_id, 'ka_course_button_text', true);
+    $signup_url =               get_post_meta($course_id, 'ka_course_signup_url', true);
 
-    $related_course_id =        get_post_meta($course_id, 'location_id', true);
+    $related_course_id =        get_post_meta($course_id, 'ka_location_id', true);
 
     $related_course_info = get_course_info_by_location($related_course_id);
 
@@ -124,12 +107,10 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
         $featured_image_thumb = $related_course_info['thumbnail'] ?: $placeholder_image;
         $excerpt = $related_course_info['excerpt'];
     } else {
-        // Hvis ingen relatert kursinfo, bruk plassholderbilde
+        // Hvis ingen relatert kursinfo, bruk plassholderbilde og fallback-data
         $featured_image_thumb = $placeholder_image;
-    }
-
-    if (!$course_link) {
         $course_link = false;
+        $excerpt = '';
     }
 }
 
@@ -296,7 +277,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                         <?php 
                         // Find main course and all available locations
-                        $main_course_id = get_post_meta($course_id, 'main_course_id', true);
+                        $main_course_id = get_post_meta($course_id, 'ka_main_course_id', true);
                         
                         // If this is a main course, use course_id as main_course_id
                         if (empty($main_course_id)) {
@@ -308,7 +289,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                             'post_type' => 'ka_coursedate',
                             'posts_per_page' => -1,
                             'meta_query' => [
-                                ['key' => 'main_course_id', 'value' => $main_course_id],
+                                ['key' => 'ka_main_course_id', 'value' => $main_course_id],
                             ],
                         ]);
                         
@@ -319,8 +300,8 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                         if (!empty($all_coursedates)) {
                             foreach ($all_coursedates as $coursedate) {
                                 // Get location_id (API ID) to find the related course subpage
-                                $coursedate_location_id = get_post_meta($coursedate->ID, 'location_id', true);
-                                $coursedate_main_course_id = get_post_meta($coursedate->ID, 'main_course_id', true);
+                                $coursedate_location_id = get_post_meta($coursedate->ID, 'ka_location_id', true);
+                                $coursedate_main_course_id = get_post_meta($coursedate->ID, 'ka_main_course_id', true);
                                 
                                 // Get location terms for this coursedate
                                 $location_terms = get_the_terms($coursedate->ID, 'ka_course_location');
@@ -337,12 +318,12 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                                             'meta_query' => [
                                                 'relation' => 'AND',
                                                 [
-                                                    'key' => 'location_id',
+                                                    'key' => 'ka_location_id',
                                                     'value' => $coursedate_location_id,
                                                     'compare' => '='
                                                 ],
                                                 [
-                                                    'key' => 'main_course_id',
+                                                    'key' => 'ka_main_course_id',
                                                     'value' => $coursedate_main_course_id,
                                                     'compare' => '='
                                                 ]
@@ -353,10 +334,10 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                                         $location_url = !empty($sub_course) ? get_permalink($sub_course[0]->ID) : '';
                                         
                                         // Get freetext location
-                                        $location_freetext = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+                                        $location_freetext = get_post_meta($coursedate->ID, 'ka_course_location_freetext', true);
                                         
                                         // Get course date
-                                        $course_first_date = get_post_meta($coursedate->ID, 'course_first_date', true);
+                                        $course_first_date = get_post_meta($coursedate->ID, 'ka_course_first_date', true);
                                         
                                         if (!empty($course_first_date) && !empty($location_url)) {
                                             $formatted_date = ka_format_date($course_first_date);
@@ -393,8 +374,8 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                         $all_location_ids = [];
                         if (!empty($all_coursedates)) {
                             foreach ($all_coursedates as $coursedate) {
-                                $coursedate_location_id = get_post_meta($coursedate->ID, 'location_id', true);
-                                $coursedate_main_course_id = get_post_meta($coursedate->ID, 'main_course_id', true);
+                                $coursedate_location_id = get_post_meta($coursedate->ID, 'ka_location_id', true);
+                                $coursedate_main_course_id = get_post_meta($coursedate->ID, 'ka_main_course_id', true);
                                 $location_terms = get_the_terms($coursedate->ID, 'ka_course_location');
                                 
                                 if (!empty($location_terms) && !is_wp_error($location_terms) && !empty($coursedate_location_id)) {
@@ -409,13 +390,13 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                                             $location_freetext_for_no_date = '';
                                             
                                             foreach ($all_coursedates as $check_coursedate) {
-                                                $check_location_id = get_post_meta($check_coursedate->ID, 'location_id', true);
+                                                $check_location_id = get_post_meta($check_coursedate->ID, 'ka_location_id', true);
                                                 if ($check_location_id == $coursedate_location_id) {
-                                                    $check_date = get_post_meta($check_coursedate->ID, 'course_first_date', true);
+                                                    $check_date = get_post_meta($check_coursedate->ID, 'ka_course_first_date', true);
                                                     
                                                     // Collect freetext while checking
                                                     if (empty($location_freetext_for_no_date)) {
-                                                        $location_freetext_for_no_date = get_post_meta($check_coursedate->ID, 'course_location_freetext', true);
+                                                        $location_freetext_for_no_date = get_post_meta($check_coursedate->ID, 'ka_course_location_freetext', true);
                                                     }
                                                     
                                                     if (!empty($check_date)) {

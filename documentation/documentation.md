@@ -152,7 +152,7 @@ Courses are created as pages, with a parent course, and subpages for course loca
 - ka_course_location (tidligere course_location): Locations are municipalities, or county if municiplality doesn't exist
 - ka_instructors (tidligere instructors): Instructor name
 
-### Course Date (coursedate)
+### Course Date (ka_coursedate)
 ```php
 'supports' => [
     'title',
@@ -161,9 +161,9 @@ Courses are created as pages, with a parent course, and subpages for course loca
 ```
 
 #### Description
-Course dates are created as seperate posts, representing specific scheduled instances of a course (location + specific date). They are connected to course by field "course_related_course". Course dates are only used in course pages and archive pages for course, ie course calendar (/kurs/).
+Course dates are created as separate `ka_coursedate` posts, representing specific scheduled instances of a `ka_course` (location + specific date). They are connected to courses by the field "course_related_course". Course dates are only used in course pages and archive pages for courses, i.e. course calendar (/kurs/).
 
-#### Meta Fields CPT coursedate
+#### Meta Fields CPT ka_coursedate
 - main_course_id: Reference to "parent" course ID
 - location_id: Location ID from Kursagenten
 - schedule_id: Schedule ID from Kursagenten

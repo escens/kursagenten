@@ -122,12 +122,12 @@ function get_existing_main_course($main_course_id) {
         'meta_query' => [
             'relation' => 'AND',
             [
-                'key' => 'main_course_id',
+                'key' => 'ka_main_course_id',
                 'value' => $main_course_id,
                 'compare' => '='
             ],
             [
-                'key' => 'is_parent_course',
+                'key' => 'ka_is_parent_course',
                 'value' => 'yes',
                 'compare' => '='
             ]
@@ -145,18 +145,18 @@ function get_existing_sub_course($location_id, $main_course_id) {
         'meta_query' => [
             'relation' => 'AND',
             [
-                'key' => 'location_id',
+                'key' => 'ka_location_id',
                 'value' => $location_id,
                 'compare' => '='
             ],
             [
-                'key' => 'main_course_id',
+                'key' => 'ka_main_course_id',
                 'value' => $main_course_id,
                 'compare' => '='
             ],
             // Sjekk at is_parent_course IKKE eksisterer
             [
-                'key' => 'is_parent_course',
+                'key' => 'ka_is_parent_course',
                 'compare' => 'NOT EXISTS'
             ]
         ],
@@ -182,11 +182,11 @@ function create_new_course($data, $main_course_id, $location_id, $language, $is_
         foreach ($common_meta_fields as $key => $value) {
             update_post_meta($post_id, $key, $value);
         }
-        update_post_meta($post_id, 'main_course_id', (int) $data['id']);
-        update_post_meta($post_id, 'is_parent_course', 'yes');
-        update_post_meta($post_id, 'meta_description', sanitize_text_field($data['introText']));
+        update_post_meta($post_id, 'ka_main_course_id', (int) $data['id']);
+        update_post_meta($post_id, 'ka_is_parent_course', 'yes');
+        update_post_meta($post_id, 'ka_meta_description', sanitize_text_field($data['introText']));
         // Foreldrekurs har ikke is_active - statusen baseres på underkurs
-        update_post_meta($post_id, 'location_id', (int) $data['id']);
+        update_post_meta($post_id, 'ka_location_id', (int) $data['id']);
 
         update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
                     
@@ -217,12 +217,12 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
-                'key' => 'location_id',
+                'key' => 'ka_location_id',
                 'value' => $main_course_id,
                 'compare' => '='
             ],
             [
-                'key' => 'is_parent_course',
+                'key' => 'ka_is_parent_course',
                 'value' => 'yes',
                 'compare' => '='
             ]
@@ -264,16 +264,16 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
         foreach ($common_meta_fields as $key => $value) {
             update_post_meta($post_id, $key, $value);
         }
-        update_post_meta($post_id, 'main_course_id', (int) $main_course_id);
-        update_post_meta($post_id, 'main_course_title', sanitize_text_field($data['name']));
-        update_post_meta($post_id, 'sub_course_location', sanitize_text_field(get_course_location($data)));
-        update_post_meta($post_id, 'meta_description', sanitize_text_field($data['introText']));
-        update_post_meta($post_id, 'is_active', $is_active ? '1' : '0');
-        update_post_meta($post_id, 'location_id', (int) $location_id);
+        update_post_meta($post_id, 'ka_main_course_id', (int) $main_course_id);
+        update_post_meta($post_id, 'ka_main_course_title', sanitize_text_field($data['name']));
+        update_post_meta($post_id, 'ka_sub_course_location', sanitize_text_field(get_course_location($data)));
+        update_post_meta($post_id, 'ka_meta_description', sanitize_text_field($data['introText']));
+        update_post_meta($post_id, 'ka_is_active', $is_active ? '1' : '0');
+        update_post_meta($post_id, 'ka_location_id', (int) $location_id);
         
         // Sett course_location_freetext basert på lokasjonsdata
         //$location_name = get_course_location($data);
-        update_post_meta($post_id, 'course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
+        update_post_meta($post_id, 'ka_course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
 
         // Pass the actual location id, not the main course id
         update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
@@ -298,7 +298,7 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
 
 function update_existing_course($post_id, $data, $main_course_id, $location_id, $language, $is_active, $is_webhook = false) {
     //error_log("=== Start update_existing_course with post_id: $post_id/location_id: $location_id/main_course_id: $main_course_id and is_active: $is_active");
-    $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
+    $is_parent_course = get_post_meta($post_id, 'ka_is_parent_course', true);
     $total_locations = count($data['locations'] ?? []);
 
     if ($is_parent_course === 'yes') {
@@ -329,16 +329,16 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
         }
         // Oppdater is_active meta-verdi kun for underkurs (ikke foreldrekurs)
         if ($is_parent_course !== 'yes') {
-            update_post_meta($post_id, 'is_active', $is_active ? '1' : '0');
+            update_post_meta($post_id, 'ka_is_active', $is_active ? '1' : '0');
         }
         // Oppdater location_id meta-verdi
-        update_post_meta($post_id, 'location_id', (int) $location_id);
+        update_post_meta($post_id, 'ka_location_id', (int) $location_id);
         if ($is_parent_course !== 'yes') {
-            update_post_meta($post_id, 'main_course_title', sanitize_text_field($data['name']));
-            update_post_meta($post_id, 'sub_course_location', sanitize_text_field(get_course_location($data)));
+            update_post_meta($post_id, 'ka_main_course_title', sanitize_text_field($data['name']));
+            update_post_meta($post_id, 'ka_sub_course_location', sanitize_text_field(get_course_location($data)));
             // Sett course_location_freetext basert på lokasjonsdata
             //$location_name = get_course_location($data);
-            update_post_meta($post_id, 'course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
+            update_post_meta($post_id, 'ka_course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
         }
 
         update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
@@ -367,7 +367,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         'post_type' => 'ka_coursedate',
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
-                ['key' => 'location_id', 'value' => $location_id],
+                ['key' => 'ka_location_id', 'value' => $location_id],
             ],
             'numberposts' => -1,
         ]);
@@ -406,8 +406,8 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
             'post_type' => 'ka_coursedate',
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
-                ['key' => 'schedule_id', 'value' => $schedule_id],
-                ['key' => 'location_id', 'value' => $location_id],
+                ['key' => 'ka_schedule_id', 'value' => $schedule_id],
+                ['key' => 'ka_location_id', 'value' => $location_id],
             ],
             'numberposts' => -1, // Get ALL matches to detect duplicates
         ]);
@@ -433,40 +433,40 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         // Set up meta fields for course date
         $meta_input = [];
 
-        if (isset($main_course_id)) {   $meta_input['main_course_id'] = $main_course_id;}
-        if (isset($location_id)) {      $meta_input['location_id'] = $location_id;}
-        if (isset($schedule_id)) {      $meta_input['schedule_id'] = $schedule_id;}
-        if (!empty($data['name'])) {    $meta_input['course_title'] = $data['name'];}
+        if (isset($main_course_id)) {   $meta_input['ka_main_course_id'] = $main_course_id;}
+        if (isset($location_id)) {      $meta_input['ka_location_id'] = $location_id;}
+        if (isset($schedule_id)) {      $meta_input['ka_schedule_id'] = $schedule_id;}
+        if (!empty($data['name'])) {    $meta_input['ka_course_title'] = $data['name'];}
 
-        if (!empty($schedule['firstCourseDate'])) {     $meta_input['course_first_date'] = format_date_for_db($schedule['firstCourseDate']);}
-        if (!empty($schedule['firstCourseDate'])) {     $meta_input['course_month'] = format_date_get_month($schedule['firstCourseDate']);}
-        if (!empty($schedule['lastCourseDate'])) {      $meta_input['course_last_date'] = format_date_for_db($schedule['lastCourseDate']);}
-        if (!empty($schedule['registrationDeadline'])) {$meta_input['course_registration_deadline'] = format_date_for_db($schedule['registrationDeadline']);}
-        if (!empty($schedule['duration'])) {            $meta_input['course_duration'] = $schedule['duration'];}
-        if (!empty($schedule['coursetime'])) {          $meta_input['course_time'] = format_coursetime($schedule['coursetime']);}
-        if (!empty($schedule['coursetimeType'])) {      $meta_input['course_time_type'] = $schedule['coursetimeType'];}
+        if (!empty($schedule['firstCourseDate'])) {     $meta_input['ka_course_first_date'] = format_date_for_db($schedule['firstCourseDate']);}
+        if (!empty($schedule['firstCourseDate'])) {     $meta_input['ka_course_month'] = format_date_get_month($schedule['firstCourseDate']);}
+        if (!empty($schedule['lastCourseDate'])) {      $meta_input['ka_course_last_date'] = format_date_for_db($schedule['lastCourseDate']);}
+        if (!empty($schedule['registrationDeadline'])) {$meta_input['ka_course_registration_deadline'] = format_date_for_db($schedule['registrationDeadline']);}
+        if (!empty($schedule['duration'])) {            $meta_input['ka_course_duration'] = $schedule['duration'];}
+        if (!empty($schedule['coursetime'])) {          $meta_input['ka_course_time'] = format_coursetime($schedule['coursetime']);}
+        if (!empty($schedule['coursetimeType'])) {      $meta_input['ka_course_time_type'] = $schedule['coursetimeType'];}
         
-                if (!empty($schedule['startTime'])) {           $meta_input['course_start_time'] = $schedule['startTime'];}
-        if (!empty($schedule['endTime'])) {             $meta_input['course_end_time'] = $schedule['endTime'];}
-        if (!empty($schedule['price'])) {               $meta_input['course_price'] = (int) $schedule['price'];}
-        if (!empty($schedule['textBeforeAmount'])) {    $meta_input['course_text_before_price'] = sanitize_text_field($schedule['textBeforeAmount']);}
-        if (!empty($schedule['textAfterAmount'])) {     $meta_input['course_text_after_price'] = sanitize_text_field($schedule['textAfterAmount']);}
-        if (!empty($schedule['courseCode'])) {          $meta_input['course_code'] = $schedule['courseCode'];}
-        if (!empty($schedule['formButtonText'])) {      $meta_input['course_button_text'] = $schedule['formButtonText'];}
-        if (!empty($schedule['language'])) {            $meta_input['course_language'] = $schedule['language'];}
+                if (!empty($schedule['startTime'])) {           $meta_input['ka_course_start_time'] = $schedule['startTime'];}
+        if (!empty($schedule['endTime'])) {             $meta_input['ka_course_end_time'] = $schedule['endTime'];}
+        if (!empty($schedule['price'])) {               $meta_input['ka_course_price'] = (int) $schedule['price'];}
+        if (!empty($schedule['textBeforeAmount'])) {    $meta_input['ka_course_text_before_price'] = sanitize_text_field($schedule['textBeforeAmount']);}
+        if (!empty($schedule['textAfterAmount'])) {     $meta_input['ka_course_text_after_price'] = sanitize_text_field($schedule['textAfterAmount']);}
+        if (!empty($schedule['courseCode'])) {          $meta_input['ka_course_code'] = $schedule['courseCode'];}
+        if (!empty($schedule['formButtonText'])) {      $meta_input['ka_course_button_text'] = $schedule['formButtonText'];}
+        if (!empty($schedule['language'])) {            $meta_input['ka_course_language'] = $schedule['language'];}
         
-        if (!empty($schedule['maxParticipants'])) {     $meta_input['course_maxParticipants'] = $schedule['maxParticipants'];}
-        if (isset($schedule['showRegistrationForm'])) { $meta_input['course_showRegistrationForm'] = $schedule['showRegistrationForm'];}
-        if (isset($schedule['markedAsFull'])) {         $meta_input['course_markedAsFull'] = $schedule['markedAsFull'];}
-        if (isset($schedule['isFull'])) {               $meta_input['course_isFull'] = $schedule['isFull'];}
-        if (!empty($course_signup_url)) {               $meta_input['course_signup_url'] = $course_signup_url;}
-        if (!empty($location['county'])) {              $meta_input['course_location'] = get_course_location($data);} 
-        if (!empty($location['description'])) {         $meta_input['course_location_freetext'] = $location['description'];}
+        if (!empty($schedule['maxParticipants'])) {     $meta_input['ka_course_maxParticipants'] = $schedule['maxParticipants'];}
+        if (isset($schedule['showRegistrationForm'])) { $meta_input['ka_course_showRegistrationForm'] = $schedule['showRegistrationForm'];}
+        if (isset($schedule['markedAsFull'])) {         $meta_input['ka_course_markedAsFull'] = $schedule['markedAsFull'];}
+        if (isset($schedule['isFull'])) {               $meta_input['ka_course_isFull'] = $schedule['isFull'];}
+        if (!empty($course_signup_url)) {               $meta_input['ka_course_signup_url'] = $course_signup_url;}
+        if (!empty($location['county'])) {              $meta_input['ka_course_location'] = get_course_location($data);} 
+        if (!empty($location['description'])) {         $meta_input['ka_course_location_freetext'] = $location['description'];}
 
-        if (!empty($location['address']['streetAddress'])) {        $meta_input['course_address_street'] = $location['address']['streetAddress'];}
-        if (!empty($location['address']['streetAddressNumber'])) {  $meta_input['course_address_street_number'] = $location['address']['streetAddressNumber'];}
-        if (!empty($location['address']['zipCode'])) {              $meta_input['course_address_zipcode'] = $location['address']['zipCode'];}
-        if (!empty($location['address']['place'])) {                $meta_input['course_address_place'] = $location['address']['place'];}
+        if (!empty($location['address']['streetAddress'])) {        $meta_input['ka_course_address_street'] = $location['address']['streetAddress'];}
+        if (!empty($location['address']['streetAddressNumber'])) {  $meta_input['ka_course_address_street_number'] = $location['address']['streetAddressNumber'];}
+        if (!empty($location['address']['zipCode'])) {              $meta_input['ka_course_address_zipcode'] = $location['address']['zipCode'];}
+        if (!empty($location['address']['place'])) {                $meta_input['ka_course_address_place'] = $location['address']['place'];}
 
         if (!empty($schedule['locationRooms']) && is_array($schedule['locationRooms'])) {
             $room_names = array();
@@ -476,14 +476,14 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
                 }
             }
             if (!empty($room_names)) {
-                $meta_input['course_location_room'] = implode(', ', $room_names);
+                $meta_input['ka_course_location_room'] = implode(', ', $room_names);
             }
         }
         // Add course_days based on coursetime format and firstCourseDate
         if (!empty($schedule['coursetime']) && !empty($schedule['firstCourseDate'])) {
             $course_days = get_course_days_from_coursetime($schedule['coursetime'], $schedule['firstCourseDate']);
             if (!empty($course_days)) {
-                $meta_input['course_days'] = $course_days;
+                $meta_input['ka_course_days'] = $course_days;
             }
         }
         //****/
@@ -509,7 +509,7 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
 
         if (!is_wp_error($coursedate_id)) {
             // Oppdater location_id
-            update_post_meta($coursedate_id, 'location_id', $location_id);
+            update_post_meta($coursedate_id, 'ka_location_id', $location_id);
             
             // Bruk den nye create_or_update_course_coursedate_relationship funksjonen
             if (!empty($post_id)) {
@@ -552,7 +552,7 @@ function cleanup_coursedates($location_id, $schedules_from_api) {
         'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
-            ['key' => 'location_id', 'value' => $location_id],
+            ['key' => 'ka_location_id', 'value' => $location_id],
         ],
         'numberposts' => -1,
     ]);
@@ -567,8 +567,8 @@ function cleanup_coursedates($location_id, $schedules_from_api) {
 
     // Sjekk hver kursdato
     foreach ($coursedates as $coursedate) {
-        $schedule_id = get_post_meta($coursedate->ID, 'schedule_id', true);
-        $related_post_id = get_post_meta($coursedate->ID, 'related_course', true);
+        $schedule_id = get_post_meta($coursedate->ID, 'ka_schedule_id', true);
+        $related_post_id = get_post_meta($coursedate->ID, 'ka_course_related_course', true);
 
         // Check for duplicates - if we've seen this schedule_id before, delete this one
         if (isset($seen_schedule_ids[$schedule_id])) {
@@ -596,21 +596,21 @@ function cleanup_coursedates($location_id, $schedules_from_api) {
 function remove_coursedate_from_related_course($coursedate_id, $post_id) {
     // Fjern kursdato fra kursets relasjoner
     if (!empty($post_id)) {
-        $related_coursedates = get_post_meta($post_id, 'course_related_coursedate', true);
+        $related_coursedates = get_post_meta($post_id, 'ka_course_related_coursedate', true);
         
         if (!empty($related_coursedates) && is_array($related_coursedates)) {
             $related_coursedates = array_diff($related_coursedates, [$coursedate_id]);
-            update_post_meta($post_id, 'course_related_coursedate', array_values($related_coursedates));
+            update_post_meta($post_id, 'ka_course_related_coursedate', array_values($related_coursedates));
         }
     }
 
     // Fjern kurs fra kursdatos relasjoner
     if (!empty($coursedate_id)) {
-        $related_courses = get_post_meta($coursedate_id, 'course_related_course', true);
+        $related_courses = get_post_meta($coursedate_id, 'ka_course_related_course', true);
         
         if (!empty($related_courses) && is_array($related_courses)) {
             $related_courses = array_diff($related_courses, [$post_id]);
-            update_post_meta($coursedate_id, 'course_related_course', array_values($related_courses));
+            update_post_meta($coursedate_id, 'ka_course_related_course', array_values($related_courses));
         }
     }
 }
@@ -624,21 +624,21 @@ function get_common_meta_fields($data, $language) {
     $first_course_type = $data['courseTypes'][0] ?? ['description' => ''];
     
     return [ 
-        'location_id' => (int) ($data['id'] ?? 0),
-        'course_content' => wp_kses_post($data['description'] ?? ''),
-        'course_price' => (int) ($first_location['price'] ?? 0),
-        'course_text_before_price' => sanitize_text_field($first_location['textBeforeAmount'] ?? ''),
-        'course_text_after_price' => sanitize_text_field($first_location['textAfterAmount'] ?? ''),
-        'course_difficulty_level' => sanitize_text_field($data['difficultyLevel'] ?? ''),
-        'course_type' => sanitize_text_field($first_course_type['description'] ?? ''),
-        'course_is_online' => sanitize_text_field($data['isOnlineCourse'] ?? ''),
-        'course_municipality' => sanitize_text_field($first_location['municipality'] ?? ''),
-        'course_county' => sanitize_text_field($first_location['county'] ?? ''),
-        'course_language' => sanitize_text_field($language ?? ''),
-        'course_external_sign_on' => sanitize_text_field($data['signOnPage'] ?? ''),
-        'course_contactperson_name' => sanitize_text_field($data['contactPerson']['name'] ?? ''),
-        'course_contactperson_phone' => sanitize_text_field($data['contactPerson']['phoneNumber'] ?? ''),
-        'course_contactperson_email' => sanitize_email($data['contactPerson']['email'] ?? ''),
+        'ka_location_id' => (int) ($data['id'] ?? 0),
+        'ka_course_content' => wp_kses_post($data['description'] ?? ''),
+        'ka_course_price' => (int) ($first_location['price'] ?? 0),
+        'ka_course_text_before_price' => sanitize_text_field($first_location['textBeforeAmount'] ?? ''),
+        'ka_course_text_after_price' => sanitize_text_field($first_location['textAfterAmount'] ?? ''),
+        'ka_course_difficulty_level' => sanitize_text_field($data['difficultyLevel'] ?? ''),
+        'ka_course_type' => sanitize_text_field($first_course_type['description'] ?? ''),
+        'ka_course_is_online' => sanitize_text_field($data['isOnlineCourse'] ?? ''),
+        'ka_course_municipality' => sanitize_text_field($first_location['municipality'] ?? ''),
+        'ka_course_county' => sanitize_text_field($first_location['county'] ?? ''),
+        'ka_course_language' => sanitize_text_field($language ?? ''),
+        'ka_course_external_sign_on' => sanitize_text_field($data['signOnPage'] ?? ''),
+        'ka_course_contactperson_name' => sanitize_text_field($data['contactPerson']['name'] ?? ''),
+        'ka_course_contactperson_phone' => sanitize_text_field($data['contactPerson']['phoneNumber'] ?? ''),
+        'ka_course_contactperson_email' => sanitize_email($data['contactPerson']['email'] ?? ''),
     ];
 }
 
@@ -933,12 +933,12 @@ function sync_main_course_data($main_course_id) {
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
-                'key' => 'main_course_id',
+                'key' => 'ka_main_course_id',
                 'value' => $main_course_id,
                 'compare' => '='
             ],
             [
-                'key' => 'is_parent_course',
+                'key' => 'ka_is_parent_course',
                 'value' => 'yes',
                 'compare' => '='
             ]
@@ -959,19 +959,19 @@ function sync_main_course_data($main_course_id) {
         'meta_query' => [
             'relation' => 'AND',
             [
-                'key' => 'main_course_id',
+                'key' => 'ka_main_course_id',
                 'value' => $main_course_id,
                 'compare' => '='
             ],
             [
                 'relation' => 'OR',
                 [
-                    'key' => 'is_parent_course',
+                    'key' => 'ka_is_parent_course',
                     'value' => 'yes',
                     'compare' => '!='
                 ],
                 [
-                    'key' => 'is_parent_course',
+                    'key' => 'ka_is_parent_course',
                     'compare' => 'NOT EXISTS'
                 ]
             ]
@@ -995,7 +995,7 @@ function sync_main_course_data($main_course_id) {
         $instructor_terms = wp_get_object_terms($course->ID, 'ka_instructors', ['fields' => 'ids']);
 
         // Hent relaterte kursdatoer
-        $course_dates = get_post_meta($course->ID, 'course_related_coursedate', true);
+        $course_dates = get_post_meta($course->ID, 'ka_course_related_coursedate', true);
         if (!empty($course_dates)) {
             $related_course_dates = array_merge($related_course_dates, (array) $course_dates);
         }
@@ -1030,7 +1030,7 @@ function sync_main_course_data($main_course_id) {
 
     // Oppdater relaterte kursdatoer på hovedkurset
     if (!empty($related_course_dates)) {
-        update_post_meta($post_id, 'course_related_coursedate', $related_course_dates);
+        update_post_meta($post_id, 'ka_course_related_coursedate', $related_course_dates);
     }
 }
 
@@ -1253,7 +1253,7 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
         $filename = substr($filename, 0, -(strlen($file_ext))) . $new_ext;
     }
     
-    $stored_image_name = get_post_meta($post_id, 'course_image_name', true);
+    $stored_image_name = get_post_meta($post_id, 'ka_course_image_name', true);
     
     // Check if the image already exists and is the same to avoid re-downloading
     if ($existing_thumbnail_id && $stored_image_name === $filename) {
@@ -1264,12 +1264,6 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     // Log when we need to download a new image
     error_log("📥 Starter nedlasting av bilde for kurs ID $post_id (kursID: $location_id)");
     $download_start = microtime(true);
-
-    // Delete the existing image if it's different
-    if ($existing_thumbnail_id) {
-        wp_delete_attachment($existing_thumbnail_id, true);
-        error_log("🗑️ Slettet gammelt bilde for kurs ID $post_id (kursID: $location_id)");
-    }
 
     $upload_dir = wp_upload_dir();
     $file_path = $upload_dir['path'] . '/' . $filename;
@@ -1302,6 +1296,24 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
         throw new Exception($error_msg);
     }
 
+    // Enforce maximum image size (500 KB) using header if available
+    $max_image_size_mb = 0.5;
+    $max_image_size_bytes = (int) ($max_image_size_mb * 1024 * 1024);
+    $content_length_header = wp_remote_retrieve_header($response, 'content-length');
+    if (!empty($content_length_header) && (int) $content_length_header > $max_image_size_bytes) {
+        $reported_size_mb = round(((int) $content_length_header) / (1024 * 1024), 2);
+        $course_name = sanitize_text_field($data['name'] ?? '');
+        $too_large_message = sprintf(
+            'Bildet er for stort (%.2f MB) for kurs "%s" (kursID: %d). Bytt til et bilde under %.0f KB i Kursagenten og kjør synkronisering på nytt. Hvis du har lagt inn webhook, holder det at du lagrer kurset i Kursagenten etter å ha byttet bildet.',
+            $reported_size_mb,
+            $course_name ?: 'Ukjent kurs',
+            $location_id,
+            $max_image_size_bytes / 1024
+        );
+        error_log('❌ ' . $too_large_message);
+        throw new Exception($too_large_message);
+    }
+
     $image_data = wp_remote_retrieve_body($response);
     if ($image_data === '' || $image_data === null || $image_data === false) {
         $error_msg = "Tomt eller ugyldig bildeinnhold mottatt";
@@ -1309,10 +1321,31 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
         throw new Exception($error_msg);
     }
     
-    // Check image size
-    $image_size_mb = strlen($image_data) / (1024 * 1024);
-    if ($image_size_mb > 10) { // Warn if image is larger than 10MB
-        error_log("⚠️ Stort bilde lastet ned: " . round($image_size_mb, 2) . "MB for kurs ID $post_id (kursID: $location_id)");
+    // Check actual image size after download and enforce limit
+    $image_size_bytes = strlen($image_data);
+    if ($image_size_bytes > $max_image_size_bytes) {
+        $image_size_mb = round($image_size_bytes / (1024 * 1024), 2);
+        $course_name = sanitize_text_field($data['name'] ?? '');
+        $too_large_message = sprintf(
+            'Bildet er for stort (%.2f MB) for kurs "%s" (kursID: %d). Bytt til et bilde under %.0f KB i Kursagenten og kjør synkronisering på nytt. Hvis du har lagt inn webhook, holder det at du lagrer kurset i Kursagenten etter å ha byttet bildet.',
+            $image_size_mb,
+            $course_name ?: 'Ukjent kurs',
+            $location_id,
+            $max_image_size_bytes / 1024
+        );
+        error_log('❌ ' . $too_large_message);
+        throw new Exception($too_large_message);
+    }
+
+    if ($image_size_bytes > (10 * 1024 * 1024)) {
+        $image_size_mb = round($image_size_bytes / (1024 * 1024), 2);
+        error_log("⚠️ Stort bilde lastet ned: {$image_size_mb}MB for kurs ID $post_id (kursID: $location_id)");
+    }
+
+    // Delete the existing image now that the new one is validated
+    if ($existing_thumbnail_id) {
+        wp_delete_attachment($existing_thumbnail_id, true);
+        error_log("🗑️ Slettet gammelt bilde for kurs ID $post_id (kursID: $location_id)");
     }
 
     // Ensure the upload directory exists
@@ -1362,7 +1395,7 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
 
     // Update the image name in custom fields (optional if you use ACF)
     update_post_meta($attach_id, '_wp_attachment_image_alt', $data['introText']);
-    update_post_meta($post_id, 'course_image_name', $filename_original);
+    update_post_meta($post_id, 'ka_course_image_name', $filename_original);
     update_post_meta($attach_id, 'is_course_image', true);
 
     // Log download time
@@ -1389,7 +1422,7 @@ function kursagenten_update_main_course_status($main_course_id = null) {
         'post_status' => array('publish', 'draft'),
         'meta_query' => array(
             array(
-                'key' => 'is_parent_course',
+                'key' => 'ka_is_parent_course',
                 'value' => 'yes'
             )
         )
@@ -1397,7 +1430,7 @@ function kursagenten_update_main_course_status($main_course_id = null) {
 
     if ($main_course_id) {
         $args['meta_query'][] = array(
-            'key' => 'main_course_id',
+            'key' => 'ka_main_course_id',
             'value' => $main_course_id
         );
     }
@@ -1414,11 +1447,11 @@ function kursagenten_update_main_course_status($main_course_id = null) {
             'post_status' => array('publish', 'draft'),
             'meta_query' => array(
                 array(
-                    'key' => 'main_course_id',
-                    'value' => get_post_meta($main_course->ID, 'main_course_id', true)
+                    'key' => 'ka_main_course_id',
+                    'value' => get_post_meta($main_course->ID, 'ka_main_course_id', true)
                 ),
                 array(
-                    'key' => 'is_parent_course',
+                    'key' => 'ka_is_parent_course',
                     'compare' => 'NOT EXISTS'
                 )
             )
@@ -1500,7 +1533,7 @@ function update_all_course_locations() {
         // Samle all lokasjonsdata fra kursene
         $locations_data = [];
         foreach ($courses as $course) {
-            $location_id = get_post_meta($course->ID, 'location_id', true);
+            $location_id = get_post_meta($course->ID, 'ka_location_id', true);
             if ($location_id) {
                 $course_data = kursagenten_get_course_details($location_id);
                 if (!empty($course_data) && !empty($course_data['locations'])) {
@@ -1611,7 +1644,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
             [
-                'key' => 'location_id',
+                'key' => 'ka_location_id',
                 'value' => $location_id,
                 'compare' => '='
             ]
@@ -1624,13 +1657,13 @@ function kursagenten_delete_course_by_location_id($location_id) {
         'posts_per_page' => -1,
         'post_status' => ['publish', 'draft'],
         'meta_query' => [
-            [ 'key' => 'location_id', 'value' => $location_id ]
+            [ 'key' => 'ka_location_id', 'value' => $location_id ]
         ]
     ]);
 
     foreach ($coursedates as $date) {
         // Try to clean relationships if helper exists
-        $related_courses = get_post_meta($date->ID, 'course_related_course', true);
+        $related_courses = get_post_meta($date->ID, 'ka_course_related_course', true);
         if (!empty($related_courses) && is_array($related_courses)) {
             foreach ($related_courses as $related_course_id) {
                 if (function_exists('remove_coursedate_from_related_course')) {
@@ -1646,7 +1679,7 @@ function kursagenten_delete_course_by_location_id($location_id) {
     $affected_main_course_ids = [];
 
     foreach ($courses as $course_post) {
-        $main_course_id = get_post_meta($course_post->ID, 'main_course_id', true);
+        $main_course_id = get_post_meta($course_post->ID, 'ka_main_course_id', true);
         if (!empty($main_course_id)) {
             $affected_main_course_ids[] = (int) $main_course_id;
         }
@@ -1665,8 +1698,8 @@ function kursagenten_delete_course_by_location_id($location_id) {
             'posts_per_page' => 1,
             'post_status' => ['publish', 'draft'],
             'meta_query' => [
-                [ 'key' => 'main_course_id', 'value' => $main_course_id, 'compare' => '=' ],
-                [ 'key' => 'is_parent_course', 'compare' => 'NOT EXISTS' ]
+                [ 'key' => 'ka_main_course_id', 'value' => $main_course_id, 'compare' => '=' ],
+                [ 'key' => 'ka_is_parent_course', 'compare' => 'NOT EXISTS' ]
             ]
         ]);
 
@@ -1677,21 +1710,21 @@ function kursagenten_delete_course_by_location_id($location_id) {
                 'posts_per_page' => 1,
                 'post_status' => ['publish', 'draft'],
                 'meta_query' => [
-                    [ 'key' => 'main_course_id', 'value' => $main_course_id, 'compare' => '=' ],
-                    [ 'key' => 'is_parent_course', 'value' => 'yes', 'compare' => '=' ]
+                    [ 'key' => 'ka_main_course_id', 'value' => $main_course_id, 'compare' => '=' ],
+                    [ 'key' => 'ka_is_parent_course', 'value' => 'yes', 'compare' => '=' ]
                 ]
             ]);
 
             if (!empty($parent_course)) {
                 // Also remove any coursedates that might be tied to the main_course_id (if any)
-                $parent_location_id = (int) get_post_meta($parent_course[0]->ID, 'location_id', true);
+                $parent_location_id = (int) get_post_meta($parent_course[0]->ID, 'ka_location_id', true);
                 if ($parent_location_id) {
                     $parent_dates = get_posts([
                         'post_type' => 'ka_coursedate',
                         'posts_per_page' => -1,
                         'post_status' => ['publish', 'draft'],
                         'meta_query' => [
-                            [ 'key' => 'location_id', 'value' => $parent_location_id ]
+                            [ 'key' => 'ka_location_id', 'value' => $parent_location_id ]
                         ]
                     ]);
                     foreach ($parent_dates as $pd) {

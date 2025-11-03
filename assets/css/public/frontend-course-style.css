@@ -990,7 +990,7 @@ text-align: center;
   padding: 0.1em 0.8em;
   margin: 0.2em;
   background: white;
-  border: 1px solid var(--ka-color-light);
+  border: 1px solid var(--ka-color-lighter);
   color: var(--ka-color-filter);
     border-radius: 5px;
     font-size: var(--ka-filter-font-size);
@@ -1744,4 +1744,178 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 .kag .specific-locations-section li::before {
     content: '' !important;
     display: none !important;
+}
+
+
+/* COURSE DATES MODAL */
+/*********************/
+.ka-course-dates-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ka-modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+}
+
+.ka-modal-content {
+    position: relative;
+    background: white;
+    border-radius: 8px;
+    max-width: 600px;
+    max-height: 80vh;
+    width: 90%;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalSlideIn 0.2s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ka-modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--ka-primary-color, var(--ka-color, #2271b1));
+    color: white;
+}
+
+.ka-modal-header h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: white;
+    font-weight: 600;
+}
+
+.ka-modal-close {
+    background: transparent;
+    border: none;
+    font-size: 32px;
+    cursor: pointer;
+    color: white;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.ka-modal-close:hover {
+    opacity: 0.7;
+}
+
+.ka-modal-body {
+    padding: 24px;
+    overflow-y: auto;
+}
+
+.ka-modal-body h4 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.1em;
+    color: #333;
+}
+
+.ka-location-group {
+    margin-bottom: 24px;
+}
+
+.ka-location-group:last-child {
+    margin-bottom: 0;
+}
+
+.ka-location-group h5 {
+    margin: 0 0 8px 0;
+    font-size: 1em;
+    color: var(--ka-primary-color, var(--ka-color, #2271b1));
+    font-weight: 600;
+}
+
+.ka-dates-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0 16px;
+}
+
+.ka-dates-list li {
+    /* margin-bottom: 6px; */
+}
+
+.ka-dates-list a {
+    text-decoration: none;
+    color: #333;
+    transition: color 0.2s;
+    display: inline-block;
+    padding: 2px 0;
+}
+
+.ka-dates-list a:hover {
+    color: var(--ka-primary-color, var(--ka-color, #2271b1));
+    text-decoration: underline;
+}
+
+.show-ka-modal {
+    color: var(--ka-primary-color, var(--ka-color, #2271b1));
+    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.show-ka-modal:hover {
+    text-decoration: underline;
+    opacity: 0.8;
+}
+
+/* Mobile responsiveness */
+@media screen and (max-width: 768px) {
+    .ka-modal-content {
+        max-width: 95%;
+        max-height: 90vh;
+    }
+    
+    .ka-modal-header {
+        padding: 16px 20px;
+    }
+    
+    .ka-modal-header h3 {
+        font-size: 1.1em;
+    }
+    
+    .ka-modal-body {
+        padding: 20px;
+    }
+    
+    .ka-dates-list {
+        margin-left: 8px;
+    }
 }

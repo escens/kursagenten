@@ -15,18 +15,18 @@ $course_excerpt = get_the_excerpt();
 $course_thumbnail = get_the_post_thumbnail_url($course_id, 'large');
 
 // Hent metadata
-$first_course_date = get_post_meta($course_id, 'course_first_date', true);
-$last_course_date = get_post_meta($course_id, 'course_last_date', true);
-$registration_deadline = get_post_meta($course_id, 'course_registration_deadline', true);
-$duration = get_post_meta($course_id, 'course_duration', true);
-$coursetime = get_post_meta($course_id, 'course_time', true);
-$price = get_post_meta($course_id, 'course_price', true);
-$after_price = get_post_meta($course_id, 'course_text_after_price', true);
-$location = get_post_meta($course_id, 'course_location', true);
-$location_freetext = get_post_meta($course_id, 'course_location_freetext', true);
-$location_room = get_post_meta($course_id, 'course_location_room', true);
-$button_text = get_post_meta($course_id, 'course_button_text', true);
-$signup_url = get_post_meta($course_id, 'course_signup_url', true);
+$first_course_date = get_post_meta($course_id, 'ka_course_first_date', true);
+$last_course_date = get_post_meta($course_id, 'ka_course_last_date', true);
+$registration_deadline = get_post_meta($course_id, 'ka_course_registration_deadline', true);
+$duration = get_post_meta($course_id, 'ka_course_duration', true);
+$coursetime = get_post_meta($course_id, 'ka_course_time', true);
+$price = get_post_meta($course_id, 'ka_course_price', true);
+$after_price = get_post_meta($course_id, 'ka_course_text_after_price', true);
+$location = get_post_meta($course_id, 'ka_course_location', true);
+$location_freetext = get_post_meta($course_id, 'ka_course_location_freetext', true);
+$location_room = get_post_meta($course_id, 'ka_course_location_room', true);
+$button_text = get_post_meta($course_id, 'ka_course_button_text', true);
+$signup_url = get_post_meta($course_id, 'ka_course_signup_url', true);
 
 // Hent taksonomier
 $instructors = get_the_terms($course_id, 'ka_instructors');

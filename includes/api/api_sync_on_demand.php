@@ -155,10 +155,17 @@ function kursagenten_run_sync_kurs() {
                 $error_count++;
                 $error_msg = is_string($sync_result) ? $sync_result : "Ukjent feil under synkronisering";
                 error_log("FEIL: $error_msg - kurs: " . ($course['course_name'] ?? 'Ukjent navn'));
+                $lower_error = strtolower($error_msg);
+                $error_type = 'sync_failed';
+                if (strpos($lower_error, 'bilde er for stort') !== false) {
+                    $error_type = 'image_too_large';
+                } elseif (strpos($lower_error, 'bilde-nedlasting timeout') !== false || strpos($lower_error, 'timeout') !== false) {
+                    $error_type = 'image_timeout';
+                }
                 $failed_courses[] = [
                     'location_id' => $course['location_id'],
                     'course_name' => $course['course_name'] ?? 'Ukjent navn',
-                    'error_type' => 'sync_failed',
+                    'error_type' => $error_type,
                     'error_message' => $error_msg
                 ];
             }
@@ -166,10 +173,17 @@ function kursagenten_run_sync_kurs() {
             $error_count++;
             $error_msg = $e->getMessage();
             error_log("FEIL under synkronisering (Exception): $error_msg");
+            $lower_error = strtolower($error_msg);
+            $error_type = 'exception';
+            if (strpos($lower_error, 'bilde er for stort') !== false) {
+                $error_type = 'image_too_large';
+            } elseif (strpos($lower_error, 'bilde-nedlasting timeout') !== false || strpos($lower_error, 'timeout') !== false) {
+                $error_type = 'image_timeout';
+            }
             $failed_courses[] = [
                 'location_id' => $course['location_id'] ?? 'Ukjent ID',
                 'course_name' => $course['course_name'] ?? 'Ukjent navn',
-                'error_type' => 'exception',
+                'error_type' => $error_type,
                 'error_message' => $error_msg
             ];
         }
@@ -401,7 +415,7 @@ function cleanup_courses_on_demand() {
     
     // Sjekk hvert kurs i WordPress
     foreach ($wp_courses as $wp_course) {
-        $location_id = get_post_meta($wp_course->ID, 'location_id', true);
+        $location_id = get_post_meta($wp_course->ID, 'ka_location_id', true);
         
         if (!in_array($location_id, $valid_location_ids)) {
             //error_log("=== SLETTING AV KURS ===");
@@ -415,7 +429,7 @@ function cleanup_courses_on_demand() {
                 'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
-                    ['key' => 'location_id', 'value' => $location_id],
+                    ['key' => 'ka_location_id', 'value' => $location_id],
                 ],
             ]);
             
@@ -436,7 +450,7 @@ function cleanup_courses_on_demand() {
                 'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
-                    ['key' => 'location_id', 'value' => $location_id],
+                    ['key' => 'ka_location_id', 'value' => $location_id],
                 ],
             ]);
             
@@ -444,7 +458,7 @@ function cleanup_courses_on_demand() {
             $seen_combinations = [];
             
             foreach ($related_dates as $date) {
-                $schedule_id = get_post_meta($date->ID, 'schedule_id', true);
+                $schedule_id = get_post_meta($date->ID, 'ka_schedule_id', true);
                 
                 // Create unique key for this combination
                 $unique_key = $location_id . '_' . $schedule_id;

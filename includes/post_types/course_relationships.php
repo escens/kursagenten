@@ -24,7 +24,7 @@ function validate_course_coursedate_relationship($course_id, $coursedate_id) {
     }
 
     // Sjekk at postene har riktig post_type
-    if ($course->post_type !== 'course' || $coursedate->post_type !== 'coursedate') {
+    if ($course->post_type !== 'ka_course' || $coursedate->post_type !== 'ka_coursedate') {
         return new WP_Error(
             'invalid_post_type',
             'En eller begge postene har feil post_type',
@@ -86,26 +86,26 @@ function create_or_update_course_coursedate_relationship($course_id, $coursedate
     }
 
     // Oppdater relasjoner for kurset
-    $current_coursedates = get_post_meta($course_id, 'course_related_coursedate', true) ?: [];
+    $current_coursedates = get_post_meta($course_id, 'ka_course_related_coursedate', true) ?: [];
     if (!is_array($current_coursedates)) {
         $current_coursedates = (array) $current_coursedates;
     }
     
     if (!in_array($coursedate_id, $current_coursedates)) {
         $current_coursedates[] = $coursedate_id;
-        update_post_meta($course_id, 'course_related_coursedate', array_unique($current_coursedates));
+        update_post_meta($course_id, 'ka_course_related_coursedate', array_unique($current_coursedates));
         log_relationship_change($course_id, $coursedate_id, 'add', 'Kursdato lagt til i kurs');
     }
 
     // Oppdater relasjoner for kursdatoen
-    $current_courses = get_post_meta($coursedate_id, 'course_related_course', true) ?: [];
+    $current_courses = get_post_meta($coursedate_id, 'ka_course_related_course', true) ?: [];
     if (!is_array($current_courses)) {
         $current_courses = (array) $current_courses;
     }
     
     if (!in_array($course_id, $current_courses)) {
         $current_courses[] = $course_id;
-        update_post_meta($coursedate_id, 'course_related_course', array_unique($current_courses));
+        update_post_meta($coursedate_id, 'ka_course_related_course', array_unique($current_courses));
         log_relationship_change($course_id, $coursedate_id, 'add', 'Kurs lagt til i kursdato');
     }
 
@@ -127,18 +127,18 @@ function remove_course_coursedate_relationship($course_id, $coursedate_id) {
     }
 
     // Fjern relasjon fra kurset
-    $current_coursedates = get_post_meta($course_id, 'course_related_coursedate', true) ?: [];
+    $current_coursedates = get_post_meta($course_id, 'ka_course_related_coursedate', true) ?: [];
     if (is_array($current_coursedates)) {
         $current_coursedates = array_diff($current_coursedates, [$coursedate_id]);
-        update_post_meta($course_id, 'course_related_coursedate', array_values($current_coursedates));
+        update_post_meta($course_id, 'ka_course_related_coursedate', array_values($current_coursedates));
         log_relationship_change($course_id, $coursedate_id, 'remove', 'Kursdato fjernet fra kurs');
     }
 
     // Fjern relasjon fra kursdatoen
-    $current_courses = get_post_meta($coursedate_id, 'course_related_course', true) ?: [];
+    $current_courses = get_post_meta($coursedate_id, 'ka_course_related_course', true) ?: [];
     if (is_array($current_courses)) {
         $current_courses = array_diff($current_courses, [$course_id]);
-        update_post_meta($coursedate_id, 'course_related_course', array_values($current_courses));
+        update_post_meta($coursedate_id, 'ka_course_related_course', array_values($current_courses));
         log_relationship_change($course_id, $coursedate_id, 'remove', 'Kurs fjernet fra kursdato');
     }
 
@@ -163,14 +163,14 @@ function cleanup_invalid_relationships() {
         'posts_per_page' => -1,
         'meta_query' => [
             [
-                'key' => 'course_related_coursedate',
+                'key' => 'ka_course_related_coursedate',
                 'compare' => 'EXISTS'
             ]
         ]
     ]);
 
     foreach ($courses as $course) {
-        $coursedates = get_post_meta($course->ID, 'course_related_coursedate', true) ?: [];
+        $coursedates = get_post_meta($course->ID, 'ka_course_related_coursedate', true) ?: [];
         if (!is_array($coursedates)) {
             $coursedates = (array) $coursedates;
         }
@@ -191,14 +191,14 @@ function cleanup_invalid_relationships() {
         'posts_per_page' => -1,
         'meta_query' => [
             [
-                'key' => 'course_related_course',
+                'key' => 'ka_course_related_course',
                 'compare' => 'EXISTS'
             ]
         ]
     ]);
 
     foreach ($coursedates as $coursedate) {
-        $courses = get_post_meta($coursedate->ID, 'course_related_course', true) ?: [];
+        $courses = get_post_meta($coursedate->ID, 'ka_course_related_course', true) ?: [];
         if (!is_array($courses)) {
             $courses = (array) $courses;
         }
@@ -223,7 +223,7 @@ function cleanup_invalid_relationships() {
  * @return array Array med kursdatoer
  */
 function get_course_coursedates($course_id) {
-    $coursedate_ids = get_post_meta($course_id, 'course_related_coursedate', true) ?: [];
+    $coursedate_ids = get_post_meta($course_id, 'ka_course_related_coursedate', true) ?: [];
     if (!is_array($coursedate_ids)) {
         $coursedate_ids = (array) $coursedate_ids;
     }
@@ -233,7 +233,7 @@ function get_course_coursedates($course_id) {
         'post__in' => $coursedate_ids,
         'posts_per_page' => -1,
         'orderby' => 'meta_value',
-        'meta_key' => 'course_first_date',
+        'meta_key' => 'ka_course_first_date',
         'order' => 'ASC'
     ]);
 }
@@ -245,7 +245,7 @@ function get_course_coursedates($course_id) {
  * @return array Array med kurs
  */
 function get_coursedate_courses($coursedate_id) {
-    $course_ids = get_post_meta($coursedate_id, 'course_related_course', true) ?: [];
+    $course_ids = get_post_meta($coursedate_id, 'ka_course_related_course', true) ?: [];
     if (!is_array($course_ids)) {
         $course_ids = (array) $course_ids;
     }

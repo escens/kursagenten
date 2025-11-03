@@ -262,8 +262,12 @@
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
 		data.nonce = kurskalender_data.filter_nonce;
-		// Send current URL so server can build correct pagination links
-		try { data.current_url = window.location.href; } catch(e) {}
+		// Send current URL so server can build correct pagination links (without current_url param to avoid nesting)
+		try { 
+			const url = new URL(window.location.href);
+			url.searchParams.delete('current_url');
+			data.current_url = url.toString(); 
+		} catch(e) {}
 
 		// Behold side-parameteren fra URL hvis den finnes og ingen ny side er spesifisert
 		if (!data.side) {
@@ -400,7 +404,7 @@
 
 	function clean(obj) {
 		for (let propName in obj) {
-			if (obj[propName] === null || obj[propName] === undefined || obj[propName] === "") {
+			if (obj[propName] === null || obj[propName] === undefined || obj[propName] === "" || propName === 'current_url') {
 				delete obj[propName];
 			}
 		}
@@ -432,6 +436,10 @@
 
 		// Process all URL parameters
 		for (const [key, value] of url.searchParams.entries()) {
+			// Skip current_url parameter entirely
+			if (key === 'current_url') {
+				continue;
+			}
 			// Spesiell håndtering for dato-parameter
 			if (key === 'dato') {
 				params[key] = value;  // Behold dato-stringen som den er
@@ -792,23 +800,17 @@
 		const href = $(this).attr('href');
 		const locate = new URL(href);
 		
-		// Behold alle eksisterende filtre
-		const currentFilters = getCurrentFiltersFromURL();
-		
-		// Konverter datoformat hvis nødvendig
-		if (currentFilters.dato && currentFilters.dato.includes(',')) {
-			// Konverter fra YYYY-MM-DD,YYYY-MM-DD til DD.MM.YYYY-DD.MM.YYYY
-			const [fromDate, toDate] = currentFilters.dato.split(',');
-			const from = moment(fromDate).format('DD.MM.YYYY');
-			const to = moment(toDate).format('DD.MM.YYYY');
-			currentFilters.dato = `${from}-${to}`;
+		// Hent alle parametere fra pagineringslenken (ikke fra current URL for å unngå duplikater)
+		const newFilters = {};
+		for (const [key, value] of locate.searchParams.entries()) {
+			if (key === 'dato') {
+				newFilters[key] = value;
+			} else if (key === 'side') {
+				newFilters[key] = parseInt(value, 10);
+			} else {
+				newFilters[key] = value.includes(',') ? value.split(',').map(v => v.trim()) : value;
+			}
 		}
-		
-		// Legg til side-parameter
-		const newFilters = {
-			...currentFilters,
-			side: locate.searchParams.get('side')
-		};
 
 		// Oppdater URL og hent resultater
 		window.history.pushState({}, '', href);

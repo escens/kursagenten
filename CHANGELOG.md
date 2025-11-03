@@ -1,3 +1,6 @@
+## 1.0.7 - 2025-11-02
+- Justering på struktruelle endringer
+
 ## 1.0.6 - 2025-10-29
 - Strukturelle endringer for unngå konflikt med andre kurs-utvidelser
 

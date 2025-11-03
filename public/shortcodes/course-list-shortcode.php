@@ -816,13 +816,13 @@ function kursagenten_course_list_shortcode($atts) {
                                             $current_url = home_url('/');
                                         }
 
-                                        // Fjern eventuelle eksisterende side-parametre fra URL-en
-                                        $current_url = remove_query_arg('side', $current_url);
+                                        // Fjern ALLE query parametere fra URL-en - de skal kun komme fra add_args
+                                        $current_url = strtok($current_url, '?');
 
-                                        // Legg til kortkode-parametre i add_args hvis de finnes
-                                        $add_args = array_map(function ($item) {
-                                            return is_array($item) ? join(',', $item) : $item;
-                                        }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]));
+                        // Legg til kortkode-parametre i add_args hvis de finnes
+                        $add_args = array_map(function ($item) {
+                            return is_array($item) ? join(',', $item) : $item;
+                        }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'current_url' => true]));
                                         
                                         // Legg til kortkode-parametre hvis de ikke allerede er i $_REQUEST
                                         if ($has_shortcode_filters) {
@@ -897,10 +897,13 @@ function kursagenten_course_list_shortcode($atts) {
         $('.per-page-option').on('click', function() {
             const perPage = $(this).data('per-page');
             const currentUrl = new URL(window.location.href);
-            currentUrl.searchParams.set('per_page', perPage);
             
-            // Fjern side-parameter når per_page endres (for å unngå ugyldige sider)
+            // Fjern problematiske parametere først
+            currentUrl.searchParams.delete('current_url');
             currentUrl.searchParams.delete('side');
+            
+            // Sett per_page
+            currentUrl.searchParams.set('per_page', perPage);
             
             // Fjern per_page fra aktive filtre før vi oppdaterer URL
             $('#active-filters .filter-tag[data-param="per_page"]').remove();

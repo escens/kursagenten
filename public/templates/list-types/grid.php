@@ -13,15 +13,23 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $course_title = get_the_title();
     $excerpt = get_the_excerpt();
     
-    // Hent location_id for å finne relaterte kursdatoer
-    $location_id = get_post_meta($course_id, 'location_id', true);
+    // Hent location_id (API-ID) for å finne relaterte kursdatoer
+    // Kursdatoer har main_course_id som matcher kursets main_course_id (ikke location_id)
+    $is_parent = get_post_meta($course_id, 'ka_is_parent_course', true);
     
-    // Hent kursdatoer basert på location_id
+    if ($is_parent === 'yes') {
+        // For hovedkurs: bruk ka_location_id (som er samme som ka_main_course_id)
+        $search_id = get_post_meta($course_id, 'ka_location_id', true);
+    } else {
+        // For underkurs: bruk ka_main_course_id
+        $search_id = get_post_meta($course_id, 'ka_main_course_id', true);
+    }
+    
     $related_coursedates = get_posts([
         'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
         'meta_query' => [
-            ['key' => 'location_id', 'value' => $location_id],
+            ['key' => 'ka_main_course_id', 'value' => $search_id],
         ],
     ]);
     
@@ -33,21 +41,10 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     // Hent data fra første tilgjengelige kursdato
     $selected_coursedate_data = get_selected_coursedate_data($related_coursedate_ids);
     
-    // Hent lokasjonsinformasjon
-    $location = get_post_meta($course_id, 'course_location', true);
-    $location_freetext = get_post_meta($course_id, 'course_location_freetext', true);
-    $location_room = get_post_meta($course_id, 'course_location_room', true);
-    
-    // Hvis location_freetext ikke er satt direkte på kurset, prøv å hente fra coursedates
-    if (empty($location_freetext)) {
-        foreach ($related_coursedates as $coursedate) {
-            $coursedate_location = get_post_meta($coursedate->ID, 'course_location_freetext', true);
-            if (!empty($coursedate_location)) {
-                $location_freetext = $coursedate_location;
-                break;
-            }
-        }
-    }
+    // Hent lokasjonsinformasjon fra den valgte kursdatoen
+    $location = $selected_coursedate_data['location'] ?? '';
+    $location_freetext = $selected_coursedate_data['location_freetext'] ?? '';
+    $location_room = $selected_coursedate_data['course_location_room'] ?? '';
     
     // Hent plassholderbilde fra innstillinger
     $options = get_option('design_option_name');
@@ -77,36 +74,43 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     // Original kode for coursedates
     $course_id = get_the_ID();
 
-    $course_title =             get_post_meta($course_id, 'course_title', true);
-    $first_course_date =        ka_format_date(get_post_meta($course_id, 'course_first_date', true));
-    $last_course_date =         ka_format_date(get_post_meta($course_id, 'course_last_date', true));
-    $registration_deadline =    ka_format_date(get_post_meta($course_id, 'course_registration_deadline', true));
-    $duration =                 get_post_meta($course_id, 'course_duration', true);
-    $coursetime =               get_post_meta($course_id, 'course_time', true);
-    $course_days =              get_post_meta($course_id, 'course_days', true);
-    $price =                    get_post_meta($course_id, 'course_price', true);
-    $after_price =              get_post_meta($course_id, 'course_text_after_price', true);
-    $location =                 get_post_meta($course_id, 'course_location', true);
-    $location_freetext =        get_post_meta($course_id, 'course_location_freetext', true);
-    $location_room =            get_post_meta($course_id, 'course_location_room', true);
-    $is_full =                  get_post_meta($course_id, 'course_isFull', true);
-    $show_registration =        get_post_meta($course_id, 'course_showRegistrationForm', true);
+    $course_title =             get_post_meta($course_id, 'ka_course_title', true);
+    $first_course_date =        ka_format_date(get_post_meta($course_id, 'ka_course_first_date', true));
+    $last_course_date =         ka_format_date(get_post_meta($course_id, 'ka_course_last_date', true));
+    $registration_deadline =    ka_format_date(get_post_meta($course_id, 'ka_course_registration_deadline', true));
+    $duration =                 get_post_meta($course_id, 'ka_course_duration', true);
+    $coursetime =               get_post_meta($course_id, 'ka_course_time', true);
+    $course_days =              get_post_meta($course_id, 'ka_course_days', true);
+    $price =                    get_post_meta($course_id, 'ka_course_price', true);
+    $after_price =              get_post_meta($course_id, 'ka_course_text_after_price', true);
+    $location =                 get_post_meta($course_id, 'ka_course_location', true);
+    $location_freetext =        get_post_meta($course_id, 'ka_course_location_freetext', true);
+    $location_room =            get_post_meta($course_id, 'ka_course_location_room', true);
+    $is_full =                  get_post_meta($course_id, 'ka_course_isFull', true);
+    $show_registration =        get_post_meta($course_id, 'ka_course_showRegistrationForm', true);
 
-    $button_text =              get_post_meta($course_id, 'course_button_text', true);
-    $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
+    $button_text =              get_post_meta($course_id, 'ka_course_button_text', true);
+    $signup_url =               get_post_meta($course_id, 'ka_course_signup_url', true);
 
-    $related_course_id =        get_post_meta($course_id, 'location_id', true);
+    $related_course_id =        get_post_meta($course_id, 'ka_location_id', true);
 
     $related_course_info = get_course_info_by_location($related_course_id);
 
+    // Hent plassholderbilde fra innstillinger
+    $options = get_option('design_option_name');
+    $placeholder_image = !empty($options['ka_plassholderbilde_kurs']) 
+        ? $options['ka_plassholderbilde_kurs']
+        : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+    
     if ($related_course_info) {
         $course_link = esc_url($related_course_info['permalink']);
-        $featured_image_thumb = $related_course_info['thumbnail-medium'];
+        $featured_image_thumb = $related_course_info['thumbnail-medium'] ?: $placeholder_image;
         $excerpt = $related_course_info['excerpt'];
-    }
-
-    if (!$course_link) {
+    } else {
+        // Hvis ingen relatert kursinfo, sett fallback-verdier
         $course_link = false;
+        $featured_image_thumb = $placeholder_image;
+        $excerpt = '';
     }
 }
 
@@ -219,7 +223,15 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     <ul class="card-details-list">
                         <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
                             <?php if (!empty($first_course_date)) : ?>
-                            <li><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></li>
+                            <li>
+                                <i class="ka-icon icon-calendar"></i>
+                                <span class="ka-main-color">Neste kurs: </span><?php echo esc_html($first_course_date); ?>
+                                <?php if (count($related_coursedate_ids) > 1) : ?>
+                                    <a href="#" class="show-ka-modal" data-course-id="<?php echo esc_attr($course_id); ?>" style="margin-left: 8px; font-size: 0.9em;">
+                                        (+<?php echo count($related_coursedate_ids) - 1; ?> flere)
+                                    </a>
+                                <?php endif; ?>
+                            </li>
                             <?php endif; ?>
                             <?php if (!empty($coursetime) || !empty($course_days)) : ?>
                             <li>
@@ -229,7 +241,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                             </li>
                             <?php endif; ?>
                             <?php if (!empty($instructor_links)) : ?>
-                            <li><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></li>
+                            <li><i class="ka-icon icon-user"></i><?php echo implode('', $instructor_links); ?></li>
                             <?php endif; ?>
                         <?php else : ?>
                             <?php if (!empty($first_course_date)) : ?>
@@ -276,4 +288,88 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
             </div>
         </div>
     </div>
+    
+    <?php if ($view_type === 'main_courses' && !$force_standard_view && count($related_coursedate_ids) > 1) : ?>
+    <!-- Popup for alle kursdatoer -->
+    <div class="ka-course-dates-modal" id="modal-<?php echo esc_attr($course_id); ?>" style="display: none;">
+        <div class="ka-modal-overlay"></div>
+        <div class="ka-modal-content">
+            <div class="ka-modal-header">
+                <h3><?php echo esc_html($course_title); ?></h3>
+                <button class="ka-modal-close" aria-label="Lukk">&times;</button>
+            </div>
+            <div class="ka-modal-body">
+                <h4>Alle tilgjengelige kurssteder og datoer</h4>
+                <?php
+                // Hent main_course_id for å finne alle kursdatoer
+                $main_course_id = get_post_meta($course_id, 'ka_main_course_id', true);
+                if (empty($main_course_id)) {
+                    $main_course_id = get_post_meta($course_id, 'ka_location_id', true);
+                }
+                
+                // Hent alle kursdatoer (samme logikk som i standard.php)
+                $all_coursedates_popup = get_posts([
+                    'post_type' => 'ka_coursedate',
+                    'posts_per_page' => -1,
+                    'meta_query' => [
+                        ['key' => 'ka_main_course_id', 'value' => $main_course_id],
+                    ],
+                ]);
+                
+                // Samle lokasjonsdata
+                $locations_popup = [];
+                foreach ($all_coursedates_popup as $coursedate) {
+                    $cd_location = get_post_meta($coursedate->ID, 'ka_course_location', true);
+                    $cd_freetext = get_post_meta($coursedate->ID, 'ka_course_location_freetext', true);
+                    $cd_first_date = get_post_meta($coursedate->ID, 'ka_course_first_date', true);
+                    $cd_signup_url = get_post_meta($coursedate->ID, 'ka_course_signup_url', true);
+                    
+                    if (!empty($cd_location) && !empty($cd_first_date)) {
+                        $key = $cd_location;
+                        if (!isset($locations_popup[$key])) {
+                            $locations_popup[$key] = [
+                                'name' => $cd_location,
+                                'freetext' => $cd_freetext,
+                                'dates' => []
+                            ];
+                        }
+                        $locations_popup[$key]['dates'][] = [
+                            'date' => ka_format_date($cd_first_date),
+                            'raw_date' => $cd_first_date,
+                            'url' => $cd_signup_url
+                        ];
+                    }
+                }
+                
+                // Sorter datoer innenfor hver lokasjon
+                foreach ($locations_popup as &$loc_data) {
+                    usort($loc_data['dates'], function($a, $b) {
+                        return strcmp($a['raw_date'], $b['raw_date']);
+                    });
+                }
+                unset($loc_data);
+                
+                // Vis lokasjonene med datoer
+                if (!empty($locations_popup)) :
+                    foreach ($locations_popup as $loc) : ?>
+                        <div class="ka-location-group">
+                            <h5><?php echo esc_html($loc['name']); ?><?php if (!empty($loc['freetext'])) : ?> (<?php echo esc_html($loc['freetext']); ?>)<?php endif; ?></h5>
+                            <ul class="ka-dates-list">
+                                <?php foreach ($loc['dates'] as $date_info) : ?>
+                                    <li>
+                                        <a href="#" class="pameldingskjema" data-url="<?php echo esc_url($date_info['url']); ?>">
+                                            <?php echo esc_html($date_info['date']); ?>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endforeach;
+                else : ?>
+                    <p>Ingen kursdatoer tilgjengelig for øyeblikket.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>

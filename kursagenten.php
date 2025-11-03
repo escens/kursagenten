@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.0.6
+ * Version:           1.0.7
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -15,13 +15,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.0.6');
+ define('KURSAG_VERSION', '1.0.7');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.0.6');
+    define('KURSAG_VERSION', '1.0.7');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -29,7 +29,7 @@ if (!defined('KURSAG_DESCRIPTION')) {
     define('KURSAG_DESCRIPTION', 'Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs');
 }
 if (!defined('KURSAG_INSTALLATION')) {
-    define('KURSAG_INSTALLATION', '1. Installer plugin<br>2. Legg inn tilsendt API-nøkkel i Innstillinger<br>3. Gå til Oversikt for å videre instruksjoner');
+    define('KURSAG_INSTALLATION', '1. Installer plugin<br>2. Legg inn tilsendt API-nøkkel i Innstillinger<br>3. Gø til Oversikt for ø videre instruksjoner');
 }
 if (!defined('KURSAG_AUTHOR')) {
     define('KURSAG_AUTHOR', 'Kursagenten Team');
@@ -107,7 +107,7 @@ register_deactivation_hook(__FILE__, 'kursagenten_deactivate');
  * Added 18.03.2025 due to a bug in the taxonomy template. Didn't find the root of the problem, but this fixed it. See also default.php in the templates/designs/taxonomy folder.
  */
 function kursagenten_fix_all_taxonomy_queries() {
-    // Bare kjør på frontend
+    // Bare kjør pø frontend
     if (is_admin()) {
         return;
     }
@@ -116,7 +116,7 @@ function kursagenten_fix_all_taxonomy_queries() {
     $full_path = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
     $path_segments = explode('/', trim($full_path, '/'));
     
-    // Sjekk om URL-stien matcher våre taksonomier
+    // Sjekk om URL-stien matcher vøre taksonomier
     if (count($path_segments) >= 2) {
         $taxonomy_slug = $path_segments[0];
         $term_slug = $path_segments[1];
@@ -129,27 +129,27 @@ function kursagenten_fix_all_taxonomy_queries() {
         // Hent URL-innstillinger
         $url_options = get_option('kag_seo_option_name');
         
-        // Bygg mapping basert på innstillinger
+        // Bygg mapping basert pø innstillinger
         $taxonomy_map = [
             (!empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori') => 'ka_coursecategory',
             (!empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted') => 'ka_course_location',
             (!empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer') => 'ka_instructors'
         ];
         
-        // Identifiser taksonomi basert på URL-sti
+        // Identifiser taksonomi basert pø URL-sti
         $taxonomy = isset($taxonomy_map[$taxonomy_slug]) ? $taxonomy_map[$taxonomy_slug] : '';
         
         // Sjekk om vi har gyldig taksonomi og term
         if (!empty($taxonomy) && !empty($term_slug)) {
             $term = null;
             
-            // Spesiell håndtering for instruktører med navnevisning
+            // Spesiell høndtering for instruktører med navnevisning
             if ($taxonomy === 'ka_instructors') {
                 $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
                 if ($name_display === 'firstname' || $name_display === 'lastname') {
                     $meta_key = $name_display === 'firstname' ? 'instructor_firstname' : 'instructor_lastname';
                     
-                    // Finn instruktør basert på fornavn/etternavn
+                    // Finn instruktør basert pø fornavn/etternavn
                     $terms = get_terms(array(
                         'taxonomy' => 'ka_instructors',
                         'meta_key' => $meta_key,
@@ -174,7 +174,7 @@ function kursagenten_fix_all_taxonomy_queries() {
                 $wp_query->queried_object = $term;
                 $wp_query->queried_object_id = $term->term_id;
                 
-                // Oppdater også taksonomi-spørringen
+                // Oppdater ogsø taksonomi-spørringen
                 $wp_query->set('taxonomy', $taxonomy);
                 $wp_query->set('term', $term->slug);
                 
@@ -184,7 +184,7 @@ function kursagenten_fix_all_taxonomy_queries() {
         }
     }
 }
-// Kjør denne funksjonen så tidlig som mulig
+// Kjør denne funksjonen sø tidlig som mulig
 add_action('wp', 'kursagenten_fix_all_taxonomy_queries', 1);
 
 /**
@@ -234,11 +234,11 @@ function kursagenten_activate() {
             }
 
             if ($needs_create) {
-                // Hvis Betaling finnes som vanlig side med slug 'betaling', opprett vår som konfliktfri
+                // Hvis Betaling finnes som vanlig side med slug 'betaling', opprett vør som konfliktfri
                 if ($page_key === 'betaling') {
                     $existing = get_page_by_path('betaling', OBJECT, 'page');
                     if ($existing instanceof WP_Post && get_post_meta($existing->ID, '_ka_system_page', true) !== 'betaling') {
-                        // create_system_page håndterer selv konflikt og setter 'kurs-betaling'
+                        // create_system_page høndterer selv konflikt og setter 'kurs-betaling'
                     }
                 }
                 Designmaler::create_system_page($page_key);
@@ -284,6 +284,11 @@ require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/course_days_helper.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
+// Load migration script for admin pages
+if (is_admin() && file_exists(KURSAG_PLUGIN_DIR . '/includes/migrations/migrate-meta-fields.php')) {
+    require_once KURSAG_PLUGIN_DIR . '/includes/migrations/migrate-meta-fields.php';
+}
+
 
 // Last inn hovedklassen og CSS output
 require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten.php';
@@ -292,7 +297,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/class-kursagenten-css-output.php';
 // Initialiser hovedklassen
 $kursagenten = new Kursagenten();
 
-// Last inn oppdateringshåndtering og initialiser
+// Last inn oppdateringshøndtering og initialiser
 require_once KURSAG_PLUGIN_DIR . '/includes/plugin_update/secure_updater.php';
 new \KursagentenUpdater\SecureUpdater();
 
@@ -343,7 +348,7 @@ add_action('admin_init', function() {
     if (!empty($api_key)) {
         return;
     }
-    // Siden vi står på
+    // Siden vi stør pø
     $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
     if (empty($page)) {
         return;
@@ -375,7 +380,7 @@ add_action('admin_init', function() {
             $enqueue_plugin_pages = false;
             $api_key = get_option('kursagenten_api_key', '');
             
-            // Sjekk om vi er på en Kursagenten admin-side
+            // Sjekk om vi er pø en Kursagenten admin-side
             foreach ($plugin_admin_pages as $slug) {
                 if (strpos($screen->id, $slug) !== false) { 
                     $enqueue_plugin_pages = true; 
@@ -383,7 +388,7 @@ add_action('admin_init', function() {
                 }
             }
             
-            // Sjekk om vi er på en taxonomi-redigeringsside
+            // Sjekk om vi er pø en taxonomi-redigeringsside
             if ($screen && in_array($screen->taxonomy, array('ka_coursecategory', 'ka_course_location', 'ka_instructors'))) {
                 $enqueue_plugin_pages = true;
             }
@@ -457,7 +462,7 @@ if (!is_admin()) {
 
         // Last inn archive-course spesifikk CSS
         if (is_post_type_archive('ka_course')) {
-            // Oppdater variabelnavn for å matche nye innstillinger
+            // Oppdater variabelnavn for ø matche nye innstillinger
             $design = get_option('kursagenten_archive_design', 'default');
             $layout = get_option('kursagenten_archive_layout', 'default');
             $list_type = get_option('kursagenten_archive_list_type', 'standard');
@@ -479,7 +484,7 @@ if (!is_admin()) {
             );
         }
 
-        // CSS for taxonomy templates - oppdater for å bruke nye innstillinger
+        // CSS for taxonomy templates - oppdater for ø bruke nye innstillinger
         if (is_tax('ka_coursecategory') || is_tax('ka_course_location') || is_tax('ka_instructors')) {
             $taxonomy = get_queried_object()->taxonomy;
             $override_enabled = get_option("kursagenten_taxonomy_{$taxonomy}_override", false);
@@ -597,6 +602,8 @@ if (!is_admin()) {
         wp_enqueue_script('kursagenten-iframe-resizer', 'https://embed.kursagenten.no/js/iframe-resizer/iframeResizer.min.js', array(), null, true);
         wp_enqueue_script('kursagenten-slidein-panel', plugins_url('assets/js/public/course-slidein-panel.js', __FILE__), array('jquery', 'kursagenten-iframe-resizer'), KURSAG_VERSION, true);
         wp_enqueue_script('kursagenten-ajax-filter', plugins_url('assets/js/public/course-ajax-filter.js', __FILE__), array('jquery', 'kursagenten-slidein-panel'), KURSAG_VERSION, true);
+        wp_enqueue_script('kursagenten-expand-content', plugins_url('assets/js/public/course-expand-content.js', __FILE__), array('jquery'), KURSAG_VERSION, true);
+        wp_enqueue_script('kursagenten-dates-modal', plugins_url('assets/js/public/course-modal.js', __FILE__), array('jquery'), KURSAG_VERSION, true);
 
         wp_enqueue_script(
             'kursagenten-datepicker-moment',
@@ -613,12 +620,7 @@ if (!is_admin()) {
         );
 
 
-        wp_enqueue_script(
-            'kursagenten-expand-content',
-            KURSAG_PLUGIN_URL . '/assets/js/public/course-expand-content.js',
-            array(),
-            KURSAG_VERSION
-        );
+        // Note: kursagenten-expand-content is now loaded earlier (line 605)
         
         // Lokaliser scriptet med nødvendige data
         wp_localize_script(
@@ -633,4 +635,3 @@ if (!is_admin()) {
         
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
-   

@@ -10,7 +10,7 @@ Write-Host ""
 # Hent nåværende versjon fra kursagenten.php
 $MainFile = Join-Path $PSScriptRoot "kursagenten.php"
 if (Test-Path $MainFile) {
-    $Content = Get-Content $MainFile -Raw
+    $Content = Get-Content $MainFile -Raw -Encoding UTF8
     if ($Content -match "define\('KURSAG_VERSION',\s*'(\d+\.\d+\.\d+)'\);") {
         $CurrentVersion = $matches[1]
         Write-Host "Nåværende versjon: $CurrentVersion" -ForegroundColor Yellow

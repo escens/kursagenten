@@ -37,8 +37,8 @@ function get_selected_coursedate_data($related_coursedate) {
                 continue;
             }
 
-            $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
-            $is_full = get_post_meta($coursedate_id, 'course_isFull', true) || get_post_meta($coursedate_id, 'course_markedAsFull', true);
+            $course_first_date = get_post_meta($coursedate_id, 'ka_course_first_date', true);
+            $is_full = get_post_meta($coursedate_id, 'ka_course_isFull', true) || get_post_meta($coursedate_id, 'ka_course_markedAsFull', true);
 
             // Hvis course_first_date finnes, sammenlign for å finne den tidligste
             if (!empty($course_first_date)) {
@@ -74,20 +74,22 @@ function get_selected_coursedate_data($related_coursedate) {
             $return_data = [
                 'id' => $selected_coursedate,
                 'title' => get_the_title($selected_coursedate),
-                'first_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_first_date', true)),
-                'last_date' => ka_format_date(get_post_meta($selected_coursedate, 'course_last_date', true)),
-                'price' => get_post_meta($selected_coursedate, 'course_price', true),
-                'after_price' => get_post_meta($selected_coursedate, 'course_text_after_price', true),
-                'duration' => get_post_meta($selected_coursedate, 'course_duration', true),
-                'time' => get_post_meta($selected_coursedate, 'course_time', true),
-                'course_days' => get_post_meta($selected_coursedate, 'course_days', true),
-                'language' => get_post_meta($selected_coursedate, 'course_language', true),
-                'button_text' => get_post_meta($selected_coursedate, 'course_button_text', true),
-                'signup_url' => get_post_meta($selected_coursedate, 'course_signup_url', true),
+                'first_date' => ka_format_date(get_post_meta($selected_coursedate, 'ka_course_first_date', true)),
+                'last_date' => ka_format_date(get_post_meta($selected_coursedate, 'ka_course_last_date', true)),
+                'price' => get_post_meta($selected_coursedate, 'ka_course_price', true),
+                'after_price' => get_post_meta($selected_coursedate, 'ka_course_text_after_price', true),
+                'duration' => get_post_meta($selected_coursedate, 'ka_course_duration', true),
+                'time' => get_post_meta($selected_coursedate, 'ka_course_time', true),
+                'course_days' => get_post_meta($selected_coursedate, 'ka_course_days', true),
+                'language' => get_post_meta($selected_coursedate, 'ka_course_language', true),
+                'button_text' => get_post_meta($selected_coursedate, 'ka_course_button_text', true),
+                'signup_url' => get_post_meta($selected_coursedate, 'ka_course_signup_url', true),
                 'coursedatemissing' => $coursedatemissing,
-                'is_full' => get_post_meta($selected_coursedate, 'course_isFull', true) || get_post_meta($selected_coursedate, 'course_markedAsFull', true),
-                'show_registration' => get_post_meta($selected_coursedate, 'course_showRegistrationForm', true),
-                'course_location_room' => get_post_meta($selected_coursedate, 'course_location_room', true),
+                'is_full' => get_post_meta($selected_coursedate, 'ka_course_isFull', true) || get_post_meta($selected_coursedate, 'ka_course_markedAsFull', true),
+                'show_registration' => get_post_meta($selected_coursedate, 'ka_course_showRegistrationForm', true),
+                'location' => get_post_meta($selected_coursedate, 'ka_course_location', true),
+                'location_freetext' => get_post_meta($selected_coursedate, 'ka_course_location_freetext', true),
+                'course_location_room' => get_post_meta($selected_coursedate, 'ka_course_location_room', true),
             ];
             return $return_data;
         }
@@ -141,36 +143,45 @@ function get_all_sorted_coursedates($related_coursedate) {
                 continue;
             }
 
-            $course_id = get_post_meta($coursedate_id, 'related_course', true);
+            $course_id = get_post_meta($coursedate_id, 'ka_course_related_course', true);
             if ($course_id && has_hidden_terms($course_id)) {
                 continue;
             }
 
-            $course_first_date = get_post_meta($coursedate_id, 'course_first_date', true);
+            $course_first_date = get_post_meta($coursedate_id, 'ka_course_first_date', true);
             $formatted_first_date = ka_format_date($course_first_date);
 
+            // Check if course is full - handle multiple value types (1, '1', true, 'true')
+            $isFull = get_post_meta($coursedate_id, 'ka_course_isFull', true);
+            $markedAsFull = get_post_meta($coursedate_id, 'ka_course_markedAsFull', true);
+            $is_full = (
+                $isFull === 1 || $isFull === '1' || $isFull === true || $isFull === 'true' ||
+                $markedAsFull === 1 || $markedAsFull === '1' || $markedAsFull === true || $markedAsFull === 'true'
+            );
+            
             $coursedate_data = [
                 'id' => $coursedate_id,
                 'title' => get_the_title($coursedate_id),
-                'course_title' => get_post_meta($coursedate_id, 'course_title', true),
+                'course_title' => get_post_meta($coursedate_id, 'ka_course_title', true),
                 'first_date' => $formatted_first_date,
-                'last_date' => ka_format_date(get_post_meta($coursedate_id, 'course_last_date', true)),
-                'price' => get_post_meta($coursedate_id, 'course_price', true),
-                'location' => get_post_meta($coursedate_id, 'course_location', true),
-                'duration' => get_post_meta($coursedate_id, 'course_duration', true),
-                'time' => get_post_meta($coursedate_id, 'course_time', true),
-                'course_days' => get_post_meta($coursedate_id, 'course_days', true),
-                'button_text' => get_post_meta($coursedate_id, 'course_button_text', true),
-                'signup_url' => get_post_meta($coursedate_id, 'course_signup_url', true),
+                'first_date_raw' => $course_first_date, // Store raw date for sorting
+                'last_date' => ka_format_date(get_post_meta($coursedate_id, 'ka_course_last_date', true)),
+                'price' => get_post_meta($coursedate_id, 'ka_course_price', true),
+                'location' => get_post_meta($coursedate_id, 'ka_course_location', true),
+                'duration' => get_post_meta($coursedate_id, 'ka_course_duration', true),
+                'time' => get_post_meta($coursedate_id, 'ka_course_time', true),
+                'course_days' => get_post_meta($coursedate_id, 'ka_course_days', true),
+                'button_text' => get_post_meta($coursedate_id, 'ka_course_button_text', true),
+                'signup_url' => get_post_meta($coursedate_id, 'ka_course_signup_url', true),
                 'missing_first_date' => empty($course_first_date),
-                'is_full' => get_post_meta($coursedate_id, 'course_isFull', true) || get_post_meta($coursedate_id, 'course_markedAsFull', true),
-                'course_location_freetext' => get_post_meta($coursedate_id, 'course_location_freetext', true),
-                'address_street' => get_post_meta($coursedate_id, 'course_address_street', true),
-                'address_number' => get_post_meta($coursedate_id, 'course_address_street_number', true),
-                'postal_code' => get_post_meta($coursedate_id, 'course_address_zipcode', true),
-                'city' => get_post_meta($coursedate_id, 'course_address_place', true),
-                'language' => get_post_meta($coursedate_id, 'course_language', true),
-                'course_location_room' => get_post_meta($coursedate_id, 'course_location_room', true),
+                'course_isFull' => $is_full, // Normalized boolean value
+                'course_location_freetext' => get_post_meta($coursedate_id, 'ka_course_location_freetext', true),
+                'address_street' => get_post_meta($coursedate_id, 'ka_course_address_street', true),
+                'address_number' => get_post_meta($coursedate_id, 'ka_course_address_street_number', true),
+                'postal_code' => get_post_meta($coursedate_id, 'ka_course_address_zipcode', true),
+                'city' => get_post_meta($coursedate_id, 'ka_course_address_place', true),
+                'language' => get_post_meta($coursedate_id, 'ka_course_language', true),
+                'course_location_room' => get_post_meta($coursedate_id, 'ka_course_location_room', true),
             ];
 
             // Legg til alle kursdatoer i hovedarrayen
@@ -180,13 +191,17 @@ function get_all_sorted_coursedates($related_coursedate) {
         // Sorter kursdatoer: først de med dato (sortert etter dato), deretter de uten dato
         if (!empty($all_coursedates)) {
             usort($all_coursedates, function ($a, $b) {
+                // Use raw dates for sorting to avoid parsing formatted Norwegian dates
+                $date_a = !empty($a['first_date_raw']) ? $a['first_date_raw'] : '';
+                $date_b = !empty($b['first_date_raw']) ? $b['first_date_raw'] : '';
+                
                 // Hvis begge har dato, sorter etter dato
-                if (!empty($a['first_date']) && !empty($b['first_date'])) {
-                    return strtotime($a['first_date']) - strtotime($b['first_date']);
+                if (!empty($date_a) && !empty($date_b)) {
+                    return strtotime($date_a) - strtotime($date_b);
                 }
                 // Hvis bare en har dato, sett den med dato først
-                if (!empty($a['first_date'])) return -1;
-                if (!empty($b['first_date'])) return 1;
+                if (!empty($date_a)) return -1;
+                if (!empty($date_b)) return 1;
                 // Hvis ingen har dato, behold original rekkefølge
                 return 0;
             });
@@ -199,7 +214,7 @@ function get_all_sorted_coursedates($related_coursedate) {
 add_filter('posts_join', function (string $join, WP_Query $query) {
 	global $wpdb;
 	if ($query->get('orderby') == 'course_first_date') {
-		$join .= " LEFT JOIN $wpdb->postmeta as pcfd ON (wp_posts.ID = pcfd.post_id AND pcfd.meta_key = 'course_first_date')";
+		$join .= " LEFT JOIN $wpdb->postmeta as pcfd ON (wp_posts.ID = pcfd.post_id AND pcfd.meta_key = 'ka_course_first_date')";
 	}
 	return $join;
 }, 10, 2);
@@ -247,7 +262,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         foreach ($locations as $location) {
             // Bruk kun taksonomi-baserte lokasjoner (ikke fritekst)
             $location_query[] = [
-                'key' => 'course_location',
+                'key' => 'ka_course_location',
                 'value' => $location,
                 'compare' => '='
             ];
@@ -260,7 +275,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         $language_query = ['relation' => 'OR'];
         foreach ($languages as $language) {
             $language_query[] = [
-                'key' => 'course_language',
+                'key' => 'ka_course_language',
                 'value' => $language,
                 'compare' => '='
             ];
@@ -279,7 +294,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
                 
                 // Forenklet: bare bruk course_first_date med dato-intervall
                 $month_query[] = [
-                    'key' => 'course_first_date',
+                    'key' => 'ka_course_first_date',
                     'value' => [
                         $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
                         $year . '-' . sprintf('%02d', $month) . '-31 23:59:59'
@@ -290,7 +305,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
             } else {
                 // Fallback for gamle format (bare måned)
                 $month_query[] = [
-                    'key' => 'course_month',
+                    'key' => 'ka_course_month',
                     'value' => $month_year,
                     'compare' => '='
                 ];
@@ -302,7 +317,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     // Legg til pris filter
     if ($price_min > 0 || $price_max < PHP_FLOAT_MAX) {
         $meta_query[] = [
-            'key' => 'course_price',
+            'key' => 'ka_course_price',
             'value' => [$price_min, $price_max],
             'type' => 'NUMERIC',
             'compare' => 'BETWEEN'
@@ -315,7 +330,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         
         if (!empty($date_from)) {
             $date_query[] = [
-                'key' => 'course_first_date',
+                'key' => 'ka_course_first_date',
                 'value' => $date_from,
                 'compare' => '>=',
                 'type' => 'DATE'
@@ -324,7 +339,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         
         if (!empty($date_to)) {
             $date_query[] = [
-                'key' => 'course_first_date',
+                'key' => 'ka_course_first_date',
                 'value' => $date_to,
                 'compare' => '<=',
                 'type' => 'DATE'
@@ -339,12 +354,12 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         $meta_query[] = [
             'relation' => 'OR',
             [
-                'key' => 'course_title',
+                'key' => 'ka_course_title',
                 'value' => $search,
                 'compare' => 'LIKE'
             ],
             [
-                'key' => 'course_description',
+                'key' => 'ka_course_description',
                 'value' => $search,
                 'compare' => 'LIKE'
             ]
@@ -426,12 +441,12 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     // Legg til filter for å modifisere SQL-spørringen
     add_filter('posts_join', function($join, $query) use ($sort) {
         global $wpdb;
-        if ($query->get('post_type') === 'coursedate') {
-            $join .= " LEFT JOIN {$wpdb->postmeta} as course_date_meta ON ({$wpdb->posts}.ID = course_date_meta.post_id AND course_date_meta.meta_key = 'course_first_date')";
+        if ($query->get('post_type') === 'ka_coursedate') {
+            $join .= " LEFT JOIN {$wpdb->postmeta} as course_date_meta ON ({$wpdb->posts}.ID = course_date_meta.post_id AND course_date_meta.meta_key = 'ka_course_first_date')";
             
             // Legg til JOIN for pris-sortering
             if ($sort === 'price') {
-                $join .= " LEFT JOIN {$wpdb->postmeta} as course_price_meta ON ({$wpdb->posts}.ID = course_price_meta.post_id AND course_price_meta.meta_key = 'course_price')";
+                $join .= " LEFT JOIN {$wpdb->postmeta} as course_price_meta ON ({$wpdb->posts}.ID = course_price_meta.post_id AND course_price_meta.meta_key = 'ka_course_price')";
             }
             
             // Legg til JOIN for tittel-sortering
@@ -444,7 +459,7 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     
     add_filter('posts_orderby', function($orderby, $query) use ($sort, $order) {
         global $wpdb;
-        if ($query->get('post_type') === 'coursedate') {
+        if ($query->get('post_type') === 'ka_coursedate') {
             $order = strtoupper($order);
             
             switch ($sort) {
@@ -515,7 +530,7 @@ function get_course_info_by_location($related_course_id) {
         'posts_per_page' => 1,
         'meta_query'     => [
             [
-                'key'     => 'location_id',
+                'key'     => 'ka_location_id',
                 'value'   => $related_course_id,
                 'compare' => '=',
             ],
@@ -562,7 +577,7 @@ function get_course_languages() {
     $language_terms = [];
 
     foreach ($coursedates as $post_id) {
-        $meta_language = get_post_meta($post_id, 'course_language', true);
+        $meta_language = get_post_meta($post_id, 'ka_course_language', true);
         if (!empty($meta_language)) {
             $language_terms[] = (object) [
                 'slug' => strtolower($meta_language),
@@ -597,8 +612,8 @@ function get_course_months() {
     $current_year = (int) date('Y');
 
     foreach ($coursedates as $post_id) {
-        $meta_month = get_post_meta($post_id, 'course_month', true);
-        $first_date = get_post_meta($post_id, 'course_first_date', true);
+        $meta_month = get_post_meta($post_id, 'ka_course_month', true);
+        $first_date = get_post_meta($post_id, 'ka_course_first_date', true);
         
         if (!empty($meta_month) && is_numeric($meta_month) && $meta_month >= 1 && $meta_month <= 12) {
             $month_num = (int) $meta_month;
@@ -694,17 +709,17 @@ function get_courses_for_taxonomy($args = []) {
                 [
                     'relation' => 'OR',
                     [
-                        'key'     => 'is_parent_course',
+                        'key'     => 'ka_is_parent_course',
                         'compare' => 'NOT EXISTS'
                     ],
                     [
-                        'key'     => 'is_parent_course',
+                        'key'     => 'ka_is_parent_course',
                         'value'   => 'yes',
                         'compare' => '!='
                     ]
                 ],
                 [
-                    'key'     => 'course_location_freetext',
+                    'key'     => 'ka_course_location_freetext',
                     'compare' => 'EXISTS'
                 ]
             ]
@@ -728,7 +743,7 @@ function get_courses_for_taxonomy($args = []) {
         'tax_query'      => ['relation' => 'AND'],
         'meta_query'     => [
             [
-                'key'     => 'is_parent_course',
+                'key'     => 'ka_is_parent_course',
                 'value'   => 'yes',
                 'compare' => '='
             ]
@@ -765,7 +780,7 @@ function get_course_locations($post_id) {
     $locations = array();
     
     // Sjekk om dette er et foreldrekurs
-    $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
+    $is_parent_course = get_post_meta($post_id, 'ka_is_parent_course', true);
     
     if ($is_parent_course === 'yes') {
         // For foreldrekurs, hent alle lokasjoner fra taxonomien
@@ -780,17 +795,17 @@ function get_course_locations($post_id) {
         }
     } else {
         // For underkurs, hent hovedkurset og alle dets lokasjoner
-        $main_course_id = get_post_meta($post_id, 'main_course_id', true);
+        $main_course_id = get_post_meta($post_id, 'ka_main_course_id', true);
         $main_course = get_posts(array(
             'post_type' => 'ka_course',
             'meta_query' => array(
                 array(
-                    'key' => 'main_course_id',
+                    'key' => 'ka_main_course_id',
                     'value' => $main_course_id,
                     'compare' => '='
                 ),
                 array(
-                    'key' => 'is_parent_course',
+                    'key' => 'ka_is_parent_course',
                     'value' => 'yes',
                     'compare' => '='
                 )
@@ -823,23 +838,23 @@ function get_course_locations($post_id) {
  */
 function display_course_locations($post_id) {
     $locations = get_course_locations($post_id);
-    $current_location = get_post_meta($post_id, 'sub_course_location', true);
-    $is_parent_course = get_post_meta($post_id, 'is_parent_course', true);
+    $current_location = get_post_meta($post_id, 'ka_sub_course_location', true);
+    $is_parent_course = get_post_meta($post_id, 'ka_is_parent_course', true);
     
     // Hent hovedkursets permalink
     $main_course_url = '';
     if ($is_parent_course !== 'yes') {
-        $main_course_id = get_post_meta($post_id, 'main_course_id', true);
+        $main_course_id = get_post_meta($post_id, 'ka_main_course_id', true);
         $main_course = get_posts(array(
             'post_type' => 'ka_course',
             'meta_query' => array(
                 array(
-                    'key' => 'main_course_id',
+                    'key' => 'ka_main_course_id',
                     'value' => $main_course_id,
                     'compare' => '='
                 ),
                 array(
-                    'key' => 'is_parent_course',
+                    'key' => 'ka_is_parent_course',
                     'value' => 'yes',
                     'compare' => '='
                 )
@@ -856,13 +871,13 @@ function display_course_locations($post_id) {
     // Bygg map fra lokasjonsnavn -> underkurs-permalink for å unngå feil slug (f.eks. baerum vs baerum-sandvika)
     // Dette prioriterer faktisk barn-innleggets permalenke fremfor taksonomi-slug.
     $child_location_links = array();
-    $parent_main_course_id = ($is_parent_course === 'yes') ? get_post_meta($post_id, 'main_course_id', true) : get_post_meta($post_id, 'main_course_id', true);
+    $parent_main_course_id = ($is_parent_course === 'yes') ? get_post_meta($post_id, 'ka_main_course_id', true) : get_post_meta($post_id, 'ka_main_course_id', true);
 
     // Hvis vi står på et foreldrekurs har det meta 'is_parent_course' = yes og deler main_course_id med barna
     if ($is_parent_course === 'yes') {
         $parent_post_id = $post_id;
         // main_course_id på foreldrekurset peker på eksternt ID; vi bruker den for å finne barna
-        $parent_main_course_id = get_post_meta($post_id, 'main_course_id', true);
+        $parent_main_course_id = get_post_meta($post_id, 'ka_main_course_id', true);
     } else if (!empty($main_course)) {
         $parent_post_id = $main_course[0]->ID;
     } else {
@@ -877,19 +892,19 @@ function display_course_locations($post_id) {
             'meta_query' => array(
                 'relation' => 'AND',
                 array(
-                    'key' => 'main_course_id',
+                    'key' => 'ka_main_course_id',
                     'value' => $parent_main_course_id,
                     'compare' => '='
                 ),
                 array(
-                    'key' => 'is_parent_course',
+                    'key' => 'ka_is_parent_course',
                     'compare' => 'NOT EXISTS'
                 )
             )
         ));
 
         foreach ($child_courses as $child) {
-            $sub_loc = get_post_meta($child->ID, 'sub_course_location', true);
+            $sub_loc = get_post_meta($child->ID, 'ka_sub_course_location', true);
             if (!empty($sub_loc)) {
                 $child_location_links[$sub_loc] = get_permalink($child->ID);
             }
@@ -978,8 +993,8 @@ function get_course_locations_with_freetext($related_coursedate) {
                 continue;
             }
 
-            $location = get_post_meta($coursedate_id, 'course_location', true);
-            $location_freetext = get_post_meta($coursedate_id, 'course_location_freetext', true);
+            $location = get_post_meta($coursedate_id, 'ka_course_location', true);
+            $location_freetext = get_post_meta($coursedate_id, 'ka_course_location_freetext', true);
 
             // Bare legg til hvis både location og freetext er satt
             if (!empty($location) && !empty($location_freetext)) {
@@ -1379,7 +1394,7 @@ function get_course_dates_query_for_count($filters) {
                 
                 // Forenklet: bare bruk course_first_date med dato-intervall
                 $month_query[] = [
-                    'key' => 'course_first_date',
+                    'key' => 'ka_course_first_date',
                     'value' => [
                         $year . '-' . sprintf('%02d', $month) . '-01 00:00:00',
                         $year . '-' . sprintf('%02d', $month) . '-31 23:59:59'
@@ -1390,7 +1405,7 @@ function get_course_dates_query_for_count($filters) {
             } else {
                 // Fallback for gamle format (bare måned)
                 $month_query[] = [
-                    'key' => 'course_month',
+                    'key' => 'ka_course_month',
                     'value' => $month_year,
                     'compare' => '='
                 ];
@@ -1468,7 +1483,7 @@ function get_course_dates_query_for_count($filters) {
         $location_query = ['relation' => 'OR'];
         foreach ($locations as $location) {
             $location_query[] = [
-                'key' => 'course_location',
+                'key' => 'ka_course_location',
                 'value' => $location,
                 'compare' => '='
             ];
@@ -1496,7 +1511,7 @@ function get_course_dates_query_for_count($filters) {
         $language_query = ['relation' => 'OR'];
         foreach ($languages as $language) {
             $language_query[] = [
-                'key' => 'course_language',
+                'key' => 'ka_course_language',
                 'value' => $language,
                 'compare' => '='
             ];
