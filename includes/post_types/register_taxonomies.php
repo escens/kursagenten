@@ -45,7 +45,8 @@ register_taxonomy('ka_coursecategory', array('ka_course', 'ka_coursedate', 'inst
     ),
     'public' => true,
     'hierarchical' => true,
-    'show_in_menu' => true,
+    'show_ui' => true,
+    'show_in_menu' => false,
     'show_in_rest' => true,
     'show_admin_column' => true,
     'rewrite' => array(
@@ -85,7 +86,8 @@ register_taxonomy('ka_course_location', array('ka_course', 'ka_coursedate', 'ins
     ),
     'public' => true,
     'hierarchical' => true,
-    'show_in_menu' => true,
+    'show_ui' => true,
+    'show_in_menu' => false,
     'show_admin_column' => true,
     'show_in_rest' => true,
     'rewrite' => array(
@@ -125,10 +127,151 @@ register_taxonomy('ka_instructors', array('ka_course', 'ka_coursedate', 'instruc
     ),
     'public' => true,
     'hierarchical' => false,
-    'show_in_menu' => true,
+    'show_ui' => true,
+    'show_in_menu' => false,
     'show_admin_column' => true,
     'show_in_rest' => true,
     'rewrite' => array(
         'slug' => $instruktor,
     ),
 ));
+
+// Add taxonomies as submenus under Kursagenten main menu and reorganize menu order
+add_action('admin_menu', function() {
+    global $submenu;
+    
+    // Add taxonomy submenus under Kursagenten menu (parent 'kursagenten')
+    add_submenu_page(
+        'kursagenten',                                      // Parent slug
+        'Kurskategorier',                                   // Page title
+        'Kurskategorier',                                   // Menu title
+        'manage_categories',                                // Capability
+        'edit-tags.php?taxonomy=ka_coursecategory&post_type=ka_course', // Menu slug
+        ''                                                  // Callback (empty for taxonomy links)
+    );
+    
+    add_submenu_page(
+        'kursagenten',
+        'Kurssteder',
+        'Kurssteder',
+        'manage_categories',
+        'edit-tags.php?taxonomy=ka_course_location&post_type=ka_course',
+        ''
+    );
+    
+    add_submenu_page(
+        'kursagenten',
+        'Instruktører',
+        'Instruktører',
+        'manage_categories',
+        'edit-tags.php?taxonomy=ka_instructors&post_type=ka_course',
+        ''
+    );
+}, 11); // Priority 11 to run after main menu (priority 9) but before reorganization
+
+// Reorganize submenu order and add separators
+add_action('admin_menu', function() {
+    global $submenu;
+    
+    if (!isset($submenu['kursagenten'])) {
+        return;
+    }
+    
+    // Create a map of menu items by their slug for easy lookup
+    $menu_items = [];
+    foreach ($submenu['kursagenten'] as $item) {
+        $menu_items[$item[2]] = $item;
+    }
+    
+    // Define the desired order with separators
+    $desired_order = [
+        'kursagenten',                                                      // Oversikt
+        'separator_1',                                                      // First separator
+        'edit.php?post_type=ka_course',                                    // Alle kurs
+        'edit-tags.php?taxonomy=ka_coursecategory&post_type=ka_course',   // Kurskategorier
+        'edit-tags.php?taxonomy=ka_course_location&post_type=ka_course',  // Kurssteder
+        'edit-tags.php?taxonomy=ka_instructors&post_type=ka_course',      // Instruktører
+        'separator_2',                                                      // Second separator
+        'design',                                                           // Kursdesign
+        'kursinnstillinger',                                                // Synkronisering
+        'bedriftsinformasjon',                                              // Bedriftsinformasjon
+        'kursagenten-theme-customizations',                                 // Tematilpasninger
+        'seo',                                                              // Endre url-er
+        'avansert',                                                         // Avanserte innstillinger
+        'ka_documentation',                                                 // Dokumentasjon
+    ];
+    
+    // Build new submenu array in desired order
+    $new_submenu = [];
+    foreach ($desired_order as $slug) {
+        if ($slug === 'separator_1' || $slug === 'separator_2') {
+            // Add separator marker - we'll style the next item
+            continue;
+        }
+        
+        if (isset($menu_items[$slug])) {
+            $item = $menu_items[$slug];
+            
+            // Add separator class to items after separators
+            if ($slug === 'edit.php?post_type=ka_course') {
+                $item[4] = 'kag-menu-separator-before';
+            } elseif ($slug === 'design') {
+                $item[4] = 'kag-menu-separator-before';
+            }
+            
+            $new_submenu[] = $item;
+        }
+    }
+    
+    // Replace the submenu with our reorganized version
+    $submenu['kursagenten'] = $new_submenu;
+}, 999); // Very high priority to run after all other menu registrations
+
+// Add link to Kursdatoer at the top of "Alle kurs" admin page
+add_action('all_admin_notices', function() {
+    $screen = get_current_screen();
+    
+    // Check if we're on the ka_course edit page
+    if ($screen && $screen->post_type === 'ka_course' && $screen->base === 'edit') {
+        $kursdatoer_url = admin_url('edit.php?post_type=ka_coursedate');
+        ?>
+        <div style="margin-top: 0px; padding: 12px 0; border-left-color: #2271b1;">
+            <p style="margin: 0;">
+                <strong>Kursdatoer:</strong> 
+                <a href="<?php echo esc_url($kursdatoer_url); ?>">Se alle kursdatoer</a> 
+                <span style="color: #666; margin-left: 10px;">– Brukes for feilsøking og oversikt</span>
+            </p>
+        </div>
+        <?php
+    }
+});
+
+// Keep Kursagenten menu open when on taxonomy pages
+add_filter('parent_file', function($parent_file) {
+    global $current_screen;
+    
+    // Check if we're on one of our taxonomy edit pages
+    if ($current_screen && in_array($current_screen->taxonomy, ['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
+        return 'kursagenten';
+    }
+    
+    return $parent_file;
+});
+
+// Highlight the correct submenu item when on taxonomy pages
+add_filter('submenu_file', function($submenu_file, $parent_file) {
+    global $current_screen;
+    
+    // Only apply to our taxonomies under Kursagenten menu
+    if ($parent_file === 'kursagenten' && $current_screen) {
+        if ($current_screen->taxonomy === 'ka_coursecategory') {
+            return 'edit-tags.php?taxonomy=ka_coursecategory&post_type=ka_course';
+        } elseif ($current_screen->taxonomy === 'ka_course_location') {
+            return 'edit-tags.php?taxonomy=ka_course_location&post_type=ka_course';
+        } elseif ($current_screen->taxonomy === 'ka_instructors') {
+            return 'edit-tags.php?taxonomy=ka_instructors&post_type=ka_course';
+        }
+    }
+    
+    return $submenu_file;
+}, 10, 2);

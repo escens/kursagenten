@@ -131,6 +131,31 @@ function kursagenten_admin_landing_page() {
                     </div>
                 </div>
 
+                <div id="berike-innhold" class="options-card">
+                    <h3>Berik innholdet ditt</h3>
+                    <div class="ka-grid ka-grid-2">
+                        <div class="kort">
+                            <h4 class="welcome-panel-title">Kurskategorier, kurssteder og instruktører</h4>
+                            <p>Kursene dine blir automatisk overført fra Kursagenten sammen med kurskategorier, kurssteder og instruktører. Men for å gi nettsiden din et profesjonelt uttrykk, kan du berike disse med bilder og tekst direkte på nettsiden.</p>
+                            <ul>
+                                <li><a href="edit-tags.php?taxonomy=ka_coursecategory&post_type=ka_course"><strong>Kurskategorier</strong></a> – Legg til bilder, beskrivelser og organiser i hovedkategorier</li>
+                                <li><a href="edit-tags.php?taxonomy=ka_course_location&post_type=ka_course"><strong>Kurssteder</strong></a> – Legg til bilder og stedsbeskrivelser</li>
+                                <li><a href="edit-tags.php?taxonomy=ka_instructors&post_type=ka_course"><strong>Instruktører</strong></a> – Legg til profilbilder og utvidet informasjon</li>
+                            </ul>
+                            <p><em>Tips: Hvis du har mange kurskategorier, kan du velge ut noen som hovedkategorier eller opprette egne. Dette gjør kategoriene mer oversiktlige for besøkende.</em></p>
+                        </div>
+                        
+                        <div class="kort">
+                            <h4 class="welcome-panel-title">Om kursredigering</h4>
+                            <p><strong>Viktig:</strong> Kursene skal i hovedsak <strong>ikke redigeres på nettsiden</strong> – all redigering bør gjøres i Kursagenten. Dette sikrer at informasjonen er oppdatert og riktig synkronisert.</p>
+                            <p>Når du besøker et kurs på frontend, finner du et redigeringsikon som tar deg direkte til kursredigering i Kursagenten. Dette gjør det enkelt å oppdatere kursinformasjon uten å gå veien om nettsiden.</p>
+                            <ul>
+                                <li><a href="edit.php?post_type=ka_course"><strong>Alle kurs</strong></a> – Se oversikt over alle importerte kurs</li>
+                            </ul>
+                            <p><em>Unntak: Du kan legge til ekstra innhold mellom "Introtekst" og "Innhold" på enkeltkurs hvis du ønsker å berike kursene med nettstedsspesifikk informasjon.</em></p>
+                        </div>
+                    </div>
+                </div>
 
                 <div id="meld-feil" class="options-card">
                 <h3>Meld feil og forbedringer</h3>

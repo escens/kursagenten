@@ -360,3 +360,14 @@ h4.welcome-panel-title {
 #wpfooter {
     position: relative;
 }
+
+/* Menu separator for Kursagenten admin menu */
+#adminmenu .kag-menu-separator-before {
+    border-top: 1px solid #626467;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+.post-type-ka_course .page-title-action,
+.post-type-ka_coursedate .page-title-action {
+    display: none;
+}

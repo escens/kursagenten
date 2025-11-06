@@ -49,6 +49,13 @@ class SecureUpdater {
         // AJAX: registrer site nå
         add_action('wp_ajax_kursagenten_register_site', [$this, 'ajax_register_site']);
 
+        // Weekly cron for reliable site registration
+        add_action('kursagenten_weekly_registration', [$this, 'cron_register_site']);
+        // Schedule cron if not already scheduled
+        if (!wp_next_scheduled('kursagenten_weekly_registration')) {
+            wp_schedule_event(time(), 'weekly', 'kursagenten_weekly_registration');
+        }
+
         // Sørg for fersk update-info når Plugins/Update-sider lastes (unngå gammel cache med feil URL)
         add_action('load-plugins.php', function() { delete_transient($this->cache_key); });
         add_action('load-update.php', function() { delete_transient($this->cache_key); });
@@ -93,9 +100,9 @@ class SecureUpdater {
             return;
         }
 
-        // Sjekk om vi allerede har registrert i dag
+        // Check if we already registered this week
         $last_register = get_option('kursagenten_last_register', 0);
-        if (!$force && (time() - $last_register < 86400)) { // 24 timer
+        if (!$force && (time() - $last_register < 604800)) { // 7 days
             return;
         }
 
@@ -956,5 +963,20 @@ class SecureUpdater {
         if (defined('WP_DEBUG') && WP_DEBUG) {
             error_log('Kursagenten: API key deleted due to ' . $reason . ' license');
         }
+    }
+
+    /**
+     * Cron job to register site weekly
+     */
+    public function cron_register_site() {
+        if (empty($this->api_key)) {
+            return;
+        }
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Kursagenten: Weekly cron registration triggered');
+        }
+        
+        $this->register_site(true);
     }
 }

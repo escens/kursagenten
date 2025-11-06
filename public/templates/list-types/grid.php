@@ -25,12 +25,28 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
         $search_id = get_post_meta($course_id, 'ka_main_course_id', true);
     }
     
+    // Check if we need to filter by location (taxonomy page)
+    $taxonomy = isset($args['taxonomy']) ? $args['taxonomy'] : null;
+    $current_term = isset($args['current_term']) ? $args['current_term'] : null;
+    
+    // Build meta query for coursedates
+    $meta_query = [
+        ['key' => 'ka_main_course_id', 'value' => $search_id],
+    ];
+    
+    // If on a location taxonomy page, filter coursedates by that location
+    if ($taxonomy === 'ka_course_location' && $current_term) {
+        $meta_query[] = [
+            'key' => 'ka_course_location',
+            'value' => $current_term->name,
+            'compare' => '='
+        ];
+    }
+    
     $related_coursedates = get_posts([
         'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
-        'meta_query' => [
-            ['key' => 'ka_main_course_id', 'value' => $search_id],
-        ],
+        'meta_query' => $meta_query,
     ]);
     
     // Konverter til array av IDer
@@ -307,13 +323,25 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     $main_course_id = get_post_meta($course_id, 'ka_location_id', true);
                 }
                 
-                // Hent alle kursdatoer (samme logikk som i standard.php)
+                // Use the filtered coursedates if on a location taxonomy page
+                $modal_meta_query = [
+                    ['key' => 'ka_main_course_id', 'value' => $main_course_id],
+                ];
+                
+                // If on a location taxonomy page, filter modal coursedates by that location
+                if ($taxonomy === 'ka_course_location' && $current_term) {
+                    $modal_meta_query[] = [
+                        'key' => 'ka_course_location',
+                        'value' => $current_term->name,
+                        'compare' => '='
+                    ];
+                }
+                
+                // Hent alle kursdatoer (filtrert hvis på location page)
                 $all_coursedates_popup = get_posts([
                     'post_type' => 'ka_coursedate',
                     'posts_per_page' => -1,
-                    'meta_query' => [
-                        ['key' => 'ka_main_course_id', 'value' => $main_course_id],
-                    ],
+                    'meta_query' => $modal_meta_query,
                 ]);
                 
                 // Samle lokasjonsdata

@@ -19,8 +19,15 @@ Kursagenten is a WordPress plugin that integrates course data from the Kursagent
 ## Installation
 1. Upload the plugin folder to `/wp-content/plugins/`
 2. Activate the plugin in WordPress admin
-3. Configure API keys under Settings > Kursagenten
+3. Configure API keys under Settings > Kursagenten (License key from admin.lanseres.no)
 4. Run initial course data synchronization
+
+### License Management
+- The plugin requires a license key from the server admin plugin
+- Upon activation with a valid license key, the plugin automatically registers the site URL with the server
+- The plugin sends a weekly "ping" to the server to confirm it's still active
+- If the plugin is deactivated, it notifies the server automatically
+- Server admin can view all active, inactive, and potentially inactive sites
 
 ## Structure
 ```
@@ -292,6 +299,39 @@ In admin options page it will be possible to change course list layout. More lay
 - User role management
 - Data sanitization
 - Nonce verification
+
+### License Tracking & Site Management
+The server admin plugin (kursagenten-server-plugin) provides comprehensive tracking of all plugin installations:
+
+#### Automatic Site Registration
+- When a license key is entered in a client site, the site automatically registers with the server
+- Registration includes: site URL, site name, plugin version, WordPress version, PHP version
+- Initial registration happens immediately after license activation
+
+#### Weekly Health Checks
+- Each client site sends a weekly "ping" to the server (changed from daily to reduce server load)
+- This ping updates the "last_seen" timestamp in the database
+- WordPress cron ensures reliable weekly checks even if admin doesn't visit the site
+
+#### Site Status Monitoring
+The server admin can view real-time status of all sites:
+- **Active**: Site has checked in within the last 7 days
+- **Warning**: Site hasn't checked in for 7-14 days (may indicate an issue)
+- **Stale**: Site hasn't checked in for over 14 days (likely deactivated or deleted)
+- **Deactivated**: Site explicitly deactivated the plugin and sent a deactivation notice
+
+#### Deactivation Notifications
+- When a site deactivates the plugin, it sends an immediate notification to the server
+- The site status is changed to "inactive" in the database
+- The weekly cron job is automatically removed on deactivation
+- This helps distinguish between intentional deactivation and technical issues
+
+#### Admin Dashboard Features
+- View all registered sites with their current status
+- See when each site was first registered and last seen
+- Monitor plugin versions across all installations
+- Track which customers have active vs inactive sites
+- Identify sites that may need support (warning/stale status)
 
 ## Troubleshooting
 

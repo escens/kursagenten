@@ -299,7 +299,128 @@ $kursagenten = new Kursagenten();
 
 // Last inn oppdateringshøndtering og initialiser
 require_once KURSAG_PLUGIN_DIR . '/includes/plugin_update/secure_updater.php';
-new \KursagentenUpdater\SecureUpdater();
+$kursagenten_updater = new \KursagentenUpdater\SecureUpdater();
+
+// Register activation and deactivation hooks
+register_activation_hook(__FILE__, 'kursagenten_plugin_activation');
+register_deactivation_hook(__FILE__, 'kursagenten_plugin_deactivation');
+
+/**
+ * Notify server when plugin is activated/reactivated
+ */
+function kursagenten_plugin_activation() {
+    $api_key = get_option('kursagenten_api_key', '');
+    if (empty($api_key)) {
+        return;
+    }
+
+    // Send activation notification to server (forces immediate registration)
+    $timestamp = time();
+    $payload = json_encode([
+        'site_url' => home_url(),
+        'site_name' => get_bloginfo('name'),
+        'plugin_version' => KURSAG_VERSION,
+        'wp_version' => get_bloginfo('version'),
+        'php_version' => PHP_VERSION,
+        'timestamp' => $timestamp
+    ]);
+    
+    $encoded_payload = base64_encode($payload);
+    $signature = hash_hmac('sha256', $payload, $api_key);
+    
+    $webhook_data = [
+        'k' => substr($api_key, 0, 12),
+        'p' => $encoded_payload,
+        's' => $signature
+    ];
+    
+    // Determine API URL
+    $host = wp_parse_url(home_url(), PHP_URL_HOST);
+    $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+    if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
+        $api_url = home_url('/kursagenten-api/');
+    } else {
+        $api_url = 'https://admin.lanseres.no/kursagenten-api/';
+    }
+    
+    $endpoint = $api_url . 'register_site?' . http_build_query($webhook_data);
+    
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('Kursagenten: Notifying server about activation');
+    }
+    
+    wp_remote_get($endpoint, [
+        'timeout' => 15,
+        'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'headers' => [
+            'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language' => 'en-US,en;q=0.5',
+            'X-Kursagenten-Version' => KURSAG_VERSION
+        ]
+    ]);
+    
+    // Reset last_register so next check happens immediately
+    delete_option('kursagenten_last_register');
+}
+
+/**
+ * Notify server when plugin is deactivated
+ */
+function kursagenten_plugin_deactivation() {
+    $api_key = get_option('kursagenten_api_key', '');
+    if (empty($api_key)) {
+        return;
+    }
+
+    // Send deactivation notification to server
+    $timestamp = time();
+    $payload = json_encode([
+        'site_url' => home_url(),
+        'site_name' => get_bloginfo('name'),
+        'plugin_version' => KURSAG_VERSION,
+        'timestamp' => $timestamp,
+        'status' => 'deactivated'
+    ]);
+    
+    $encoded_payload = base64_encode($payload);
+    $signature = hash_hmac('sha256', $payload, $api_key);
+    
+    $webhook_data = [
+        'k' => substr($api_key, 0, 12),
+        'p' => $encoded_payload,
+        's' => $signature
+    ];
+    
+    // Determine API URL
+    $host = wp_parse_url(home_url(), PHP_URL_HOST);
+    $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+    if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
+        $api_url = home_url('/kursagenten-api/');
+    } else {
+        $api_url = 'https://admin.lanseres.no/kursagenten-api/';
+    }
+    
+    $endpoint = $api_url . 'deactivate_site?' . http_build_query($webhook_data);
+    
+    if (defined('WP_DEBUG') && WP_DEBUG) {
+        error_log('Kursagenten: Notifying server about deactivation');
+    }
+    
+    wp_remote_get($endpoint, [
+        'timeout' => 5,
+        'blocking' => false, // Non-blocking so deactivation isn't delayed
+        'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'headers' => [
+            'X-Kursagenten-Version' => KURSAG_VERSION
+        ]
+    ]);
+    
+    // Clear the scheduled cron job
+    $timestamp = wp_next_scheduled('kursagenten_weekly_registration');
+    if ($timestamp) {
+        wp_unschedule_event($timestamp, 'kursagenten_weekly_registration');
+    }
+}
 
 /* MISC ADMIN FUNCTIONS */
 require_once KURSAG_PLUGIN_DIR . '/includes/misc/hide_course-images_in_mediafolder.php';

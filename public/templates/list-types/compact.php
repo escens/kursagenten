@@ -37,12 +37,28 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
         $search_id = get_post_meta($course_id, 'ka_main_course_id', true);
     }
     
+    // Check if we need to filter by location (taxonomy page)
+    $taxonomy = isset($args['taxonomy']) ? $args['taxonomy'] : null;
+    $current_term = isset($args['current_term']) ? $args['current_term'] : null;
+    
+    // Build meta query for coursedates
+    $meta_query = [
+        ['key' => 'ka_main_course_id', 'value' => $search_id],
+    ];
+    
+    // If on a location taxonomy page, filter coursedates by that location
+    if ($taxonomy === 'ka_course_location' && $current_term) {
+        $meta_query[] = [
+            'key' => 'ka_course_location',
+            'value' => $current_term->name,
+            'compare' => '='
+        ];
+    }
+    
     $related_coursedates = get_posts([
         'post_type' => 'ka_coursedate',
         'posts_per_page' => -1,
-        'meta_query' => [
-            ['key' => 'ka_main_course_id', 'value' => $search_id],
-        ],
+        'meta_query' => $meta_query,
     ]);
     
     // Konverter til array av IDer
@@ -160,16 +176,21 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                  
                  <div class="compact-course-meta">
                      <?php if (!empty($first_course_date)) : ?>
-                         <span class="compact-course-date">
-                             <i class="ka-icon icon-calendar"></i>
-                             <span>
-                                 <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
-                                     <strong>Neste kurs: </strong>
-                                 <?php endif; ?>
-                                 <?php echo esc_html($first_course_date); ?>
-                             </span>
-                         </span>
-                     <?php endif; ?>
+                        <span class="compact-course-date">
+                            <i class="ka-icon icon-calendar"></i>
+                            <span>
+                                <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
+                                    <strong>Neste kurs: </strong>
+                                <?php endif; ?>
+                                <?php echo esc_html($first_course_date); ?>
+                                <?php if ($view_type === 'main_courses' && !$force_standard_view && count($related_coursedate_ids) > 1) : ?>
+                                    <a href="#" class="show-ka-modal" data-course-id="<?php echo esc_attr($course_id); ?>" style="margin-left: 8px; font-size: 0.9em;">
+                                        (+<?php echo count($related_coursedate_ids) - 1; ?> flere)
+                                    </a>
+                                <?php endif; ?>
+                            </span>
+                        </span>
+                    <?php endif; ?>
                     
                     <?php if (!empty($location)) : ?>
                         <span class="compact-course-location">
@@ -202,3 +223,99 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
         </div>
     </div>
 </div>
+
+<?php if ($view_type === 'main_courses' && !$force_standard_view && count($related_coursedate_ids) > 1) : ?>
+<!-- Popup for alle kursdatoer -->
+<div class="ka-course-dates-modal" id="modal-<?php echo esc_attr($course_id); ?>" style="display: none;">
+    <div class="ka-modal-overlay"></div>
+    <div class="ka-modal-content">
+        <div class="ka-modal-header">
+            <h3><?php echo esc_html($course_title); ?></h3>
+            <button class="ka-modal-close" aria-label="Lukk">&times;</button>
+        </div>
+        <div class="ka-modal-body">
+            <h4>Alle tilgjengelige kurssteder og datoer</h4>
+            <?php
+            // Hent main_course_id for å finne alle kursdatoer
+            $main_course_id = get_post_meta($course_id, 'ka_main_course_id', true);
+            if (empty($main_course_id)) {
+                $main_course_id = get_post_meta($course_id, 'ka_location_id', true);
+            }
+            
+            // Use the filtered coursedates if on a location taxonomy page
+            $modal_meta_query = [
+                ['key' => 'ka_main_course_id', 'value' => $main_course_id],
+            ];
+            
+            // If on a location taxonomy page, filter modal coursedates by that location
+            if ($taxonomy === 'ka_course_location' && $current_term) {
+                $modal_meta_query[] = [
+                    'key' => 'ka_course_location',
+                    'value' => $current_term->name,
+                    'compare' => '='
+                ];
+            }
+            
+            // Hent alle kursdatoer (filtrert hvis på location page)
+            $all_coursedates_popup = get_posts([
+                'post_type' => 'ka_coursedate',
+                'posts_per_page' => -1,
+                'meta_query' => $modal_meta_query,
+            ]);
+            
+            // Samle lokasjonsdata
+            $locations_popup = [];
+            foreach ($all_coursedates_popup as $coursedate) {
+                $cd_location = get_post_meta($coursedate->ID, 'ka_course_location', true);
+                $cd_freetext = get_post_meta($coursedate->ID, 'ka_course_location_freetext', true);
+                $cd_first_date = get_post_meta($coursedate->ID, 'ka_course_first_date', true);
+                $cd_signup_url = get_post_meta($coursedate->ID, 'ka_course_signup_url', true);
+                
+                if (!empty($cd_location) && !empty($cd_first_date)) {
+                    $key = $cd_location;
+                    if (!isset($locations_popup[$key])) {
+                        $locations_popup[$key] = [
+                            'name' => $cd_location,
+                            'freetext' => $cd_freetext,
+                            'dates' => []
+                        ];
+                    }
+                    $locations_popup[$key]['dates'][] = [
+                        'date' => ka_format_date($cd_first_date),
+                        'raw_date' => $cd_first_date,
+                        'url' => $cd_signup_url
+                    ];
+                }
+            }
+            
+            // Sorter datoer innenfor hver lokasjon
+            foreach ($locations_popup as &$loc_data) {
+                usort($loc_data['dates'], function($a, $b) {
+                    return strcmp($a['raw_date'], $b['raw_date']);
+                });
+            }
+            unset($loc_data);
+            
+            // Vis lokasjonene med datoer
+            if (!empty($locations_popup)) :
+                foreach ($locations_popup as $loc) : ?>
+                    <div class="ka-location-group">
+                        <h5><?php echo esc_html($loc['name']); ?><?php if (!empty($loc['freetext'])) : ?> (<?php echo esc_html($loc['freetext']); ?>)<?php endif; ?></h5>
+                        <ul class="ka-dates-list">
+                            <?php foreach ($loc['dates'] as $date_info) : ?>
+                                <li>
+                                    <a href="#" class="pameldingskjema" data-url="<?php echo esc_url($date_info['url']); ?>">
+                                        <?php echo esc_html($date_info['date']); ?>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endforeach;
+            else : ?>
+                <p>Ingen kursdatoer tilgjengelig for øyeblikket.</p>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>

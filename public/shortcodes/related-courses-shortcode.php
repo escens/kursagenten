@@ -116,14 +116,14 @@ class RelatedCourses {
                 'terms' => $current_term->term_id,
             ]],
             'posts_per_page' => -1,
-            'post__not_in' => [$post->ID],
-            'meta_query'     => [
-            [
-                'key'     => 'is_parent_course',
-                'value'   => 'yes',
-                'compare' => '='
-            ]
-        ], // Ekskluder gjeldende innlegg
+        'post__not_in' => [$post->ID],
+        'meta_query'     => [
+        [
+            'key'     => 'ka_is_parent_course',
+            'value'   => 'yes',
+            'compare' => '='
+        ]
+    ], // Ekskluder gjeldende innlegg
         ]);
     }
 

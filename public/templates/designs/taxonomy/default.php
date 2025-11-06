@@ -325,7 +325,9 @@ if ($view_type === 'all_coursedates') {
                             'view_type' => $view_type,
                             'is_taxonomy_page' => true,
                             'list_type' => $list_type,
-                            'shortcode_show_images' => $show_images
+                            'shortcode_show_images' => $show_images,
+                            'taxonomy' => $taxonomy,
+                            'current_term' => $term
                         ];
 
                         while ($query->have_posts()) : $query->the_post();

@@ -1884,9 +1884,8 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 }
 
 .show-ka-modal {
-    color: var(--ka-primary-color, var(--ka-color, #2271b1));
+    color: var(--ka-primary-color, var(--ka-color-darker, #2271b1));
     text-decoration: none;
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
 }
