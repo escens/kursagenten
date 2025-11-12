@@ -1,9 +1,11 @@
 ## 1.0.8 - 2025-11-07
 - Fix: Kurstatus vistes med ledige plasser uavhengig av status i kursliste. Rettet så det nå også viser fullt/på forspørsel.
 - Lagt til: Ny designmal for taksonomi: *Profil*. Rundt hovedbilde, tittel under. Kolonne under med kort og lang beskrivelse.
+- Lagt til: Mulighet for å begrense antall kurs i kortkode for kursliste: [kursliste antall=10]
+- Lagt til: Ny kursliste-mal med kun status, dato, kurstittel og påmeldingsknapp. Foreløpig kun til bruk i kursliste kortkode: [kursliste list_type="date-and-title"]
 
 ## 1.0.7 - 2025-11-07
-- Justering på struktruelle endringer
+- Justering på strukturelle endringer
 - Endring av admin meny. Nå er alle Kursagenten sider samlet.
 - Oppdatering av innstillings-siden "Oversikt"
 
