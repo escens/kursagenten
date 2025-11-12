@@ -107,5 +107,6 @@ register_post_type('ka_coursedate', array(
     'rewrite'           => false,
     'publicly_queryable'=> false,
     'query_var'         => false,
+    'exclude_from_search' => true,
     'delete_with_user'  => false,
 ));

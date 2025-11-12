@@ -186,59 +186,51 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
             <?php endif; ?>
             
              <div class="compact-course-info">
-                 <h3 class="compact-course-title">
-                     <a href="<?php echo esc_url($course_link); ?>">
-                         <?php echo esc_html($course_title); ?>
-                     </a>
-                     <?php if ($is_full) : ?>
-                         <span class="compact-availability full">Fullt</span>
-                     <?php elseif (!$show_registration) : ?>
-                         <span class="compact-availability on-demand">På forespørsel</span>
-                     <?php else : ?>
-                         <span class="compact-availability available">Ledige plasser</span>
-                     <?php endif; ?>
-                 </h3>
-                 
-                 <div class="compact-course-meta">
-                     <?php if (!empty($first_course_date)) : ?>
-                        <span class="compact-course-date">
-                            <i class="ka-icon icon-calendar"></i>
-                            <span>
-                                <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
-                                    <strong>Neste kurs: </strong>
-                                <?php endif; ?>
-                                <?php echo esc_html($first_course_date); ?>
-                                <?php if ($view_type === 'main_courses' && !$force_standard_view && count($related_coursedate_ids) > 1) : ?>
-                                    <a href="#" class="show-ka-modal" data-course-id="<?php echo esc_attr($course_id); ?>" style="margin-left: 8px; font-size: 0.9em;">
-                                        (+<?php echo count($related_coursedate_ids) - 1; ?> flere)
-                                    </a>
-                                <?php endif; ?>
+                <a href="<?php echo esc_url($course_link); ?>">
+                    <div class="compact-course-first-column">
+                        <?php if ($is_full) : ?>
+                                <span class="course-available full"></span>
+                            <?php elseif (!$show_registration) : ?>
+                                <span class="course-available on-demand"></span>
+                            <?php else : ?>
+                                <span class="course-available"></span>
+                        <?php endif; ?>
+
+                        <?php if (!empty($first_course_date)) : ?>
+                            <span class="compact-course-date">
+                                <span>
+                                    <?php if ($view_type === 'main_courses' && !$force_standard_view) : ?>
+                                        <strong>Neste kurs: </strong>
+                                    <?php endif; ?>
+                                    <?php echo esc_html($first_course_date); ?>
+                                    <?php if ($view_type === 'main_courses' && !$force_standard_view && count($related_coursedate_ids) > 1) : ?>
+                                        <a href="#" class="show-ka-modal" data-course-id="<?php echo esc_attr($course_id); ?>" style="margin-left: 8px; font-size: 0.9em;">
+                                            (+<?php echo count($related_coursedate_ids) - 1; ?> flere)
+                                        </a>
+                                    <?php endif; ?>
+                                </span>
                             </span>
+                        <?php endif; ?>
+                    </div>
+
+                    <div class="compact-course-second-column">
+                        <span class="compact-course-title">
+                            
+                                <?php echo esc_html($course_title); ?>
+
+                                <?php if (!empty($location)) : ?>
+                                    <span class="compact-course-location">
+                                        - <?php echo esc_html($location); ?>
+                                    </span>
+                                <?php endif; ?>
+                            
                         </span>
-                    <?php endif; ?>
-                    
-                    <?php if (!empty($location)) : ?>
-                        <span class="compact-course-location">
-                            <i class="ka-icon icon-location"></i>
-                            <span><?php echo esc_html($location); ?></span>
-                        </span>
-                    <?php endif; ?>
-                    
-                    <?php if (!empty($price)) : ?>
-                        <span class="compact-course-price">
-                            <i class="ka-icon icon-layers"></i>
-                            <span><?php echo esc_html($price); ?> <?php echo isset($after_price) ? esc_html($after_price) : ''; ?></span>
-                        </span>
-                    <?php endif; ?>
-                </div>
+                    </div>
+                </a>           
             </div>
         </div>
         
         <div class="compact-course-actions">
-            <a href="<?php echo esc_url($course_link); ?>" class="compact-btn compact-btn-secondary">
-                Les mer
-            </a>
-
             <?php if (!empty($signup_url)) : ?>
                 <button class="compact-btn compact-btn-primary pameldingskjema" data-url="<?php echo esc_url($signup_url); ?>">
                     <?php echo esc_html($button_text ?: 'Påmelding'); ?>

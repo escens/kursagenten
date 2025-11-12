@@ -11,6 +11,13 @@
  * [kursliste kategori="dans" sted="oslo"] - Shows dance courses in Oslo
  * [kursliste språk="norsk"] - Shows only Norwegian courses
  * [kursliste måned="01"] - Shows only January courses
+ * [kursliste list_type="compact"] - Shows compact list type
+ * [kursliste list_type="grid"] - Shows grid list type
+ * [kursliste list_type="standard"] - Shows standard list type
+ * [kursliste antall="10"] - Shows the first 10 courses
+ * [kursliste bilder="yes"] - Shows images
+ * [kursliste bilder="no"] - Shows no images
+ * [kursliste klasse="min-klasse"] - Shows class attribute
  * 
  * @package Kursagenten
  * @subpackage Shortcodes
@@ -80,7 +87,8 @@ function kursagenten_course_list_shortcode($atts) {
         'force_standard_view' => 'false',
         'klasse' => '',
         'list_type' => '', // standard, grid, compact
-        'bilder' => '' // yes, no - overstyr bildeinnstillinger
+        'bilder' => '', // yes, no - overstyr bildeinnstillinger
+        'antall' => '' // Begrens antall kurs som vises
     ), $atts, 'kursliste');
 
     // Load required dependencies
@@ -96,6 +104,8 @@ function kursagenten_course_list_shortcode($atts) {
     $has_shortcode_filters = false;
     $shortcode_params = [];
     $active_shortcode_filters = []; // Track which filters are active in shortcode
+    $limit_courses = isset($atts['antall']) ? absint($atts['antall']) : 0;
+    $limit_mode = $limit_courses > 0;
     
     if (!empty($atts['kategori'])) {
         $_REQUEST['k'] = $atts['kategori'];
@@ -142,6 +152,12 @@ function kursagenten_course_list_shortcode($atts) {
         $shortcode_params['mnd'] = $month_value;
         $active_shortcode_filters[] = 'months';
         $has_shortcode_filters = true;
+    }
+
+    if ($limit_mode) {
+        $_REQUEST['per_page'] = $limit_courses;
+        $_GET['per_page'] = $limit_courses;
+        $shortcode_params['per_page'] = $limit_courses;
     }
 
     // Hent valgt listetype fra innstillinger eller shortcode parameter
@@ -203,6 +219,9 @@ function kursagenten_course_list_shortcode($atts) {
 
     // Initialize main course query and filter settings
     $query = get_course_dates_query();
+    $displayed_course_count = ($limit_mode && $query instanceof WP_Query)
+        ? $query->post_count
+        : ($query instanceof WP_Query ? $query->found_posts : 0);
 
     // Håndter side-parameter
     $paged = (get_query_var('side')) ? get_query_var('side') : 1;
@@ -734,7 +753,7 @@ function kursagenten_course_list_shortcode($atts) {
                                 <?php if ($query instanceof WP_Query && $query->have_posts()) : ?>
                                     <div class="courselist-header">
                                         <div id="courselist-header-left">
-                                            <div id="course-count"><?php echo $query->found_posts; ?> kurs <?php echo $query->max_num_pages > 1 ? sprintf("- side %d av %d", $query->get('paged'), $query->max_num_pages) : ''; ?></div>                              
+                                            <div id="course-count"><?php echo intval($displayed_course_count); ?> kurs <?php echo (!$limit_mode && $query->max_num_pages > 1) ? sprintf("- side %d av %d", $query->get('paged'), $query->max_num_pages) : ''; ?></div>
                                         </div>
 
                                         <div id="courselist-header-right">
@@ -797,6 +816,7 @@ function kursagenten_course_list_shortcode($atts) {
                                         ?>
                                     </div>
 
+                                    <?php if (!$limit_mode) : ?>
                                     <div class="pagination-wrapper">
                                         <div class="pagination">
                                         <?php
@@ -845,6 +865,7 @@ function kursagenten_course_list_shortcode($atts) {
                                         ?>
                                         </div>
                                     </div>
+                                    <?php endif; ?>
 
                                     <div class="course-loading" style="display: none;">
                                         <div class="loading-spinner"></div>

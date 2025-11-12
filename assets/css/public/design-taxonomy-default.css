@@ -471,7 +471,6 @@
 #ka .category-buttons {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
 }
 
 /* Kategori-filter styling - kursdato og filter visning*/

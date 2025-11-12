@@ -1,7 +1,13 @@
-## 1.0.7 - 2025-11-02
-- Justering på struktruelle endringer
+## 1.0.8 - 2025-11-07
+- Fix: Kurstatus vistes med ledige plasser uavhengig av status i kursliste. Rettet så det nå også viser fullt/på forspørsel.
+- Lagt til: Ny designmal for taksonomi: *Profil*. Rundt hovedbilde, tittel under. Kolonne under med kort og lang beskrivelse.
 
-## 1.0.6 - 2025-10-29
+## 1.0.7 - 2025-11-07
+- Justering på struktruelle endringer
+- Endring av admin meny. Nå er alle Kursagenten sider samlet.
+- Oppdatering av innstillings-siden "Oversikt"
+
+## 1.0.6 - 2025-11-02
 - Strukturelle endringer for unngå konflikt med andre kurs-utvidelser
 
 ## 1.0.5 - 2025-10-16

@@ -6,6 +6,9 @@
  */
 
 // Admin view settings
+$admin_view_class = '';
+$admin_view = 'false';
+
 if (current_user_can('editor') || current_user_can('administrator')) {
     $admin_view_class = ' admin-view';
     $admin_view = 'true';

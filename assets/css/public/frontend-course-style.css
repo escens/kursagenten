@@ -426,6 +426,10 @@ border-radius: 8px;
   color: white;
 }
 
+#ka .button-filter .category-count {
+  font-size: var(--ka-font-xs);
+  opacity: 0.8;
+}
 
 
 /* --Tooltip */
@@ -1802,7 +1806,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--ka-primary-color, var(--ka-color, #2271b1));
+    background: var(--ka-color, var(--ka-color, #2271b1));
     color: white;
 }
 
@@ -1884,7 +1888,7 @@ box-shadow: 0 0 6px rgba(0,0,0,0.05);
 }
 
 .show-ka-modal {
-    color: var(--ka-primary-color, var(--ka-color-darker, #2271b1));
+    color: black;
     text-decoration: none;
     cursor: pointer;
     transition: all 0.2s;

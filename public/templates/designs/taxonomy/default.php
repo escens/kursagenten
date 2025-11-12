@@ -307,7 +307,7 @@ if ($view_type === 'all_coursedates') {
                                     </button>
                                     <?php foreach ($top_categories as $category): ?>
                                         <button class="category-btn button-filter" data-category="<?php echo esc_attr($category['slug']); ?>">
-                                            <?php echo esc_html($category['name']); ?> (<?php echo $category['count']; ?>)
+                                            <?php echo esc_html($category['name']); ?> <span class="category-count">(<?php echo $category['count']; ?>)</span>
                                         </button>
                                     <?php endforeach; ?>
                                 </div>

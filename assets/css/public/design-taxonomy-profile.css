@@ -1,0 +1,106 @@
+/**
+ * Profile taxonomy design styles
+ */
+
+.taxonomy-design-profile .taxonomy-header-profile {
+    padding-top: 3rem;
+    padding-bottom: 0;
+}
+
+.taxonomy-header-profile__layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.8rem;
+    flex-wrap: wrap;
+}
+
+.taxonomy-header-profile__image,
+.taxonomy-header-profile__content {
+    position: relative;
+    left: -1.5rem;
+}
+.taxonomy-header-profile__image img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.taxonomy-header-profile__content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .1rem;
+    min-width: 220px;
+}
+
+#ka-main .taxonomy-header-profile__content h1 {
+    margin: 0;
+}
+
+.taxonomy-header-profile__back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -1em;
+    font-size: 0.9rem;
+    color: #666;
+    text-decoration: none;
+}
+#ka .taxonomy-header-profile__back-link .ka-icon {
+    background-color: #666;
+    width: 0.4em;
+    height: 0.7em;
+}
+#ka .taxonomy-header-profile__back-link:hover .ka-icon {
+    background-color: var(--ka-color);
+}
+
+.taxonomy-header-profile__back-link:hover,
+.taxonomy-header-profile__back-link:focus {
+    text-decoration: underline;
+}
+
+.taxonomy-header-profile__descriptions {
+    max-width: 700px;
+    margin: 0 auto;
+    margin-top: 1.5rem;
+}
+
+.taxonomy-header-profile__descriptions .taxonomy-description,
+.taxonomy-header-profile__descriptions .taxonomy-rich-description {
+    margin-bottom: 1.5rem;
+}
+#ka .taxonomy-header-profile__descriptions .taxonomy-description{
+    font-size: 1.3rem;
+    color: inherit !important;
+}
+
+.taxonomy-header-profile__descriptions .taxonomy-rich-description:last-child,
+.taxonomy-header-profile__descriptions .taxonomy-description:last-child {
+    margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+    .taxonomy-header-profile__layout {
+        justify-content: center;
+        text-align: center;
+    }
+
+    .taxonomy-header-profile__content {
+        align-items: center;
+    }
+
+    .taxonomy-header-profile__back-link {
+        justify-content: center;
+    }
+
+    .taxonomy-header-profile__descriptions {
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
+

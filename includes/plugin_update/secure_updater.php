@@ -204,7 +204,7 @@ class SecureUpdater {
             return (object) $cached;
         }
 
-        // Unngå nettverkskall på irrelevante admin-sider (tillat Plugins, Plugin-info, Update-core, eller vår egen AJAX)
+        // Avoid remote calls on irrelevant admin screens (allow Plugins, Plugin-info, Update-core, cron, WP-CLI, REST, AJAX)
         if (is_admin()) {
             $screen = function_exists('get_current_screen') ? get_current_screen() : null;
             $allowed_bases = array('plugins', 'plugin-install', 'update-core');
@@ -214,7 +214,20 @@ class SecureUpdater {
             // Allow during bulk updates and WordPress core update checks
             $is_bulk_update = $is_ajax && isset($_POST['action']) && in_array($_POST['action'], array('update-plugin', 'update-selected'), true);
             $is_update_check = isset($_GET['action']) && in_array($_GET['action'], array('check-plugin-updates', 'update-plugin'), true);
-            if (!$is_allowed_screen && !$is_our_ajax && !$is_bulk_update && !$is_update_check) {
+            $is_cron = function_exists('wp_doing_cron') && wp_doing_cron();
+            $is_cli = defined('WP_CLI') && WP_CLI;
+            $is_rest = defined('REST_REQUEST') && REST_REQUEST;
+
+            if (
+                !$is_allowed_screen
+                && !$is_our_ajax
+                && !$is_bulk_update
+                && !$is_update_check
+                && !$is_cron
+                && !$is_cli
+                && !$is_rest
+                && !$is_ajax
+            ) {
                 return false;
             }
         }
@@ -307,7 +320,9 @@ class SecureUpdater {
         if (isset($body['status']) && $body['status'] === 'success') {
             if (isset($body['update_available']) && $body['update_available'] === true && isset($body['update_info'])) {
                 // Hvis det er oppdatering tilgjengelig, returner update_info
-                return (object) $body['update_info'];
+                $update_info = $body['update_info'];
+                $update_info['update_available'] = true;
+                return (object) $update_info;
             }
 
             // Ingen oppdatering: bygg komplett plugin-info objekt (unngå udefinert variabel)
@@ -338,7 +353,8 @@ class SecureUpdater {
                 'banners' => [
                     'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp',
                     'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp'
-                ]
+                ],
+                'update_available' => false
             ];
         }
         return false;
@@ -403,6 +419,7 @@ class SecureUpdater {
         set_transient($this->cache_key, $cache_data, HOUR_IN_SECONDS);
 
         if ($remote_data && version_compare($this->version, $remote_data->version, '<')) {
+            $remote_data->update_available = true;
             return $remote_data;
         }
         
@@ -540,6 +557,11 @@ class SecureUpdater {
             $response->upgrade_notice = $remote->upgrade_notice;
 
             $transient->response[$response->plugin] = $response;
+        } elseif (isset($remote->update_available) && $remote->update_available === false) {
+            $plugin_file = "{$this->plugin_slug}/{$this->plugin_slug}.php";
+            if (isset($transient->response[$plugin_file])) {
+                unset($transient->response[$plugin_file]);
+            }
         }
 
         return $transient;

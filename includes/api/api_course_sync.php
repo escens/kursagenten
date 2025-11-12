@@ -1296,9 +1296,9 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
         throw new Exception($error_msg);
     }
 
-    // Enforce maximum image size (500 KB) using header if available
-    $max_image_size_mb = 0.5;
-    $max_image_size_bytes = (int) ($max_image_size_mb * 1024 * 1024);
+    // Enforce maximum image size (999 KB) using header if available
+    $max_image_size_kb = 999;
+    $max_image_size_bytes = (int) ($max_image_size_kb * 1024);
     $content_length_header = wp_remote_retrieve_header($response, 'content-length');
     if (!empty($content_length_header) && (int) $content_length_header > $max_image_size_bytes) {
         $reported_size_mb = round(((int) $content_length_header) / (1024 * 1024), 2);
@@ -1308,7 +1308,7 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
             $reported_size_mb,
             $course_name ?: 'Ukjent kurs',
             $location_id,
-            $max_image_size_bytes / 1024
+            $max_image_size_kb
         );
         error_log('❌ ' . $too_large_message);
         throw new Exception($too_large_message);
@@ -1331,7 +1331,7 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
             $image_size_mb,
             $course_name ?: 'Ukjent kurs',
             $location_id,
-            $max_image_size_bytes / 1024
+            $max_image_size_kb
         );
         error_log('❌ ' . $too_large_message);
         throw new Exception($too_large_message);

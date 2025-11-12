@@ -125,7 +125,7 @@ class KA_Documentation_Page {
                     </div>
                     <div class="kort">
                     <h4>Meny</h4>
-                    <p><span class="copytext">[ka-meny type="kurskategorier" start="din-hovedterm"]</span><br><span class="copytext">[ka-meny type="instruktorer"]</span><br><span class="copytext">[ka-meny type="kurssteder"]</span></p>
+                    <p><span class="copytext">[ka-meny type="kurskategorier"]</span><br><span class="copytext">[ka-meny type="kurskategorier" start="din-hovedterm"]</span><br><span class="copytext">[ka-meny type="instruktorer"]</span><br><span class="copytext">[ka-meny type="kurssteder"]</span></p>
                     <p title="Legg inn kortkoden i tekstfeltet i en egendefinert meny. I url-feltet skriver du #. For å få menyen som en undermeny, dra dette menypunktet til høyre innunder et annet menypunkt. For å lage meny av en bestemt kategori (med underkategorier), skriv inn kategori-slug etter start=""."><img src="<?php echo esc_url(plugins_url('assets/images/admin-menu-illustration.jpg', KURSAG_PLUGIN_FILE)); ?>" alt="Kursagenten admin" style="width: 100%; max-width: 400px;"></p>
                     </div>
                     

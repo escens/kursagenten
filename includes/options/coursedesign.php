@@ -542,6 +542,7 @@ class Designmaler {
                                     'default' => 'Standard - med bilde og beskrivelse',
                                     'simple' => 'Enkel - Kun tittel og kort beskrivelse',
                                     'default-2' => 'Standard 2 - header bilde + innholdsbilde',
+                                    'profile' => 'Profil - rundt bilde og tittel',
                                     'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {
@@ -1481,33 +1482,59 @@ class Designmaler {
     public function add_custom_css() {
         $custom_css = get_option('kursagenten_custom_css', '');
         
-        if (!empty($custom_css)) {
-            // Sjekk om vi er på en side som hører til utvidelsen
-            $is_kursagenten_page = false;
-            
-            // Sjekk om vi er på en enkeltkurs-side
-            if (is_singular('ka_course')) {
-                $is_kursagenten_page = true;
-            }
-            
-            // Sjekk om vi er på en kursarkiv-side
-            if (is_post_type_archive('ka_course')) {
-                $is_kursagenten_page = true;
-            }
-            
-            // Sjekk om vi er på en taksonomi-side
-            if (is_tax('ka_coursecategory') || is_tax('ka_course_location') || is_tax('ka_instructors')) {
-                $is_kursagenten_page = true;
-            }
-            
-            // Hvis vi er på en side som hører til utvidelsen, legg til CSS-en
-            if ($is_kursagenten_page) {
-                echo '<!-- Kursagenten Custom CSS -->' . "\n";
-                echo '<style type="text/css" id="kursagenten-custom-css">' . "\n";
-                echo $custom_css . "\n";
-                echo '</style>' . "\n";
+        if (!empty($custom_css) && $this->is_kursagenten_frontend_context()) {
+            echo '<!-- Kursagenten Custom CSS -->' . "\n";
+            echo '<style type="text/css" id="kursagenten-custom-css">' . "\n";
+            echo $custom_css . "\n";
+            echo '</style>' . "\n";
+        }
+    }
+
+    /**
+     * Determine whether we are rendering a Kursagenten frontend context.
+     *
+     * @return bool
+     */
+    private function is_kursagenten_frontend_context() {
+        if (is_singular('ka_course') || is_post_type_archive('ka_course')) {
+            return true;
+        }
+
+        if (is_tax('ka_coursecategory') || is_tax('ka_course_location') || is_tax('ka_instructors')) {
+            return true;
+        }
+
+        if (!is_page()) {
+            return false;
+        }
+
+        $post = get_post();
+        if (!($post instanceof WP_Post)) {
+            return false;
+        }
+
+        $kursagenten_shortcodes = array(
+            'kursliste',
+            'kurskategorier',
+            'kurssteder',
+            'instruktorer',
+        );
+
+        foreach ($kursagenten_shortcodes as $shortcode) {
+            if (has_shortcode($post->post_content, $shortcode)) {
+                return true;
             }
         }
+
+        $required_pages = self::get_required_pages();
+        foreach (array_keys($required_pages) as $page_key) {
+            $page_id = get_option('ka_page_' . $page_key);
+            if ($page_id && (int) $page_id === (int) $post->ID) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static $required_pages = null;
@@ -1645,7 +1672,7 @@ if (queryString) {
                                         <a href="<?php echo get_permalink($page_id); ?>" target="_blank">Vis</a>
                                     </div>
                                 <?php else: ?>
-                                    <span class="status-indicator not-created">âœ— Ikke opprettet</span>
+                                    <span class="status-indicator not-created">Ikke opprettet</span>
                                 <?php endif; ?>
                             </td>
                             <td class="actions">
@@ -1813,10 +1840,12 @@ if (queryString) {
             }
         }
 
+        $post_status = ($page_key === 'betaling') ? 'publish' : 'draft';
+
         $page_id = wp_insert_post([
             'post_title' => $post_title,
             'post_content' => $page_data['content'],
-            'post_status' => 'publish',
+            'post_status' => $post_status,
             'post_type' => 'page',
             'post_name' => $desired_slug,
             'comment_status' => 'closed'

@@ -1,8 +1,8 @@
 <?php
 /**
- * Simple taksonomi-design (uten bilde og beskrivelse)
+ * Profil-basert taksonomi-design med rundt bilde og kompakt header
  * Brukes for ka_course_location, ka_coursecategory og ka_instructors
- * 
+ *
  * Dette er et design-rammeverk som inneholder layout og struktur.
  * Selve kurslistevisningen kommer fra list-types filene (standard.php, grid.php, compact.php)
  */
@@ -22,6 +22,23 @@ if (!isset($term->term_id) || !isset($term->taxonomy)) {
 // Hent nødvendig data
 $term_id = $term->term_id;
 $taxonomy = $term->taxonomy;
+$rich_description = get_term_meta($term_id, 'rich_description', true);
+$image_url = get_taxonomy_image($term_id, $taxonomy);
+$image_dimensions = [
+    'width' => 120,
+    'height' => 120,
+];
+
+if (!empty($image_url)) {
+    $attachment_id = attachment_url_to_postid($image_url);
+    if ($attachment_id) {
+        $image_data = wp_get_attachment_image_src($attachment_id, 'medium');
+        if ($image_data) {
+            $image_dimensions['width'] = !empty($image_data[1]) ? (int) $image_data[1] : 120;
+            $image_dimensions['height'] = !empty($image_data[2]) ? (int) $image_data[2] : 120;
+        }
+    }
+}
 
 // Finn tilbake-lenke basert på taxonomy
 $back_link_mapping = [
@@ -46,8 +63,10 @@ $show_images = get_taxonomy_setting($taxonomy, 'show_images', 'yes');
 // Hent kurs basert på visningstype
 if ($view_type === 'all_coursedates') {
     // Vis alle kursdatoer - bruk [kursliste] kortkoden
+    // Den håndterer alt: query, filtre, AJAX, layout
     $shortcode_atts = [];
     
+    // Legg til taxonomy-parameter
     if ($taxonomy === 'ka_coursecategory') {
         $shortcode_atts[] = 'kategori="' . esc_attr($term->slug) . '"';
     } elseif ($taxonomy === 'ka_course_location') {
@@ -59,7 +78,10 @@ if ($view_type === 'all_coursedates') {
     $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
     $shortcode_atts[] = 'bilder="' . esc_attr($show_images) . '"';
     
+    // Bygg shortcode-string
     $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
+    
+    // Query er null i denne modus - shortcoden håndterer alt
     $query = null;
 } else {
     // Vis hovedkurs (standard)
@@ -67,47 +89,72 @@ if ($view_type === 'all_coursedates') {
 }
 ?>
 
-<article class="ka-outer-container taxonomy-container view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
-    <header class="ka-section ka-taxonomy-header">
+<article class="ka-outer-container taxonomy-container taxonomy-design-profile view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
+    <header class="ka-section ka-taxonomy-header taxonomy-header-profile">
         <div class="ka-content-container">
-            <div class="taxonomy-header-content">
-                
-                <h1>
-                <?php if (!empty($back_link_url)): ?>
-                <a href="<?php echo esc_url($back_link_url); ?>" class="back-link" title="Tilbake til <?php echo esc_attr($back_link_title); ?>">
-                    <i class="ka-icon icon-circle-left-regular page-back-link"></i>
-                    <span class="sr-only">Tilbake til <?php echo esc_html($back_link_title); ?></span>
-                </a>
-                <?php endif; ?><?php 
-                // Håndter navnevisning for instruktører
-                if ($taxonomy === 'ka_instructors') {
-                    $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
-                    switch ($name_display) {
-                        case 'firstname':
-                            $display_name = get_term_meta($term_id, 'instructor_firstname', true);
-                            echo esc_html(!empty($display_name) ? $display_name : $term->name);
-                            break;
-                        case 'lastname':
-                            $display_name = get_term_meta($term_id, 'instructor_lastname', true);
-                            echo esc_html(!empty($display_name) ? $display_name : $term->name);
-                            break;
-                        default:
-                            echo esc_html($term->name);
-                    }
-                } else {
-                    echo esc_html($term->name);
-                }
-                ?></h1>
-                <?php
-                // Hook immediately after the H1 title in header block
-                do_action('ka_taxonomy_after_title', $term);
-                ?>
-                <?php if (!empty($term->description)): ?>
-                    <div class="taxonomy-description">
-                        <?php echo wp_kses_post($term->description); ?>
+            <div class="taxonomy-header-profile__layout">
+                <?php if (!empty($image_url)): ?>
+                    <div class="taxonomy-header-profile__image">
+                        <img src="<?php echo esc_url($image_url); ?>"
+                             width="<?php echo esc_attr($image_dimensions['width']); ?>"
+                             height="<?php echo esc_attr($image_dimensions['height']); ?>"
+                             alt="<?php echo esc_attr($term->name); ?>"
+                             title="<?php echo esc_attr($term->name); ?>">
                     </div>
                 <?php endif; ?>
+
+                <div class="taxonomy-header-profile__content">
+                    <h1>
+                    <?php 
+                    // Håndter navnevisning for instruktører
+                    if ($taxonomy === 'ka_instructors') {
+                        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+                        switch ($name_display) {
+                            case 'firstname':
+                                $display_name = get_term_meta($term_id, 'instructor_firstname', true);
+                                echo esc_html(!empty($display_name) ? $display_name : $term->name);
+                                break;
+                            case 'lastname':
+                                $display_name = get_term_meta($term_id, 'instructor_lastname', true);
+                                echo esc_html(!empty($display_name) ? $display_name : $term->name);
+                                break;
+                            default:
+                                echo esc_html($term->name);
+                        }
+                    } else {
+                        echo esc_html($term->name);
+                    }
+                    ?></h1>
+                    <?php
+                    // Hook immediately after the H1 title in header block
+                    do_action('ka_taxonomy_after_title', $term);
+                    ?>
+                    <?php if (!empty($back_link_url)): ?>
+                        <a href="<?php echo esc_url($back_link_url); ?>" class="taxonomy-header-profile__back-link" title="Tilbake til <?php echo esc_attr($back_link_title); ?>">
+                            <i class="ka-icon icon-chevron-left" aria-hidden="true"></i>
+                            <span>Tilbake til <?php echo esc_html($back_link_title); ?></span>
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
+
+            <?php if (!empty($term->description) || !empty($rich_description)): ?>
+                <div class="taxonomy-header-profile__descriptions">
+                    <?php if (!empty($term->description)): ?>
+                        <div class="taxonomy-description">
+                            <?php echo wp_kses_post($term->description); ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if (!empty($rich_description)): ?>
+                        <div class="taxonomy-rich-description">
+                            <?php
+                            // Allow advanced content formatting
+                            echo apply_filters('the_content', $rich_description);
+                            ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         </div>
     </header>
 
@@ -119,12 +166,31 @@ if ($view_type === 'all_coursedates') {
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
         
-                <!-- Uten innhold i venstre og høyre kolonne -->
+            <div class="taxonomy-content-grid">
+                <div class="left-column">
+                    <?php
+                    // Felles hook for venstre kolonne på taksonomi-sider
+                    do_action('ka_taxonomy_left_column', $term);
+                    ?>
+                </div>
+
+                <div class="right-column">
+                    <?php
+                    // Hook at the top of the right column
+                    do_action('ka_taxonomy_right_column_top', $term);
+                    ?>
+                    <?php
+                    // Hook at the bottom of the right column
+                    do_action('ka_taxonomy_right_column_bottom', $term);
+                    ?>
+                </div>
+            </div>
 
             <?php
             // Hook below main image and extended description, before course list
             do_action('ka_taxonomy_below_description', $term);
             ?>
+            
             <?php if ($taxonomy === 'ka_course_location'): ?>
                     <?php 
                     $specific_locations = get_term_meta($term_id, 'specific_locations', true);
@@ -211,18 +277,26 @@ if ($view_type === 'all_coursedates') {
 
 
             <?php if ($view_type === 'all_coursedates'): ?>
-                <!-- Bruk [kursliste] shortcode -->
+                <!-- Bruk [kursliste] shortcode - den håndterer alt -->
                 <div class="taxonomy-coursedates">
+                    <h2>Tilgjengelige kurs</h2>
                     <?php
+                    // Hook before the course list
                     do_action('ka_courselist_before', $term);
+                    
+                    // Kjør shortcoden - den håndterer query, filtre, AJAX, pagination, alt!
                     echo do_shortcode($shortcode);
+                    
+                    // Hook after the course list
                     do_action('ka_courselist_after', $term);
                     ?>
                 </div>
             <?php elseif ($query && $query->have_posts()): ?>
-                <!-- Vis hovedkurs -->
+                <!-- Vis hovedkurs med enkel kategori-filter -->
                 <div class="taxonomy-coursedates">
+                    <h2>Tilgjengelige kurs</h2>
                     <?php
+                    // Hook before the course list (above filters and pagination)
                     do_action('ka_courselist_before', $term);
                     ?>
                     
@@ -256,7 +330,7 @@ if ($view_type === 'all_coursedates') {
                         $args = [
                             'course_count' => $query->found_posts,
                             'query' => $query,
-                                'instructor_url' => $taxonomy === 'ka_instructors' ? get_instructor_display_url($term, $taxonomy) : null,
+                            'instructor_url' => $taxonomy === 'ka_instructors' ? get_instructor_display_url($term, $taxonomy) : null,
                             'view_type' => $view_type,
                             'is_taxonomy_page' => true,
                             'list_type' => $list_type,
@@ -329,20 +403,6 @@ if ($view_type === 'all_coursedates') {
             // Hook below the course list (taxonomy footer)
             do_action('ka_taxonomy_footer', $term);
             ?>
-        </div>
-    </section>
-    <section class="ka-section ka-footer-content">
-        <div class="ka-content-container">
-            <?php if ($taxonomy === 'ka_coursecategory') : ?>
-                <h2>Flere kurskategorier</h2>
-                <?php echo do_shortcode('[kurskategorier layout="rad" stil="kort" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" bildestr="0px" overskrift="h4" fontmin="13px" fontmaks="16px" avstand="2em .5em"]'); ?>
-            <?php elseif ($taxonomy === 'ka_instructors') : ?>
-                <h2>Flere instruktører</h2>
-                <?php echo do_shortcode('[instruktorer layout="rad" stil="kort" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" bildestr="0px" overskrift="h4" fontmin="13px" fontmaks="16px" avstand="2em .5em"]'); ?>
-            <?php elseif ($taxonomy === 'ka_course_location') : ?>
-                <h2>Flere kurssteder</h2>
-                <?php echo do_shortcode('[kurssteder layout="rad" stil="kort" grid=5 gridtablet=2 gridmobil=1 radavstand="1rem" bildestr="0px" overskrift="h4" fontmin="13px" fontmaks="16px" avstand="2em .5em"]'); ?>
-            <?php endif; ?>
         </div>
     </section>
 </article>

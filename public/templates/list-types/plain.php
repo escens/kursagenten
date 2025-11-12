@@ -6,6 +6,28 @@
 
 if (!defined('ABSPATH')) exit;
 
+if (!function_exists('kursagenten_normalize_bool')) {
+    /**
+     * Normalize truthy values from metadata to strict booleans.
+     */
+    function kursagenten_normalize_bool($value): bool {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value === 1;
+        }
+
+        if (is_string($value)) {
+            $value = strtolower(trim($value));
+            return in_array($value, ['1', 'true', 'yes', 'on'], true);
+        }
+
+        return false;
+    }
+}
+
 // Sjekk visningstype fra args
 $view_type = isset($args['view_type']) ? $args['view_type'] : 'all_coursedates';
 $is_taxonomy_page = isset($args['is_taxonomy_page']) && $args['is_taxonomy_page'];
@@ -84,9 +106,9 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $price = $selected_coursedate_data['price'] ?? '';
     $after_price = $selected_coursedate_data['after_price'] ?? '';
     $signup_url = $selected_coursedate_data['signup_url'] ?? '';
-    $show_registration = $selected_coursedate_data['show_registration'] ?? false;
+    $show_registration = kursagenten_normalize_bool($selected_coursedate_data['show_registration'] ?? false);
     $button_text = $selected_coursedate_data['button_text'] ?? '';
-    $is_full = $selected_coursedate_data['is_full'] ?? false;
+    $is_full = kursagenten_normalize_bool($selected_coursedate_data['is_full'] ?? false);
 } else {
     // Original kode for coursedates
     $course_id = get_the_ID();
@@ -98,9 +120,12 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $location = get_post_meta($course_id, 'ka_course_location', true);
     $location_freetext = get_post_meta($course_id, 'ka_course_location_freetext', true);
     $signup_url = get_post_meta($course_id, 'ka_course_signup_url', true);
-    $show_registration = get_post_meta($course_id, 'ka_course_showRegistrationForm', true);
+    $show_registration_meta = get_post_meta($course_id, 'ka_course_showRegistrationForm', true);
     $button_text = get_post_meta($course_id, 'ka_course_button_text', true);
-    $is_full = get_post_meta($course_id, 'ka_course_isFull', true);
+    $is_full_meta = get_post_meta($course_id, 'ka_course_isFull', true);
+    $marked_as_full_meta = get_post_meta($course_id, 'ka_course_markedAsFull', true);
+    $is_full = kursagenten_normalize_bool($is_full_meta) || kursagenten_normalize_bool($marked_as_full_meta);
+    $show_registration = kursagenten_normalize_bool($show_registration_meta);
 
     $related_course_id = get_post_meta($course_id, 'ka_location_id', true);
     $related_course_info = get_course_info_by_location($related_course_id);
@@ -165,9 +190,9 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                      <a href="<?php echo esc_url($course_link); ?>">
                          <?php echo esc_html($course_title); ?>
                      </a>
-                     <?php if ($is_full === 'true') : ?>
+                     <?php if ($is_full) : ?>
                          <span class="compact-availability full">Fullt</span>
-                     <?php elseif (empty($show_registration) || $show_registration === 'false') : ?>
+                     <?php elseif (!$show_registration) : ?>
                          <span class="compact-availability on-demand">På forespørsel</span>
                      <?php else : ?>
                          <span class="compact-availability available">Ledige plasser</span>
