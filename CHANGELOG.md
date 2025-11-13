@@ -1,3 +1,5 @@
+## 1.0.9 - 2025-12-07
+- Fix: Lagt inn fallback api-adresse
 ## 1.0.8 - 2025-11-07
 - Fix: Kurstatus vistes med ledige plasser uavhengig av status i kursliste. Rettet så det nå også viser fullt/på forspørsel.
 - Lagt til: Ny designmal for taksonomi: *Profil*. Rundt hovedbilde, tittel under. Kolonne under med kort og lang beskrivelse.

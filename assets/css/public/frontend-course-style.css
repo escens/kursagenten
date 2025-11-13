@@ -551,7 +551,7 @@ pointer-events: none; /* Hindrer musen i å trigge tooltip igjen */
 /*****************************/
 #ka .edit-course{
 position: fixed;
-bottom: 10px;
+top: 160px;
 left: 10px;
 z-index: 10000;
 }
