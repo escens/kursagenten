@@ -514,33 +514,96 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
 
 /**
  * Finn URL for et course med samme location_id som coursedate.
+ * Prioriterer underkurs (subcourse) over hovedkurs.
  *
- * @param int $coursedate_id ID for coursedate-innlegget.
- * @return string|null URL til det relaterte kurset, eller null hvis ikke funnet.
+ * @param int $related_course_id Location ID (API-ID) for å finne kurset
+ * @param int|null $main_course_id Optional: Main course ID for mer presis søking
+ * @return array|null Array med kursinformasjon, eller null hvis ikke funnet
  */
-function get_course_info_by_location($related_course_id) {
+function get_course_info_by_location($related_course_id, $main_course_id = null) {
     // Sjekk om related_course_id er angitt
     if (!$related_course_id) {
         return null; // Returner null hvis related_course_id mangler
     }
 
-    // Søk etter course med matching location_id
-    $args = [
+    // Først prøv å finne underkurs (subcourse) - prioriter dette
+    $sub_course_args = [
         'post_type'      => 'ka_course',
         'posts_per_page' => 1,
         'meta_query'     => [
+            'relation' => 'AND',
             [
                 'key'     => 'ka_location_id',
                 'value'   => $related_course_id,
                 'compare' => '=',
             ],
+            // Sjekk at is_parent_course IKKE eksisterer eller ikke er 'yes'
+            [
+                'key'     => 'ka_is_parent_course',
+                'compare' => 'NOT EXISTS',
+            ],
+        ],
+    ];
+    
+    // Hvis main_course_id er gitt, legg til det i søket for mer presis match
+    if (!empty($main_course_id)) {
+        $sub_course_args['meta_query'][] = [
+            'key'     => 'ka_main_course_id',
+            'value'   => $main_course_id,
+            'compare' => '=',
+        ];
+    }
+
+    $sub_query = new WP_Query($sub_course_args);
+
+    if ($sub_query->have_posts()) {
+        $course = $sub_query->posts[0];
+        $course_id = $course->ID;
+
+        // Hent informasjon fra det relaterte kurset
+        $design_options = get_option('design_option_name');
+        $placeholder_image = !empty($design_options['ka_plassholderbilde_kurs'])
+            ? $design_options['ka_plassholderbilde_kurs']
+            : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+
+        $course_info = [
+            'title'      => get_the_title($course_id),
+            'permalink'  => get_permalink($course_id),
+            'thumbnail'  => get_the_post_thumbnail_url($course_id, 'thumbnail') ?: $placeholder_image,
+            'thumbnail-medium'  => get_the_post_thumbnail_url($course_id, 'medium') ?: $placeholder_image,
+            'thumbnail-full'  => get_the_post_thumbnail_url($course_id, 'full') ?: $placeholder_image,
+            'excerpt'    => get_the_excerpt($course_id),
+        ];
+
+        wp_reset_postdata(); // Rydd opp etter WP_Query
+        return $course_info; // Returner informasjonen som en array
+    }
+    
+    wp_reset_postdata();
+
+    // Hvis vi ikke fant underkurs, prøv å finne hovedkurs som fallback
+    $main_course_args = [
+        'post_type'      => 'ka_course',
+        'posts_per_page' => 1,
+        'meta_query'     => [
+            'relation' => 'AND',
+            [
+                'key'     => 'ka_location_id',
+                'value'   => $related_course_id,
+                'compare' => '=',
+            ],
+            [
+                'key'     => 'ka_is_parent_course',
+                'value'   => 'yes',
+                'compare' => '=',
+            ],
         ],
     ];
 
-    $query = new WP_Query($args);
+    $main_query = new WP_Query($main_course_args);
 
-    if ($query->have_posts()) {
-        $course = $query->posts[0];
+    if ($main_query->have_posts()) {
+        $course = $main_query->posts[0];
         $course_id = $course->ID;
 
         // Hent informasjon fra det relaterte kurset

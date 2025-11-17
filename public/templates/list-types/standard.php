@@ -31,20 +31,42 @@ $force_standard_view = isset($args['force_standard_view']) && $args['force_stand
 
 // Hvis visningstype er 'main_courses', vis hovedkurs med første tilgjengelige dato
 if ($view_type === 'main_courses' && !$force_standard_view) {
-    $course_id = get_the_ID();
-    $course_title = get_the_title();
-    $excerpt = get_the_excerpt();
+    // Når view_type er 'main_courses', returnerer queryen ka_coursedate posts
+    // Vi må finne hovedkurset basert på kursdatoen
+    $coursedate_id = get_the_ID();
     
-    // Hent location_id (API-ID) for å finne relaterte kursdatoer
-    // Kursdatoer har main_course_id som matcher kursets main_course_id (ikke location_id)
-    $is_parent = get_post_meta($course_id, 'ka_is_parent_course', true);
+    // Hent main_course_id fra kursdatoen
+    $main_course_id = get_post_meta($coursedate_id, 'ka_main_course_id', true);
     
-    if ($is_parent === 'yes') {
-        // For hovedkurs: bruk ka_location_id (som er samme som ka_main_course_id)
-        $search_id = get_post_meta($course_id, 'ka_location_id', true);
+    // Finn hovedkurset basert på main_course_id
+    $main_courses = get_posts([
+        'post_type' => 'ka_course',
+        'posts_per_page' => 1,
+        'meta_query' => [
+            'relation' => 'AND',
+            [
+                'key' => 'ka_main_course_id',
+                'value' => $main_course_id,
+                'compare' => '='
+            ],
+            [
+                'key' => 'ka_is_parent_course',
+                'value' => 'yes',
+                'compare' => '='
+            ]
+        ]
+    ]);
+    
+    // Hvis vi fant hovedkurset, bruk det som base
+    if (!empty($main_courses)) {
+        $course_id = $main_courses[0]->ID;
+        $course_title = get_the_title($course_id);
+        $excerpt = get_the_excerpt($course_id);
     } else {
-        // For underkurs: bruk ka_main_course_id
-        $search_id = get_post_meta($course_id, 'ka_main_course_id', true);
+        // Fallback hvis hovedkurset ikke finnes
+        $course_id = 0;
+        $course_title = '';
+        $excerpt = '';
     }
     
     // Check if we need to filter by location (taxonomy page)
@@ -53,7 +75,7 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     
     // Build meta query for coursedates
     $meta_query = [
-        ['key' => 'ka_main_course_id', 'value' => $search_id],
+        ['key' => 'ka_main_course_id', 'value' => $main_course_id],
     ];
     
     // If on a location taxonomy page, filter coursedates by that location
@@ -91,10 +113,49 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
         ? $options['ka_plassholderbilde_kurs']
         : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
     
-    $featured_image_thumb = get_the_post_thumbnail_url($course_id, 'thumbnail') ?: $placeholder_image;
+    $featured_image_thumb = $course_id ? get_the_post_thumbnail_url($course_id, 'thumbnail') : '';
+    $featured_image_thumb = $featured_image_thumb ?: $placeholder_image;
     
-    // Sett opp link til kurset
-    $course_link = get_permalink($course_id);
+    // Sett opp link til kurset - finn lokasjonsundersiden basert på valgt kursdato
+    $course_link = $course_id ? get_permalink($course_id) : '#'; // Fallback til hovedkurset
+    
+    // Hvis vi har en valgt kursdato, prøv å finne lokasjonsundersiden
+    if (!empty($selected_coursedate_data['id'])) {
+        $selected_coursedate_id = $selected_coursedate_data['id'];
+        $coursedate_location_id = get_post_meta($selected_coursedate_id, 'ka_location_id', true);
+        $coursedate_main_course_id = get_post_meta($selected_coursedate_id, 'ka_main_course_id', true);
+        
+        // Finn lokasjonsundersiden (subcourse) basert på location_id og main_course_id
+        if (!empty($coursedate_location_id) && !empty($coursedate_main_course_id)) {
+            $sub_course = get_posts([
+                'post_type' => 'ka_course',
+                'posts_per_page' => 1,
+                'meta_query' => [
+                    'relation' => 'AND',
+                    [
+                        'key' => 'ka_location_id',
+                        'value' => $coursedate_location_id,
+                        'compare' => '='
+                    ],
+                    [
+                        'key' => 'ka_main_course_id',
+                        'value' => $coursedate_main_course_id,
+                        'compare' => '='
+                    ],
+                    // Sjekk at is_parent_course IKKE eksisterer eller ikke er 'yes'
+                    [
+                        'key' => 'ka_is_parent_course',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ]
+            ]);
+            
+            // Bruk lokasjonsundersiden hvis den finnes, ellers fallback til hovedkurset
+            if (!empty($sub_course)) {
+                $course_link = get_permalink($sub_course[0]->ID);
+            }
+        }
+    }
     
     // Hent data fra første tilgjengelige kursdato
     $first_course_date = $selected_coursedate_data['first_date'] ?? '';
@@ -134,8 +195,9 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $signup_url =               get_post_meta($course_id, 'ka_course_signup_url', true);
 
     $related_course_id =        get_post_meta($course_id, 'ka_location_id', true);
+    $main_course_id =           get_post_meta($course_id, 'ka_main_course_id', true);
 
-    $related_course_info = get_course_info_by_location($related_course_id);
+    $related_course_info = get_course_info_by_location($related_course_id, $main_course_id);
 
     // Hent plassholderbilde fra innstillinger
     $options = get_option('design_option_name');

@@ -1,5 +1,8 @@
 ## 1.0.9 - 2025-12-07
 - Fix: Lagt inn fallback api-adresse
+- Lagt til: attributt st=sted/st=ikke-sted som kan brukes i kortkoder for kurskategorier, kursliste og automenyer. Begrenser visning av kategorier og menyer til de som hører til/ikke hører til spesifikke steder.
+
+
 ## 1.0.8 - 2025-11-07
 - Fix: Kurstatus vistes med ledige plasser uavhengig av status i kursliste. Rettet så det nå også viser fullt/på forspørsel.
 - Lagt til: Ny designmal for taksonomi: *Profil*. Rundt hovedbilde, tittel under. Kolonne under med kort og lang beskrivelse.

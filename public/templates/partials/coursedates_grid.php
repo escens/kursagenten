@@ -18,8 +18,17 @@ $button_text =              get_post_meta($course_id, 'course_button_text', true
 $signup_url =               get_post_meta($course_id, 'course_signup_url', true);
 
 $related_course_id =        get_post_meta($course_id, 'location_id', true);
+// Prøv også ka_location_id hvis location_id ikke finnes (for nye coursedates)
+if (empty($related_course_id)) {
+    $related_course_id = get_post_meta($course_id, 'ka_location_id', true);
+}
+$main_course_id = get_post_meta($course_id, 'main_course_id', true);
+// Prøv også ka_main_course_id hvis main_course_id ikke finnes
+if (empty($main_course_id)) {
+    $main_course_id = get_post_meta($course_id, 'ka_main_course_id', true);
+}
 
-$related_course_info = get_course_info_by_location($related_course_id);
+$related_course_info = get_course_info_by_location($related_course_id, $main_course_id);
 
 if ($related_course_info) {
     $course_link = esc_url($related_course_info['permalink']);
