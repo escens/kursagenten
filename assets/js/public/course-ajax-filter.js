@@ -437,7 +437,7 @@
 		// Process all URL parameters
 		for (const [key, value] of url.searchParams.entries()) {
 			// Skip current_url parameter entirely
-			if (key === 'current_url') {
+			if (key === 'current_url' || key === 'st' || key === 'sc') {
 				continue;
 			}
 			// Spesiell håndtering for dato-parameter
@@ -461,6 +461,9 @@
 			});
 		}
 
+		// Sikkerhet: fjern transport-parametre fra filtersettet
+		delete params.st;
+		delete params.sc;
 		return params;
 	}
 
@@ -508,11 +511,16 @@
 		const $activeFiltersContainer = $('#active-filters');
 		$activeFiltersContainer.empty();
 
+		// Sikkerhet: klon og fjern transport-parametre eksplisitt
+		const cleaned = { ...filters };
+		if (cleaned.st !== undefined) { delete cleaned.st; }
+		if (cleaned.sc !== undefined) { delete cleaned.sc; }
+
 		// Create chips for each active filter
-		Object.keys(filters).forEach(key => {
+		Object.keys(cleaned).forEach(key => {
 			// Ekskluder sorteringsparametere og andre systemparametere
 			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'per_page' && key !== 'order' && key !== 'side' && key !== 'current_url' &&
-				filters[key] && filters[key].length > 0) {
+				cleaned[key] && cleaned[key].length > 0) {
 				
 				// Ekskluder kortkode-parametere fra aktive filtre
 				if (typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && 
@@ -543,7 +551,7 @@
 					return;
 				}
 
-				const values = Array.isArray(filters[key]) ? filters[key] : [filters[key]];
+				const values = Array.isArray(cleaned[key]) ? cleaned[key] : [cleaned[key]];
 				values.forEach(value => {
 					// For månedsfilteret, bruk 'mnd' som filter-key for å matche med checkbox
 					const filterKey = key === 'mnd' ? 'mnd' : 
@@ -678,7 +686,7 @@
 		const $resetButton = $('#reset-filters');
         const $activeFiltersContainer = $('#active-filters-container');
 		const hasActiveFilters = Object.keys(filters).some(key =>
-			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' && key !== 'side' && key !== 'current_url' &&
+			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' && key !== 'side' && key !== 'current_url' && key !== 'st' && key !== 'sc' &&
 			filters[key] && filters[key].length > 0 &&
 			// Ekskluder kortkode-parametere fra aktive filtre
 			!(typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && 

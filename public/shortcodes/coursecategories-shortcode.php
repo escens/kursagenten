@@ -37,6 +37,9 @@ class CourseCategories {
             'kilde' => 'bilde_kurskategori',
             'layout' => 'stablet',
             'stil' => 'standard',
+            // Filtrering og UI-parametre
+            'st' => '', // transport-parameter for sted (slug eller "ikke-slug")
+            'skjul_sted_chip' => '', // "ja" for å skjule sted-chip videre
             'grid' => '3',
             'gridtablet' => '2',
             'gridmobil' => '1',
@@ -64,7 +67,7 @@ class CourseCategories {
         $a = $this->process_attributes($a);
         
         // Hent og filtrer terms
-        $terms = $this->get_filtered_terms($a['vis']);
+        $terms = $this->get_filtered_terms($a['vis'], $a['st']);
         
         // Generer output ved å bruke ID-spesifikke grid-stiler
         $output = \GridStyles::get_grid_styles($random_id, $a);
@@ -101,7 +104,7 @@ class CourseCategories {
         return $atts;
     }
 
-    private function get_filtered_terms(string $vis): array {
+    private function get_filtered_terms(string $vis, string $st): array {
         $terms = get_terms([
             'taxonomy' => 'ka_coursecategory',
             'hide_empty' => true,
@@ -124,10 +127,10 @@ class CourseCategories {
             return [];
         }
 
-        return $this->filter_terms($terms, $vis);
+        return $this->filter_terms($terms, $vis, $st);
     }
 
-    private function filter_terms(array $terms, string $vis): array 
+    private function filter_terms(array $terms, string $vis, string $st): array 
     {
         // If "vis" is a slug, resolve to a specific parent term id
         $parent_term_id = null;
@@ -140,11 +143,33 @@ class CourseCategories {
             }
         }
 
+        // For stedsfiltrering: støtt "ikke-<slug>" for ekskluderende søk
+        $location_term_id = null;
+        $exclude_location = false;
+        $st = trim((string)$st);
+        if ($st !== '') {
+            $neg_prefix = 'ikke-';
+            if (stripos($st, $neg_prefix) === 0) {
+                $exclude_location = true;
+                $st_slug = sanitize_title(substr($st, strlen($neg_prefix)));
+            } else {
+                $st_slug = sanitize_title($st);
+            }
+            $loc_term = get_term_by('slug', $st_slug, 'ka_course_location');
+            if ($loc_term && !is_wp_error($loc_term)) {
+                $location_term_id = (int)$loc_term->term_id;
+            }
+        }
+
         // Build maps based on published posts only (avoid counting drafts)
         $has_published = [];
         $children_of = [];
         foreach ($terms as $term) {
-            $has_published[$term->term_id] = $this->term_has_published_courses((int)$term->term_id);
+            $has_published[$term->term_id] = $this->term_has_published_courses(
+                (int)$term->term_id,
+                $location_term_id,
+                $exclude_location
+            );
             if ($term->parent !== 0) {
                 $children_of[$term->parent] = $children_of[$term->parent] ?? [];
                 $children_of[$term->parent][] = (int)$term->term_id;
@@ -186,18 +211,27 @@ class CourseCategories {
     }
 
     // Check if a term has at least one published course
-    private function term_has_published_courses(int $term_id): bool {
+    private function term_has_published_courses(int $term_id, ?int $location_term_id = null, bool $exclude_location = false): bool {
         // Query only published posts to avoid drafts keeping categories visible
+            $tax_query = [[
+                'taxonomy' => 'ka_coursecategory',
+                'field' => 'term_id',
+                'terms' => $term_id,
+            ]];
+            if ($location_term_id !== null) {
+                $tax_query[] = [
+                    'taxonomy' => 'ka_course_location',
+                    'field' => 'term_id',
+                    'terms' => [$location_term_id],
+                    'operator' => $exclude_location ? 'NOT IN' : 'IN',
+                ];
+            }
             $q = new \WP_Query([
             'post_type' => 'ka_course',
             'post_status' => 'publish',
             'posts_per_page' => 1,
             'fields' => 'ids',
-                'tax_query' => [[
-                'taxonomy' => 'ka_coursecategory',
-                'field' => 'term_id',
-                'terms' => $term_id,
-            ]],
+                'tax_query' => $tax_query,
             'no_found_rows' => true,
             'update_post_meta_cache' => false,
             'update_post_term_cache' => false,
@@ -294,8 +328,22 @@ class CourseCategories {
                 }
             }
 
+            $link_url = get_term_link($term);
+            // Legg til transport-parametre for sted (st) og ev. sc=0
+            if (!is_wp_error($link_url)) {
+                $query_args = [];
+                if (!empty($a['st'])) {
+                    $query_args['st'] = $a['st'];
+                }
+                if (!empty($a['skjul_sted_chip']) && $a['skjul_sted_chip'] === 'ja') {
+                    $query_args['sc'] = '0';
+                }
+                if (!empty($query_args)) {
+                    $link_url = add_query_arg($query_args, $link_url);
+                }
+            }
             $image_html = "
-                <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
+                <a class='image box-inner' href='" . esc_url($link_url) . "' title='{$term->name}'>
                     <picture>
                         <img src='{$thumbnail}' 
                              width='" . esc_attr($width) . "' 
@@ -307,11 +355,24 @@ class CourseCategories {
                 </a>";
         }
 
+        $title_link = get_term_link($term);
+        if (!is_wp_error($title_link)) {
+            $query_args = [];
+            if (!empty($a['st'])) {
+                $query_args['st'] = $a['st'];
+            }
+            if (!empty($a['skjul_sted_chip']) && $a['skjul_sted_chip'] === 'ja') {
+                $query_args['sc'] = '0';
+            }
+            if (!empty($query_args)) {
+                $title_link = add_query_arg($query_args, $title_link);
+            }
+        }
         return "
             <div class='box term-{$term->term_id}'>
                 {$image_html}
                 <div class='text box-inner'>
-                    <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
+                    <a class='title' href='" . esc_url($title_link) . "' title='{$term->name}'>
                         <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
                     <div class='description info'>" . $short_description . "</div>

@@ -17,7 +17,11 @@ function kurstagger($atts){
         // Parse attributes
         $atts = shortcode_atts(array(
             'type' => '',
-            'start' => ''
+            'start' => '',
+            // Valgfritt: skjul sted-chip i videre visning (bærer sc=0)
+            'skjul_sted_chip' => '',
+            // Valgfritt: transport-parameter for sted (slug eller "ikke-slug"), brukes hvis satt
+            'st' => '',
         ), $atts);
         
         // Get taxonomy type
@@ -62,6 +66,26 @@ function kurstagger($atts){
 
     // Finn parent ID hvis start er satt
     $parent_id = 0;
+    // Forbered stedsfilter (st) for å begrense hvilke termer som vises i menyen
+    $st_param = !empty($atts['st'])
+        ? sanitize_text_field((string)$atts['st'])
+        : (isset($_GET['st']) ? sanitize_text_field((string)$_GET['st']) : '');
+    $filter_location_term_id = null;
+    $exclude_location = false;
+    if ($st_param !== '') {
+        $neg_prefix = 'ikke-';
+        if (stripos($st_param, $neg_prefix) === 0) {
+            $exclude_location = true;
+            $st_slug = sanitize_title(substr($st_param, strlen($neg_prefix)));
+        } else {
+            $st_slug = sanitize_title($st_param);
+        }
+        $loc_term = get_term_by('slug', $st_slug, 'ka_course_location');
+        if ($loc_term && !is_wp_error($loc_term)) {
+            $filter_location_term_id = (int) $loc_term->term_id;
+        }
+    }
+
     if (!empty($atts['start'])) {
         $parent_term = get_term_by('slug', $atts['start'], $taxonomy);
         if ($parent_term) {
@@ -85,8 +109,12 @@ function kurstagger($atts){
                 ]
             ]
         ]);
-        // Filter bort termer uten publiserte kurs
-        $kurstagger = ka_filter_terms_with_published_courses($kurstagger, $taxonomy);
+        // Filter bort termer uten publiserte kurs (ta hensyn til stedsfilter hvis satt)
+        if ($filter_location_term_id !== null) {
+            $kurstagger = ka_filter_terms_with_published_courses_by_location($kurstagger, $taxonomy, $filter_location_term_id, $exclude_location);
+        } else {
+            $kurstagger = ka_filter_terms_with_published_courses($kurstagger, $taxonomy);
+        }
     }else{
         $parent = 0;
         $kurstagger = get_terms([
@@ -105,16 +133,38 @@ function kurstagger($atts){
             ]
             ]
         ]);
-        // Filter bort termer uten publiserte kurs
-        $kurstagger = ka_filter_terms_with_published_courses($kurstagger, $taxonomy);
+        // Filter bort termer uten publiserte kurs (ta hensyn til stedsfilter hvis satt)
+        if ($filter_location_term_id !== null) {
+            $kurstagger = ka_filter_terms_with_published_courses_by_location($kurstagger, $taxonomy, $filter_location_term_id, $exclude_location);
+        } else {
+            $kurstagger = ka_filter_terms_with_published_courses($kurstagger, $taxonomy);
+        }
     }
 
     if ( ! empty( $kurstagger ) && ! is_wp_error( $kurstagger ) ) {
         $current_theme = wp_get_theme();
         $theme_name = strtolower($current_theme->get('Name'));
         
+        // Les transport-parameter fra shortcode-attributt først, ellers fra nåværende URL
+        $current_st = !empty($atts['st'])
+            ? sanitize_text_field((string)$atts['st'])
+            : (isset($_GET['st']) ? sanitize_text_field((string)$_GET['st']) : '');
+        $append_sc0 = (!empty($atts['skjul_sted_chip']) && $atts['skjul_sted_chip'] === 'ja');
+
         foreach( $kurstagger as $kurstag ){
             $url = get_term_link($kurstag->slug, $taxonomy);
+            if (!is_wp_error($url)) {
+                $args = [];
+                if ($current_st !== '') {
+                    $args['st'] = $current_st;
+                }
+                if ($append_sc0) {
+                    $args['sc'] = '0';
+                }
+                if (!empty($args)) {
+                    $url = add_query_arg($args, $url);
+                }
+            }
 
             if( $kurstag->parent == $parent ) {
                 $term_children = get_term_children($kurstag->term_id, $taxonomy);
@@ -128,6 +178,18 @@ function kurstagger($atts){
                     foreach( $kurstagger as $subkurstag ){
                         if($subkurstag->parent == $kurstag->term_id) {
                             $suburl = get_term_link($subkurstag->slug, $taxonomy);
+                            if (!is_wp_error($suburl)) {
+                                $args = [];
+                                if ($current_st !== '') {
+                                    $args['st'] = $current_st;
+                                }
+                                if ($append_sc0) {
+                                    $args['sc'] = '0';
+                                }
+                                if (!empty($args)) {
+                                    $suburl = add_query_arg($args, $suburl);
+                                }
+                            }
                             $output .= get_menu_item_html($subkurstag, $suburl, false, $theme_name);
                         }
                     }//end foreach
@@ -180,6 +242,46 @@ function ka_filter_terms_with_published_courses($terms, $taxonomy) {
     return array_values($filtered);
 }
 
+// Hjelpefunksjon: filtrer termer til de som har publiserte kurs, med stedsfilter (IN/NOT IN)
+function ka_filter_terms_with_published_courses_by_location($terms, $taxonomy, int $location_term_id, bool $exclude_location) {
+    if (empty($terms) || is_wp_error($terms)) {
+        return $terms;
+    }
+
+    // Bygg barneliste per forelder
+    $children_of = [];
+    foreach ($terms as $t) {
+        if ($t->parent) {
+            $children_of[$t->parent] = $children_of[$t->parent] ?? [];
+            $children_of[$t->parent][] = (int)$t->term_id;
+        }
+    }
+
+    // For hver term, sjekk om den selv har publiserte kurs under stedsfilter
+    $has_published = [];
+    foreach ($terms as $t) {
+        $has_published[$t->term_id] = ka_term_has_published_courses_with_location((int)$t->term_id, $taxonomy, $location_term_id, $exclude_location);
+    }
+
+    // Inkluder term hvis den selv har publiserte kurs, eller om noen barn har publiserte kurs (under samme stedsfilter)
+    $filtered = array_filter($terms, function($t) use ($children_of, $has_published) {
+        $tid = (int)$t->term_id;
+        if (!empty($has_published[$tid])) {
+            return true;
+        }
+        if (!empty($children_of[$tid])) {
+            foreach ($children_of[$tid] as $child_id) {
+                if (!empty($has_published[$child_id])) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    });
+
+    return array_values($filtered);
+}
+
 // Helper: verify that the term has at least one published ka_course/ka_coursedate depending on the taxonomy
 function ka_term_has_published_courses(int $term_id, string $taxonomy): bool {
     // For alle taksonomier her viser vi kurs, ikke coursedates, i meny
@@ -193,6 +295,34 @@ function ka_term_has_published_courses(int $term_id, string $taxonomy): bool {
             'field' => 'term_id',
             'terms' => $term_id,
         ]],
+        'no_found_rows' => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    ]);
+    return $q->have_posts();
+}
+
+// Helper: verify published courses with optional location IN/NOT IN constraint
+function ka_term_has_published_courses_with_location(int $term_id, string $taxonomy, int $location_term_id, bool $exclude_location): bool {
+    $tax_query = [[
+        'taxonomy' => $taxonomy,
+        'field' => 'term_id',
+        'terms' => $term_id,
+    ]];
+    // Legg til lokasjonsfilter
+    $tax_query[] = [
+        'taxonomy' => 'ka_course_location',
+        'field' => 'term_id',
+        'terms' => [$location_term_id],
+        'operator' => $exclude_location ? 'NOT IN' : 'IN',
+    ];
+
+    $q = new WP_Query([
+        'post_type' => 'ka_course',
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+        'tax_query' => $tax_query,
         'no_found_rows' => true,
         'update_post_meta_cache' => false,
         'update_post_term_cache' => false,

@@ -48,6 +48,15 @@ if ($view_type === 'all_coursedates') {
     
     $shortcode_atts[] = 'list_type="' . esc_attr($list_type) . '"';
     $shortcode_atts[] = 'bilder="' . esc_attr($show_images) . '"';
+    // Transport-parametre fra URL: st og sc
+    $st = isset($_GET['st']) ? sanitize_text_field((string)$_GET['st']) : '';
+    $sc = isset($_GET['sc']) ? sanitize_text_field((string)$_GET['sc']) : '';
+    if ($st !== '') {
+        $shortcode_atts[] = 'st="' . esc_attr($st) . '"';
+    }
+    if ($sc === '0') {
+        $shortcode_atts[] = 'skjul_sted_chip="ja"';
+    }
     
     $shortcode = '[kursliste ' . implode(' ', $shortcode_atts) . ']';
     $query = null;
@@ -197,6 +206,26 @@ if ($view_type === 'all_coursedates') {
                     <!-- Kursliste - bruker valgt list-type -->
                     <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results">
                         <?php
+                        // Map transport-parameter st -> lokasjonsnavn for filtrering av hovedkurs
+                        $st_param = isset($_GET['st']) ? sanitize_text_field((string)$_GET['st']) : '';
+                        $filter_location_name = '';
+                        $exclude_location = false;
+                        if ($st_param !== '') {
+                            $neg_prefix = 'ikke-';
+                            if (stripos($st_param, $neg_prefix) === 0) {
+                                $exclude_location = true;
+                                $st_slug = sanitize_title(substr($st_param, strlen($neg_prefix)));
+                            } else {
+                                $st_slug = sanitize_title($st_param);
+                            }
+                            $loc_term = get_term_by('slug', $st_slug, 'ka_course_location');
+                            if ($loc_term && !is_wp_error($loc_term)) {
+                                $filter_location_name = $loc_term->name;
+                            } else {
+                                $filter_location_name = ucwords(str_replace('-', ' ', $st_slug));
+                            }
+                        }
+
                         $args = [
                             'course_count' => $query->found_posts,
                             'query' => $query,
@@ -210,6 +239,20 @@ if ($view_type === 'all_coursedates') {
                         ];
 
                         while ($query->have_posts()) : $query->the_post();
+                            // Hovedkurs: filtrer på lokasjon hvis st er satt
+                            if ($filter_location_name !== '') {
+                                $location_terms = get_the_terms(get_the_ID(), 'ka_course_location');
+                                $location_names = [];
+                                if (!empty($location_terms) && !is_wp_error($location_terms)) {
+                                    foreach ($location_terms as $lt) {
+                                        $location_names[] = $lt->name;
+                                    }
+                                }
+                                $has_location = in_array($filter_location_name, $location_names, true);
+                                if ((!$exclude_location && !$has_location) || ($exclude_location && $has_location)) {
+                                    continue;
+                                }
+                            }
                             // Inkluder valgt list-type (standard, grid, compact)
                             get_course_template_part($args);
                         endwhile;
@@ -223,6 +266,14 @@ if ($view_type === 'all_coursedates') {
                             <?php
                             // Generate pagination links
                             $base_url = $taxonomy === 'ka_instructors' ? get_instructor_display_url($term, $taxonomy) : get_term_link($term);
+                            // Behold kun transport-parametere i paginering
+                            $transport_args = [];
+                            if (isset($_GET['st']) && $_GET['st'] !== '') {
+                                $transport_args['st'] = sanitize_text_field((string)$_GET['st']);
+                            }
+                            if (isset($_GET['sc']) && $_GET['sc'] !== '') {
+                                $transport_args['sc'] = sanitize_text_field((string)$_GET['sc']);
+                            }
                             echo paginate_links([
                                 'base' => $base_url . '?%_%',
                                 'current' => max(1, $query->get('paged')),
@@ -230,9 +281,7 @@ if ($view_type === 'all_coursedates') {
                                 'total' => $query->max_num_pages,
                                 'prev_text' => '<i class="ka-icon icon-chevron-left"></i> <span>Forrige</span>',
                                 'next_text' => '<span>Neste</span> <i class="ka-icon icon-chevron-right"></i>',
-                                'add_args' => array_map(function ($item) {
-                                    return is_array($item) ? join(',', $item) : $item;
-                                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+                                'add_args' => $transport_args
                             ]);
                             ?>
                             </div>

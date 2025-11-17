@@ -81,6 +81,7 @@ function kursagenten_course_list_shortcode($atts) {
         'kategori' => '',
         'sted' => '',
         'lokasjon' => '',
+        'st' => '',
         'instruktør' => '',
         'språk' => '',
         'måned' => '',
@@ -106,6 +107,60 @@ function kursagenten_course_list_shortcode($atts) {
     $active_shortcode_filters = []; // Track which filters are active in shortcode
     $limit_courses = isset($atts['antall']) ? absint($atts['antall']) : 0;
     $limit_mode = $limit_courses > 0;
+    
+    // Map transport-parameter "st" (slug eller "ikke-slug") til sted-navn i $_REQUEST/$_GET
+    $incoming_st = '';
+    if (!empty($atts['st'])) {
+        $incoming_st = (string)$atts['st'];
+    } elseif (isset($_GET['st']) && $_GET['st'] !== '') {
+        // Tillat mapping fra URL når shortcoden starter (ikke via JS)
+        $incoming_st = (string)$_GET['st'];
+    }
+    if ($incoming_st !== '') {
+        $st_value = trim($incoming_st);
+        $neg_prefix = 'ikke-';
+        $is_neg = (stripos($st_value, $neg_prefix) === 0);
+        $slug = $is_neg ? substr($st_value, strlen($neg_prefix)) : $st_value;
+        $slug = sanitize_title($slug);
+        $term = get_term_by('slug', $slug, 'ka_course_location');
+        if ($is_neg) {
+            // Negativ spørring: inkluder alle lokasjoner unntatt denne
+            $exclude_name = $term && !is_wp_error($term)
+                ? $term->name
+                : ucwords(str_replace('-', ' ', $slug));
+            $all_terms = get_terms([
+                'taxonomy' => 'ka_course_location',
+                'hide_empty' => false,
+                'fields' => 'all',
+            ]);
+            $allowed_names = [];
+            if (!is_wp_error($all_terms) && !empty($all_terms)) {
+                foreach ($all_terms as $t) {
+                    if ($t->name !== $exclude_name) {
+                        $allowed_names[] = $t->name;
+                    }
+                }
+            }
+            // Sett REQUEST til kommaseparert liste for OR-union (spørringslaget bruker '=' pr verdi)
+            $mapped = implode(',', $allowed_names);
+            $_REQUEST['sted'] = $mapped;
+            $_GET['sted'] = $mapped;
+        } else {
+            // Positiv spørring: enkel lokasjonsnavn
+            $mapped = $term && !is_wp_error($term)
+                ? $term->name
+                : ucwords(str_replace('-', ' ', $slug));
+            $_REQUEST['sted'] = $mapped;
+            $_GET['sted'] = $mapped;
+        }
+        // Viktig: Ikke legg 'sted' fra st i $shortcode_params slik at chip ikke vises normalt
+        // Hvis sc=0, skjul chip eksplisitt ved å markere som shortcode-parameter
+        if (isset($_GET['sc']) && (string)$_GET['sc'] === '0') {
+            $shortcode_params['sted'] = $_REQUEST['sted'];
+            $has_shortcode_filters = true;
+            $active_shortcode_filters[] = 'locations';
+        }
+    }
     
     if (!empty($atts['kategori'])) {
         $_REQUEST['k'] = $atts['kategori'];

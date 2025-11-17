@@ -200,9 +200,24 @@ class RelatedCourses {
         $thumbnail_width = esc_attr($thumbnail['width']);
         $thumbnail_height = esc_attr($thumbnail['height']);
         
+        // Behold transport-parametre (st og ev. sc) fra gjeldende URL
+        $link_url = get_permalink($post->ID);
+        if (!is_wp_error($link_url)) {
+            $args = [];
+            if (isset($_GET['st']) && $_GET['st'] !== '') {
+                $args['st'] = sanitize_text_field((string)$_GET['st']);
+            }
+            if (isset($_GET['sc']) && $_GET['sc'] !== '') {
+                $args['sc'] = sanitize_text_field((string)$_GET['sc']);
+            }
+            if (!empty($args)) {
+                $link_url = add_query_arg($args, $link_url);
+            }
+        }
+        
         return "
             <div class='box term-{$post->ID}'>
-                <a class='image box-inner' href='" . get_permalink($post->ID) . "' title='{$title}'>
+                <a class='image box-inner' href='" . esc_url($link_url) . "' title='{$title}'>
                     <picture>
                         <img src='{$thumbnail_url}' 
                              width='{$thumbnail_width}' 
@@ -213,7 +228,7 @@ class RelatedCourses {
                     </picture>
                 </a>
                 <div class='text box-inner'>
-                    <a class='title' href='" . get_permalink($post->ID) . "' title='{$title}'>
+                    <a class='title' href='" . esc_url($link_url) . "' title='{$title}'>
                         <{$a['overskrift']} class='tittel'>{$title}</{$a['overskrift']}>
                     </a>
                     <div class='description'>" . get_the_excerpt($post->ID) . "</div>
