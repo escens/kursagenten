@@ -76,6 +76,11 @@ if ($view_type === 'all_coursedates') {
 }
 ?>
 
+<?php
+// Hook before the entire header section
+do_action('ka_taxonomy_header_before', $term);
+?>
+
 <article class="ka-outer-container taxonomy-container view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
     <header class="ka-section ka-taxonomy-header">
         <div class="ka-content-container">
@@ -402,6 +407,11 @@ if ($view_type === 'all_coursedates') {
         </div>
     </section>
 </article>
+
+<?php
+// Hook after the entire footer section
+do_action('ka_taxonomy_after', $term);
+?>
 
 
 

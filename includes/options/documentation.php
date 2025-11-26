@@ -77,7 +77,7 @@ class KA_Documentation_Page {
                     <p>I <a href="admin.php?page=design">Kursdesign</a> velger du mal for kursdetaljer og for taksonomier. Å bytte mal påvirker oppsett, rekkefølge på elementer og visuelle detaljer.</p>
                     <ul>
                         <li><strong>Enkeltkurs</strong>: velg dedikert mal for kursdetaljsiden.</li>
-                        <li><strong>Kategorier/steder/instruktører</strong>: velg mal for lister og enkeltsider.</li>
+                        <li><strong>Kategorier/steder/instruktører</strong>: velg layout for lister og enkeltsider.</li>
                     </ul>
                     <p>Endringer kan kreve oppdatering/refresh av cache og permalenker ved utstakte URL-tilpasninger.</p>
                 </div>
@@ -125,7 +125,7 @@ class KA_Documentation_Page {
                     </div>
                     <div class="kort">
                     <h4>Meny</h4>
-                    <p><span class="copytext">[ka-meny type="kurskategorier"]</span><br><span class="copytext">[ka-meny type="kurskategorier" start="din-hovedterm"]</span><br><span class="copytext">[ka-meny type="instruktorer"]</span><br><span class="copytext">[ka-meny type="kurssteder"]</span></p>
+                    <p><span class="copytext">[ka-meny type="kurskategorier"]</span><br><span class="copytext">[ka-meny type="kurskategorier" start="din-hovedterm" st="sted/st=ikke-sted"]</span><br><span class="copytext">[ka-meny type="instruktorer"]</span><br><span class="copytext">[ka-meny type="kurssteder"]</span></p>
                     <p title="Legg inn kortkoden i tekstfeltet i en egendefinert meny. I url-feltet skriver du #. For å få menyen som en undermeny, dra dette menypunktet til høyre innunder et annet menypunkt. For å lage meny av en bestemt kategori (med underkategorier), skriv inn kategori-slug etter start=""."><img src="<?php echo esc_url(plugins_url('assets/images/admin-menu-illustration.jpg', KURSAG_PLUGIN_FILE)); ?>" alt="Kursagenten admin" style="width: 100%; max-width: 400px;"></p>
                     </div>
                     
@@ -138,8 +138,8 @@ class KA_Documentation_Page {
                 <h3  id="lister">Kortkoder for lister og grid</h3>
                 <p>Kortkoder kan legges inn i teksten på sider og blogginnlegg. Du kan legge inn hele kurslisten, eller lister med enten alle kurskategorier, kurs i samme kategori (brukes på kurssider), eller instruktører.<br>Det er mange ulike valg. Du finner full kortkode under, med samtlige valg, samt en liste som forklarer alle valgene.<br>Kortkoden kopieres, og limes inn der du ønsker å vise den. <br>Merk at du må fjerne eventuelle valg du ikke trenger, og deler der flere valg er listet opp (feks som stablet/rad/liste).</p>
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
-                    <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk" klasse="min-klasse"]</span></p>
-                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small" style="color:#666">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" utdrag="ja" klasse="min-klasse"]</span></p>
+                    <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk" st=sted/st=ikke-sted klasse="min-klasse"]</span></p>
+                    <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small" style="color:#666">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" st=sted/st=ikke-sted utdrag="ja" klasse="min-klasse"]</span></p>
                     <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="spesifikke-lokasjoner" klasse="min-klasse"]</span></p>
                     <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small" style="color:#666">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja" klasse="min-klasse"]</span></p>
                 </div>
@@ -308,6 +308,13 @@ class KA_Documentation_Page {
                                 <td><span class="copytext">[instruktor skjul=Anna,Per]</span></td>
                             </tr>
                             <tr>
+                                <td>St</td>
+                                <td>Velg å vise/skjule kurskategorier/menypunkter som hører til spesifikke steder. Eksempel: vis alle kurs som ikke er nettkurs: st="ikke-nettbasert"</td>
+                                <td>sted, ikke-sted<br><strong>Standard</strong>: viser alle</td>
+                                <td>Kurskategorier, automenyer</td>
+                                <td><span class="copytext">[kurskategorier st=sted]<br>[ka-meny type="kurskategorier" st=sted]</span></td>
+                            </tr>
+                            <tr>
                                 <td>Utdrag</td>
                                 <td>Vis tekst fra feltet "Kort beskrivelse".</td>
                                 <td>ja<br><strong>Standard</strong>: viser ikke</td>
@@ -338,6 +345,7 @@ class KA_Documentation_Page {
                     <div class="kort">
                             <h4>Taksonomi-sider</h4>
                             <p style="line-height: 1.8;">
+                                <strong>Header før</strong> <span class="copytext">ka_taxonomy_header_before</span><br><span style="color:#777;font-style:italic"> – Før hele header-seksjonen (før &lt;article&gt;).</span><br>
                                 <strong>Header etter tittel</strong> <span class="copytext">ka_taxonomy_after_title</span><br><span style="color:#777;font-style:italic"> – Vises rett etter H1 i toppseksjonen.</span><br>
                                 <strong>Header etter seksjon</strong> <span class="copytext">ka_taxonomy_header_after</span><br><span style="color:#777;font-style:italic"> – Vises rett under hele header-blokken.</span><br>
                                 <strong>Venstre kolonne</strong> <span class="copytext">ka_taxonomy_left_column</span><br><span style="color:#777;font-style:italic"> – Plassering for innhold i venstre kolonne.</span><br>
@@ -346,12 +354,14 @@ class KA_Documentation_Page {
                                 <strong>Under bilde og beskrivelse</strong> <span class="copytext">ka_taxonomy_below_description</span><br><span style="color:#777;font-style:italic"> – Like under hovedbilde/utvidet beskrivelse, før kurslisten.</span><br>
                                 <strong>Før kursliste</strong> <span class="copytext">ka_courselist_before</span><br><span style="color:#777;font-style:italic"> – Under overskrift, over filter/paginering og liste.</span><br>
                                 <strong>Etter paginering</strong> <span class="copytext">ka_taxonomy_pagination_after</span><br><span style="color:#777;font-style:italic"> – Rett under pagineringskontroller i mal "Standard".</span><br>
-                                <strong>Footer</strong> <span class="copytext">ka_taxonomy_footer</span><br><span style="color:#777;font-style:italic"> – Helt nederst, etter kurslisten (bunnseksjon).</span>
+                                <strong>Footer</strong> <span class="copytext">ka_taxonomy_footer</span><br><span style="color:#777;font-style:italic"> – Helt nederst, etter kurslisten (bunnseksjon).</span><br>
+                                <strong>Etter hele siden</strong> <span class="copytext">ka_taxonomy_after</span><br><span style="color:#777;font-style:italic"> – Etter hele footer-seksjonen (etter &lt;/article&gt;).</span>
                             </p>
                     </div>
                     <div class="kort">
                         <h4>Enkeltkurs</h4>
                         <p style="line-height: 1.8;">
+                        <strong>Header før</strong> <span class="copytext">ka_singel_header_before</span><br><span style="color:#777;font-style:italic"> – Før hele header-seksjonen (før &lt;article&gt;).</span><br>
                         <strong>Header etter tittel</strong> <span class="copytext">ka_singel_header_links_after</span><br><span style="color:#777;font-style:italic"> – Etter lenkene i header-seksjonen.</span><br>
                         <strong>Header etter</strong> <span class="copytext">ka_singel_header_after</span><br><span style="color:#777;font-style:italic"> – Rett under hele header-blokken.</span><br>
                         <strong>Kursliste etter</strong> <span class="copytext">ka_singel_courselist_after</span><br><span style="color:#777;font-style:italic"> – Etter eventuell kursliste-seksjon på detaljsiden.</span><br>
@@ -364,6 +374,7 @@ class KA_Documentation_Page {
                         <strong>Sidekolonne etter</strong> <span class="copytext">ka_singel_aside_after</span><br><span style="color:#777;font-style:italic"> – Etter sidekolonne/aside.</span><br>
                         <strong>Footer før</strong> <span class="copytext">ka_singel_footer_before</span><br><span style="color:#777;font-style:italic"> – Rett før footer.</span><br>
                         <strong>Footer etter</strong> <span class="copytext">ka_singel_footer_after</span><br><span style="color:#777;font-style:italic"> – Rett etter footer-seksjonen.</span><br>
+                        <strong>Etter hele siden</strong> <span class="copytext">ka_singel_after</span><br><span style="color:#777;font-style:italic"> – Etter hele footer-seksjonen (etter &lt;/article&gt;).</span><br>
                         </p>
                     </div>
 

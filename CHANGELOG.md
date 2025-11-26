@@ -1,6 +1,15 @@
-## 1.0.9 - 2025-12-07
+## 1.1.02 - 2025-11-26
+- Lagt til: Støtte for CPT tema-maler: single-ka_course.php, taxonomy-ka_course_location.php, taxonomy-ka_coursecategory.php og taxonomy-ka_instructors.php. Bruk støttefunksjon kursagenten_get_content(); mellom get_header og get_footer for å generere innholdet.
+
+## 1.1.01 - 2025-11-23
+- Fix: Endret hvordan *the content* behandles når det skal vises på en kursside. Alle Gutenberg-blokker skal nå fungere.
+- Fix: Oppdateringslogikken gjorde enkelte sider trege. Det skal nå være reparert.
+
+## 1.0.9 - 2025-11-17
 - Fix: Lagt inn fallback api-adresse
-- Lagt til: attributt st=sted/st=ikke-sted som kan brukes i kortkoder for kurskategorier, kursliste og automenyer. Begrenser visning av kategorier og menyer til de som hører til/ikke hører til spesifikke steder.
+- Lagt til: Attributt st=sted/st=ikke-sted som kan brukes i kortkoder for kurskategorier, kursliste og automenyer. Begrenser visning av kategorier og menyer til de som hører til/ikke hører til spesifikke steder, feks nettkurs/ikke-nettkurs.
+- Fix: Enkelte linker til enkeltkurs fra kursliste gikk til hovedkurset. Nå går alle linker til korrekt lokasjon.
+- Lagt til nye hook-plasseringer: ka_singel_header_before, ka_singel_after, ka_taxonomy_header_before og ka_taxonomy_after
 
 
 ## 1.0.8 - 2025-11-07

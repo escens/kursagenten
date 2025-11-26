@@ -15,6 +15,8 @@ class SecureUpdater {
     private $api_key;
     private $api_url;
     private $cache_key;
+    private $failed_request_key;
+    private $request_in_progress_key;
 
     public function __construct() {
         $this->plugin_slug = 'kursagenten';
@@ -24,6 +26,8 @@ class SecureUpdater {
         // Use local server if available, otherwise fallback to external
         $this->api_url = $this->get_api_url();
         $this->cache_key = 'kursagenten_secure_updater';
+        $this->failed_request_key = 'kursagenten_updater_failed';
+        $this->request_in_progress_key = 'kursagenten_updater_in_progress';
 
         // Hooks
         add_filter('plugins_api', [$this, 'info'], 20, 3);
@@ -57,24 +61,36 @@ class SecureUpdater {
         }
 
         // Sørg for fersk update-info når Plugins/Update-sider lastes (unngå gammel cache med feil URL)
-        add_action('load-plugins.php', function() { delete_transient($this->cache_key); });
-        add_action('load-update.php', function() { delete_transient($this->cache_key); });
-        add_action('load-update-core.php', function() { delete_transient($this->cache_key); });
+        add_action('load-plugins.php', function() { 
+            delete_transient($this->cache_key);
+            delete_transient($this->failed_request_key);
+        });
+        add_action('load-update.php', function() { 
+            delete_transient($this->cache_key);
+            delete_transient($this->failed_request_key);
+        });
+        add_action('load-update-core.php', function() { 
+            delete_transient($this->cache_key);
+            delete_transient($this->failed_request_key);
+        });
     }
 
     /**
-     * Get API URL - only use local server on central host; otherwise use external
+     * Get API URL - use admin-ajax.php as proxy to bypass firewall restrictions
      */
     private function get_api_url() {
         // Determine current host
         $host = wp_parse_url(home_url(), PHP_URL_HOST);
         $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+        
         // Use local endpoint only on central server instance
         if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
             return home_url('/kursagenten-api/');
         }
-        // Otherwise always use external API
-        return 'https://admin.lanseres.no/kursagenten-api/';
+        
+        // Use admin-ajax.php as proxy to bypass firewall restrictions
+        // admin-ajax.php is typically whitelisted in firewalls/WAF
+        return 'https://admin.lanseres.no/wp-admin/admin-ajax.php?action=';
     }
 
     /**
@@ -204,55 +220,102 @@ class SecureUpdater {
             return (object) $cached;
         }
 
+        // Check if a request is already in progress - prevent concurrent calls
+        $in_progress = get_transient($this->request_in_progress_key);
+        if ($in_progress !== false) {
+            // Another request is in progress, wait a moment and check cache again
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten: Request already in progress, skipping');
+            }
+            // Wait briefly and check cache again
+            usleep(100000); // 0.1 second
+            $cached = get_transient($this->cache_key);
+            return $cached !== false ? (object) $cached : false;
+        }
+
+        // Check if we recently had a failed request - avoid repeated timeouts
+        $failed_request = get_transient($this->failed_request_key);
+        if ($failed_request !== false) {
+            // If we failed recently, return false immediately to avoid blocking page loads
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten: Skipping update check - recent failure detected');
+            }
+            return false;
+        }
+
+        // Mark request as in progress (expires in 30 seconds as safety net)
+        set_transient($this->request_in_progress_key, time(), 30);
+
+        // Never make remote calls on frontend - only in admin
+        if (!is_admin()) {
+            return false;
+        }
+
         // Avoid remote calls on irrelevant admin screens (allow Plugins, Plugin-info, Update-core, cron, WP-CLI, REST, AJAX)
-        if (is_admin()) {
-            $screen = function_exists('get_current_screen') ? get_current_screen() : null;
-            $allowed_bases = array('plugins', 'plugin-install', 'update-core');
-            $is_allowed_screen = $screen && in_array($screen->base, $allowed_bases, true);
-            $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
-            $is_our_ajax = $is_ajax && isset($_POST['action']) && $_POST['action'] === 'kursagenten_check_updates';
-            // Allow during bulk updates and WordPress core update checks
-            $is_bulk_update = $is_ajax && isset($_POST['action']) && in_array($_POST['action'], array('update-plugin', 'update-selected'), true);
-            $is_update_check = isset($_GET['action']) && in_array($_GET['action'], array('check-plugin-updates', 'update-plugin'), true);
-            $is_cron = function_exists('wp_doing_cron') && wp_doing_cron();
-            $is_cli = defined('WP_CLI') && WP_CLI;
-            $is_rest = defined('REST_REQUEST') && REST_REQUEST;
+        $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+        $allowed_bases = array('plugins', 'plugin-install', 'update-core');
+        $is_allowed_screen = $screen && in_array($screen->base, $allowed_bases, true);
+        $is_ajax = defined('DOING_AJAX') && DOING_AJAX;
+        $is_our_ajax = $is_ajax && isset($_POST['action']) && $_POST['action'] === 'kursagenten_check_updates';
+        // Allow during bulk updates and WordPress core update checks
+        $is_bulk_update = $is_ajax && isset($_POST['action']) && in_array($_POST['action'], array('update-plugin', 'update-selected'), true);
+        $is_update_check = isset($_GET['action']) && in_array($_GET['action'], array('check-plugin-updates', 'update-plugin'), true);
+        $is_cron = function_exists('wp_doing_cron') && wp_doing_cron();
+        $is_cli = defined('WP_CLI') && WP_CLI;
+        $is_rest = defined('REST_REQUEST') && REST_REQUEST;
 
-            if (
-                !$is_allowed_screen
-                && !$is_our_ajax
-                && !$is_bulk_update
-                && !$is_update_check
-                && !$is_cron
-                && !$is_cli
-                && !$is_rest
-                && !$is_ajax
-            ) {
-                return false;
-            }
+        if (
+            !$is_allowed_screen
+            && !$is_our_ajax
+            && !$is_bulk_update
+            && !$is_update_check
+            && !$is_cron
+            && !$is_cli
+            && !$is_rest
+            && !$is_ajax
+        ) {
+            return false;
         }
 
-        // Prøv først ny API-metode hvis API-nøkkel er tilgjengelig
-        if (!empty($this->api_key)) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Kursagenten: Prøver API-metode med API-nøkkel');
+        try {
+            // Prøv først ny API-metode hvis API-nøkkel er tilgjengelig
+            if (!empty($this->api_key)) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten: Prøver API-metode med API-nøkkel');
+                }
+                $api_result = $this->request_api_method();
+                if ($api_result !== false) {
+                    // Clear failed request flag on success
+                    delete_transient($this->failed_request_key);
+                    delete_transient($this->request_in_progress_key);
+                    return $api_result;
+                }
+                
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten: API-metode feilet, går til fallback');
+                }
+            } else {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten: Ingen API-nøkkel, går direkte til JSON-metode');
+                }
             }
-            $api_result = $this->request_api_method();
-            if ($api_result !== false) {
-                return $api_result;
-            }
-            
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Kursagenten: API-metode feilet, går til fallback');
-            }
-        } else {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Kursagenten: Ingen API-nøkkel, går direkte til JSON-metode');
-            }
-        }
 
-        // Fallback til den gamle JSON-baserte metoden
-        return $this->request_json_method();
+            // Fallback til den gamle JSON-baserte metoden
+            $json_result = $this->request_json_method();
+            if ($json_result !== false) {
+                // Clear failed request flag on success
+                delete_transient($this->failed_request_key);
+            }
+            delete_transient($this->request_in_progress_key);
+            return $json_result;
+        } catch (\Exception $e) {
+            // Ensure we clear the in-progress flag even on exception
+            delete_transient($this->request_in_progress_key);
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten: Exception in request(): ' . $e->getMessage());
+            }
+            return false;
+        }
     }
 
     /**
@@ -260,23 +323,56 @@ class SecureUpdater {
      */
     private function request_api_method() {
         $data = [
-            'action' => 'check_update',
             'api_key' => $this->api_key,
             'site_url' => home_url(),
             'plugin_version' => $this->version
         ];
 
-        // Post til /kursagenten-api/check_update
-        $endpoint = $this->api_url . 'check_update';
+        // Use admin-ajax.php as proxy to bypass firewall restrictions
+        // Check if we're using admin-ajax.php proxy or direct API endpoint
+        $is_ajax_proxy = strpos($this->api_url, 'admin-ajax.php') !== false;
+        
+        if ($is_ajax_proxy) {
+            // Use admin-ajax.php proxy
+            $endpoint = $this->api_url . 'kursagenten_check_update';
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten: Using admin-ajax.php proxy: ' . $endpoint);
+            }
+        } else {
+            // Use direct API endpoint
+            $endpoint = $this->api_url . 'check_update';
+            $data['action'] = 'check_update';
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten: Using direct API endpoint: ' . $endpoint);
+            }
+        }
+        
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Kursagenten: API URL base: ' . $this->api_url);
+            error_log('Kursagenten: Full endpoint: ' . $endpoint);
+        }
+        
         $response = wp_remote_post($endpoint, [
             'body' => $data,
-            'timeout' => 5
+            'timeout' => 3, // Reduced from 5 to 3 seconds for faster failure
+            'blocking' => true,
+            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'headers' => [
+                'Content-Type' => 'application/x-www-form-urlencoded',
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest'
+            ],
+            'sslverify' => true,
+            'httpversion' => '1.1'
         ]);
 
         if (is_wp_error($response)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Kursagenten API oppdateringsfeil: ' . $response->get_error_message());
             }
+            // Mark as failed request immediately to avoid repeated attempts
+            set_transient($this->failed_request_key, time(), 15 * MINUTE_IN_SECONDS);
+            delete_transient($this->request_in_progress_key);
             return false;
         }
 
@@ -369,16 +465,23 @@ class SecureUpdater {
         }
 
         $remote = wp_remote_get('https://admin.lanseres.no/plugin-updates/kursagenten.json', [
-            'timeout' => 10,
+            'timeout' => 3, // Reduced from 10 to 3 seconds for faster failure
+            'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'headers' => [
-                'Accept' => 'application/json'
-            ]
+                'Accept' => 'application/json',
+                'X-Requested-With' => 'XMLHttpRequest'
+            ],
+            'sslverify' => true,
+            'httpversion' => '1.1'
         ]);
 
         if (is_wp_error($remote)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Kursagenten JSON oppdateringsfeil: ' . $remote->get_error_message());
             }
+            // Mark as failed request immediately to avoid repeated attempts
+            set_transient($this->failed_request_key, time(), 15 * MINUTE_IN_SECONDS);
+            delete_transient($this->request_in_progress_key);
             return false;
         }
 
@@ -389,6 +492,9 @@ class SecureUpdater {
                 error_log('JSON URL: https://admin.lanseres.no/plugin-updates/kursagenten.json');
                 error_log('Response: ' . wp_remote_retrieve_body($remote));
             }
+            // Mark as failed request for non-200 responses (but not for timeout which is already handled)
+            set_transient($this->failed_request_key, time(), 5 * MINUTE_IN_SECONDS);
+            delete_transient($this->request_in_progress_key);
             return false;
         }
 
@@ -542,6 +648,14 @@ class SecureUpdater {
         if (is_array($remote)) { $remote = (object) $remote; }
         if (empty($remote->version)) { return $transient; }
 
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log(sprintf('Kursagenten: Versjonssjekk - Lokal: %s, Remote: %s, Sammenligning: %s', 
+                $this->version, 
+                $remote->version, 
+                version_compare($this->version, $remote->version, '<') ? 'OPPDATERING TILGJENGELIG' : 'Ingen oppdatering'
+            ));
+        }
+
         if (version_compare($this->version, $remote->version, '<')) {
             $response = new \stdClass();
             $response->slug = $this->plugin_slug;
@@ -644,8 +758,16 @@ class SecureUpdater {
      */
     public function add_update_check_link($links, $file) {
         if ($file === $this->plugin_slug . '/' . $this->plugin_slug . '.php') {
-            $remote = $this->request();
-            $has_update = $remote && version_compare($this->version, $remote->version, '<');
+            // Use cached data if available to avoid blocking page load
+            $cached = get_transient($this->cache_key);
+            $remote = false;
+            if ($cached !== false) {
+                $remote = (object) $cached;
+            } else {
+                // Only make request if cache is empty and we're on allowed screen
+                $remote = $this->request();
+            }
+            $has_update = $remote && isset($remote->version) && version_compare($this->version, $remote->version, '<');
             
             // Legg til "Vis detaljer" link kun hvis det ikke er oppdateringer
             if (!$has_update) {
@@ -682,20 +804,40 @@ class SecureUpdater {
             error_log('Kursagenten: AJAX oppdateringssjekk startet');
         }
         
+        // Clear caches to force fresh check
         delete_transient($this->cache_key);
+        delete_transient($this->failed_request_key);
+        delete_transient($this->request_in_progress_key);
+        
         $remote = $this->request();
         
         if ($remote) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Kursagenten: AJAX oppdatering funnet');
+                error_log('Kursagenten: AJAX oppdatering funnet - versjon ' . (isset($remote->version) ? $remote->version : 'ukjent'));
             }
-            wp_send_json_success('Oppdatering tilgjengelig');
+            $message = isset($remote->version) 
+                ? sprintf('Oppdatering tilgjengelig: versjon %s', $remote->version)
+                : 'Oppdatering tilgjengelig';
+            wp_send_json_success($message);
         } else {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('Kursagenten: AJAX ingen oppdateringer funnet');
+            // Check if it's a network error (failed request flag was set again)
+            $failed_request = get_transient($this->failed_request_key);
+            if ($failed_request !== false) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten: AJAX sjekk feilet - server svarer ikke (timeout)');
+                }
+                wp_send_json_error([
+                    'message' => 'Kunne ikke koble til oppdateringsserver (admin.lanseres.no).',
+                    'details' => 'Serveren svarer ikke innen timeout-tiden. Dette kan skyldes nettverksproblemer eller at serveren er nede.',
+                    'suggestion' => 'Prøv igjen om noen minutter, eller kontakt support hvis problemet vedvarer.'
+                ]);
+            } else {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten: AJAX ingen oppdateringer funnet');
+                }
+                // Behandle "ingen oppdatering" som OK (server svarte success, update_available=false)
+                wp_send_json_success('Ingen oppdateringer funnet - du har den nyeste versjonen.');
             }
-            // Behandle "ingen oppdatering" som OK (server svarte success, update_available=false)
-            wp_send_json_success('Ingen oppdateringer funnet');
         }
     }
 
@@ -720,12 +862,29 @@ class SecureUpdater {
                         var msg = (typeof response.data === "string" && response.data) ? response.data : "Oppdateringssjekk fullført!";
                         alert(msg);
                         // Bare refresh hvis det potensielt er endringer (ikke ved "Ingen oppdateringer")
-                        if (msg.indexOf("Ingen oppdateringer") === -1) {
+                        if (msg.indexOf("Ingen oppdateringer") === -1 && msg.indexOf("nyeste versjonen") === -1) {
                             location.reload();
                         }
                     } else {
-                        alert("Feil ved oppdateringssjekk: " + (response && response.data ? response.data : "ukjent feil"));
+                        var errorMsg = "Feil ved oppdateringssjekk";
+                        if (response && response.data) {
+                            if (typeof response.data === "object" && response.data.message) {
+                                errorMsg = response.data.message;
+                                if (response.data.details) {
+                                    errorMsg += "\\n\\n" + response.data.details;
+                                }
+                                if (response.data.suggestion) {
+                                    errorMsg += "\\n\\n" + response.data.suggestion;
+                                }
+                            } else if (typeof response.data === "string") {
+                                errorMsg = response.data;
+                            }
+                        }
+                        alert(errorMsg);
                     }
+                    $link.text("Sjekk for oppdateringer").prop("disabled", false);
+                }).fail(function() {
+                    alert("Kunne ikke koble til server. Sjekk nettverksforbindelsen.");
                     $link.text("Sjekk for oppdateringer").prop("disabled", false);
                 });
             }
@@ -738,6 +897,7 @@ class SecureUpdater {
     public function purge($upgrader, $options) {
         if ($options['action'] === 'update' && $options['type'] === 'plugin') {
             delete_transient($this->cache_key);
+            delete_transient($this->failed_request_key);
         }
     }
 
@@ -929,9 +1089,22 @@ class SecureUpdater {
      */
     private function get_public_changelog() {
         try {
-            $endpoint = $this->api_url . 'get_changelog';
+            // Use admin-ajax.php as proxy to bypass firewall restrictions
+            $is_ajax_proxy = strpos($this->api_url, 'admin-ajax.php') !== false;
+            
+            if ($is_ajax_proxy) {
+                $endpoint = $this->api_url . 'kursagenten_get_changelog';
+            } else {
+                $endpoint = $this->api_url . 'get_changelog';
+            }
+            
             $response = wp_remote_get($endpoint, [
-                'timeout' => 5
+                'timeout' => 5,
+                'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'headers' => [
+                    'Accept' => 'application/json',
+                    'X-Requested-With' => 'XMLHttpRequest'
+                ]
             ]);
             
             if (is_wp_error($response)) {

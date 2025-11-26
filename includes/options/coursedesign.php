@@ -503,8 +503,8 @@ class Designmaler {
                 <div class="options-card" data-section="taksonomi">
                     <h3>Taksonomi-sider</h3>
                     <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</br>
-                    <strong>Design</strong> bestemmer layouten (header, kolonner, hooks).</br>
-                     <strong>Listevisning</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). </br>
+                    <strong>Layout</strong> bestemmer oppsettet av elementer på siden (header, kolonner, hooks).</br>
+                     <strong>Listedesign</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). </br>
                      <strong>Visningstype</strong> bestemmer om du vil vise hovedkurs eller alle kursdatoer.</p>
                     <p>&nbsp;</p>
                     
@@ -533,7 +533,7 @@ class Designmaler {
 
                     <!-- Design -->
                     <div class="option-row">
-                        <label class="option-label">Design:</label>
+                        <label class="option-label">Layout:</label>
                         <div class="option-input">
                             <select name="kursagenten_taxonomy_design">
                                 <?php
@@ -560,7 +560,7 @@ class Designmaler {
 
                     <!-- Listevisning -->
                     <div class="option-row">
-                        <label class="option-label">Listevisning:</label>
+                        <label class="option-label">Listedesign:</label>
                         <div class="option-input">
                             <select name="kursagenten_taxonomy_list_type">
                                 <?php
@@ -671,7 +671,7 @@ class Designmaler {
                                     
                                     <!-- Design -->
                                     <div class="option-row">
-                                        <label class="option-label">Design:</label>
+                                        <label class="option-label">Layout:</label>
                                         <div class="option-input">
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_design">
                                                 <?php 
@@ -690,7 +690,7 @@ class Designmaler {
                                     
                                     <!-- List type -->
                                     <div class="option-row">
-                                        <label class="option-label">Listevisning:</label>
+                                        <label class="option-label">Listedesign:</label>
                                         <div class="option-input">
                                             <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_list_type">
                                                 <?php 

@@ -181,6 +181,11 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     @media (max-width: 768px) { .background-blur { background-image: url('<?php echo esc_url($featured_image_thumb); ?>'); } }
 </style>
 
+<?php
+// Hook before the entire header section
+do_action('ka_singel_header_before');
+?>
+
 <article class="ka-outer-container course-container">
     <?php if ($admin_view === 'true') : ?>
     <div class="edit-course edit-link"><a href="<?php echo "https://www.kursagenten.no/User.aspx?page=regKurs&id=" . $course_id; ?>" target="_blank"><span class="ka-icon-button"><i class="ka-icon icon-edit"></i></span><span class="edit-text">Rediger kurs</span></a></div>
@@ -429,7 +434,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
                         <?php if ($admin_view === 'true') : ?>
                         <div class="edit-link"><a href="<?php echo get_edit_post_link(); ?>"><i class="ka-icon icon-edit"></i><span class="edit-text">Rediger Wordpress innhold</span></a></div>
                         <?php endif; ?>
-                        <div class="content-text<?php echo $admin_view_class; ?>"><?php echo wp_kses_post($wp_content); ?></div>
+                        <div class="content-text<?php echo $admin_view_class; ?>"><?php echo apply_filters('the_content', $wp_content); ?></div>
                     <?php else : ?>
                         <?php if ($admin_view === 'true') : ?>
                         <div class="edit-link"><a href="<?php echo get_edit_post_link(); ?>"><i class="ka-icon icon-plus"></i><span class="edit-text">Legg til ekstra Wordpress innhold</span></a></div>
@@ -488,6 +493,11 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     </section>
     <?php do_action('ka_singel_footer_after'); ?>
 </article>
+
+<?php
+// Hook after the entire footer section
+do_action('ka_singel_after');
+?>
 
 
 

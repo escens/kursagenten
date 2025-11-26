@@ -245,7 +245,7 @@
 }
 
 #ka .compact-btn-primary:hover {
-    background: var(--ka-color-dark, #2563eb);
+    background: var(--ka-color-darker, #2563eb);
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
 }

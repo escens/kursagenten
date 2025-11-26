@@ -10,6 +10,7 @@ require_once(dirname(__FILE__) . '/template-seo-functions.php');
 
 /**
  * Laster inn riktig template basert på kontekst og innstillinger
+ * Respekterer temaets egne templates først, bruker pluginens templates som fallback
  *
  * @param string $template Original template path
  * @return string Modified template path
@@ -39,6 +40,41 @@ function kursagenten_template_loader($template) {
         }
     }
     
+    // VIKTIG: Sjekk om temaet har egne templates først
+    // Dette lar temaer bruke WordPress standard template hierarchy
+    if (is_singular('ka_course')) {
+        // Sjekk om temaet har single-ka_course.php (kun spesifikk template, ikke generisk single.php)
+        $theme_single = locate_template(['single-ka_course.php']);
+        if ($theme_single) {
+            // Temaet har egen template - la den bruke den
+            return $theme_single;
+        }
+    } elseif (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors'])) {
+        $current_tax = get_queried_object();
+        if ($current_tax && isset($current_tax->taxonomy)) {
+            $tax_name = $current_tax->taxonomy;
+            // Sjekk WordPress template hierarchy for taksonomier
+            // taxonomy-{taxonomy}-{term}.php, taxonomy-{taxonomy}.php, taxonomy.php
+            $theme_taxonomy = locate_template([
+                "taxonomy-{$tax_name}-{$current_tax->slug}.php",
+                "taxonomy-{$tax_name}.php",
+                'taxonomy.php'
+            ]);
+            if ($theme_taxonomy) {
+                // Temaet har egen template - la den bruke den
+                return $theme_taxonomy;
+            }
+        }
+    } elseif (is_post_type_archive('ka_course')) {
+        // Sjekk om temaet har archive-ka_course.php (kun spesifikk template, ikke generisk archive.php)
+        $theme_archive = locate_template(['archive-ka_course.php']);
+        if ($theme_archive) {
+            // Temaet har egen template - la den bruke den
+            return $theme_archive;
+        }
+    }
+    
+    // Hvis temaet ikke har egne templates, bruk pluginens templates
     // Bestem kontekst og layout
     $context = '';
     $layout = 'default';
@@ -83,7 +119,46 @@ function kursagenten_template_loader($template) {
 add_filter('template_include', 'kursagenten_template_loader', 99);
 
 /**
+ * Hjelpefunksjon for temaets templates - henter pluginens innhold med wrapper men uten header/footer
+ * Brukes når temaet har egne templates som allerede har header/footer
+ * 
+ * Eksempel bruk i temaets single-ka_course.php:
+ * <?php get_header(); ?>
+ * <?php kursagenten_get_content(); ?>
+ * <?php get_footer(); ?>
+ * 
+ * Eller i taxonomy-ka_course_location.php:
+ * <?php get_header(); ?>
+ * <?php kursagenten_get_content(); ?>
+ * <?php get_footer(); ?>
+ */
+function kursagenten_get_content() {
+    // Hent variabler fra rammeverket
+    global $query, $top_filters, $left_filters, $filter_types, $available_filters, 
+           $has_left_filters, $left_column_class, $is_search_only, $search_class, 
+           $taxonomy_data, $filter_display_info;
+    ?>
+    <div id="ka" class="kursagenten-wrapper ka-default-width">
+        <main id="ka-main" class="kursagenten-main" role="main">
+            <div class="ka-container">
+                <?php
+                // Last inn riktig design-template basert på kontekst
+                kursagenten_get_design_template();
+                ?>
+            </div>
+        </main>
+        <div id="slidein-overlay"></div>
+        <div id="slidein-panel">
+            <button class="close-btn" aria-label="Close">&times;</button>
+            <iframe id="kursagenten-iframe" src=""></iframe>
+        </div>
+    </div>
+    <?php
+}
+
+/**
  * Laster inn riktig design-template basert på kontekst og innstillinger
+ * Dette er den interne funksjonen som faktisk laster design-templaten
  */
 function kursagenten_get_design_template() {
     $design = 'default';

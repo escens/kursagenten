@@ -1,5 +1,4 @@
-<?php 
-
+<?php
 //Legg inn rating schema i Rank Math
 //Legg til rating schema fra utvidelse Site Reviews i Course schema fra RankMath Pro
 
