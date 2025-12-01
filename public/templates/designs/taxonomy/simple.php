@@ -30,11 +30,16 @@ $back_link_mapping = [
     'ka_instructors' => 'instruktorer'
 ];
 $system_page_key = isset($back_link_mapping[$taxonomy]) ? $back_link_mapping[$taxonomy] : 'kurs';
-$back_link_url = Designmaler::get_system_page_url($system_page_key);
+$back_link_url = Designmaler::get_system_page_url($system_page_key, true); // Sjekk publiseringsstatus
 
-// Hent sidetittel for tilbake-lenken
-$page_id = get_option('ka_page_' . $system_page_key);
-$back_link_title = $page_id && get_post($page_id) ? mb_strtolower(get_the_title($page_id)) : 'oversikten';
+// Hent sidetittel for tilbake-lenken (kun hvis siden er publisert)
+$back_link_title = 'oversikten';
+if (!empty($back_link_url)) {
+    $page_id = get_option('ka_page_' . $system_page_key);
+    if ($page_id && get_post($page_id) && get_post_status($page_id) === 'publish') {
+        $back_link_title = mb_strtolower(get_the_title($page_id));
+    }
+}
 
 // Sjekk visningstype-innstilling
 $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');

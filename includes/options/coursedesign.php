@@ -12,6 +12,10 @@ class Designmaler {
         add_action('admin_post_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
         // Legg til AJAX action
         add_action('wp_ajax_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
+        // Legg til AJAX action for å publisere side
+        add_action('wp_ajax_ka_publish_system_page', array($this, 'handle_publish_system_page'));
+        // Legg til AJAX action for å endre tildelt side
+        add_action('wp_ajax_ka_change_system_page', array($this, 'handle_change_system_page'));
         
         // Legg til hooks for permalenk-håndtering
         add_action('init', array($this, 'register_instructor_rewrite_rules'), 10);
@@ -58,7 +62,10 @@ class Designmaler {
                 <!-- System-sider -->
                 <div class="options-card" id="section-systemsider" data-section="systemsider">
                     <h3>Wordpress sider</h3>
-                    <p>Generer sider for kurs, kurskategorier, kurssteder og instruktører. Sidene opprettes som vanlige WordPress-sider, og du kan endre tittel og innhold. En <a href="/wp-admin/admin.php?page=ka_documentation#kortkoder">kortkode</a> legges inn automatisk. Sidene er merket med "Kursagenten" i sideoversikten.</p>
+                    <p>Velg sider som tilegnes til ulike deler av Kursagenten. Du kan velge fra eksisterende sider, eller opprette nye sider.</p>
+                    <p>Hvis du oppretter sider for kurs, kurskategorier, kurssteder og/eller instruktører, vil sidene opprettes som vanlige WordPress-sider. Du kan fritt endre tittel og innhold. En <a href="/wp-admin/admin.php?page=ka_documentation#kortkoder">kortkode</a> legges inn automatisk.</p>
+                    <p>Sidene blir merket med "Kursagenten" i sideoversikten. Ved å klikke på <i class="ka-icon icon-code-simple-solid-full"></i> kopierer du kortkoden til utklippstavlen, og kan lime den inn der du ønsker å vise den på en eksisterende side.</p>
+                    
                     <?php $this->render_system_pages_section(); ?>
                 </div>
 
@@ -1623,6 +1630,7 @@ if (queryString) {
                     <tr>
                         <th scope="col">Side</th>
                         <th scope="col">Beskrivelse</th>
+                        <th scope="col">Tildelt side</th>
                         <th scope="col">Status</th>
                         <th scope="col">Handlinger</th>
                     </tr>
@@ -1634,7 +1642,20 @@ if (queryString) {
                         $post_status = $exists ? get_post_status($page_id) : '';
                         ?>
                         <tr>
-                            <td><?php echo esc_html($page['title']); ?></td>
+                            <td>
+                                <?php echo esc_html($page['title']); ?>
+                                <?php 
+                                $shortcode = $this->get_shortcode_for_page($key);
+                                if (!empty($shortcode)): 
+                                ?>
+                                    <span class="copytext" 
+                                          data-shortcode="<?php echo esc_attr($shortcode); ?>"
+                                          title="Kopier kortkode for <?php echo esc_attr($page['title']); ?>"
+                                          style="cursor: pointer; margin-left: 5px;">
+                                        <i class="ka-icon icon-code-simple-solid-full" style="font-size: 14px; color: #666; vertical-align: middle;"></i>
+                                    </span>
+                                <?php endif; ?>
+                            </td>
                             <td>
                                 <?php echo esc_html($page['description']); ?>
                                 <?php 
@@ -1649,6 +1670,31 @@ if (queryString) {
                                     }
                                 }
                                 ?>
+                            </td>
+                            <td>
+                                <?php
+                                // Hent alle sider for dropdown
+                                $all_pages = get_pages([
+                                    'post_status' => ['publish', 'draft'],
+                                    'sort_column' => 'post_title',
+                                    'sort_order' => 'ASC'
+                                ]);
+                                ?>
+                                <select class="ka-page-selector" 
+                                        name="ka_page_<?php echo esc_attr($key); ?>" 
+                                        data-key="<?php echo esc_attr($key); ?>"
+                                        data-nonce="<?php echo wp_create_nonce('ka_change_page'); ?>"
+                                        style="min-width: 200px;">
+                                    <option value="">-- Velg side --</option>
+                                    <?php foreach ($all_pages as $page_option): 
+                                        $selected = ($exists && $page_id == $page_option->ID) ? ' selected' : '';
+                                        $status_text = $page_option->post_status === 'publish' ? ' (Publisert)' : ' (Kladd)';
+                                    ?>
+                                        <option value="<?php echo esc_attr($page_option->ID); ?>"<?php echo $selected; ?>>
+                                            <?php echo esc_html($page_option->post_title . $status_text); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
                             </td>
                             <td>
                                 <?php if ($exists): ?>
@@ -1670,6 +1716,12 @@ if (queryString) {
                                         <a href="<?php echo get_edit_post_link($page_id); ?>" target="_blank">Rediger</a>
                                         |
                                         <a href="<?php echo get_permalink($page_id); ?>" target="_blank">Vis</a>
+                                        <?php if ($post_status === 'draft'): ?>
+                                            |
+                                            <a href="#" class="ka-publish-page-link" 
+                                               data-key="<?php echo esc_attr($key); ?>"
+                                               data-nonce="<?php echo wp_create_nonce('ka_publish_page'); ?>">Publiser</a>
+                                        <?php endif; ?>
                                     </div>
                                 <?php else: ?>
                                     <span class="status-indicator not-created">Ikke opprettet</span>
@@ -1682,7 +1734,7 @@ if (queryString) {
                                                 data-action="create" 
                                                 data-key="<?php echo esc_attr($key); ?>"
                                                 data-nonce="<?php echo wp_create_nonce('ka_manage_pages'); ?>">
-                                            Opprett side
+                                            Opprett ny side
                                         </button>
                                     <?php else: ?>
                                         <button type="button" class="button button-secondary ka-system-page-action"
@@ -1715,16 +1767,28 @@ if (queryString) {
             .status-indicator.not-created { background: #ffebee; color: #c62828; }
             .page-links { margin-top: 5px; font-size: 0.9em; }
             .actions form { display: flex; gap: 5px; }
+            .ka-page-selector {
+                min-width: 200px;
+                padding: 2px 5px;
+            }
         </style>
         <script>
         jQuery(document).ready(function($) {
             $('.ka-system-page-action').on('click', function(e) {
                 e.preventDefault();
                 var button = $(this);
+                var action = button.data('action');
                 
                 // Sjekk om dette er en slette-handling
-                if (button.data('action') === 'delete') {
-                    if (!confirm('Er du sikker på at du vil slette denne siden?')) {
+                if (action === 'delete') {
+                    if (!confirm('Er du sikker på at du ønsker å slette siden?')) {
+                        return false; // Stopp hvis brukeren klikker Avbryt
+                    }
+                }
+                
+                // Sjekk om dette er en tilbakestill-handling
+                if (action === 'reset') {
+                    if (!confirm('Er du sikker på at du ønsker å tilbakestille innholdet? Alt innholdet på siden vil da bli borte, med unntak av kortkoden som viser listen med kurs, kategorier, steder eller instruktører.')) {
                         return false; // Stopp hvis brukeren klikker Avbryt
                     }
                 }
@@ -1741,6 +1805,107 @@ if (queryString) {
                         location.reload();
                     } else {
                         alert('Det oppstod en feil. Vennligst prøv igjen.');
+                    }
+                });
+            });
+
+            // Håndter publisering av side
+            $('.ka-publish-page-link').on('click', function(e) {
+                e.preventDefault();
+                var link = $(this);
+                var data = {
+                    action: 'ka_publish_system_page',
+                    ka_page_key: link.data('key'),
+                    _wpnonce: link.data('nonce')
+                };
+
+                $.post(ajaxurl, data, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Det oppstod en feil ved publisering. Vennligst prøv igjen.');
+                    }
+                });
+            });
+
+            // Håndter kopiering av kortkode med copytext klasse
+            // Overstyr standard copytext funksjonalitet for elementer med data-shortcode
+            $(document).on('click', '.copytext[data-shortcode]', function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // Stopp standard copytext handler
+                
+                var shortcode = $(this).data('shortcode');
+                if (shortcode) {
+                    // Kopier til utklippstavle
+                    var $temp = $('<textarea>');
+                    $('body').append($temp);
+                    $temp.val(shortcode).select();
+                    document.execCommand('copy');
+                    $temp.remove();
+                    
+                    // Vis tooltip som copytext klassen gjør
+                    var tooltip = $('<span class="tooltip-copytext">Kopiert</span>');
+                    $('body').append(tooltip);
+                    
+                    var offset = $(this).offset();
+                    tooltip.css({
+                        'position': 'absolute',
+                        'top': offset.top - tooltip.outerHeight() - 10,
+                        'left': offset.left + ($(this).width() / 2),
+                        'transform': 'translateX(-50%)',
+                        'z-index': 1000,
+                        'background-color': '#333',
+                        'color': '#fff',
+                        'padding': '5px 10px',
+                        'border-radius': '5px',
+                        'font-size': '12px',
+                        'text-align': 'center'
+                    });
+                    
+                    setTimeout(function() {
+                        tooltip.fadeOut(500, function() {
+                            $(this).remove();
+                        });
+                    }, 1500);
+                }
+            });
+
+            // Håndter endring av tildelt side via dropdown
+            $('.ka-page-selector').on('change', function() {
+                var $select = $(this);
+                var pageKey = $select.data('key');
+                var newPageId = $select.val();
+                var nonce = $select.data('nonce');
+                
+                if (!newPageId) {
+                    // Fjern tilknytning hvis ingen side er valgt
+                    $.post(ajaxurl, {
+                        action: 'ka_change_system_page',
+                        ka_page_key: pageKey,
+                        ka_new_page_id: '',
+                        _wpnonce: nonce
+                    }, function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            alert('Det oppstod en feil ved endring av side. Vennligst prøv igjen.');
+                            location.reload(); // Reload for å gjenopprette dropdown
+                        }
+                    });
+                    return;
+                }
+                
+                $.post(ajaxurl, {
+                    action: 'ka_change_system_page',
+                    ka_page_key: pageKey,
+                    ka_new_page_id: newPageId,
+                    _wpnonce: nonce
+                }, function(response) {
+                    if (response.success) {
+                        location.reload();
+                    } else {
+                        alert('Det oppstod en feil ved endring av side. Vennligst prøv igjen.');
+                        location.reload(); // Reload for å gjenopprette dropdown
                     }
                 });
             });
@@ -1802,6 +1967,129 @@ if (queryString) {
         }
     }
 
+    /**
+     * Håndter publisering av systemside
+     */
+    public function handle_publish_system_page() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Ingen tillatelse');
+            return;
+        }
+
+        if (!isset($_POST['ka_page_key'])) {
+            wp_send_json_error('Mangler page_key');
+            return;
+        }
+
+        // Verifiser nonce
+        $nonce = isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : '';
+        if (!wp_verify_nonce($nonce, 'ka_publish_page')) {
+            wp_send_json_error('Ugyldig sikkerhetskode');
+            return;
+        }
+
+        $page_key = sanitize_key($_POST['ka_page_key']);
+        $page_id = get_option('ka_page_' . $page_key);
+
+        if (!$page_id || !get_post($page_id)) {
+            wp_send_json_error('Side ikke funnet');
+            return;
+        }
+
+        $result = wp_update_post([
+            'ID' => $page_id,
+            'post_status' => 'publish'
+        ]);
+
+        if ($result && !is_wp_error($result)) {
+            wp_send_json_success(['message' => 'Side publisert']);
+        } else {
+            wp_send_json_error(['message' => 'Kunne ikke publisere side']);
+        }
+    }
+
+    /**
+     * Håndter endring av tildelt systemside
+     */
+    public function handle_change_system_page() {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error('Ingen tillatelse');
+            return;
+        }
+
+        if (!isset($_POST['ka_page_key'])) {
+            wp_send_json_error('Mangler nødvendige parametere');
+            return;
+        }
+
+        // Verifiser nonce
+        $nonce = isset($_POST['_wpnonce']) ? $_POST['_wpnonce'] : '';
+        if (!wp_verify_nonce($nonce, 'ka_change_page')) {
+            wp_send_json_error('Ugyldig sikkerhetskode');
+            return;
+        }
+
+        $page_key = sanitize_key($_POST['ka_page_key']);
+        $new_page_id = isset($_POST['ka_new_page_id']) ? absint($_POST['ka_new_page_id']) : 0;
+
+        // Hvis ingen side er valgt, fjern tilknytning
+        if (empty($new_page_id)) {
+            $old_page_id = get_option('ka_page_' . $page_key);
+            if ($old_page_id) {
+                // Fjern key fra post_meta array
+                $existing_keys = get_post_meta($old_page_id, '_ka_system_page_keys', true);
+                if (is_array($existing_keys)) {
+                    $existing_keys = array_diff($existing_keys, [$page_key]);
+                    if (empty($existing_keys)) {
+                        delete_post_meta($old_page_id, '_ka_system_page_keys');
+                    } else {
+                        update_post_meta($old_page_id, '_ka_system_page_keys', array_values($existing_keys));
+                    }
+                }
+            }
+            delete_option('ka_page_' . $page_key);
+            wp_send_json_success(['message' => 'Tilknytning fjernet']);
+            return;
+        }
+
+        // Sjekk at den nye siden eksisterer
+        $new_page = get_post($new_page_id);
+        if (!$new_page || $new_page->post_type !== 'page') {
+            wp_send_json_error('Ugyldig side');
+            return;
+        }
+
+        // Fjern gammel tilknytning hvis den finnes
+        $old_page_id = get_option('ka_page_' . $page_key);
+        if ($old_page_id && $old_page_id != $new_page_id) {
+            $old_keys = get_post_meta($old_page_id, '_ka_system_page_keys', true);
+            if (is_array($old_keys)) {
+                $old_keys = array_diff($old_keys, [$page_key]);
+                if (empty($old_keys)) {
+                    delete_post_meta($old_page_id, '_ka_system_page_keys');
+                } else {
+                    update_post_meta($old_page_id, '_ka_system_page_keys', array_values($old_keys));
+                }
+            }
+        }
+
+        // Oppdater option
+        update_option('ka_page_' . $page_key, $new_page_id);
+        
+        // Oppdater post_meta med array av keys (støtter flere keys per side)
+        $existing_keys = get_post_meta($new_page_id, '_ka_system_page_keys', true);
+        if (!is_array($existing_keys)) {
+            $existing_keys = [];
+        }
+        if (!in_array($page_key, $existing_keys)) {
+            $existing_keys[] = $page_key;
+            update_post_meta($new_page_id, '_ka_system_page_keys', $existing_keys);
+        }
+
+        wp_send_json_success(['message' => 'Side endret']);
+    }
+
+
     private static function add_admin_notice($message, $type = 'success') {
         add_action('admin_notices', function() use ($message, $type) {
             printf(
@@ -1826,8 +2114,11 @@ if (queryString) {
         // avoid WP auto-adding -2 by using a conflict-free slug for Betaling.
         $existing = get_page_by_path($desired_slug, OBJECT, 'page');
         if ($existing instanceof \WP_Post) {
-            $existing_key = get_post_meta($existing->ID, '_ka_system_page', true);
-            if ($existing_key !== $page_key) {
+            $existing_keys = get_post_meta($existing->ID, '_ka_system_page_keys', true);
+            if (!is_array($existing_keys)) {
+                $existing_keys = [];
+            }
+            if (!in_array($page_key, $existing_keys)) {
                 if ($page_key === 'betaling') {
                     $desired_slug = 'kurs-betaling';
                     $post_title = 'Betaling for kurs';
@@ -1835,7 +2126,6 @@ if (queryString) {
             } else {
                 // Already our system page, just update option and return
                 update_option('ka_page_' . $page_key, $existing->ID);
-                update_post_meta($existing->ID, '_ka_system_page', $page_key);
                 return (int) $existing->ID;
             }
         }
@@ -1852,8 +2142,19 @@ if (queryString) {
         ]);
         
         if ($page_id) {
+            // Oppdater option
             update_option('ka_page_' . $page_key, $page_id);
-            update_post_meta($page_id, '_ka_system_page', $page_key);
+            
+            // Oppdater post_meta med array av keys (støtter flere keys per side)
+            $existing_keys = get_post_meta($page_id, '_ka_system_page_keys', true);
+            if (!is_array($existing_keys)) {
+                $existing_keys = [];
+            }
+            if (!in_array($page_key, $existing_keys)) {
+                $existing_keys[] = $page_key;
+                update_post_meta($page_id, '_ka_system_page_keys', $existing_keys);
+            }
+            
             self::add_admin_notice('Systemside ble opprettet.');
         }
         
@@ -1863,7 +2164,22 @@ if (queryString) {
     public static function delete_system_page($page_key) {
         $page_id = get_option('ka_page_' . $page_key);
         if ($page_id) {
-            wp_delete_post($page_id, true);
+            // Fjern key fra post_meta array
+            $existing_keys = get_post_meta($page_id, '_ka_system_page_keys', true);
+            if (is_array($existing_keys)) {
+                $existing_keys = array_diff($existing_keys, [$page_key]);
+                if (empty($existing_keys)) {
+                    // Hvis ingen keys igjen, slett post_meta
+                    delete_post_meta($page_id, '_ka_system_page_keys');
+                    // Slett siden hvis den ikke har andre formål
+                    wp_delete_post($page_id, true);
+                } else {
+                    update_post_meta($page_id, '_ka_system_page_keys', array_values($existing_keys));
+                }
+            } else {
+                // Fallback: slett siden hvis post_meta ikke finnes
+                wp_delete_post($page_id, true);
+            }
             delete_option('ka_page_' . $page_key);
             self::add_admin_notice('Systemside ble slettet.');
             return true;
@@ -1891,17 +2207,63 @@ if (queryString) {
      * Hent URL til en systemside
      * 
      * @param string $page_key Nøkkelen for systemsiden (f.eks. 'kurs', 'kurskategorier')
-     * @return string URL til siden, eller arkiv-URL hvis siden ikke finnes
+     * @param bool $check_published Sjekk om siden er publisert (standard: true)
+     * @return string URL til siden, eller tom streng hvis siden ikke finnes eller ikke er publisert
      */
-    public static function get_system_page_url($page_key) {
+    public static function get_system_page_url($page_key, $check_published = true) {
         $page_id = get_option('ka_page_' . $page_key);
-        if ($page_id && get_post($page_id)) {
-            return get_permalink($page_id);
+        if ($page_id) {
+            $page = get_post($page_id);
+            if ($page) {
+                // Hvis vi skal sjekke publiseringsstatus og siden ikke er publisert, returner tom streng
+                if ($check_published && get_post_status($page_id) !== 'publish') {
+                    return '';
+                }
+                return get_permalink($page_id);
+            }
         }
         
-        // Fallback til arkiv-URL for kurs
-        if ($page_key === 'kurs') {
+        // Fallback: sjekk om noen annen side har denne key-en i post_meta
+        $all_pages = get_pages(['post_status' => $check_published ? 'publish' : 'any']);
+        foreach ($all_pages as $page) {
+            $page_keys = get_post_meta($page->ID, '_ka_system_page_keys', true);
+            if (is_array($page_keys) && in_array($page_key, $page_keys)) {
+                return get_permalink($page->ID);
+            }
+        }
+        
+        // Fallback til arkiv-URL for kurs (kun hvis ikke sjekk publiseringsstatus)
+        if (!$check_published && $page_key === 'kurs') {
             return get_post_type_archive_link('ka_course');
+        }
+        
+        return '';
+    }
+
+    /**
+     * Hent kortkode for en systemside
+     * 
+     * @param string $page_key Nøkkelen for systemsiden
+     * @return string Kortkoden som brukes på siden
+     */
+    private function get_shortcode_for_page($page_key) {
+        $required_pages = self::get_required_pages();
+        if (!isset($required_pages[$page_key])) {
+            return '';
+        }
+        
+        $content = $required_pages[$page_key]['content'];
+        
+        // Fjern HTML-kommentarer og whitespace
+        $content = preg_replace('/<!--.*?-->/s', '', $content);
+        $content = trim($content);
+        
+        // Hent kortkode fra innholdet (håndter både enkeltlinje og flerlinje)
+        if (preg_match('/\[([^\]]+)\]/s', $content, $matches)) {
+            $shortcode_content = trim($matches[1]);
+            // Normaliser whitespace (erstatt flere mellomrom/newlines med ett mellomrom)
+            $shortcode_content = preg_replace('/\s+/', ' ', $shortcode_content);
+            return '[' . $shortcode_content . ']';
         }
         
         return '';

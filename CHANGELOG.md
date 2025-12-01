@@ -1,3 +1,14 @@
+## 1.1.05 - 2025-12-01
+- Forbedring: Under "Kursdesign" kan du nå velge eksisterende sider for kurs, kurskategorier, kurssteder og instruktører i stedet for å måtte opprette nye. Du kan også bruke samme side for flere funksjoner (f.eks. én side som viser både kurs og kurskategorier). Lenker i malene oppdateres automatisk basert på hva du velger. Kun Betaling-siden opprettes automatisk ved installering.
+- Fix: Gitt korrekt navn til "Lisensnøkkel", omdøpt fra "API-nøkkel"
+
+## 1.1.04 - 2025-11-28
+- Fix: Internkurs blir nå hoppet over i synken. Webhook er også fjernet i Kursagenten, så disse kursene ikke blir overført ved opprettelse/lagring. For å fjerne internkurs: Gå til Synkronisering og klikk på *Rydd opp i kurs*
+
+## 1.1.03 - 2025-11-27
+- Endret: Navn på følgende steder blir endret - Rana / Mo i Rana → Mo i Rana, Lenvik / Finnsnes → Finnsnes, Porsgrunn / Brevik → Porsgrunn og Vågan / Svolvær → Svolvær
+- Fix: På taksonomisider har sted som aktivt filter på kurssteder, og kategori på kurskategorier, blitt fjernet. Dette gjelder for visningstypen "Vis alle kursdatoer".
+
 ## 1.1.02 - 2025-11-26
 - Lagt til: Støtte for CPT tema-maler: single-ka_course.php, taxonomy-ka_course_location.php, taxonomy-ka_coursecategory.php og taxonomy-ka_instructors.php. Bruk støttefunksjon kursagenten_get_content(); mellom get_header og get_footer for å generere innholdet.
 

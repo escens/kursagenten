@@ -6,8 +6,8 @@
 
 ## Mulige årsaker (og løsninger)
 
-### 1. ❗ API-nøkkel mangler (MEST SANNSYNLIG)
-Siden du resatt databasen, er alle innstillinger borte, inkludert API-nøkkelen.
+### 1. ❗ Lisensnøkkel mangler (MEST SANNSYNLIG)
+Siden du resatt databasen, er alle innstillinger borte, inkludert Lisensnøkkelen.
 
 **Løsning:**
 1. Gå til: **Innstillinger → Kursinnstillinger**

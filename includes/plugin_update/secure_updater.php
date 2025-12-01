@@ -48,7 +48,7 @@ class SecureUpdater {
         add_action('admin_menu', [$this, 'register_license_settings_page']);
         add_action('admin_init', [$this, 'register_license_setting']);
         add_action('admin_notices', [$this, 'maybe_show_missing_key_notice']);
-        // Reager når API-nøkkel oppdateres
+        // Reager når Lisensnøkkel oppdateres
         add_action('update_option_kursagenten_api_key', [$this, 'on_api_key_updated'], 10, 3);
         // AJAX: registrer site nå
         add_action('wp_ajax_kursagenten_register_site', [$this, 'ajax_register_site']);
@@ -278,10 +278,10 @@ class SecureUpdater {
         }
 
         try {
-            // Prøv først ny API-metode hvis API-nøkkel er tilgjengelig
+            // Prøv først ny API-metode hvis Lisensnøkkel er tilgjengelig
             if (!empty($this->api_key)) {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('Kursagenten: Prøver API-metode med API-nøkkel');
+                    error_log('Kursagenten: Prøver API-metode med lisensnøkkel');
                 }
                 $api_result = $this->request_api_method();
                 if ($api_result !== false) {
@@ -296,7 +296,7 @@ class SecureUpdater {
                 }
             } else {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
-                    error_log('Kursagenten: Ingen API-nøkkel, går direkte til JSON-metode');
+                    error_log('Kursagenten: Ingen lisensnøkkel, går direkte til JSON-metode');
                 }
             }
 
@@ -325,7 +325,9 @@ class SecureUpdater {
         $data = [
             'api_key' => $this->api_key,
             'site_url' => home_url(),
-            'plugin_version' => $this->version
+            'plugin_version' => $this->version,
+            'wp_version' => get_bloginfo('version'),
+            'php_version' => PHP_VERSION
         ];
 
         // Use admin-ajax.php as proxy to bypass firewall restrictions
@@ -902,7 +904,7 @@ class SecureUpdater {
     }
 
     /**
-     * Registrer innstillingsside for lisens (API-nøkkel)
+     * Registrer innstillingsside for lisens (Lisensnøkkel)
      */
     public function register_license_settings_page() {
         add_options_page(
@@ -915,7 +917,7 @@ class SecureUpdater {
     }
 
     /**
-     * Registrer setting for API-nøkkel
+     * Registrer setting for Lisensnøkkel
      */
     public function register_license_setting() {
         register_setting('kursagenten_license', 'kursagenten_api_key', [
@@ -928,11 +930,11 @@ class SecureUpdater {
         }, 'kursagenten-license');
         add_settings_field(
             'kursagenten_api_key_field',
-            __('API-nøkkel', 'kursagenten'),
+            __('Lisensnøkkel', 'kursagenten'),
             function() {
                 $value = get_option('kursagenten_api_key', '');
                 echo '<input type="text" name="kursagenten_api_key" value="' . esc_attr($value) . '" class="regular-text" />';
-                echo '<p class="description">' . esc_html__('Lim inn API-nøkkelen du fikk tildelt.', 'kursagenten') . '</p>';
+                echo '<p class="description">' . esc_html__('Lim inn lisensnøkkelen du fikk tildelt.', 'kursagenten') . '</p>';
             },
             'kursagenten-license',
             'kursagenten_license_section'
@@ -992,7 +994,7 @@ class SecureUpdater {
     }
 
     /**
-     * Vis admin-notis dersom API-nøkkel mangler
+     * Vis admin-notis dersom Lisensnøkkel mangler
      */
     public function maybe_show_missing_key_notice() {
         if (!current_user_can('manage_options')) {
@@ -1033,7 +1035,7 @@ class SecureUpdater {
             $url = esc_url(admin_url('admin.php?page=kursagenten'));
             echo '<div class="notice notice-warning"><p>'
                 . sprintf(
-                    __('Kursagenten: API-nøkkel mangler. %sLegg inn nøkkel her%s.', 'kursagenten'),
+                    __('Kursagenten: Lisensnøkkel mangler. %sLegg inn nøkkel her%s.', 'kursagenten'),
                     '<a href="' . $url . '">',
                     '</a>'
                 )
@@ -1047,7 +1049,7 @@ class SecureUpdater {
     }
 
     /**
-     * Kalles når API-nøkkel oppdateres
+     * Kalles når Lisensnøkkel oppdateres
      */
     public function on_api_key_updated($old_value, $value, $option) {
         $this->api_key = $value;

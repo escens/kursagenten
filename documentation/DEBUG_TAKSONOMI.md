@@ -80,7 +80,7 @@ DELETE FROM wp_term_relationships WHERE object_id NOT IN (SELECT ID FROM wp_post
 
 ### Steg 2: Kjør FULL synkronisering på nytt
 1. Sørg for at det ikke er noen PHP-feil
-2. Sjekk at API-nøkkel er satt
+2. Sjekk at Lisensnøkkel er satt
 3. Kjør "Hent alle kurs fra Kursagenten"
 4. Vent til den er 100% ferdig
 5. Sjekk debug.log for feil

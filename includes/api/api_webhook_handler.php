@@ -93,18 +93,27 @@ function process_webhook_data($request) {
         $course_data = get_main_course_id_by_location_id($location_id);
         
         if (!$course_data) {
-            error_log("DEBUG: location_id {$location_id} finnes ikke i API-et.");
+            error_log("DEBUG: location_id {$location_id} finnes ikke i CourseList API-et (kan være internkurs).");
+            // Even for webhooks, we should not process internal courses
+            // Check if it exists in single course API to confirm it's an internal course
+            $single_course_check = kursagenten_get_course_details($location_id);
+            if (!empty($single_course_check)) {
+                error_log("ADVARSEL: Webhook mottatt for internkurs (location_id: $location_id). Kurset finnes i enkeltkurs API men ikke i CourseList API. Hopper over.");
+                return new WP_REST_Response('Internal course webhook ignored (not in CourseList).', 200);
+            }
             return new WP_REST_Response('Location ID not found in API.', 404);
         }
 
         $course_data['location_id'] = $location_id;
         // If webhook includes Enabled, override is_active from API list to avoid race conditions
         if (isset($body['Enabled'])) {
-            $course_data['is_active'] = (bool) $body['Enabled'];
+$course_data['is_active'] = (bool) $body['Enabled'];
         }
         
         try {
             error_log("Starting course processing for CourseId: $location_id");
+            // Note: Even webhooks should respect CourseList validation now
+            // But we pass is_webhook=true to allow webhook-specific logic (like all_locations)
             $result = create_or_update_course_and_schedule($course_data, true);
             if ($result) {
                 error_log("Successfully processed course update for CourseId: $location_id");

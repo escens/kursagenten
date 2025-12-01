@@ -26,6 +26,10 @@ You can create the following template files in your theme:
 
 ## Example: Single Course Template
 
+<?php get_header(); ?>
+<?php kursagenten_get_content(); ?>
+<?php get_footer(); ?>
+
 Create `single-ka_course.php` in your theme:
 
 ```php

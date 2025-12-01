@@ -9,6 +9,42 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
     $language = sanitize_text_field($course_data['language'] ?? null); 
     $is_active = $course_data['is_active'] ?? true;
     
+    // Check if this location_id is in the valid CourseList (prevents syncing internal courses)
+    // For webhooks: We still check CourseList, but webhooks might be legitimate updates
+    // However, if course is not in CourseList at all, it's an internal course and should be skipped
+    $valid_location_ids = get_transient('kursagenten_valid_location_ids');
+    if ($valid_location_ids === false || empty($valid_location_ids)) {
+        // Transient expired or empty, rebuild from CourseList API
+        error_log("Transient utløpt eller tom i create_or_update_course_and_schedule, henter CourseList på nytt");
+        $course_list = kursagenten_get_course_list();
+        $valid_location_ids = [];
+        if (!empty($course_list)) {
+            foreach ($course_list as $course_item) {
+                // Skip internal courses: courses with mainCategory.id === 0 are internal courses
+                $main_category_id = isset($course_item['mainCategory']['id']) ? (int) $course_item['mainCategory']['id'] : null;
+                if ($main_category_id === 0) {
+                    continue; // Skip this entire course (all its locations)
+                }
+                
+                foreach ($course_item['locations'] as $location) {
+                    $valid_location_ids[] = (int) $location['courseId'];
+                }
+            }
+        }
+        set_transient('kursagenten_valid_location_ids', $valid_location_ids, HOUR_IN_SECONDS);
+    }
+    
+    // CRITICAL: Must check if location_id is in valid list before proceeding
+    // This applies to both regular sync and webhooks to prevent internal courses
+    if (!in_array($location_id, $valid_location_ids)) {
+        if ($is_webhook) {
+            error_log("ADVARSEL: Webhook hopper over internkurs med location_id: $location_id (finnes ikke i CourseList API)");
+        } else {
+            error_log("ADVARSEL: Hopper over internkurs med location_id: $location_id (finnes ikke i CourseList API)");
+        }
+        return false;
+    }
+    
     // Hvis vi har single_course_data, bruk det direkte
     $individual_course_data = $course_data['single_course_data'] ?? null;
     
@@ -18,6 +54,30 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
         $individual_course_data = kursagenten_get_course_details($location_id);
         if (empty($individual_course_data)) {
             error_log("FEIL: Kunne ikke hente kursdetaljer for location_id: $location_id");
+            return false;
+        }
+    }
+    
+    // Additional safety check: Verify course is still in CourseList after fetching details
+    // This prevents internal courses that might have been fetched via single course API
+    if (!$is_webhook) {
+        $valid_location_ids_check = get_transient('kursagenten_valid_location_ids');
+        if ($valid_location_ids_check === false || empty($valid_location_ids_check)) {
+            // Rebuild transient if needed
+            $course_list_check = kursagenten_get_course_list();
+            $valid_location_ids_check = [];
+            if (!empty($course_list_check)) {
+                foreach ($course_list_check as $course_item) {
+                    foreach ($course_item['locations'] as $location) {
+                        $valid_location_ids_check[] = (int) $location['courseId'];
+                    }
+                }
+            }
+            set_transient('kursagenten_valid_location_ids', $valid_location_ids_check, HOUR_IN_SECONDS);
+        }
+        
+        if (!in_array($location_id, $valid_location_ids_check)) {
+            error_log("ADVARSEL: Kurs med location_id: $location_id ble funnet i enkeltkurs API men ikke i CourseList - hopper over (internkurs)");
             return false;
         }
     }
@@ -644,11 +704,21 @@ function get_common_meta_fields($data, $language) {
 
 function get_course_location($data) {
     if (!empty($data['locations'][0]['municipality'])) {
-        // Spesialhåndtering for Bærum / Sandvika
-        if ($data['locations'][0]['municipality'] === 'Bærum / Sandvika') {
-            return 'Bærum';
+        // Special handling for municipality names with multiple variants
+        $municipality_mapping = [
+            'Bærum / Sandvika' => 'Bærum',
+            'Rana / Mo i Rana' => 'Mo i Rana',
+            'Lenvik / Finnsnes' => 'Finnsnes',
+            'Porsgrunn / Brevik' => 'Porsgrunn',
+            'Vågan / Svolvær' => 'Svolvær',
+        ];
+        
+        $municipality = $data['locations'][0]['municipality'];
+        if (isset($municipality_mapping[$municipality])) {
+            return $municipality_mapping[$municipality];
         }
-        return $data['locations'][0]['municipality'];
+        
+        return $municipality;
     } elseif (!empty($data['locations'][0]['county'])) {
         return $data['locations'][0]['county'];
     }

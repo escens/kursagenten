@@ -132,13 +132,24 @@ if (!empty($post_ids)) {
 // 5. Slett custom database table
 $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}kursdato");
 
-// 6. Slett systemsider
+// 6. Fjern tilknytning til systemsider (slett ikke selve sidene)
+// Brukere kan ha tilpasset innhold på disse sidene, så vi beholder dem
 require_once dirname(__FILE__) . '/includes/options/coursedesign.php';
 $pages = Designmaler::get_required_pages();
 foreach (array_keys($pages) as $page_key) {
     $page_id = get_option('ka_page_' . $page_key);
     if ($page_id) {
-        wp_delete_post($page_id, true);
+        // Fjern post_meta som knytter siden til Kursagenten
+        $existing_keys = get_post_meta($page_id, '_ka_system_page_keys', true);
+        if (is_array($existing_keys)) {
+            $existing_keys = array_diff($existing_keys, [$page_key]);
+            if (empty($existing_keys)) {
+                delete_post_meta($page_id, '_ka_system_page_keys');
+            } else {
+                update_post_meta($page_id, '_ka_system_page_keys', array_values($existing_keys));
+            }
+        }
+        // Slett option som knytter page_key til page_id
         delete_option('ka_page_' . $page_key);
     }
 }

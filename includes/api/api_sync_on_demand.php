@@ -57,8 +57,16 @@ function kursagenten_get_course_ids() {
     
     $course_data = [];
     $index = 0;
+    $valid_location_ids = []; // Store valid location IDs to prevent internal courses from being synced
     
     foreach ($courses as $course) {
+        // Skip internal courses: courses with mainCategory.id === 0 are internal courses
+        $main_category_id = isset($course['mainCategory']['id']) ? (int) $course['mainCategory']['id'] : null;
+        if ($main_category_id === 0) {
+            error_log("Hopper over internkurs (mainCategory.id === 0): " . ($course['name'] ?? 'Ukjent navn') . " (ID: " . ($course['id'] ?? 'Ukjent') . ")");
+            continue; // Skip this entire course (all its locations)
+        }
+        
         foreach ($course['locations'] as $location) {
             $is_active = false;
             if (isset($location['active'])) {
@@ -70,6 +78,7 @@ function kursagenten_get_course_ids() {
             }
             
             $location_id = (int) $location['courseId'];
+            $valid_location_ids[] = $location_id; // Add to valid list
             
             // Only send basic info - detailed data will be fetched per batch
             $course_data[] = [
@@ -88,9 +97,13 @@ function kursagenten_get_course_ids() {
         }
     }
     
+    // Store valid location IDs in transient for use during sync (expires in 1 hour)
+    set_transient('kursagenten_valid_location_ids', $valid_location_ids, HOUR_IN_SECONDS);
+    
     $total_courses = count($course_data);
     
     error_log("=== SLUTT: Bygget liste med $total_courses kurs ===");
+    error_log("=== Lagret " . count($valid_location_ids) . " gyldige location_ids for å forhindre synk av internkurs ===");
 
     wp_send_json_success([
         'courses' => $course_data,
@@ -122,24 +135,82 @@ function kursagenten_run_sync_kurs() {
     $error_count = 0;
     $failed_courses = []; // Track failed courses with details
 
+    // Get valid location IDs from transient to prevent syncing internal courses
+    $valid_location_ids = get_transient('kursagenten_valid_location_ids');
+    if ($valid_location_ids === false || empty($valid_location_ids)) {
+        // If transient expired or empty, rebuild the list from CourseList API
+        error_log("Transient utløpt eller tom, henter gyldige location_ids på nytt");
+        $course_list = kursagenten_get_course_list();
+        $valid_location_ids = [];
+        if (!empty($course_list)) {
+            foreach ($course_list as $course_item) {
+                // Skip internal courses: courses with mainCategory.id === 0 are internal courses
+                $main_category_id = isset($course_item['mainCategory']['id']) ? (int) $course_item['mainCategory']['id'] : null;
+                if ($main_category_id === 0) {
+                    continue; // Skip this entire course (all its locations)
+                }
+                
+                foreach ($course_item['locations'] as $location) {
+                    $valid_location_ids[] = (int) $location['courseId'];
+                }
+            }
+        }
+        set_transient('kursagenten_valid_location_ids', $valid_location_ids, HOUR_IN_SECONDS);
+        error_log("Oppdatert transient med " . count($valid_location_ids) . " gyldige location_ids");
+    }
+    
     foreach ($_POST['courses'] as $course) {
         try {
-            error_log("--Synkroniserer kurs: " . ($course['course_name'] ?? 'Ukjent navn') . " (ID: " . $course['location_id'] . ")");
+            $location_id = (int) ($course['location_id'] ?? 0);
+            error_log("--Synkroniserer kurs: " . ($course['course_name'] ?? 'Ukjent navn') . " (ID: " . $location_id . ")");
+            
+            // CRITICAL: Check if this location_id is in the valid list (prevents syncing internal courses)
+            // This check MUST pass before fetching detailed course data
+            if (!in_array($location_id, $valid_location_ids)) {
+                $error_msg = "Kurset er et internkurs og skal ikke synkroniseres (finnes ikke i CourseList API)";
+                error_log("ADVARSEL: $error_msg for location_id: " . $location_id);
+                $error_count++;
+                $failed_courses[] = [
+                    'location_id' => $location_id,
+                    'course_name' => $course['course_name'] ?? 'Ukjent navn',
+                    'error_type' => 'internal_course',
+                    'error_message' => $error_msg
+                ];
+                continue;
+            }
             
             // Fetch detailed course data for this location
-            $single_course = kursagenten_get_course_details($course['location_id']);
+            $single_course = kursagenten_get_course_details($location_id);
             
             if (empty($single_course)) {
                 $error_msg = "Kunne ikke hente detaljert kursdata fra API";
-                error_log("FEIL: $error_msg for location_id: " . $course['location_id']);
+                error_log("FEIL: $error_msg for location_id: " . $location_id);
                 $error_count++;
                 $failed_courses[] = [
-                    'location_id' => $course['location_id'],
+                    'location_id' => $location_id,
                     'course_name' => $course['course_name'] ?? 'Ukjent navn',
                     'error_type' => 'api_fetch_failed',
                     'error_message' => $error_msg
                 ];
                 continue;
+            }
+            
+            // Additional check: Verify course is not an internal course by checking mainCategory.id
+            // Internal courses often have mainCategory.id === 0
+            if (isset($single_course['mainCategory']['id']) && (int)$single_course['mainCategory']['id'] === 0) {
+                // Double-check: Even if mainCategory.id is 0, verify it's not in CourseList
+                if (!in_array($location_id, $valid_location_ids)) {
+                    $error_msg = "Kurset er et internkurs (mainCategory.id === 0 og finnes ikke i CourseList API)";
+                    error_log("ADVARSEL: $error_msg for location_id: " . $location_id);
+                    $error_count++;
+                    $failed_courses[] = [
+                        'location_id' => $location_id,
+                        'course_name' => $course['course_name'] ?? 'Ukjent navn',
+                        'error_type' => 'internal_course',
+                        'error_message' => $error_msg
+                    ];
+                    continue;
+                }
             }
             
             // Add the detailed course data to the course array
@@ -250,11 +321,46 @@ function kursagenten_nightly_sync() {
         return;
     }
 
+    // Build list of valid location IDs to prevent syncing internal courses
+    $valid_location_ids = [];
+    foreach ($courses as $course) {
+        // Skip internal courses: courses with mainCategory.id === 0 are internal courses
+        $main_category_id = isset($course['mainCategory']['id']) ? (int) $course['mainCategory']['id'] : null;
+        if ($main_category_id === 0) {
+            error_log("Nattlig synk: Hopper over internkurs (mainCategory.id === 0): " . ($course['name'] ?? 'Ukjent navn') . " (ID: " . ($course['id'] ?? 'Ukjent') . ")");
+            continue; // Skip this entire course (all its locations)
+        }
+        
+        foreach ($course['locations'] as $location) {
+            $valid_location_ids[] = (int) $location['courseId'];
+        }
+    }
+    
+    // Update transient with valid location IDs for future use
+    set_transient('kursagenten_valid_location_ids', $valid_location_ids, HOUR_IN_SECONDS);
+    error_log("Nattlig synkronisering: Lagret " . count($valid_location_ids) . " gyldige location_ids i transient.");
+
     $success_count = 0;
     $error_count = 0;
 
     foreach ($courses as $course) {
+        // Skip internal courses: courses with mainCategory.id === 0 are internal courses
+        $main_category_id = isset($course['mainCategory']['id']) ? (int) $course['mainCategory']['id'] : null;
+        if ($main_category_id === 0) {
+            error_log("Nattlig synk: Hopper over internkurs (mainCategory.id === 0): " . ($course['name'] ?? 'Ukjent navn') . " (ID: " . ($course['id'] ?? 'Ukjent') . ")");
+            $error_count++; // Count as error for tracking
+            continue; // Skip this entire course (all its locations)
+        }
+        
         foreach ($course['locations'] as $location) {
+            $location_id = (int) $location['courseId'];
+            
+            // CRITICAL: Skip if location_id is not in valid list (prevents syncing internal courses)
+            if (!in_array($location_id, $valid_location_ids)) {
+                error_log("ADVARSEL: Hopper over internkurs med location_id: $location_id (finnes ikke i gyldig liste)");
+                $error_count++; // Count as error for tracking
+                continue;
+            }
             $is_active = false;
             if (isset($location['active'])) {
                 $is_active = filter_var($location['active'], FILTER_VALIDATE_BOOLEAN);
@@ -267,15 +373,15 @@ function kursagenten_nightly_sync() {
             }
 
             // Hent enkeltkursdata for denne lokasjonen
-            $single_course = kursagenten_get_course_details($location['courseId']);
+            $single_course = kursagenten_get_course_details($location_id);
             
             if (empty($single_course)) {
-                error_log("ADVARSEL: Kunne ikke hente enkeltkursdata for location_id: " . $location['courseId']);
+                error_log("ADVARSEL: Kunne ikke hente enkeltkursdata for location_id: " . $location_id);
                 continue;
             }
             
             $course_data = [
-                'location_id' => $location['courseId'],
+                'location_id' => $location_id,
                 'main_course_id' => $course['id'],
                 'course_name' => $location['courseName'],
                 'municipality' => $location['municipality'],
@@ -361,13 +467,21 @@ function cleanup_courses_on_demand() {
     $api_course_details = [];
     
     foreach ($courses as $course) {
+        // Skip internal courses: courses with mainCategory.id === 0 are internal courses
+        $main_category_id = isset($course['mainCategory']['id']) ? (int) $course['mainCategory']['id'] : null;
+        if ($main_category_id === 0) {
+            error_log("Cleanup: Hopper over internkurs (mainCategory.id === 0): " . ($course['name'] ?? 'Ukjent navn') . " (ID: " . ($course['id'] ?? 'Ukjent') . ")");
+            continue; // Skip this entire course (all its locations)
+        }
+        
         foreach ($course['locations'] as $location) {
-            $valid_location_ids[] = $location['courseId'];
+            $location_id_int = (int) $location['courseId'];
+            $valid_location_ids[] = $location_id_int;
             
             // Hent detaljer for hvert kurs
-            $course_details = kursagenten_get_course_details($location['courseId']);
+            $course_details = kursagenten_get_course_details($location_id_int);
             if (!empty($course_details)) {
-                $api_course_details[$location['courseId']] = [
+                $api_course_details[$location_id_int] = [
                     'name' => $course_details['name'],
                     'first_course_date' => null,
                     'schedule_ids' => [],
@@ -377,15 +491,15 @@ function cleanup_courses_on_demand() {
                 
                 // Finn første kursdato og schedule_ids
                 foreach ($course_details['locations'] as $loc) {
-                    if ($loc['courseId'] == $location['courseId'] && !empty($loc['schedules'])) {
+                    if ($loc['courseId'] == $location_id_int && !empty($loc['schedules'])) {
                         foreach ($loc['schedules'] as $schedule) {
                             if (!empty($schedule['id'])) {
                                 $valid_schedule_ids[] = $schedule['id'];
-                                $api_course_details[$location['courseId']]['schedule_ids'][] = $schedule['id'];
-                                $api_course_details[$location['courseId']]['has_scheduled_dates'] = true;
+                                $api_course_details[$location_id_int]['schedule_ids'][] = $schedule['id'];
+                                $api_course_details[$location_id_int]['has_scheduled_dates'] = true;
                             }
                             if (!empty($schedule['firstCourseDate'])) {
-                                $api_course_details[$location['courseId']]['first_course_date'] = $schedule['firstCourseDate'];
+                                $api_course_details[$location_id_int]['first_course_date'] = $schedule['firstCourseDate'];
                             }
                         }
                     }
@@ -393,6 +507,9 @@ function cleanup_courses_on_demand() {
             }
         }
     }
+    
+    // Update transient with valid location IDs for future use
+    set_transient('kursagenten_valid_location_ids', $valid_location_ids, HOUR_IN_SECONDS);
     
     error_log("=== API DATA ===");
     error_log("Gyldige location_ids fra API: " . implode(', ', $valid_location_ids));
@@ -416,8 +533,36 @@ function cleanup_courses_on_demand() {
     // Sjekk hvert kurs i WordPress
     foreach ($wp_courses as $wp_course) {
         $location_id = get_post_meta($wp_course->ID, 'ka_location_id', true);
+        $location_id_int = (int) $location_id;
         
-        if (!in_array($location_id, $valid_location_ids)) {
+        // CRITICAL: Check if course exists in CourseList API
+        // Courses not in CourseList are considered internal courses and should be deleted
+        $exists_in_course_list = in_array($location_id_int, $valid_location_ids);
+        
+        if (!$exists_in_course_list) {
+            // Course is not in CourseList API - it's either deleted or an internal course
+            // Verify it's an internal course by checking single course API
+            $single_course_check = kursagenten_get_course_details($location_id_int);
+            if (!empty($single_course_check)) {
+                // Course exists in single course API but not in CourseList = internal course
+                error_log("=== SLETTING AV INTERNKURS ===");
+                error_log("Kurs med location_id $location_id_int finnes i enkeltkurs API men ikke i CourseList API");
+                error_log("Post ID: " . $wp_course->ID);
+                error_log("Tittel: " . $wp_course->post_title);
+                error_log("Status: " . $wp_course->post_status);
+                
+                // Check if mainCategory.id === 0 (additional indicator for internal course)
+                if (isset($single_course_check['mainCategory']['id']) && (int)$single_course_check['mainCategory']['id'] === 0) {
+                    error_log("Bekreftet internkurs: mainCategory.id === 0");
+                }
+            } else {
+                // Course doesn't exist in either API - it's been deleted
+                error_log("=== SLETTING AV SLETTET KURS ===");
+                error_log("Kurs med location_id $location_id_int finnes ikke lenger i API");
+                error_log("Post ID: " . $wp_course->ID);
+                error_log("Tittel: " . $wp_course->post_title);
+                error_log("Status: " . $wp_course->post_status);
+            }
             //error_log("=== SLETTING AV KURS ===");
             //error_log("Kurs med location_id $location_id finnes ikke lenger i API");
             //error_log("Post ID: " . $wp_course->ID);
@@ -429,7 +574,7 @@ function cleanup_courses_on_demand() {
                 'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
-                    ['key' => 'ka_location_id', 'value' => $location_id],
+                    ['key' => 'ka_location_id', 'value' => $location_id_int],
                 ],
             ]);
             
@@ -445,12 +590,13 @@ function cleanup_courses_on_demand() {
                 error_log("Slettet kurs ID: {$wp_course->ID}");
             }
         } else {
+            // Course exists in CourseList - check its course dates
             // Sjekk kursdatoer for dette kurset basert på location_id
             $related_dates = get_posts([
                 'post_type' => 'ka_coursedate',
                 'posts_per_page' => -1,
                 'meta_query' => [
-                    ['key' => 'ka_location_id', 'value' => $location_id],
+                    ['key' => 'ka_location_id', 'value' => $location_id_int],
                 ],
             ]);
             
@@ -461,14 +607,14 @@ function cleanup_courses_on_demand() {
                 $schedule_id = get_post_meta($date->ID, 'ka_schedule_id', true);
                 
                 // Create unique key for this combination
-                $unique_key = $location_id . '_' . $schedule_id;
+                $unique_key = $location_id_int . '_' . $schedule_id;
                 
                 // Check for duplicates - if we've seen this combination before, delete this one
                 if (isset($seen_combinations[$unique_key])) {
                     error_log("=== SLETTING AV DUPLIKAT KURSDATO ===");
                     error_log("Kursdato ID: " . $date->ID);
                     error_log("Tittel: " . $date->post_title);
-                    error_log("Location ID: " . $location_id);
+                    error_log("Location ID: " . $location_id_int);
                     error_log("Schedule ID: " . $schedule_id);
                     error_log("Dette er duplikat nummer " . ($seen_combinations[$unique_key] + 1));
                     
@@ -488,9 +634,9 @@ function cleanup_courses_on_demand() {
                 
                 if ($schedule_id === '0' || $schedule_id === 0) {
                     // For nettbaserte kurs, behold kursdatoen med schedule_id 0
-                    if (!$api_course_details[$location_id]['is_online']) {
+                    if (isset($api_course_details[$location_id_int]) && !$api_course_details[$location_id_int]['is_online']) {
                         // For vanlige kurs, slett kun hvis API-et har minst én plan med en faktisk schedule_id
-                        if ($api_course_details[$location_id]['has_scheduled_dates']) {
+                        if ($api_course_details[$location_id_int]['has_scheduled_dates']) {
                             $should_delete = true;
                             error_log("Kursdato med schedule_id 0 skal slettes fordi API har minst én plan med en faktisk schedule_id");
                         }
@@ -507,7 +653,7 @@ function cleanup_courses_on_demand() {
                     error_log("Kursdato ID: " . $date->ID);
                     error_log("Tittel: " . $date->post_title);
                     error_log("Status: " . $date->post_status);
-                    error_log("Location ID: " . $location_id);
+                    error_log("Location ID: " . $location_id_int);
                     error_log("Schedule ID: " . $schedule_id);
                     
                     if (wp_delete_post($date->ID, true)) {

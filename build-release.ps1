@@ -114,6 +114,7 @@ New-Item -ItemType Directory -Path $TempPluginDir -Force | Out-Null
 $ExcludePatterns = @(
     "*.ps1",           # PowerShell-scripts
     "BUILD_README.md", # Build dokumentasjon
+    "ADMIN_INTEGRATION_PLAN.md", # Admin integration plan (internt dokument)
     "node_modules",    # Node modules
     ".git",            # Git
     ".gitignore",      # Git ignore

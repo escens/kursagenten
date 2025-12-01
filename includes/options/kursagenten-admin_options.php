@@ -11,7 +11,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php';
 
 // Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php
 
-// Instantiate submenu classes kun når lisens (API-nøkkel) finnes for å redusere last
+// Instantiate submenu classes kun når lisens (Lisensnøkkel) finnes for å redusere last
 $__kag_api_key_present = get_option('kursagenten_api_key', '');
 if (!empty($__kag_api_key_present)) {
     if (is_admin()) {
@@ -57,7 +57,7 @@ add_action('admin_menu', 'kursagenten_register_admin_menu', 9);
 
 // Landing page function remains the same
 function kursagenten_admin_landing_page() {
-    // Vis kun lisensboks dersom API-nøkkel mangler
+    // Vis kun lisensboks dersom Lisensnøkkel mangler
     $current_key = get_option('kursagenten_api_key', '');
     if (empty($current_key)) {
         ?>
@@ -80,10 +80,10 @@ function kursagenten_admin_landing_page() {
                     ?>
                     <table class="form-table">
                         <tr>
-                            <th scope="row"><?php echo esc_html__('API-nøkkel', 'kursagenten'); ?></th>
+                            <th scope="row"><?php echo esc_html__('Lisensnøkkel', 'kursagenten'); ?></th>
                             <td>
                                 <input type="text" name="kursagenten_api_key" class="regular-text" value="" />
-                                <p class="description"><?php echo esc_html__('Lim inn API-nøkkelen du fikk tildelt.', 'kursagenten'); ?></p>
+                                <p class="description"><?php echo esc_html__('Lim inn lisensnøkkelen du fikk tildelt.', 'kursagenten'); ?></p>
                             </td>
                         </tr>
                     </table>
@@ -122,8 +122,8 @@ function kursagenten_admin_landing_page() {
                         </div>
                         
                         <div class="kort">
-                            <h4 class="welcome-panel-title">Juster design og maler</h4>
-                            <p>Opprett nødvendige sider for kurs, kurskategorier, kurssteder og instruktører. Velg design på kursliste, enkeltkurs, kategorier, steder og instruktører. Velg hovedfarger.</p>
+                            <h4 class="welcome-panel-title">Velg sider og design</h4>
+                            <p>Opprett eller velg nødvendige sider for kurs, kurskategorier, kurssteder og instruktører. Velg design på kursliste, enkeltkurs, kategorier, steder og instruktører. Velg hovedfarger.</p>
                             <ul>
                                 <li><a href="admin.php?page=design"><strong>Designvalg</strong></a></li>
                             </ul>

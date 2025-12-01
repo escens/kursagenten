@@ -437,7 +437,7 @@
 		// Process all URL parameters
 		for (const [key, value] of url.searchParams.entries()) {
 			// Skip current_url parameter entirely
-			if (key === 'current_url' || key === 'st' || key === 'sc') {
+			if (key === 'current_url' || key === 'st' || key === 'sc' || key === 'ka_course_location' || key === 'ka_coursecategory') {
 				continue;
 			}
 			// Spesiell håndtering for dato-parameter
@@ -464,6 +464,8 @@
 		// Sikkerhet: fjern transport-parametre fra filtersettet
 		delete params.st;
 		delete params.sc;
+		delete params.ka_course_location;
+		delete params.ka_coursecategory;
 		return params;
 	}
 
@@ -515,6 +517,8 @@
 		const cleaned = { ...filters };
 		if (cleaned.st !== undefined) { delete cleaned.st; }
 		if (cleaned.sc !== undefined) { delete cleaned.sc; }
+		if (cleaned.ka_course_location !== undefined) { delete cleaned.ka_course_location; }
+		if (cleaned.ka_coursecategory !== undefined) { delete cleaned.ka_coursecategory; }
 
 		// Create chips for each active filter
 		Object.keys(cleaned).forEach(key => {

@@ -205,7 +205,12 @@ do_action('ka_singel_header_before');
                     
                 <?php endif; ?>
                 <div class="header-links iconlist horizontal uppercase">
-                    <div><a href="<?php echo esc_url(Designmaler::get_system_page_url('kurs')); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div> 
+                    <?php 
+                    $kurs_url = Designmaler::get_system_page_url('kurs', true);
+                    if (!empty($kurs_url)): 
+                    ?>
+                        <div><a href="<?php echo esc_url($kurs_url); ?>"><i class="ka-icon icon-vertical-bars"></i> Alle kurs</a></div>
+                    <?php endif; ?> 
                     <div class="taxonomy-list horizontal">
                         <?php if (!empty($coursecategory_links)) : ?>
                             <i class="ka-icon icon-vertical-bars"></i><?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>

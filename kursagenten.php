@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.1.02
+ * Version:           1.1.05
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -16,13 +16,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.1.02');
+ define('KURSAG_VERSION', '1.1.05');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.1.02');
+    define('KURSAG_VERSION', '1.1.05');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -30,7 +30,7 @@ if (!defined('KURSAG_DESCRIPTION')) {
     define('KURSAG_DESCRIPTION', 'Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs');
 }
 if (!defined('KURSAG_INSTALLATION')) {
-    define('KURSAG_INSTALLATION', '1. Installer plugin<br>2. Legg inn tilsendt API-nøkkel i Innstillinger<br>3. Gø til Oversikt for ø videre instruksjoner');
+    define('KURSAG_INSTALLATION', '1. Installer plugin<br>2. Legg inn tilsendt Lisensnøkkel i Innstillinger<br>3. Gå til Oversikt for videre instruksjoner');
 }
 if (!defined('KURSAG_AUTHOR')) {
     define('KURSAG_AUTHOR', 'Kursagenten Team');
@@ -214,36 +214,32 @@ function kursagenten_activate() {
     // Then flush rewrite rules
     flush_rewrite_rules();
 
-    // Opprett alle systemsider ved aktivering hvis de mangler eller peker til slettet/trashet side
+    // Opprett kun Betaling-side ved aktivering hvis den mangler eller peker til slettet/trashet side
     require_once KURSAG_PLUGIN_DIR . '/includes/options/coursedesign.php';
     if (class_exists('Designmaler')) {
-        $pages = Designmaler::get_required_pages();
-        foreach (array_keys($pages) as $page_key) {
-            $option_key = 'ka_page_' . $page_key;
-            $page_id = (int) get_option($option_key);
-            $needs_create = true;
+        $page_key = 'betaling';
+        $option_key = 'ka_page_' . $page_key;
+        $page_id = (int) get_option($option_key);
+        $needs_create = true;
 
-            if ($page_id > 0) {
-                $post = get_post($page_id);
-                if ($post && $post->post_type === 'page' && $post->post_status !== 'trash') {
-                    // Gyldig side finnes allerede
-                    $needs_create = false;
-                } else {
-                    // Rydd opp foreldreløs option
-                    delete_option($option_key);
-                }
+        if ($page_id > 0) {
+            $post = get_post($page_id);
+            if ($post && $post->post_type === 'page' && $post->post_status !== 'trash') {
+                // Gyldig side finnes allerede
+                $needs_create = false;
+            } else {
+                // Rydd opp foreldreløs option
+                delete_option($option_key);
             }
+        }
 
-            if ($needs_create) {
-                // Hvis Betaling finnes som vanlig side med slug 'betaling', opprett vør som konfliktfri
-                if ($page_key === 'betaling') {
-                    $existing = get_page_by_path('betaling', OBJECT, 'page');
-                    if ($existing instanceof WP_Post && get_post_meta($existing->ID, '_ka_system_page', true) !== 'betaling') {
-                        // create_system_page høndterer selv konflikt og setter 'kurs-betaling'
-                    }
-                }
-                Designmaler::create_system_page($page_key);
+        if ($needs_create) {
+            // Hvis Betaling finnes som vanlig side med slug 'betaling', opprett vør som konfliktfri
+            $existing = get_page_by_path('betaling', OBJECT, 'page');
+            if ($existing instanceof WP_Post && get_post_meta($existing->ID, '_ka_system_page_keys', true) !== 'betaling') {
+                // create_system_page høndterer selv konflikt og setter 'kurs-betaling'
             }
+            Designmaler::create_system_page($page_key);
         }
     }
 }
@@ -458,7 +454,7 @@ function kursagenten_load_admin_options() {
 }
 add_action('plugins_loaded', 'kursagenten_load_admin_options');
 
-// Global guard: redirect alle Kursagenten-undersider til Oversikt dersom API-nøkkel mangler
+// Global guard: redirect alle Kursagenten-undersider til Oversikt dersom Lisensnøkkel mangler
 add_action('admin_init', function() {
     if (!is_admin()) {
         return;
