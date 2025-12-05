@@ -140,7 +140,7 @@ class KA_Documentation_Page {
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
                     <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk" st=sted/st=ikke-sted klasse="min-klasse"]</span></p>
                     <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small" style="color:#666">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" st=sted/st=ikke-sted utdrag="ja" klasse="min-klasse"]</span></p>
-                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="spesifikke-lokasjoner" klasse="min-klasse"]</span></p>
+                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="standard/alta,oslo,bergen" stedinfo="ja" klasse="min-klasse"]</span></p>
                     <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small" style="color:#666">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja" klasse="min-klasse"]</span></p>
                 </div>
                 <p>&nbsp;</p>
@@ -295,10 +295,17 @@ class KA_Documentation_Page {
                             </tr>
                             <tr>
                                 <td>Vis (s)</td>
-                                <td>Velg å vise spesifikke lokasjoner.</td>
-                                <td>spesifikke-lokasjoner<br><strong>Standard</strong>: vises ikke</td>
+                                <td>Filtrer stedslisten til kun vise spesifikke steder. Kan bruke stedsnavn eller slug (case-insensitive).</td>
+o                                <td>standard, kommaseparert liste (feks alta,oslo,bergen eller "Oslo,Mo i Rana")<br><strong>Standard</strong>: viser alle steder</td>
                                 <td>Kurssteder</td>
-                                <td><span class="copytext">[kurssteder vis=spesifikke-lokasjoner]</span></td>
+                                <td><span class="copytext">[kurssteder vis=alta,oslo,bergen]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Stedinfo</td>
+                                <td>Vis liste med spesifikke lokasjoner under hvert stedsnavn. Dette kommer fra feltet "Fritekst sted" i Kursagenten. </td>
+                                <td>ja<br><strong>Standard</strong>: vises ikke</td>
+                                <td>Kurssteder</td>
+                                <td><span class="copytext">[kurssteder stedinfo=ja]</span></td>
                             </tr>
                             <tr>
                                 <td>Skjul</td>

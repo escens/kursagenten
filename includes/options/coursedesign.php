@@ -1487,9 +1487,18 @@ class Designmaler {
      * Legg til egendefinert CSS på frontend-sider
      */
     public function add_custom_css() {
-        $custom_css = get_option('kursagenten_custom_css', '');
+        // Early exit if not in Kursagenten context to avoid unnecessary database call
+        if (!$this->is_kursagenten_frontend_context()) {
+            return;
+        }
         
-        if (!empty($custom_css) && $this->is_kursagenten_frontend_context()) {
+        // Cache CSS option to avoid repeated database calls
+        static $custom_css = null;
+        if ($custom_css === null) {
+            $custom_css = get_option('kursagenten_custom_css', '');
+        }
+        
+        if (!empty($custom_css)) {
             echo '<!-- Kursagenten Custom CSS -->' . "\n";
             echo '<style type="text/css" id="kursagenten-custom-css">' . "\n";
             echo $custom_css . "\n";

@@ -436,7 +436,11 @@ require_once KURSAG_PLUGIN_DIR . '/assets/dynamic-icons.php';
     
 // Hent admin options
 function kursagenten_load_admin_options() {
-    $admin_options = get_option('kag_avansert_option_name');
+    // Cache admin options to avoid repeated database calls
+    static $admin_options = null;
+    if ($admin_options === null) {
+        $admin_options = get_option('kag_avansert_option_name', []);
+    }
     
     $option_files = [
         'ka_rename_posts' =>    '/includes/misc/change-post-to-article.php',

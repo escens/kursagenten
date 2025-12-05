@@ -12,12 +12,18 @@ require_once KURSAG_PLUGIN_DIR . '/includes/options/options_menu_top.php';
 // Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php
 
 // Instantiate submenu classes kun når lisens (Lisensnøkkel) finnes for å redusere last
-$__kag_api_key_present = get_option('kursagenten_api_key', '');
+// Cache API key check to avoid repeated database calls
+static $__kag_api_key_present = null;
+if ($__kag_api_key_present === null) {
+    $__kag_api_key_present = get_option('kursagenten_api_key', '');
+}
+
 if (!empty($__kag_api_key_present)) {
     if (is_admin()) {
         $kursinnstillinger = new Kursinnstillinger();
     }
     // Instansier Designmaler-klassen både i admin og frontend
+    // Designmaler is needed on frontend for wp_head CSS output
     $designmaler = new Designmaler();
 
     if (is_admin()) {

@@ -358,7 +358,22 @@ do_action('ka_singel_header_before');
                                         </p>
                                             </div>
                                             <div class="aside">
-                                                <?php if (!empty($coursedate['address_street'])) : ?>
+                                                <?php 
+                                                // Check if this specific coursedate is online
+                                                // Check if location is "Nettbasert" or has 'nettbasert' term
+                                                $coursedate_is_online = false;
+                                                if (!empty($coursedate['location'])) {
+                                                    $location_lower = strtolower($coursedate['location']);
+                                                    if ($location_lower === 'nettbasert' || stripos($location_lower, 'nettbasert') !== false) {
+                                                        $coursedate_is_online = true;
+                                                    }
+                                                }
+                                                // Also check taxonomy term
+                                                if (!$coursedate_is_online && !empty($coursedate['id'])) {
+                                                    $coursedate_is_online = has_term('nettbasert', 'ka_course_location', $coursedate['id']);
+                                                }
+                                                ?>
+                                                <?php if (!empty($coursedate['address_street']) && !$coursedate_is_online) : ?>
                                                 <p><strong>Adresse</strong></p>
                                                 <p> <?php echo esc_html($coursedate['course_location_freetext']) ?><br>
                                                     <?php echo esc_html($coursedate['address_street']) ?><br>

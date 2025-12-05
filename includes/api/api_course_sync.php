@@ -331,9 +331,15 @@ function create_new_sub_course($data, $main_course_id, $location_id, $language, 
         update_post_meta($post_id, 'ka_is_active', $is_active ? '1' : '0');
         update_post_meta($post_id, 'ka_location_id', (int) $location_id);
         
-        // Sett course_location_freetext basert på lokasjonsdata
+        // Sett course_location_freetext basert på lokasjonsdata - men ikke for nettkurs
         //$location_name = get_course_location($data);
-        update_post_meta($post_id, 'ka_course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
+        $is_online = !empty($data['isOnlineCourse']) && ($data['isOnlineCourse'] === true || $data['isOnlineCourse'] === 'true' || $data['isOnlineCourse'] === 1 || $data['isOnlineCourse'] === '1');
+        if (!$is_online && !empty($data['locations'][0]['description'])) {
+            update_post_meta($post_id, 'ka_course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
+        } else {
+            // Remove location_freetext if course is online
+            delete_post_meta($post_id, 'ka_course_location_freetext');
+        }
 
         // Pass the actual location id, not the main course id
         update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
@@ -396,9 +402,15 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
         if ($is_parent_course !== 'yes') {
             update_post_meta($post_id, 'ka_main_course_title', sanitize_text_field($data['name']));
             update_post_meta($post_id, 'ka_sub_course_location', sanitize_text_field(get_course_location($data)));
-            // Sett course_location_freetext basert på lokasjonsdata
+            // Sett course_location_freetext basert på lokasjonsdata - men ikke for nettkurs
             //$location_name = get_course_location($data);
-            update_post_meta($post_id, 'ka_course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
+            $is_online = !empty($data['isOnlineCourse']) && ($data['isOnlineCourse'] === true || $data['isOnlineCourse'] === 'true' || $data['isOnlineCourse'] === 1 || $data['isOnlineCourse'] === '1');
+            if (!$is_online && !empty($data['locations'][0]['description'])) {
+                update_post_meta($post_id, 'ka_course_location_freetext', sanitize_text_field($data['locations'][0]['description']));
+            } else {
+                // Remove location_freetext if course is online
+                delete_post_meta($post_id, 'ka_course_location_freetext');
+            }
         }
 
         update_course_taxonomies($post_id, $location_id, $data, $is_webhook);
@@ -521,12 +533,28 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
         if (isset($schedule['isFull'])) {               $meta_input['ka_course_isFull'] = $schedule['isFull'];}
         if (!empty($course_signup_url)) {               $meta_input['ka_course_signup_url'] = $course_signup_url;}
         if (!empty($location['county'])) {              $meta_input['ka_course_location'] = get_course_location($data);} 
-        if (!empty($location['description'])) {         $meta_input['ka_course_location_freetext'] = $location['description'];}
+        // Only set location_freetext if course is not online
+        $is_online = !empty($data['isOnlineCourse']) && ($data['isOnlineCourse'] === true || $data['isOnlineCourse'] === 'true' || $data['isOnlineCourse'] === 1 || $data['isOnlineCourse'] === '1');
+        if (!$is_online && !empty($location['description'])) {
+            $meta_input['ka_course_location_freetext'] = $location['description'];
+        } else {
+            // Ensure location_freetext is removed for online courses
+            $meta_input['ka_course_location_freetext'] = '';
+        }
 
-        if (!empty($location['address']['streetAddress'])) {        $meta_input['ka_course_address_street'] = $location['address']['streetAddress'];}
-        if (!empty($location['address']['streetAddressNumber'])) {  $meta_input['ka_course_address_street_number'] = $location['address']['streetAddressNumber'];}
-        if (!empty($location['address']['zipCode'])) {              $meta_input['ka_course_address_zipcode'] = $location['address']['zipCode'];}
-        if (!empty($location['address']['place'])) {                $meta_input['ka_course_address_place'] = $location['address']['place'];}
+        // Only set address fields if course is not online
+        if (!$is_online) {
+            if (!empty($location['address']['streetAddress'])) {        $meta_input['ka_course_address_street'] = $location['address']['streetAddress'];}
+            if (!empty($location['address']['streetAddressNumber'])) {  $meta_input['ka_course_address_street_number'] = $location['address']['streetAddressNumber'];}
+            if (!empty($location['address']['zipCode'])) {              $meta_input['ka_course_address_zipcode'] = $location['address']['zipCode'];}
+            if (!empty($location['address']['place'])) {                $meta_input['ka_course_address_place'] = $location['address']['place'];}
+        } else {
+            // Remove address fields for online courses
+            $meta_input['ka_course_address_street'] = '';
+            $meta_input['ka_course_address_street_number'] = '';
+            $meta_input['ka_course_address_zipcode'] = '';
+            $meta_input['ka_course_address_place'] = '';
+        }
 
         if (!empty($schedule['locationRooms']) && is_array($schedule['locationRooms'])) {
             $room_names = array();

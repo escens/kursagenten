@@ -7,7 +7,16 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurssteder i grid-format
- * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" vis="standard/spesifikke-lokasjoner"]
+ * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" vis="standard/alta,oslo,bergen" stedinfo="ja"]
+ * 
+ * vis-parameteren (filtrering, konsistent med kurskategorier):
+ * - "standard": viser alle steder (standard)
+ * - kommaseparert liste: viser kun spesifikke steder (f.eks. "alta,oslo,bergen" eller "tromso,trondheim")
+ * - Kan bruke stedsnavn eller slug (case-insensitive)
+ * 
+ * stedinfo-parameteren:
+ * - "ja": viser liste over spesifikke steder (fritekst sted fra Kursagenten) under hvert sted
+ * - standard: viser ikke stedsinfo
  */
 class CourseLocationGrid {
     private string $placeholder_image;
@@ -43,6 +52,7 @@ class CourseLocationGrid {
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
             'vis' => 'standard',
+            'stedinfo' => '',
             'klasse' => ''
         ];
 
@@ -54,7 +64,7 @@ class CourseLocationGrid {
         $a = $this->process_attributes($a);
         
         // Hent kurssteder
-        $terms = $this->get_terms();
+        $terms = $this->get_terms($a['vis']);
         
         if (empty($terms) || is_wp_error($terms)) {
             return '<div class="no-locations">Det er for øyeblikket ingen kurssteder å vise.</div>';
@@ -92,7 +102,7 @@ class CourseLocationGrid {
         return $atts;
     }
 
-    private function get_terms(): array 
+    private function get_terms(string $vis = 'standard'): array 
     {
         $args = [
             'taxonomy' => 'ka_course_location',
@@ -111,6 +121,39 @@ class CourseLocationGrid {
             'orderby' => 'name',
             'order' => 'ASC'
         ];
+
+        // Hvis vis ikke er "standard", tolkes det som en kommaseparert liste av steder å filtrere på
+        if ($vis !== 'standard' && !empty($vis)) {
+            $location_names = array_map('trim', explode(',', $vis));
+            $location_term_ids = [];
+            
+            foreach ($location_names as $location_name) {
+                if (empty($location_name)) {
+                    continue;
+                }
+                
+                // Prøv først å finne via slug
+                $location_slug = sanitize_title($location_name);
+                $location_term = get_term_by('slug', $location_slug, 'ka_course_location');
+                
+                // Hvis ikke funnet via slug, prøv via navn (case-insensitive)
+                if (!$location_term || is_wp_error($location_term)) {
+                    $location_term = get_term_by('name', $location_name, 'ka_course_location');
+                }
+                
+                if ($location_term && !is_wp_error($location_term)) {
+                    $location_term_ids[] = (int) $location_term->term_id;
+                }
+            }
+            
+            // Hvis vi fant noen term_ids, bruk dem til å filtrere
+            if (!empty($location_term_ids)) {
+                $args['include'] = $location_term_ids;
+            } else {
+                // Hvis ingen steder ble funnet, returner tom array
+                return [];
+            }
+        }
 
         $terms = get_terms($args);
         
@@ -131,9 +174,10 @@ class CourseLocationGrid {
     }
 
     /**
-     * Determine if a location term has any associated published content
-     * either via 'ka_course' posts with the taxonomy or via 'ka_coursedate' posts
-     * referencing the term id in meta 'location_id'.
+     * Determine if a location term has any associated published content.
+     * Checks:
+     *  - published 'ka_course' posts using the 'ka_course_location' taxonomy
+     *  - published 'ka_coursedate' posts referencing the location via meta 'ka_location_id'.
      */
     private function has_associated_content(int $term_id): bool
     {
@@ -156,7 +200,7 @@ class CourseLocationGrid {
             return true;
         }
 
-        // Check for published 'ka_coursedate' posts pointing to this location via meta 'location_id'
+        // Check for published 'ka_coursedate' posts pointing to this location via meta 'ka_location_id'
         $coursedate_ids = get_posts([
             'post_type' => 'ka_coursedate',
             'post_status' => 'publish',
@@ -166,7 +210,7 @@ class CourseLocationGrid {
             'update_post_meta_cache' => false,
             'update_post_term_cache' => false,
             'meta_query' => [[
-                'key' => 'location_id',
+                'key' => 'ka_location_id',
                 'value' => $term_id,
                 'compare' => '=',
             ]],
@@ -183,7 +227,7 @@ class CourseLocationGrid {
             'posts_per_page' => -1,
             'meta_query' => [
                 [
-                    'key' => 'location_id',
+                    'key' => 'ka_location_id',
                     'value' => $term_id,
                 ]
             ]
@@ -191,7 +235,7 @@ class CourseLocationGrid {
 
         $locations = [];
         foreach ($coursedates as $coursedate) {
-            $location_freetext = get_post_meta($coursedate->ID, 'course_location_freetext', true);
+            $location_freetext = get_post_meta($coursedate->ID, 'ka_course_location_freetext', true);
             if (!empty($location_freetext) && !in_array($location_freetext, $locations)) {
                 $locations[] = $location_freetext;
             }
@@ -298,8 +342,8 @@ class CourseLocationGrid {
                     </a>
                     <div class='description info'>" . wp_kses_post($description) . "</div>";
 
-                        // Hent spesifikke lokasjoner (kun hvis vis="spesifikke-lokasjoner")
-                        if ($a['vis'] === 'spesifikke-lokasjoner') {
+                        // Hent spesifikke steder (fritekst sted fra Kursagenten) - kun hvis stedinfo="ja"
+                        if ($a['stedinfo'] === 'ja') {
                             $specific_locations = get_term_meta($term->term_id, 'specific_locations', true);
                             
                             if (!empty($specific_locations) && is_array($specific_locations)) {

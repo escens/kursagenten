@@ -43,7 +43,11 @@ class SecureUpdater {
         add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_scripts']);
 
         // Registrer site ved første besøk (eller når pending registration finnes)
-        add_action('init', [$this, 'maybe_register_site']);
+        // Only run in admin to avoid unnecessary database calls on frontend
+        // Note: Cron jobs use cron_register_site() directly, not this hook
+        if (is_admin()) {
+            add_action('admin_init', [$this, 'maybe_register_site']);
+        }
         // Innstillinger-side og notiser
         add_action('admin_menu', [$this, 'register_license_settings_page']);
         add_action('admin_init', [$this, 'register_license_setting']);
@@ -77,20 +81,29 @@ class SecureUpdater {
 
     /**
      * Get API URL - use admin-ajax.php as proxy to bypass firewall restrictions
+     * Cached to avoid repeated calls on every page load
      */
     private function get_api_url() {
+        static $cached_url = null;
+        
+        if ($cached_url !== null) {
+            return $cached_url;
+        }
+        
         // Determine current host
         $host = wp_parse_url(home_url(), PHP_URL_HOST);
         $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
         
         // Use local endpoint only on central server instance
         if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
-            return home_url('/kursagenten-api/');
+            $cached_url = home_url('/kursagenten-api/');
+        } else {
+            // Use admin-ajax.php as proxy to bypass firewall restrictions
+            // admin-ajax.php is typically whitelisted in firewalls/WAF
+            $cached_url = 'https://admin.lanseres.no/wp-admin/admin-ajax.php?action=';
         }
         
-        // Use admin-ajax.php as proxy to bypass firewall restrictions
-        // admin-ajax.php is typically whitelisted in firewalls/WAF
-        return 'https://admin.lanseres.no/wp-admin/admin-ajax.php?action=';
+        return $cached_url;
     }
 
     /**
@@ -98,8 +111,19 @@ class SecureUpdater {
      */
     /**
      * Check if we need to register site (handles both scheduled and daily checks)
+     * Only runs in admin context to avoid unnecessary database calls on frontend
      */
     public function maybe_register_site() {
+        // Early exit if not in admin (safety check)
+        if (!is_admin()) {
+            return;
+        }
+        
+        // Early exit if no API key (avoid unnecessary database calls)
+        if (empty($this->api_key)) {
+            return;
+        }
+        
         // Check if we have a pending registration from a recent API key update
         if (get_transient('kursagenten_pending_registration')) {
             delete_transient('kursagenten_pending_registration');
@@ -112,7 +136,12 @@ class SecureUpdater {
     }
 
     public function register_site($force = false) {
-        if (empty($this->api_key) || is_admin() === false) {
+        if (empty($this->api_key)) {
+            return;
+        }
+        
+        // Only skip on frontend (allow admin and cron)
+        if (!is_admin() && !(function_exists('wp_doing_cron') && wp_doing_cron())) {
             return;
         }
 
@@ -424,12 +453,8 @@ class SecureUpdater {
             }
 
             // Ingen oppdatering: bygg komplett plugin-info objekt (unngå udefinert variabel)
-            // Hent changelog fra server-plugin (public endpoint)
+            // Skip changelog fetch here to avoid blocking HTTP call - it will be fetched in info() method when needed
             $changelog_text = 'Changelog er ikke tilgjengelig.';
-            $changelog_data = $this->get_public_changelog();
-            if (is_array($changelog_data) && isset($changelog_data['changelog']) && !empty($changelog_data['changelog'])) {
-                $changelog_text = $changelog_data['changelog'];
-            }
 
             return (object) [
                 'name' => 'Kursagenten',
@@ -1088,8 +1113,16 @@ class SecureUpdater {
 
     /**
      * Get changelog from public endpoint (no license required)
+     * Uses cache to avoid repeated HTTP calls
      */
     private function get_public_changelog() {
+        // Cache changelog for 1 hour to avoid repeated HTTP calls
+        $cache_key = 'kursagenten_changelog';
+        $cached = get_transient($cache_key);
+        if ($cached !== false) {
+            return $cached;
+        }
+        
         try {
             // Use admin-ajax.php as proxy to bypass firewall restrictions
             $is_ajax_proxy = strpos($this->api_url, 'admin-ajax.php') !== false;
@@ -1101,7 +1134,7 @@ class SecureUpdater {
             }
             
             $response = wp_remote_get($endpoint, [
-                'timeout' => 5,
+                'timeout' => 3, // Reduced timeout to avoid blocking
                 'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'headers' => [
                     'Accept' => 'application/json',
@@ -1113,6 +1146,8 @@ class SecureUpdater {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Kursagenten changelog feil: ' . $response->get_error_message());
                 }
+                // Cache failure for shorter time (5 minutes) to allow retry
+                set_transient($cache_key, false, 5 * MINUTE_IN_SECONDS);
                 return false;
             }
             
@@ -1121,19 +1156,27 @@ class SecureUpdater {
                 if (defined('WP_DEBUG') && WP_DEBUG) {
                     error_log('Kursagenten changelog HTTP feil: ' . $response_code);
                 }
+                // Cache failure for shorter time (5 minutes) to allow retry
+                set_transient($cache_key, false, 5 * MINUTE_IN_SECONDS);
                 return false;
             }
             
             $body = json_decode(wp_remote_retrieve_body($response), true);
             if (is_array($body) && isset($body['status']) && $body['status'] === 'success') {
+                // Cache successful response for 1 hour
+                set_transient($cache_key, $body, HOUR_IN_SECONDS);
                 return $body;
             }
             
+            // Cache failure for shorter time (5 minutes) to allow retry
+            set_transient($cache_key, false, 5 * MINUTE_IN_SECONDS);
             return false;
         } catch (Exception $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Kursagenten changelog exception: ' . $e->getMessage());
             }
+            // Cache failure for shorter time (5 minutes) to allow retry
+            set_transient($cache_key, false, 5 * MINUTE_IN_SECONDS);
             return false;
         }
     }
