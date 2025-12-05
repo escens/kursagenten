@@ -1,12 +1,16 @@
 <?php
 class Designmaler {
     private $design_options;
+    private $cached_custom_css = null;
 
     public function __construct() {
         add_action('admin_menu', array($this, 'design_add_plugin_page'));
         add_action('admin_init', array($this, 'design_page_init'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
         add_action('wp_head', array($this, 'add_custom_css'), 999);
+        
+        // Clear cached CSS when option is updated
+        add_action('update_option_kursagenten_custom_css', array($this, 'clear_custom_css_cache'), 10, 2);
         
         // Legg til action for å håndtere systemside-operasjoner
         add_action('admin_post_ka_manage_system_pages', array($this, 'handle_system_pages_actions'));
@@ -1493,17 +1497,27 @@ class Designmaler {
         }
         
         // Cache CSS option to avoid repeated database calls
-        static $custom_css = null;
-        if ($custom_css === null) {
-            $custom_css = get_option('kursagenten_custom_css', '');
+        // Use class property instead of static to allow cache invalidation
+        if ($this->cached_custom_css === null) {
+            $this->cached_custom_css = get_option('kursagenten_custom_css', '');
         }
         
-        if (!empty($custom_css)) {
+        if (!empty($this->cached_custom_css)) {
             echo '<!-- Kursagenten Custom CSS -->' . "\n";
             echo '<style type="text/css" id="kursagenten-custom-css">' . "\n";
-            echo $custom_css . "\n";
+            echo $this->cached_custom_css . "\n";
             echo '</style>' . "\n";
         }
+    }
+
+    /**
+     * Clear cached custom CSS when option is updated
+     * 
+     * @param mixed $old_value The old option value
+     * @param mixed $new_value The new option value
+     */
+    public function clear_custom_css_cache($old_value, $new_value) {
+        $this->cached_custom_css = null;
     }
 
     /**

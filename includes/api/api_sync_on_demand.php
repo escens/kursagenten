@@ -491,7 +491,8 @@ function cleanup_courses_on_demand() {
                 
                 // Finn første kursdato og schedule_ids
                 foreach ($course_details['locations'] as $loc) {
-                    if ($loc['courseId'] == $location_id_int && !empty($loc['schedules'])) {
+                    // Use strict equality and ensure type matching (courseId from API is string)
+                    if ((int) $loc['courseId'] === $location_id_int && !empty($loc['schedules'])) {
                         foreach ($loc['schedules'] as $schedule) {
                             if (!empty($schedule['id'])) {
                                 $valid_schedule_ids[] = $schedule['id'];
@@ -742,4 +743,3 @@ function kursagenten_deactivate_nightly_cleanup() {
     wp_clear_scheduled_hook('kursagenten_nightly_cleanup');
 }
 register_deactivation_hook(__FILE__, 'kursagenten_deactivate_nightly_cleanup');
-

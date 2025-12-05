@@ -1,3 +1,9 @@
+## 1.1.06 - 2025-12-05
+- Lagt til: Kortkode-attributt *vis* steder, som gir mulighet til å filtrere kurssteder-kortkode til kun å vise ønskede lokasjoner. Fungerer både med slug og stedsnavn. Eksempel: vis=oslo,drammen,bergen
+- Endret: Tidlligere attributt *vis* for kurssteder har blitt omdøpt til *stedinfo*. Gir mulighet til å vise spesifikke lokasjoner under stedsnavn i listen (fra feltet Fritekst sted i Kursagenten).
+- Fix: Hvis kurslokasjon blir endret fra fysisk sted til nettkurs, blir nå fritekst sted og adresse fjernet fra oppføring 
+- Fix: Feil i kode på [kurssteder], nå rettet. Viste steder som ikke lenger skulle være synlige.
+
 ## 1.1.05 - 2025-12-01
 - Forbedring: Under "Kursdesign" kan du nå velge eksisterende sider for kurs, kurskategorier, kurssteder og instruktører i stedet for å måtte opprette nye. Du kan også bruke samme side for flere funksjoner (f.eks. én side som viser både kurs og kurskategorier). Lenker i malene oppdateres automatisk basert på hva du velger. Kun Betaling-siden opprettes automatisk ved installering.
 - Fix: Gitt korrekt navn til "Lisensnøkkel", omdøpt fra "API-nøkkel"
