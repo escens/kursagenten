@@ -1,3 +1,7 @@
+## 1.1.07 - 2025-12-
+- Intert: lagt inn performance-debug.php og dokumentasjon for feilsøking hvis utvidelsen blir treg
+- Internt: gjort endringer til secure updater, gjorde siden treg igjen
+
 ## 1.1.06 - 2025-12-05
 - Lagt til: Kortkode-attributt *vis* steder, som gir mulighet til å filtrere kurssteder-kortkode til kun å vise ønskede lokasjoner. Fungerer både med slug og stedsnavn. Eksempel: vis=oslo,drammen,bergen
 - Endret: Tidlligere attributt *vis* for kurssteder har blitt omdøpt til *stedinfo*. Gir mulighet til å vise spesifikke lokasjoner under stedsnavn i listen (fra feltet Fritekst sted i Kursagenten).

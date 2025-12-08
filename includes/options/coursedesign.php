@@ -238,7 +238,7 @@ class Designmaler {
                     <div class="option-row">
                         <label class="option-label">Listevisning:</label>
                         <div class="option-input">
-                            <select name="kursagenten_archive_list_type">
+                            <select name="kursagenten_archive_list_type" id="kursagenten_archive_list_type">
                                 <?php
                                 $current_list = get_option('kursagenten_archive_list_type', 'standard');
                                 $list_types = [
@@ -257,6 +257,63 @@ class Designmaler {
                                 }
                                 ?>
                             </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid kolonner (kun når grid er valgt) -->
+                    <div class="option-row grid-columns-settings" id="archive_grid_columns_settings" style="<?php echo ($current_list === 'grid') ? '' : 'display: none;'; ?>">
+                        <label class="option-label">Antall kolonner i rutenett:</label>
+                        <div class="option-input">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Desktop:</label>
+                                    <select name="kursagenten_archive_grid_columns_desktop">
+                                        <?php
+                                        $current_desktop = get_option('kursagenten_archive_grid_columns_desktop', '3');
+                                        for ($i = 1; $i <= 6; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_desktop, (string)$i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tablet:</label>
+                                    <select name="kursagenten_archive_grid_columns_tablet">
+                                        <?php
+                                        $current_tablet = get_option('kursagenten_archive_grid_columns_tablet', '2');
+                                        for ($i = 1; $i <= 4; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_tablet, (string)$i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mobil:</label>
+                                    <select name="kursagenten_archive_grid_columns_mobile">
+                                        <?php
+                                        $current_mobile = get_option('kursagenten_archive_grid_columns_mobile', '1');
+                                        for ($i = 1; $i <= 2; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_mobile, (string)$i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -573,7 +630,7 @@ class Designmaler {
                     <div class="option-row">
                         <label class="option-label">Listedesign:</label>
                         <div class="option-input">
-                            <select name="kursagenten_taxonomy_list_type">
+                            <select name="kursagenten_taxonomy_list_type" id="kursagenten_taxonomy_list_type">
                                 <?php
                                 $current_list = get_option('kursagenten_taxonomy_list_type', 'standard');
                                 $list_types = [
@@ -592,6 +649,63 @@ class Designmaler {
                                 }
                                 ?>
                             </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Grid kolonner (kun når grid er valgt) -->
+                    <div class="option-row grid-columns-settings" id="taxonomy_grid_columns_settings" style="<?php echo ($current_list === 'grid') ? '' : 'display: none;'; ?>">
+                        <label class="option-label">Antall kolonner i rutenett:</label>
+                        <div class="option-input">
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Desktop:</label>
+                                    <select name="kursagenten_taxonomy_grid_columns_desktop">
+                                        <?php
+                                        $current_desktop = get_option('kursagenten_taxonomy_grid_columns_desktop', '3');
+                                        for ($i = 1; $i <= 6; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_desktop, (string)$i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tablet:</label>
+                                    <select name="kursagenten_taxonomy_grid_columns_tablet">
+                                        <?php
+                                        $current_tablet = get_option('kursagenten_taxonomy_grid_columns_tablet', '2');
+                                        for ($i = 1; $i <= 4; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_tablet, (string)$i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mobil:</label>
+                                    <select name="kursagenten_taxonomy_grid_columns_mobile">
+                                        <?php
+                                        $current_mobile = get_option('kursagenten_taxonomy_grid_columns_mobile', '1');
+                                        for ($i = 1; $i <= 2; $i++) {
+                                            printf(
+                                                '<option value="%d" %s>%d</option>',
+                                                $i,
+                                                selected($current_mobile, (string)$i, false),
+                                                $i
+                                            );
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
@@ -703,7 +817,7 @@ class Designmaler {
                                     <div class="option-row">
                                         <label class="option-label">Listedesign:</label>
                                         <div class="option-input">
-                                            <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_list_type">
+                                            <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_list_type" class="taxonomy-list-type-select" data-taxonomy="<?php echo esc_attr($tax_name); ?>">
                                                 <?php 
                                                 $current_tax_list_type = get_option("kursagenten_taxonomy_{$tax_name}_list_type", '');
                                                 ?>
@@ -715,6 +829,66 @@ class Designmaler {
                                                     </option>
                                                 <?php endforeach; ?>
                                             </select>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Grid kolonner for taksonomi-spesifikke innstillinger (kun når grid er valgt) -->
+                                    <div class="option-row grid-columns-settings taxonomy-grid-columns-settings" id="taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_settings" style="<?php echo ($current_tax_list_type === 'grid') ? '' : 'display: none;'; ?>">
+                                        <label class="option-label">Antall kolonner i rutenett:</label>
+                                        <div class="option-input">
+                                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Desktop:</label>
+                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_desktop">
+                                                        <option value="">Bruk standard</option>
+                                                        <?php
+                                                        $current_desktop = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_desktop", '');
+                                                        for ($i = 1; $i <= 6; $i++) {
+                                                            printf(
+                                                                '<option value="%d" %s>%d</option>',
+                                                                $i,
+                                                                selected($current_desktop, (string)$i, false),
+                                                                $i
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tablet:</label>
+                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_tablet">
+                                                        <option value="">Bruk standard</option>
+                                                        <?php
+                                                        $current_tablet = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_tablet", '');
+                                                        for ($i = 1; $i <= 4; $i++) {
+                                                            printf(
+                                                                '<option value="%d" %s>%d</option>',
+                                                                $i,
+                                                                selected($current_tablet, (string)$i, false),
+                                                                $i
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mobil:</label>
+                                                    <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_mobile">
+                                                        <option value="">Bruk standard</option>
+                                                        <?php
+                                                        $current_mobile = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_mobile", '');
+                                                        for ($i = 1; $i <= 2; $i++) {
+                                                            printf(
+                                                                '<option value="%d" %s>%d</option>',
+                                                                $i,
+                                                                selected($current_mobile, (string)$i, false),
+                                                                $i
+                                                            );
+                                                        }
+                                                        ?>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     
@@ -956,6 +1130,64 @@ class Designmaler {
             )
         );
 
+        // Registrer grid kolonne-innstillinger for archive (kursliste med filter)
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_grid_columns_desktop',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'absint',
+                'default' => '3'
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_grid_columns_tablet',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'absint',
+                'default' => '2'
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_archive_grid_columns_mobile',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'absint',
+                'default' => '1'
+            )
+        );
+
+        // Registrer grid kolonne-innstillinger for taxonomy (taksonomi-sider)
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_grid_columns_desktop',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'absint',
+                'default' => '3'
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_grid_columns_tablet',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'absint',
+                'default' => '2'
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_grid_columns_mobile',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'absint',
+                'default' => '1'
+            )
+        );
+
         // Registrer taksonomi-spesifikke innstillinger
         $taxonomies = ['ka_coursecategory' => 'Kurskategorier', 
                       'ka_course_location' => 'Kurssteder', 
@@ -985,6 +1217,35 @@ class Designmaler {
                     )
                 );
             }
+
+            // Registrer grid kolonne-innstillinger for hver taksonomi (hvis override er aktivert)
+            register_setting(
+                'design_option_group',
+                "kursagenten_taxonomy_{$tax_name}_grid_columns_desktop",
+                array(
+                    'type' => 'string',
+                    'sanitize_callback' => 'absint',
+                    'default' => ''
+                )
+            );
+            register_setting(
+                'design_option_group',
+                "kursagenten_taxonomy_{$tax_name}_grid_columns_tablet",
+                array(
+                    'type' => 'string',
+                    'sanitize_callback' => 'absint',
+                    'default' => ''
+                )
+            );
+            register_setting(
+                'design_option_group',
+                "kursagenten_taxonomy_{$tax_name}_grid_columns_mobile",
+                array(
+                    'type' => 'string',
+                    'sanitize_callback' => 'absint',
+                    'default' => ''
+                )
+            );
 
             // Registrer navnevisning for instruktører
             if ($tax_name === 'ka_instructors') {
@@ -1233,6 +1494,13 @@ class Designmaler {
                             if (typeof toggleAdvancedColors === "function") {
                                 toggleAdvancedColors();
                             }
+                            // Re-evaluer visning av grid kolonne-innstillinger når seksjonen åpnes
+                            if (typeof toggleGridColumnsSettings === "function") {
+                                toggleGridColumnsSettings();
+                            }
+                            if (typeof toggleTaxonomySpecificGridColumns === "function") {
+                                toggleTaxonomySpecificGridColumns();
+                            }
                             // Oppdater URL-state: inkluder denne i settet av åpne bokser
                             var sectionKey = $card.data('section');
                             if (sectionKey) {
@@ -1364,6 +1632,70 @@ class Designmaler {
                         });
                     }
                 }).disableSelection();
+
+                // Toggle grid columns settings based on list type selection
+                function toggleGridColumnsSettings() {
+                    var archiveListType = $('#kursagenten_archive_list_type').val();
+                    var taxonomyListType = $('#kursagenten_taxonomy_list_type').val();
+                    
+                    // Toggle archive grid columns settings
+                    var $archiveSettings = $('#archive_grid_columns_settings');
+                    var $archiveCard = $archiveSettings.closest('.options-card');
+                    var archiveIsCollapsed = ($archiveCard.length && $archiveCard.attr('data-collapsed') === 'true');
+                    
+                    if (archiveListType === 'grid' && !archiveIsCollapsed) {
+                        $archiveSettings.show();
+                    } else {
+                        $archiveSettings.hide();
+                    }
+                    
+                    // Toggle taxonomy grid columns settings
+                    var $taxonomySettings = $('#taxonomy_grid_columns_settings');
+                    var $taxonomyCard = $taxonomySettings.closest('.options-card');
+                    var taxonomyIsCollapsed = ($taxonomyCard.length && $taxonomyCard.attr('data-collapsed') === 'true');
+                    
+                    if (taxonomyListType === 'grid' && !taxonomyIsCollapsed) {
+                        $taxonomySettings.show();
+                    } else {
+                        $taxonomySettings.hide();
+                    }
+                }
+                
+                // Toggle taxonomy-specific grid columns settings
+                function toggleTaxonomySpecificGridColumns() {
+                    $('.taxonomy-list-type-select').each(function() {
+                        var $select = $(this);
+                        var listType = $select.val();
+                        var taxonomy = $select.data('taxonomy');
+                        var $settings = $('#taxonomy_' + taxonomy + '_grid_columns_settings');
+                        var $card = $settings.closest('.options-card');
+                        var isCollapsed = ($card.length && $card.attr('data-collapsed') === 'true');
+                        
+                        // Vis kun når grid er valgt OG seksjonen er utvidet
+                        if (listType === 'grid' && !isCollapsed) {
+                            $settings.show();
+                        } else {
+                            $settings.hide();
+                        }
+                    });
+                }
+                
+                // Bind change events
+                $('#kursagenten_archive_list_type, #kursagenten_taxonomy_list_type').on('change', toggleGridColumnsSettings);
+                $(document).on('change', '.taxonomy-list-type-select', toggleTaxonomySpecificGridColumns);
+                
+                // Re-evaluate grid columns settings when sections are toggled
+                $('.options-card').on('click', 'h3', function() {
+                    // Use setTimeout to ensure the collapse state is updated first
+                    setTimeout(function() {
+                        toggleGridColumnsSettings();
+                        toggleTaxonomySpecificGridColumns();
+                    }, 10);
+                });
+                
+                // Initial toggle on page load
+                toggleGridColumnsSettings();
+                toggleTaxonomySpecificGridColumns();
         });
         JS    
         );
@@ -1502,11 +1834,126 @@ class Designmaler {
             $this->cached_custom_css = get_option('kursagenten_custom_css', '');
         }
         
+        $css_output = '';
+        
+        // Add grid columns CSS if grid is selected
+        $this->add_grid_columns_css($css_output);
+        
+        // Add custom CSS if exists
         if (!empty($this->cached_custom_css)) {
+            $css_output .= $this->cached_custom_css . "\n";
+        }
+        
+        if (!empty($css_output)) {
             echo '<!-- Kursagenten Custom CSS -->' . "\n";
             echo '<style type="text/css" id="kursagenten-custom-css">' . "\n";
-            echo $this->cached_custom_css . "\n";
+            echo $css_output;
             echo '</style>' . "\n";
+        }
+    }
+
+    /**
+     * Add dynamic CSS for grid columns based on settings
+     * 
+     * @param string $css_output Reference to CSS output string
+     */
+    private function add_grid_columns_css(&$css_output) {
+        // Check if we're on archive page (kursliste med filter)
+        $is_archive = is_post_type_archive('ka_course') || 
+                     (is_page() && has_shortcode(get_post()->post_content ?? '', 'kursliste'));
+        
+        // Check if we're on taxonomy page
+        $is_taxonomy = is_tax('ka_coursecategory') || is_tax('ka_course_location') || is_tax('ka_instructors');
+        
+        // Determine which list type and settings to use
+        $list_type = null;
+        $desktop_cols = null;
+        $tablet_cols = null;
+        $mobile_cols = null;
+        
+        if ($is_archive) {
+            $list_type = get_option('kursagenten_archive_list_type', 'standard');
+            if ($list_type === 'grid') {
+                $desktop_cols = absint(get_option('kursagenten_archive_grid_columns_desktop', '3'));
+                $tablet_cols = absint(get_option('kursagenten_archive_grid_columns_tablet', '2'));
+                $mobile_cols = absint(get_option('kursagenten_archive_grid_columns_mobile', '1'));
+            }
+        } elseif ($is_taxonomy) {
+            // Check for taxonomy-specific override first
+            $taxonomy = get_queried_object()->taxonomy ?? '';
+            $taxonomy_override = get_option("kursagenten_taxonomy_{$taxonomy}_override", false);
+            
+            if ($taxonomy_override) {
+                $taxonomy_list_type = get_option("kursagenten_taxonomy_{$taxonomy}_list_type", '');
+                if ($taxonomy_list_type === 'grid') {
+                    // Use taxonomy-specific grid settings if they exist, otherwise use global taxonomy settings
+                    $tax_desktop = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_desktop", '');
+                    $tax_tablet = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_tablet", '');
+                    $tax_mobile = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_mobile", '');
+                    
+                    // Use taxonomy-specific values if set, otherwise fallback to global taxonomy settings
+                    if ($tax_desktop !== '') {
+                        $desktop_cols = absint($tax_desktop);
+                    } else {
+                        $desktop_cols = absint(get_option('kursagenten_taxonomy_grid_columns_desktop', '3'));
+                    }
+                    
+                    if ($tax_tablet !== '') {
+                        $tablet_cols = absint($tax_tablet);
+                    } else {
+                        $tablet_cols = absint(get_option('kursagenten_taxonomy_grid_columns_tablet', '2'));
+                    }
+                    
+                    if ($tax_mobile !== '') {
+                        $mobile_cols = absint($tax_mobile);
+                    } else {
+                        $mobile_cols = absint(get_option('kursagenten_taxonomy_grid_columns_mobile', '1'));
+                    }
+                    
+                    $list_type = 'grid';
+                }
+            } else {
+                $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
+                if ($list_type === 'grid') {
+                    $desktop_cols = absint(get_option('kursagenten_taxonomy_grid_columns_desktop', '3'));
+                    $tablet_cols = absint(get_option('kursagenten_taxonomy_grid_columns_tablet', '2'));
+                    $mobile_cols = absint(get_option('kursagenten_taxonomy_grid_columns_mobile', '1'));
+                }
+            }
+        }
+        
+        // Generate CSS if grid is selected and we have column values
+        if ($list_type === 'grid' && $desktop_cols !== null) {
+            // Ensure valid values (minimum 1, reasonable maximum)
+            $desktop_cols = max(1, min(6, $desktop_cols));
+            $tablet_cols = max(1, min(4, $tablet_cols));
+            $mobile_cols = max(1, min(2, $mobile_cols));
+            
+            $css_output .= "/* Grid columns - Custom settings */\n";
+            $css_output .= "#ka .courselist-items {\n";
+            $css_output .= "    grid-template-columns: repeat({$desktop_cols}, 1fr) !important;\n";
+            $css_output .= "}\n\n";
+            
+            // Tablet breakpoint (max-width: 1024px) - matches list-grid.css
+            $css_output .= "@media (max-width: 1024px) {\n";
+            $css_output .= "    #ka .courselist-items {\n";
+            $css_output .= "        grid-template-columns: repeat({$tablet_cols}, 1fr) !important;\n";
+            $css_output .= "    }\n";
+            $css_output .= "}\n\n";
+            
+            // Tablet breakpoint (max-width: 768px) - also matches list-grid.css
+            $css_output .= "@media (max-width: 768px) {\n";
+            $css_output .= "    #ka .courselist-items {\n";
+            $css_output .= "        grid-template-columns: repeat({$tablet_cols}, 1fr) !important;\n";
+            $css_output .= "    }\n";
+            $css_output .= "}\n\n";
+            
+            // Mobile breakpoint (max-width: 576px) - matches list-grid.css
+            $css_output .= "@media (max-width: 576px) {\n";
+            $css_output .= "    #ka .courselist-items {\n";
+            $css_output .= "        grid-template-columns: repeat({$mobile_cols}, 1fr) !important;\n";
+            $css_output .= "    }\n";
+            $css_output .= "}\n\n";
         }
     }
 

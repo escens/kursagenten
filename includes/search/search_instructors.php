@@ -213,13 +213,8 @@ add_filter('post_type_link', function($permalink, $post) {
     return $permalink;
 }, 10, 2);
 
-// Remove all unnecessary filters
-remove_all_filters('post_thumbnail_html');
-remove_all_filters('wp_get_attachment_image');
-remove_all_filters('wp_get_attachment_image_src');
-remove_all_filters('post_thumbnail_id');
-remove_all_filters('wp_get_attachment_url');
-remove_all_filters('get_post_metadata');
+// Note: We don't remove filters globally as this can conflict with other plugins
+// Instead, we handle instructor-specific filtering in our own filters below
 
 // Keep only the essential filters
 add_filter('has_post_thumbnail', function($has_thumbnail, $post) {

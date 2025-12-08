@@ -45,6 +45,7 @@ class SecureUpdater {
         // Registrer site ved første besøk (eller når pending registration finnes)
         // Only run in admin to avoid unnecessary database calls on frontend
         // Note: Cron jobs use cron_register_site() directly, not this hook
+        // Run on shutdown to avoid blocking admin page loads
         if (is_admin()) {
             add_action('admin_init', [$this, 'maybe_register_site']);
         }
@@ -127,11 +128,27 @@ class SecureUpdater {
         // Check if we have a pending registration from a recent API key update
         if (get_transient('kursagenten_pending_registration')) {
             delete_transient('kursagenten_pending_registration');
+            // Force registration runs synchronously (blocking) since it's important
             $this->register_site(true);
             return;
         }
         
-        // Otherwise run normal daily check
+        // Check if we already registered this week BEFORE calling register_site
+        // This avoids unnecessary function call on every admin page load
+        $last_register = get_option('kursagenten_last_register', 0);
+        if ($last_register > 0 && (time() - $last_register < 604800)) { // 7 days
+            return; // Already registered recently, skip
+        }
+        
+        // Schedule registration to run on shutdown to avoid blocking admin pages
+        // This prevents the 5+ second HTTP timeout from blocking admin page loads
+        add_action('shutdown', [$this, 'register_site_on_shutdown'], 999);
+    }
+    
+    /**
+     * Wrapper to register site on shutdown (non-blocking)
+     */
+    public function register_site_on_shutdown() {
         $this->register_site(false);
     }
 
@@ -195,8 +212,13 @@ class SecureUpdater {
             error_log('  Plugin version: ' . $data['plugin_version']);
         }
         
+        // Use non-blocking request to avoid blocking admin pages
+        // Only block if this is a forced registration (e.g., after API key update)
+        $blocking = $force;
+        
         $response = wp_remote_get($endpoint, [
-            'timeout' => 15,
+            'timeout' => $blocking ? 5 : 3, // Shorter timeout for non-blocking, 5s for forced
+            'blocking' => $blocking, // Non-blocking for normal checks to avoid slowing admin
             'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'headers' => [
                 'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -205,6 +227,17 @@ class SecureUpdater {
             ]
         ]);
 
+        // For non-blocking requests, wp_remote_get returns immediately
+        // Response will be empty or minimal, so we skip processing
+        if (!$blocking) {
+            // Non-blocking request was sent, exit early
+            // Actual result will be handled by server or next cron run
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten: Registration request sent (non-blocking)');
+            }
+            return;
+        }
+        
         $is_error = is_wp_error($response);
         $code = $is_error ? 0 : (int) wp_remote_retrieve_response_code($response);
         
