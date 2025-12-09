@@ -245,7 +245,8 @@ class Designmaler {
                                     'standard' => 'Standard liste',
                                     'grid' => 'Rutenett',
                                     'plain' => 'Ren og enkel liste',
-                                    'compact' => 'Kompakt liste'
+                                    'compact' => 'Kompakt liste',
+                                    'simple-cards' => 'Enkle kort'
                                 ];
                                 foreach ($list_types as $value => $label) {
                                     printf(
@@ -261,7 +262,7 @@ class Designmaler {
                     </div>
                     
                     <!-- Grid kolonner (kun når grid er valgt) -->
-                    <div class="option-row grid-columns-settings" id="archive_grid_columns_settings" style="<?php echo ($current_list === 'grid') ? '' : 'display: none;'; ?>">
+                    <div class="option-row grid-columns-settings" id="archive_grid_columns_settings" style="<?php echo (in_array($current_list, ['grid', 'simple-cards'])) ? '' : 'display: none;'; ?>">
                         <label class="option-label">Antall kolonner i rutenett:</label>
                         <div class="option-input">
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
@@ -637,7 +638,8 @@ class Designmaler {
                                     'standard' => 'Standard liste',
                                     'grid' => 'Rutenett',
                                     'plain' => 'Ren og enkel liste',
-                                    'compact' => 'Kompakt liste'
+                                    'compact' => 'Kompakt liste',
+                                    'simple-cards' => 'Enkle kort'
                                 ];
                                 foreach ($list_types as $value => $label) {
                                     printf(
@@ -653,7 +655,7 @@ class Designmaler {
                     </div>
                     
                     <!-- Grid kolonner (kun når grid er valgt) -->
-                    <div class="option-row grid-columns-settings" id="taxonomy_grid_columns_settings" style="<?php echo ($current_list === 'grid') ? '' : 'display: none;'; ?>">
+                    <div class="option-row grid-columns-settings" id="taxonomy_grid_columns_settings" style="<?php echo (in_array($current_list, ['grid', 'simple-cards'])) ? '' : 'display: none;'; ?>">
                         <label class="option-label">Antall kolonner i rutenett:</label>
                         <div class="option-input">
                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
@@ -833,7 +835,7 @@ class Designmaler {
                                     </div>
                                     
                                     <!-- Grid kolonner for taksonomi-spesifikke innstillinger (kun når grid er valgt) -->
-                                    <div class="option-row grid-columns-settings taxonomy-grid-columns-settings" id="taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_settings" style="<?php echo ($current_tax_list_type === 'grid') ? '' : 'display: none;'; ?>">
+                                    <div class="option-row grid-columns-settings taxonomy-grid-columns-settings" id="taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_settings" style="<?php echo (in_array($current_tax_list_type, ['grid', 'simple-cards'])) ? '' : 'display: none;'; ?>">
                                         <label class="option-label">Antall kolonner i rutenett:</label>
                                         <div class="option-input">
                                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
@@ -1643,7 +1645,7 @@ class Designmaler {
                     var $archiveCard = $archiveSettings.closest('.options-card');
                     var archiveIsCollapsed = ($archiveCard.length && $archiveCard.attr('data-collapsed') === 'true');
                     
-                    if (archiveListType === 'grid' && !archiveIsCollapsed) {
+                    if ((archiveListType === 'grid' || archiveListType === 'simple-cards') && !archiveIsCollapsed) {
                         $archiveSettings.show();
                     } else {
                         $archiveSettings.hide();
@@ -1654,10 +1656,26 @@ class Designmaler {
                     var $taxonomyCard = $taxonomySettings.closest('.options-card');
                     var taxonomyIsCollapsed = ($taxonomyCard.length && $taxonomyCard.attr('data-collapsed') === 'true');
                     
-                    if (taxonomyListType === 'grid' && !taxonomyIsCollapsed) {
+                    if ((taxonomyListType === 'grid' || taxonomyListType === 'simple-cards') && !taxonomyIsCollapsed) {
                         $taxonomySettings.show();
                     } else {
                         $taxonomySettings.hide();
+                    }
+                    
+                    // Handle view type for simple-cards: disable "all_coursedates" and auto-select "main_courses"
+                    var $viewTypeMainCourses = $('input[name="kursagenten_taxonomy_view_type"][value="main_courses"]');
+                    var $viewTypeAllCoursedates = $('input[name="kursagenten_taxonomy_view_type"][value="all_coursedates"]');
+                    
+                    if (taxonomyListType === 'simple-cards') {
+                        // Disable "all_coursedates" option
+                        $viewTypeAllCoursedates.prop('disabled', true).closest('label').css('opacity', '0.5');
+                        // Auto-select "main_courses" if not already selected
+                        if (!$viewTypeMainCourses.is(':checked')) {
+                            $viewTypeMainCourses.prop('checked', true);
+                        }
+                    } else {
+                        // Re-enable "all_coursedates" option
+                        $viewTypeAllCoursedates.prop('disabled', false).closest('label').css('opacity', '1');
                     }
                 }
                 
@@ -1671,8 +1689,8 @@ class Designmaler {
                         var $card = $settings.closest('.options-card');
                         var isCollapsed = ($card.length && $card.attr('data-collapsed') === 'true');
                         
-                        // Vis kun når grid er valgt OG seksjonen er utvidet
-                        if (listType === 'grid' && !isCollapsed) {
+                        // Vis kun når grid eller simple-cards er valgt OG seksjonen er utvidet
+                        if ((listType === 'grid' || listType === 'simple-cards') && !isCollapsed) {
                             $settings.show();
                         } else {
                             $settings.hide();
@@ -1873,7 +1891,7 @@ class Designmaler {
         
         if ($is_archive) {
             $list_type = get_option('kursagenten_archive_list_type', 'standard');
-            if ($list_type === 'grid') {
+            if ($list_type === 'grid' || $list_type === 'simple-cards') {
                 $desktop_cols = absint(get_option('kursagenten_archive_grid_columns_desktop', '3'));
                 $tablet_cols = absint(get_option('kursagenten_archive_grid_columns_tablet', '2'));
                 $mobile_cols = absint(get_option('kursagenten_archive_grid_columns_mobile', '1'));
@@ -1884,8 +1902,8 @@ class Designmaler {
             $taxonomy_override = get_option("kursagenten_taxonomy_{$taxonomy}_override", false);
             
             if ($taxonomy_override) {
-                $taxonomy_list_type = get_option("kursagenten_taxonomy_{$taxonomy}_list_type", '');
-                if ($taxonomy_list_type === 'grid') {
+                    $taxonomy_list_type = get_option("kursagenten_taxonomy_{$taxonomy}_list_type", '');
+                    if ($taxonomy_list_type === 'grid' || $taxonomy_list_type === 'simple-cards') {
                     // Use taxonomy-specific grid settings if they exist, otherwise use global taxonomy settings
                     $tax_desktop = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_desktop", '');
                     $tax_tablet = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_tablet", '');
@@ -1914,7 +1932,7 @@ class Designmaler {
                 }
             } else {
                 $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
-                if ($list_type === 'grid') {
+                if ($list_type === 'grid' || $list_type === 'simple-cards') {
                     $desktop_cols = absint(get_option('kursagenten_taxonomy_grid_columns_desktop', '3'));
                     $tablet_cols = absint(get_option('kursagenten_taxonomy_grid_columns_tablet', '2'));
                     $mobile_cols = absint(get_option('kursagenten_taxonomy_grid_columns_mobile', '1'));
@@ -1922,14 +1940,14 @@ class Designmaler {
             }
         }
         
-        // Generate CSS if grid is selected and we have column values
-        if ($list_type === 'grid' && $desktop_cols !== null) {
+        // Generate CSS if grid or simple-cards is selected and we have column values
+        if (($list_type === 'grid' || $list_type === 'simple-cards') && $desktop_cols !== null) {
             // Ensure valid values (minimum 1, reasonable maximum)
             $desktop_cols = max(1, min(6, $desktop_cols));
             $tablet_cols = max(1, min(4, $tablet_cols));
             $mobile_cols = max(1, min(2, $mobile_cols));
             
-            $css_output .= "/* Grid columns - Custom settings */\n";
+            $css_output .= "/* " . ($list_type === 'simple-cards' ? 'Simple cards' : 'Grid') . " columns - Custom settings */\n";
             $css_output .= "#ka .courselist-items {\n";
             $css_output .= "    grid-template-columns: repeat({$desktop_cols}, 1fr) !important;\n";
             $css_output .= "}\n\n";
