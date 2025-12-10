@@ -379,13 +379,25 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
     }
     error_log("Updating course {$post_id}/location {$location_id}/main_course_id {$main_course_id} status to: {$post_status} (is_active: " . ($is_active ? 'true' : 'false') . ")");
 
-    wp_update_post([
+    // Update post data including slug for sub-courses
+    $update_data = [
         'ID'           => $post_id,
         'post_title'   => sanitize_text_field($updated_title),
         'description'  => 'Updated',
         'post_excerpt' => sanitize_text_field($data['introText']),
         'post_status'  => $post_status,
-    ]);
+    ];
+    
+    // Update slug (post_name) for sub-courses when location name changes
+    if ($is_parent_course !== 'yes') {
+        $new_location_name = get_course_location($data);
+        $current_post = get_post($post_id);
+        if ($current_post && $current_post->post_name !== $new_location_name) {
+            $update_data['post_name'] = sanitize_title($new_location_name);
+        }
+    }
+
+    wp_update_post($update_data);
 
     if (!is_wp_error($post_id)) {
         // Update shared metadata
@@ -732,7 +744,11 @@ function get_common_meta_fields($data, $language) {
 
 function get_course_location($data) {
     if (!empty($data['locations'][0]['municipality'])) {
-        // Special handling for municipality names with multiple variants
+        // Get municipality name mapping from options
+        $municipality_mapping = get_option('kursagenten_location_mappings', array());
+        
+        // If no mappings exist, initialize with default values
+        if (empty($municipality_mapping)) {
         $municipality_mapping = [
             'Bærum / Sandvika' => 'Bærum',
             'Rana / Mo i Rana' => 'Mo i Rana',
@@ -740,6 +756,8 @@ function get_course_location($data) {
             'Porsgrunn / Brevik' => 'Porsgrunn',
             'Vågan / Svolvær' => 'Svolvær',
         ];
+            update_option('kursagenten_location_mappings', $municipality_mapping);
+        }
         
         $municipality = $data['locations'][0]['municipality'];
         if (isset($municipality_mapping[$municipality])) {
@@ -1844,4 +1862,92 @@ function kursagenten_delete_course_by_location_id($location_id) {
 
     error_log("=== SLUTT: kursagenten_delete_course_by_location_id ===");
     return $deleted_any_course;
+}
+
+/**
+ * Update slugs on sub-courses when location name mapping changes
+ * 
+ * @param string $old_name The old location name (before mapping)
+ * @param string $new_name The new location name (after mapping)
+ * @return int Number of posts updated
+ */
+function kursagenten_update_course_slugs_for_location_mapping($old_name, $new_name) {
+    if (empty($old_name) || empty($new_name) || $old_name === $new_name) {
+        return 0;
+    }
+
+    // Sanitize slugs
+    $old_slug = sanitize_title($old_name);
+    $new_slug = sanitize_title($new_name);
+    
+    if ($old_slug === $new_slug) {
+        return 0; // No change needed if slugs are the same
+    }
+
+    // Find all sub-courses (not parent courses) with the old slug or matching meta field
+    // We check both post_name (slug) and ka_sub_course_location meta field
+    global $wpdb;
+    $post_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT DISTINCT p.ID 
+        FROM {$wpdb->posts} p
+        LEFT JOIN {$wpdb->postmeta} pm1 ON p.ID = pm1.post_id AND pm1.meta_key = 'ka_sub_course_location'
+        LEFT JOIN {$wpdb->postmeta} pm2 ON p.ID = pm2.post_id AND pm2.meta_key = 'ka_is_parent_course'
+        WHERE p.post_type = 'ka_course' 
+        AND p.post_status != 'trash'
+        AND (pm2.meta_value != 'yes' OR pm2.meta_id IS NULL)
+        AND (
+            p.post_name = %s 
+            OR (pm1.meta_value = %s)
+        )",
+        $old_slug,
+        $old_name
+    ));
+
+    if (empty($post_ids)) {
+        return 0;
+    }
+
+    $updated_count = 0;
+
+    foreach ($post_ids as $post_id) {
+        $final_new_slug = $new_slug;
+        
+        // Check if new slug already exists (avoid conflicts)
+        $existing_post = get_page_by_path($final_new_slug, OBJECT, 'ka_course');
+        
+        if ($existing_post && $existing_post->ID != $post_id) {
+            // Slug conflict - append number
+            $counter = 1;
+            do {
+                $final_new_slug = $new_slug . '-' . $counter;
+                $existing_post = get_page_by_path($final_new_slug, OBJECT, 'ka_course');
+                $counter++;
+            } while ($existing_post && $existing_post->ID != $post_id && $counter < 100); // Safety limit
+        }
+
+        // Update the post slug
+        $result = wp_update_post(array(
+            'ID' => $post_id,
+            'post_name' => $final_new_slug,
+        ), true);
+
+        if (!is_wp_error($result)) {
+            // Also update the metadata
+            update_post_meta($post_id, 'ka_sub_course_location', sanitize_text_field($new_name));
+            
+            // Update post title if it contains the old location name
+            $post = get_post($post_id);
+            if ($post && strpos($post->post_title, ' - ' . $old_name) !== false) {
+                $new_title = str_replace(' - ' . $old_name, ' - ' . $new_name, $post->post_title);
+                wp_update_post(array(
+                    'ID' => $post_id,
+                    'post_title' => $new_title,
+                ));
+            }
+            
+            $updated_count++;
+        }
+    }
+
+    return $updated_count;
 }

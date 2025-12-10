@@ -79,7 +79,7 @@ register_taxonomy('ka_course_location', array('ka_course', 'ka_coursedate', 'ins
         'item_link' => 'Kurssted link',
         'item_link_description' => 'Link til et kurssted',
         'archives'  => capitalize_first_letter($kurssted),
-        'name_field_description' => 'Navnet slik det som vises på siden. Bør ikke endres.',
+        'name_field_description' => 'Navnet slik det som vises på siden. Kan endres under <a href="' . admin_url('admin.php?page=kursinnstillinger#steder') . '">Synkronisering</a>.',
         'slug_field_description' => '"Slug" er den SEO-vennlige versjonen av url-en. Eksempel /oslo',
         'parent_field_description' => 'Velg en forelder for å lage et hierarki, og la dette bli en subkategori.',
         'desc_field_description' => 'Kort beskrivelse brukes i oversikter og som innledende tekst på detaljside',
@@ -275,3 +275,113 @@ add_filter('submenu_file', function($submenu_file, $parent_file) {
     
     return $submenu_file;
 }, 10, 2);
+
+// Make name field readonly for ka_course_location taxonomy and update description
+add_action('ka_course_location_edit_form_fields', function($term) {
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        // Make name field readonly
+        $('#name').prop('readonly', true).css('background-color', '#f0f0f0');
+        
+        // Make slug field readonly
+        $('#slug').prop('readonly', true).css('background-color', '#f0f0f0');
+        
+        // Update description text
+        var $desc = $('#name-description');
+        if ($desc.length) {
+            var syncUrl = '<?php echo esc_js(admin_url('admin.php?page=kursinnstillinger#steder')); ?>';
+            $desc.html('Navnet slik det som vises på siden. Kan endres under <a href="' + syncUrl + '">Synkronisering</a>.');
+        }
+    });
+    </script>
+    <?php
+}, 10, 1);
+
+// Also handle the add form (though locations are usually created automatically)
+add_action('ka_course_location_add_form_fields', function() {
+    ?>
+    <script type="text/javascript">
+    jQuery(document).ready(function($) {
+        // Make name field readonly on add form too
+        $('#tag-name').prop('readonly', true).css('background-color', '#f0f0f0');
+        
+        // Make slug field readonly on add form too
+        $('#tag-slug').prop('readonly', true).css('background-color', '#f0f0f0');
+        
+        // Update description text
+        var $desc = $('#tag-name-description');
+        if ($desc.length) {
+            var syncUrl = '<?php echo esc_js(admin_url('admin.php?page=kursinnstillinger#steder')); ?>';
+            $desc.html('Navnet slik det som vises på siden. Kan endres under <a href="' + syncUrl + '">Synkronisering</a>.');
+        }
+    });
+    </script>
+    <?php
+});
+
+// Store original term name and slug before update to prevent changes
+add_action('load-edit-tags.php', function() {
+    if (isset($_GET['taxonomy']) && $_GET['taxonomy'] === 'ka_course_location' && isset($_GET['tag_ID'])) {
+        $term_id = (int) $_GET['tag_ID'];
+        $term = get_term($term_id, 'ka_course_location');
+        if ($term && !is_wp_error($term)) {
+            // Store original name and slug in transient
+            set_transient('ka_location_original_name_' . $term_id, $term->name, 300);
+            set_transient('ka_location_original_slug_' . $term_id, $term->slug, 300);
+        }
+    }
+});
+
+// Prevent name and slug changes via form submission
+add_action('edit_term', function($term_id, $tt_id, $taxonomy) {
+    static $preventing_loop = false;
+    
+    // Only apply to ka_course_location taxonomy
+    if ($taxonomy !== 'ka_course_location' || $preventing_loop) {
+        return;
+    }
+    
+    // Get original name and slug from transient
+    $original_name = get_transient('ka_location_original_name_' . $term_id);
+    $original_slug = get_transient('ka_location_original_slug_' . $term_id);
+    
+    $needs_revert = false;
+    $update_data = array();
+    
+    // Check if name was changed
+    if ($original_name && isset($_POST['name']) && $_POST['name'] !== $original_name) {
+        $update_data['name'] = $original_name;
+        $needs_revert = true;
+    }
+    
+    // Check if slug was changed
+    if ($original_slug && isset($_POST['slug']) && $_POST['slug'] !== $original_slug) {
+        $update_data['slug'] = $original_slug;
+        $needs_revert = true;
+    }
+    
+    if ($needs_revert) {
+        // Revert the changes
+        $preventing_loop = true;
+        wp_update_term($term_id, $taxonomy, $update_data);
+        $preventing_loop = false;
+        
+        // Delete transients
+        delete_transient('ka_location_original_name_' . $term_id);
+        delete_transient('ka_location_original_slug_' . $term_id);
+        
+        // Show admin notice
+        add_action('admin_notices', function() {
+            ?>
+            <div class="notice notice-warning is-dismissible">
+                <p><strong>Advarsel:</strong> Navn og slug på kurssteder kan ikke endres her. Du kan endre navnet under <a href="<?php echo esc_url(admin_url('admin.php?page=kursinnstillinger#steder')); ?>">Synkronisering</a>.</p>
+            </div>
+            <?php
+        });
+    } else {
+        // Clean up transients
+        delete_transient('ka_location_original_name_' . $term_id);
+        delete_transient('ka_location_original_slug_' . $term_id);
+    }
+}, 5, 3); // Priority 5 to run early
