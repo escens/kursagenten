@@ -283,6 +283,7 @@ require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/course_days_helper.php';
+require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
 // Load migration script for admin pages

@@ -7,12 +7,17 @@ if (!defined('ABSPATH')) exit;
 
 /**
  * Shortcode for å vise kurssteder i grid-format
- * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" vis="standard/alta,oslo,bergen" stedinfo="ja"]
+ * [kurssteder layout="grid/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" vis="standard/alta,oslo,bergen" region="østlandet" stedinfo="ja"]
  * 
  * vis-parameteren (filtrering, konsistent med kurskategorier):
  * - "standard": viser alle steder (standard)
  * - kommaseparert liste: viser kun spesifikke steder (f.eks. "alta,oslo,bergen" eller "tromso,trondheim")
  * - Kan bruke stedsnavn eller slug (case-insensitive)
+ * 
+ * region-parameteren:
+ * - Filtrerer kurssteder basert på region (kun hvis regioner er aktivert)
+ * - Gyldige verdier: "sørlandet", "østlandet", "vestlandet", "midt-norge", "nord-norge"
+ * - Kan kombineres med vis-parameteren (OR-logikk: viser steder fra regionen ELLER de spesifiserte stedene)
  * 
  * stedinfo-parameteren:
  * - "ja": viser liste over spesifikke steder (fritekst sted fra Kursagenten) under hvert sted
@@ -52,6 +57,7 @@ class CourseLocationGrid {
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
             'vis' => 'standard',
+            'region' => '',
             'stedinfo' => '',
             'klasse' => ''
         ];
@@ -64,7 +70,7 @@ class CourseLocationGrid {
         $a = $this->process_attributes($a);
         
         // Hent kurssteder
-        $terms = $this->get_terms($a['vis']);
+        $terms = $this->get_terms($a['vis'], $a['region']);
         
         if (empty($terms) || is_wp_error($terms)) {
             return '<div class="no-locations">Det er for øyeblikket ingen kurssteder å vise.</div>';
@@ -102,30 +108,62 @@ class CourseLocationGrid {
         return $atts;
     }
 
-    private function get_terms(string $vis = 'standard'): array 
+    private function get_terms(string $vis = 'standard', string $region = ''): array 
     {
         $args = [
             'taxonomy' => 'ka_course_location',
             'hide_empty' => false,
             'meta_query' => [
-                'relation' => 'OR',
+                'relation' => 'AND',
                 [
-                    'key' => 'hide_in_list',
-                    'value' => 'Vis',
-                ],
-                [
-                    'key' => 'hide_in_list',
-                    'compare' => 'NOT EXISTS'
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
                 ]
             ],
             'orderby' => 'name',
             'order' => 'ASC'
         ];
 
+        $location_term_ids = [];
+
+        // Hvis region er spesifisert, hent alle term_ids fra den regionen
+        if (!empty($region)) {
+            // Normaliser region-navn (støtt både med og uten bindestrek, case-insensitive)
+            $region = strtolower(trim($region));
+            $valid_regions = ['sørlandet', 'østlandet', 'vestlandet', 'midt-norge', 'nord-norge'];
+            
+            // Sjekk om region er gyldig
+            if (in_array($region, $valid_regions, true)) {
+                // Hent alle steder med denne regionen
+                $region_terms = get_terms([
+                    'taxonomy' => 'ka_course_location',
+                    'hide_empty' => false,
+                    'meta_query' => [
+                        [
+                            'key' => 'location_region',
+                            'value' => $region,
+                            'compare' => '='
+                        ]
+                    ],
+                    'fields' => 'ids'
+                ]);
+                
+                if (!is_wp_error($region_terms) && !empty($region_terms)) {
+                    $location_term_ids = array_merge($location_term_ids, array_map('intval', $region_terms));
+                }
+            }
+        }
+
         // Hvis vis ikke er "standard", tolkes det som en kommaseparert liste av steder å filtrere på
         if ($vis !== 'standard' && !empty($vis)) {
             $location_names = array_map('trim', explode(',', $vis));
-            $location_term_ids = [];
             
             foreach ($location_names as $location_name) {
                 if (empty($location_name)) {
@@ -145,14 +183,16 @@ class CourseLocationGrid {
                     $location_term_ids[] = (int) $location_term->term_id;
                 }
             }
-            
-            // Hvis vi fant noen term_ids, bruk dem til å filtrere
-            if (!empty($location_term_ids)) {
-                $args['include'] = $location_term_ids;
-            } else {
-                // Hvis ingen steder ble funnet, returner tom array
-                return [];
-            }
+        }
+
+        // Hvis vi har samlet term_ids (fra region og/eller vis), bruk dem med OR-logikk
+        if (!empty($location_term_ids)) {
+            // Fjern duplikater
+            $location_term_ids = array_unique($location_term_ids);
+            $args['include'] = $location_term_ids;
+        } elseif (!empty($region)) {
+            // Hvis kun region er spesifisert og vi ikke fant noen steder, returner tom array
+            return [];
         }
 
         $terms = get_terms($args);

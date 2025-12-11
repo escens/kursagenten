@@ -40,6 +40,45 @@ class KA_Documentation_Page {
                     </ol>
                 </div>
 
+                <div id="synkronisering" class="options-card">
+                    <h3>Synkronisering av kurs</h3>
+                    
+                    <h4>Henting av kurs fra Kursagenten</h4>
+                    <p>Kursene dine hentes fra Kursagenten på to måter:</p>
+                    <ul>
+                        <li><strong>Manuell synkronisering:</strong> Gå til <a href="admin.php?page=kursinnstillinger">Synkronisering</a> og klikk på "Hent alle kurs fra Kursagenten". Dette bør gjøres første gang du setter opp pluginen, og ved behov for å oppdatere alle kursene samtidig.</li>
+                        <li><strong>Automatisk synkronisering via webhooks:</strong> Når webhooks er konfigurert, oppdateres kursene automatisk når de endres i Kursagenten. Dette er den anbefalte metoden for løpende oppdateringer.</li>
+                    </ul>
+                    
+                    <h4>Opprydding av kurs</h4>
+                    <p>Opprydding fjerner kurs og kursdatoer som ikke lenger finnes i Kursagenten, samt utløpte kursdatoer. Dette holder nettsiden ryddig og oppdatert.</p>
+                    <p>Det finnes to måter å rydde opp på:</p>
+                    <ul>
+                        <li><strong>Avkrysning før synkronisering:</strong> Når du klikker på "Hent alle kurs fra Kursagenten", kan du kryss av for "Rydd opp i kurs etter synkronisering". Dette kjører opprydding automatisk etter at synkroniseringen er fullført. <strong>NB:</strong> Opprydding tar 3-5 minutter ekstra.</li>
+                        <li><strong>Egen opprydding:</strong> Du kan også kjøre opprydding separat ved å klikke på knappen "Rydd opp i kurs" på <a href="admin.php?page=kursinnstillinger">Synkronisering</a>-siden. Dette er nyttig hvis du bare ønsker å rydde opp uten å synkronisere alle kursene på nytt.</li>
+                    </ul>
+                    <p><strong>Hva ryddes opp:</strong></p>
+                    <ul>
+                        <li>Kurs som er slettet i Kursagenten (finnes ikke lenger i API-et)</li>
+                        <li>Kursdatoer som er slettet eller utløpt</li>
+                    </ul>
+                    <p><strong>Automatisk opprydding:</strong> Det kjøres også en automatisk nattlig opprydding klokken 03:00 hver natt, så det er ikke alltid nødvendig å kjøre opprydding manuelt. Bruk manuell opprydding hvis du har mange utløpte kursdatoer som vises på nettsiden og ønsker å rydde opp umiddelbart.</p>
+                    
+                    <h4>Webhooks</h4>
+                    <p>Webhooks sikrer at kursene dine alltid er oppdatert uten manuell innsats. For å aktivere webhooks:</p>
+                    <ol>
+                        <li>Gå til <a href="admin.php?page=kursinnstillinger">Synkronisering</a> i WordPress-administrasjonen.</li>
+                        <li>Kopier webhook-URL-en som vises på siden: <code class="copytext"><?php echo esc_url(site_url('/wp-json/kursagenten-api/v1/process-webhook')); ?></code></li>
+                        <li>Logg inn på <a href="https://kursadmin.kursagenten.no/IntegrationSettings" target="_blank">Kursagenten</a> og gå til <strong>Integrasjonsinnstillinger → Webhooks</strong>.</li>
+                        <li>Lim inn webhook-URL-en i feltene <strong>CourseCreated</strong> og <strong>CourseUpdated</strong>.</li>
+                    </ol>
+                    <p>Når webhooks er aktivert, vil kursene automatisk oppdateres i WordPress når de endres eller opprettes i Kursagenten. Dette gjelder både kursdata, datoer og lokasjoner.</p>
+                    
+                    <h4>Endring av stedsnavn</h4>
+                    <p>Du kan endre navn på kurssteder som kommer fra Kursagenten. Dette er nyttig hvis du ønsker å bruke kortere eller mer beskrivende navn på nettsiden. Se <a href="admin.php?page=ka_documentation#stedsnavn-og-regioner">Stedsnavn og regioner</a> for mer informasjon.</p>
+                    
+                </div>
+
                 <div id="anbefalte-sider" class="options-card">
                     <h3>Sider som opprettes automatisk</h3>
                     <p>Under "Kursdesign" blir det opprettet anbefalte sider med lister for kurs, kategorier, steder og instruktører. Disse inneholder kortkoder som blir generert automatisk. Anbefalte sider:</p>
@@ -140,7 +179,7 @@ class KA_Documentation_Page {
                 <div class="kort" style="background: #fbfbfb; padding: 1em; border-radius: 10px;">
                     <p><strong>Kursliste med filter </strong><span class="smal"><span class="copytext">[kursliste]</span></span><br><span class="copytext small">[kursliste kategori="web" sted="oslo" måned="9" språk="norsk" st=sted/st=ikke-sted klasse="min-klasse"]</span></p>
                     <p><strong>Liste med kurskategorier </strong><span class="smal"><span class="copytext">[kurskategorier]</span></span><br><span class="copytext small" style="color:#666">[kurskategorier kilde="bilde/ikon" layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1  radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13" fontmaks="18" avstand="2em .5em" skygge="ja" vis="hovedkategorier/subkategorier/slug/standard" st=sted/st=ikke-sted utdrag="ja" klasse="min-klasse"]</span></p>
-                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="standard/alta,oslo,bergen" stedinfo="ja" klasse="min-klasse"]</span></p>
+                    <p><strong>Liste med kurssteder </strong><span class="smal"><span class="copytext">[kurssteder]</span></span><br><span class="copytext small" style="color:#666">[kurssteder layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" utdrag="ja" vis="standard/alta,oslo,bergen" region="østlandet" stedinfo="ja" klasse="min-klasse"]</span></p>
                     <p><strong>Liste med instruktører </strong><span class="smal"><span class="copytext">[instruktorer]</span></span><br><span class="copytext small" style="color:#666">[instruktorer layout="stablet/rad/liste" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" stil="standard/kort" bildestr="100px" bildeform="avrundet/rund/firkantet/10px" bildeformat="4/3" overskrift="h3" fontmin="13px" fontmaks="15px" avstand="2em .5em" skygge="ja" skjul="Iris,Anna" utdrag="ja" beskrivelse="ja" klasse="min-klasse"]</span></p>
                 </div>
                 <p>&nbsp;</p>
@@ -296,9 +335,16 @@ class KA_Documentation_Page {
                             <tr>
                                 <td>Vis (s)</td>
                                 <td>Filtrer stedslisten til kun vise spesifikke steder. Kan bruke stedsnavn eller slug (case-insensitive).</td>
-o                                <td>standard, kommaseparert liste (feks alta,oslo,bergen eller "Oslo,Mo i Rana")<br><strong>Standard</strong>: viser alle steder</td>
+                                <td>standard, kommaseparert liste (feks alta,oslo,bergen eller "Oslo,Mo i Rana")<br><strong>Standard</strong>: viser alle steder</td>
                                 <td>Kurssteder</td>
                                 <td><span class="copytext">[kurssteder vis=alta,oslo,bergen]</span></td>
+                            </tr>
+                            <tr>
+                                <td>Region</td>
+                                <td>Filtrer kurssteder basert på region (kun hvis regioner er aktivert). Kan kombineres med vis-parameteren (OR-logikk: viser steder fra regionen ELLER de spesifiserte stedene).</td>
+                                <td>sørlandet, østlandet, vestlandet, midt-norge, nord-norge<br><strong>Standard</strong>: ingen filtrering</td>
+                                <td>Kurssteder</td>
+                                <td><span class="copytext">[kurssteder region="østlandet"]</span><br><span class="copytext">[kurssteder region="østlandet" vis="bergen"]</span></td>
                             </tr>
                             <tr>
                                 <td>Stedinfo</td>
@@ -393,6 +439,42 @@ o                                <td>standard, kommaseparert liste (feks alta,os
                     
                 </div>
             </div>
+
+            <div id="stedsnavn-og-regioner" class="options-card">
+                    <h3>Stedsnavn og regioner</h3>
+                    <h4>Endring av stedsnavn</h4>
+                    <p>Du kan endre navn på kurssteder som kommer fra Kursagenten. Dette er nyttig hvis du ønsker å bruke kortere eller mer beskrivende navn på nettsiden.</p>
+                    <ul>
+                        <li>Gå til <a href="admin.php?page=kursinnstillinger#location-name-mapping">Synkronisering → Navnendring på kurssteder</a>.</li>
+                        <li>Klikk på "Endre navn på nytt sted" for å legge til en ny navnendring.</li>
+                        <li>Velg stedet fra listen eller skriv inn navnet manuelt, og angi det nye navnet.</li>
+                        <li>Klikk "Lagre" for å lagre navnendringen.</li>
+                    </ul>
+                    <p><strong>Viktig:</strong> Når du endrer navn på et sted:</p>
+                    <ul>
+                        <li>Det gamle stedet blir ikke slettet, men blir ikke lenger synlig på nettsiden.</li>
+                        <li>Slugs (nettadresser) på kursene som har dette stedet oppdateres ved neste synkronisering.</li>
+                        <li>Du må kjøre en full synkronisering ("Hent alle kurs fra Kursagenten") for å ta i bruk navnendringene.</li>
+                        <li>Merk også "Rydd opp i kurs" før du kjører synken for å sikre at gamle kursdatoer fjernes.</li>
+                    </ul>
+                    
+                    <h4>Regioner</h4>
+                    <p>Regioner lar deg organisere kurssteder i geografiske områder (Sørlandet, Østlandet, Vestlandet, Midt-Norge, Nord-Norge). Dette er nyttig for filtrering og organisering av kurssteder.</p>
+                    <ul>
+                        <li>Gå til <a href="admin.php?page=kursinnstillinger#regions">Synkronisering → Regioner</a>.</li>
+                        <li>Kryss av for "Aktiver regioninndeling" for å aktivere funksjonen.</li>
+                        <li>Dra fylker mellom regionene for å organisere dem etter dine behov.</li>
+                        <li>Endringene lagres automatisk når du flytter fylker.</li>
+                        <li>Bruk "Resett til standard" for å tilbakestille regioninndelingen til standardverdiene.</li>
+                    </ul>
+                    <p><strong>Bruk i kortkoder:</strong> Du kan filtrere kurssteder basert på region i kortkoden <code class="copytext">[kurssteder]</code>:</p>
+                    <ul>
+                        <li><code class="copytext">[kurssteder region="østlandet"]</code> – viser kun kurssteder i Østlandet</li>
+                        <li><code class="copytext">[kurssteder region="østlandet" vis="bergen"]</code> – viser alle steder i Østlandet eller Bergen (OR-logikk)</li>
+                    </ul>
+                    <p>Gyldige regioner: <code>sørlandet</code>, <code>østlandet</code>, <code>vestlandet</code>, <code>midt-norge</code>, <code>nord-norge</code></p>
+                    <p><strong>Merk:</strong> Regioner må være aktivert for at filtreringen skal fungere. Du kan også endre region for individuelle kurssteder ved å redigere kursstedet i <a href="edit-tags.php?taxonomy=ka_course_location&post_type=ka_course">Kurssteder</a>-oversikten.</p>
+                </div>
 
             <div class="options-card">
                 <h3>Tips og feilsøking</h3>

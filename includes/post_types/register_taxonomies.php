@@ -79,7 +79,7 @@ register_taxonomy('ka_course_location', array('ka_course', 'ka_coursedate', 'ins
         'item_link' => 'Kurssted link',
         'item_link_description' => 'Link til et kurssted',
         'archives'  => capitalize_first_letter($kurssted),
-        'name_field_description' => 'Navnet slik det som vises på siden. Kan endres under <a href="' . admin_url('admin.php?page=kursinnstillinger#steder') . '">Synkronisering</a>.',
+        'name_field_description' => 'Navnet slik det som vises på siden. Kan endres under <a href="' . admin_url('admin.php?page=kursinnstillinger#places') . '">Synkronisering</a>.',
         'slug_field_description' => '"Slug" er den SEO-vennlige versjonen av url-en. Eksempel /oslo',
         'parent_field_description' => 'Velg en forelder for å lage et hierarki, og la dette bli en subkategori.',
         'desc_field_description' => 'Kort beskrivelse brukes i oversikter og som innledende tekst på detaljside',
@@ -290,7 +290,7 @@ add_action('ka_course_location_edit_form_fields', function($term) {
         // Update description text
         var $desc = $('#name-description');
         if ($desc.length) {
-            var syncUrl = '<?php echo esc_js(admin_url('admin.php?page=kursinnstillinger#steder')); ?>';
+            var syncUrl = '<?php echo esc_js(admin_url('admin.php?page=kursinnstillinger#places')); ?>';
             $desc.html('Navnet slik det som vises på siden. Kan endres under <a href="' + syncUrl + '">Synkronisering</a>.');
         }
     });
@@ -298,23 +298,72 @@ add_action('ka_course_location_edit_form_fields', function($term) {
     <?php
 }, 10, 1);
 
-// Also handle the add form (though locations are usually created automatically)
-add_action('ka_course_location_add_form_fields', function() {
+// Replace the add form with information message
+add_action('ka_course_location_pre_add_form', function($taxonomy) {
+    $sync_url = admin_url('admin.php?page=kursinnstillinger#places');
+    $regions_url = admin_url('admin.php?page=kursinnstillinger#regions');
+    $use_regions = get_option('kursagenten_use_regions', false);
     ?>
     <script type="text/javascript">
     jQuery(document).ready(function($) {
-        // Make name field readonly on add form too
-        $('#tag-name').prop('readonly', true).css('background-color', '#f0f0f0');
+        // Create the information message
+        var infoHtml = '<div class="form-wrap" style="margin-top: 0;">' +
+            '<h2>Informasjon om kurssteder</h2>' +
+            '<div class="notice notice-info" style="padding: 15px; margin: 15px 0;">' +
+            '<p style="margin-bottom: 10px;">' +
+            '<strong>Kurssteder opprettes automatisk</strong> når du synkroniserer kurs fra Kursagenten. Du kan ikke legge til kurssteder manuelt her.' +
+            '</p>' +
+            '<p style="margin-bottom: 10px;">' +
+            '<strong>Navnendring på kurssteder:</strong><br>' +
+            'Du kan endre navn på kurssteder under <a href="<?php echo esc_js($sync_url); ?>">Synkronisering → Navnendring på kurssteder</a>. ' +
+            'Når du endrer navn på et sted, blir også slugs (nettadressen) på kursene som har dette stedet oppdatert.<br> Det gamle stedet blir ikke slettet, men blir ikke lenger synlig på nettsiden.' +
+            '</p>' +
+            <?php if ($use_regions) : ?>
+            '<p style="margin-bottom: 0;">' +
+            '<strong>Regioner:</strong><br>' +
+            'Regioner er aktivert. Du kan administrere regioninndelingen under <a href="<?php echo esc_js($regions_url); ?>">Synkronisering → Regioner</a>. Tilhørighet til en region kan endres under hvert kurssted.' +
+            '</p>' +
+            <?php else : ?>
+            '<p style="margin-bottom: 0;">' +
+            '<strong>Regioner:</strong><br>' +
+            'Du kan aktivere og administrere regioner under <a href="<?php echo esc_js($regions_url); ?>">Synkronisering → Regioner</a>.' +
+            '</p>' +
+            <?php endif; ?>
+            '</div>' +
+            '</div>';
         
-        // Make slug field readonly on add form too
-        $('#tag-slug').prop('readonly', true).css('background-color', '#f0f0f0');
-        
-        // Update description text
-        var $desc = $('#tag-name-description');
-        if ($desc.length) {
-            var syncUrl = '<?php echo esc_js(admin_url('admin.php?page=kursinnstillinger#steder')); ?>';
-            $desc.html('Navnet slik det som vises på siden. Kan endres under <a href="' + syncUrl + '">Synkronisering</a>.');
-        }
+        // Wait for the form to be rendered, then replace it
+        setTimeout(function() {
+            var $formWrap = $('#col-left .form-wrap');
+            if ($formWrap.length) {
+                // Hide the form but keep the structure
+                $formWrap.find('form#addtag').hide();
+                $formWrap.find('h2').text('Informasjon om kurssteder');
+                
+                // Insert info message after h2
+                $formWrap.find('h2').after('<div class="notice notice-info" style="padding: 15px; margin: 15px 0;">' +
+                    '<p style="margin-bottom: 10px;">' +
+                    '<strong>Kurssteder opprettes automatisk</strong> når du synkroniserer kurs fra Kursagenten. Du kan ikke legge til kurssteder manuelt her.' +
+                    '</p>' +
+                    '<p style="margin-bottom: 10px;">' +
+                    '<strong>Navnendring på kurssteder:</strong><br>' +
+                    'Du kan endre navn på kurssteder under <a href="<?php echo esc_js($sync_url); ?>">Synkronisering → Navnendring på kurssteder</a>. ' +
+                    'Når du endrer navn på et sted, blir også slugs (nettadressen) på kursene som har dette stedet oppdatert.<br> Det gamle stedet blir ikke slettet, men blir ikke lenger synlig på nettsiden.' +
+                    '</p>' +
+                    <?php if ($use_regions) : ?>
+                    '<p style="margin-bottom: 0;">' +
+                    '<strong>Regioner:</strong><br>' +
+                    'Regioner er aktivert. Du kan administrere regioninndelingen under <a href="<?php echo esc_js($regions_url); ?>">Synkronisering → Regioner</a>. Tilhørighet til en region kan endres under hvert kurssted.' +
+                    '</p>' +
+                    <?php else : ?>
+                    '<p style="margin-bottom: 0;">' +
+                    '<strong>Regioner:</strong><br>' +
+                    'Du kan aktivere og administrere regioner under <a href="<?php echo esc_js($regions_url); ?>">Synkronisering → Regioner</a>.' +
+                    '</p>' +
+                    <?php endif; ?>
+                    '</div>');
+            }
+        }, 100);
     });
     </script>
     <?php
@@ -375,7 +424,7 @@ add_action('edit_term', function($term_id, $tt_id, $taxonomy) {
         add_action('admin_notices', function() {
             ?>
             <div class="notice notice-warning is-dismissible">
-                <p><strong>Advarsel:</strong> Navn og slug på kurssteder kan ikke endres her. Du kan endre navnet under <a href="<?php echo esc_url(admin_url('admin.php?page=kursinnstillinger#steder')); ?>">Synkronisering</a>.</p>
+                <p><strong>Advarsel:</strong> Navn og slug på kurssteder kan ikke endres her. Du kan endre navnet under <a href="<?php echo esc_url(admin_url('admin.php?page=kursinnstillinger#places')); ?>">Synkronisering</a>.</p>
             </div>
             <?php
         });

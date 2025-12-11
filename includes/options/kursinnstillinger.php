@@ -10,6 +10,9 @@ class Kursinnstillinger {
         add_action('wp_ajax_kursagenten_remove_location_mapping', array($this, 'ajax_remove_location_mapping'));
         add_action('wp_ajax_kursagenten_update_location_mapping', array($this, 'ajax_update_location_mapping'));
         add_action('wp_ajax_kursagenten_get_location_terms', array($this, 'ajax_get_location_terms'));
+        add_action('wp_ajax_kursagenten_toggle_regions', array($this, 'ajax_toggle_regions'));
+        add_action('wp_ajax_kursagenten_save_region_mapping', array($this, 'ajax_save_region_mapping'));
+        add_action('wp_ajax_kursagenten_reset_region_mapping', array($this, 'ajax_reset_region_mapping'));
     }
 
     // Shortcodes for settings in kursinnstillinger.php is in misc/kursagenten-shortcodes.php
@@ -27,12 +30,29 @@ class Kursinnstillinger {
             true
         );
         
+        wp_enqueue_script(
+            'kursagenten-regions',
+            KURSAG_PLUGIN_URL . '/assets/js/admin/regions.js',
+            array('jquery', 'jquery-ui-sortable'),
+            '1.0.0',
+            true
+        );
+        
         wp_localize_script(
             'kursagenten-location-mapping',
             'kursagentenLocationMapping',
             array(
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('kursagenten_location_mapping_nonce'),
+            )
+        );
+        
+        wp_localize_script(
+            'kursagenten-regions',
+            'kursagentenRegions',
+            array(
+                'ajax_url' => admin_url('admin-ajax.php'),
+                'nonce' => wp_create_nonce('kursagenten_regions_nonce'),
             )
         );
     }
@@ -61,6 +81,7 @@ class Kursinnstillinger {
 
         $this->kag_kursinnst_options = get_option('kag_kursinnst_option_name'); 
         require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
+        require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
 
         ?>
         <div class="wrap options-form ka-wrap" id="toppen">
@@ -125,15 +146,16 @@ class Kursinnstillinger {
 
         <?php submit_button(); ?>
 
-        <h2 id="steder">Kurssteder og regioner</h2>
+        <h2 id="places">Kurssteder og regioner</h2>
         <!-- Location Name Mapping Section -->
         <div class="options-card" style="margin-top: 20px;">
             <h3 id="location-name-mapping">Navnendring på kurssteder</h3>
             <p>Her kan du endre navn på kurssteder som kommer fra Kursagenten. Når du endrer navn på et sted, blir også slugs (nettadressen) på kursene som har dette stedet oppdatert.<br><br>
-            1. Nytt sted blir lagret når du klikker på "Lagre", og blir oppdatert når du klikker utenfor tekstboksen.<br>
-            2. Slugs på kursene som har dette stedet oppdateres umiddelbart.<br>
-            3. Det gamle stedet blir ikke slettet, men blir ikke lenger synlig på nettsiden.<br>
-            4. <span style="color: #d63638;"><strong>Viktig:</strong></span> For å ta i bruk navnendringene, kjør en full synk fra Kursagenten ved å klikke på "Hent alle kurs fra Kursagenten". Husk også å markere "Rydd opp i kurs" før du kjører synken.<br><br></p>
+            1. Nytt sted blir lagret når du klikker på "Lagre".<br>
+            2. Stedet blir "oversatt" til det nye navnet når kurs blir hentet fra Kursagenten.<br>
+            3. Slugs/nettadresser på kursene som har dette stedet oppdateres umiddelbart.<br>
+            4. Det gamle stedet blir ikke slettet, men blir ikke lenger synlig på nettsiden.<br><br>
+            5. <span style="color: #d63638;"><strong>Viktig:</strong></span> For å ta i bruk navnendringene, kjør en full synk fra Kursagenten ved å klikke på "Hent alle kurs fra Kursagenten". Husk også å markere "Rydd opp i kurs" før du kjører synken.<br><br></p>
             
 
             <?php
@@ -179,6 +201,7 @@ class Kursinnstillinger {
 
             <div style="margin-top: 15px;">
                 <button type="button" class="button" id="add-location-mapping-btn">Endre navn på nytt sted</button>
+                <span style="font-size: 12px; color: #666; line-height: 30px; padding-left: 1em;">NB! Kjør full synk fra Kursagenten umiddelbart etter å ha lagt til/endret navn på et sted(er)!</span>
             </div>
 
             <div id="new-location-mapping-row" style="display: none; margin-top: 15px;">
@@ -200,6 +223,57 @@ class Kursinnstillinger {
                         </td>
                     </tr>
                 </table>
+            </div>
+        </div>
+
+        <!-- Regions Section -->
+        <div class="options-card" style="margin-top: 20px;">
+            <h3 id="regions">Regioner</h3>
+            <?php
+            $use_regions = get_option('kursagenten_use_regions', false);
+            ?>
+            <p>
+                <label>
+                    <input type="checkbox" id="use-regions-checkbox" name="kursagenten_use_regions" value="1" <?php checked($use_regions, true); ?>>
+                    Aktiver regioninndeling (Sørlandet, Østlandet, Vestlandet, Midt-Norge, Nord-Norge)
+                </label>
+            </p>
+            <p class="description">Når aktivert, kan lokasjoner organiseres i regioner. Dette påvirker ikke synkronisering, men kan brukes for filtrering og organisering.</p>
+            
+            <div id="regions-settings" style="display: <?php echo $use_regions ? 'block' : 'none'; ?>; margin-top: 20px;">
+                <h4>Regioninndeling</h4>
+                <p>Dra fylker mellom regioner for å organisere dem. Merk at en del fylker er utdaterte, men er inkludert for bakover-kompatibilitet. Bruk "Resett til standard" for å tilbakestille regioninndelingen til standardverdiene.</p>
+                <button type="button" class="button" id="reset-region-mapping">Resett til standard</button>
+                
+                <div id="region-mapping-container" style="margin-top: 20px; display: flex; gap: 20px; flex-wrap: wrap;">
+                    <?php
+                    $region_mapping = kursagenten_get_region_mapping();
+                    $region_labels = [
+                        'sørlandet' => 'Sørlandet',
+                        'østlandet' => 'Østlandet',
+                        'vestlandet' => 'Vestlandet',
+                        'midt-norge' => 'Midt-Norge',
+                        'nord-norge' => 'Nord-Norge'
+                    ];
+                    
+                    foreach ($region_mapping as $region_key => $region_data) {
+                        $region_label = $region_labels[$region_key] ?? ucfirst($region_key);
+                        ?>
+                        <div class="region-column" data-region="<?php echo esc_attr($region_key); ?>" style="flex: 1; min-width: 150px; border: 2px dashed #cccccc61; padding: 15px; border-radius: 5px; background: #f6f6f67a;">
+                            <h4 style="margin-top: 0;"><?php echo esc_html($region_label); ?></h4>
+                            <ul class="county-list" style="list-style: none; padding: 0; margin: 0; min-height: 50px;">
+                                <?php foreach ($region_data['counties'] as $county) : ?>
+                                    <li class="county-item" data-county="<?php echo esc_attr($county); ?>" style="padding: 8px; margin: 5px 0; background: white; border: 1px solid #ccc; border-radius: 3px; cursor: move;">
+                                    <i class="ka-icon icon-grip-dots" style="position: relative;top: 3px;"></i>
+                                        <?php echo esc_html($county); ?>
+                                    </li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                        <?php
+                    }
+                    ?>
+                </div>
             </div>
         </div>
 
@@ -247,18 +321,13 @@ class Kursinnstillinger {
         $mappings[$old_name] = $new_name;
         update_option('kursagenten_location_mappings', $mappings);
 
-        // Update slugs on existing sub-courses
-        require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
-        $updated_count = 0;
-        if (function_exists('kursagenten_update_course_slugs_for_location_mapping')) {
-            $updated_count = kursagenten_update_course_slugs_for_location_mapping($old_name, $new_name);
-        }
+        // Note: Slug updates will happen during the next sync, not immediately
+        // This prevents 404 errors if user forgets to sync right away
 
         wp_send_json_success(array(
-            'message' => 'Navnendring lagret' . ($updated_count > 0 ? " ($updated_count kurs oppdatert)" : ''),
+            'message' => 'Navnendring lagret. Slug-oppdateringer vil skje ved neste synkronisering.',
             'old_name' => $old_name,
-            'new_name' => $new_name,
-            'updated_count' => $updated_count
+            'new_name' => $new_name
         ));
     }
 
@@ -308,21 +377,14 @@ class Kursinnstillinger {
 
         $mappings = get_option('kursagenten_location_mappings', array());
         if (isset($mappings[$old_name])) {
-            $old_mapped_value = $mappings[$old_name];
             $mappings[$old_name] = $new_name;
             update_option('kursagenten_location_mappings', $mappings);
             
-            // Update slugs on existing sub-courses
-            require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
-            $updated_count = 0;
-            if (function_exists('kursagenten_update_course_slugs_for_location_mapping')) {
-                // Use the old mapped value (what was actually used in posts) to find courses
-                $updated_count = kursagenten_update_course_slugs_for_location_mapping($old_mapped_value, $new_name);
-            }
+            // Note: Slug updates will happen during the next sync, not immediately
+            // This prevents 404 errors if user forgets to sync right away
             
             wp_send_json_success(array(
-                'message' => 'Navnendring oppdatert' . ($updated_count > 0 ? " ($updated_count kurs oppdatert)" : ''),
-                'updated_count' => $updated_count
+                'message' => 'Navnendring oppdatert. Slug-oppdateringer vil skje ved neste synkronisering.'
             ));
         } else {
             wp_send_json_error(array('message' => 'Navnendring ikke funnet'));
@@ -360,6 +422,149 @@ class Kursinnstillinger {
         }
 
         wp_send_json_success(array('terms' => $available_terms));
+    }
+
+    /**
+     * AJAX handler for toggling regions on/off
+     */
+    public function ajax_toggle_regions() {
+        check_ajax_referer('kursagenten_regions_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Ikke tilgang'));
+            return;
+        }
+
+        $enabled = isset($_POST['enabled']) && $_POST['enabled'] === 'true';
+        update_option('kursagenten_use_regions', $enabled);
+
+        if ($enabled) {
+            // Assign regions to existing terms when first activated
+            require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+            $updated_count = kursagenten_assign_regions_to_existing_terms();
+            wp_send_json_success(array(
+                'message' => 'Regioner aktivert' . ($updated_count > 0 ? " ($updated_count lokasjoner oppdatert)" : ''),
+                'updated_count' => $updated_count
+            ));
+        } else {
+            // Remove region data from all terms when deactivated
+            $terms = get_terms(array(
+                'taxonomy' => 'ka_course_location',
+                'hide_empty' => false,
+            ));
+            
+            $removed_count = 0;
+            if (!empty($terms) && !is_wp_error($terms)) {
+                foreach ($terms as $term) {
+                    delete_term_meta($term->term_id, 'location_region');
+                    $removed_count++;
+                }
+            }
+            
+            wp_send_json_success(array(
+                'message' => 'Regioner deaktivert' . ($removed_count > 0 ? " ($removed_count lokasjoner oppdatert)" : ''),
+                'removed_count' => $removed_count
+            ));
+        }
+    }
+
+    /**
+     * AJAX handler for saving region mapping
+     */
+    public function ajax_save_region_mapping() {
+        check_ajax_referer('kursagenten_regions_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Ikke tilgang'));
+            return;
+        }
+
+        $mapping_json = isset($_POST['mapping']) ? $_POST['mapping'] : '';
+        
+        // Try to decode JSON - handle both with and without slashes
+        $mapping = json_decode($mapping_json, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            // Try with stripslashes if first attempt failed
+            $mapping = json_decode(stripslashes($mapping_json), true);
+        }
+
+        if (empty($mapping) || !is_array($mapping)) {
+            wp_send_json_error(array(
+                'message' => 'Ingen mapping mottatt eller ugyldig format',
+                'debug' => array(
+                    'json_error' => json_last_error_msg(),
+                    'received' => substr($mapping_json, 0, 200)
+                )
+            ));
+            return;
+        }
+
+        // Sanitize mapping data
+        // Note: Don't use sanitize_key() for region names as it removes special characters
+        // Region names are predefined and safe
+        $valid_regions = ['sørlandet', 'østlandet', 'nord-norge', 'vestlandet', 'midt-norge'];
+        $sanitized_mapping = array();
+        foreach ($mapping as $region => $data) {
+            if (!is_array($data) || !isset($data['counties'])) {
+                continue;
+            }
+            // Only accept valid region names
+            if (!in_array($region, $valid_regions, true)) {
+                continue;
+            }
+            $sanitized_mapping[$region] = array(
+                'counties' => array_map('sanitize_text_field', $data['counties'] ?? []),
+                'municipalities' => array() // Always empty
+            );
+        }
+
+        if (empty($sanitized_mapping)) {
+            wp_send_json_error(array('message' => 'Ingen gyldig mapping data'));
+            return;
+        }
+
+        $save_result = update_option('kursagenten_region_mapping', $sanitized_mapping);
+        
+        // Verify the option was saved correctly
+        $verify_mapping = get_option('kursagenten_region_mapping', array());
+        $mapping_saved = !empty($verify_mapping) && count($verify_mapping) === count($sanitized_mapping);
+
+        // Update all location terms with new region assignments
+        require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+        $updated_count = kursagenten_update_all_terms_with_region_mapping();
+
+        wp_send_json_success(array(
+            'message' => 'Regioninndeling lagret' . ($updated_count > 0 ? " ($updated_count lokasjoner oppdatert)" : ''),
+            'updated_count' => $updated_count,
+            'saved_mapping' => $sanitized_mapping,
+            'mapping_saved' => $mapping_saved,
+            'verify_mapping' => $verify_mapping
+        ));
+    }
+
+    /**
+     * AJAX handler for resetting region mapping to default
+     */
+    public function ajax_reset_region_mapping() {
+        check_ajax_referer('kursagenten_regions_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => 'Ikke tilgang'));
+            return;
+        }
+
+        require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+        $default_mapping = kursagenten_get_default_region_mapping();
+        update_option('kursagenten_region_mapping', $default_mapping);
+
+        // Update all location terms with default region assignments
+        $updated_count = kursagenten_update_all_terms_with_region_mapping();
+
+        wp_send_json_success(array(
+            'message' => 'Regioninndeling tilbakestilt til standard' . ($updated_count > 0 ? " ($updated_count lokasjoner oppdatert)" : ''),
+            'mapping' => $default_mapping,
+            'updated_count' => $updated_count
+        ));
     }
 }
 ?>

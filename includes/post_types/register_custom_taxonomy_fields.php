@@ -58,6 +58,50 @@ function add_taxonomy_image_field($term, $taxonomy, $field_name, $label_text, $b
 }
 
 
+// Add region field for location taxonomy
+function add_location_region_field($term) {
+    if (!isset($term->term_id)) {
+        return;
+    }
+    
+    // Check if regions are enabled
+    $use_regions = get_option('kursagenten_use_regions', false);
+    if (!$use_regions) {
+        return;
+    }
+    
+    require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+    
+    $current_region = get_term_meta($term->term_id, 'location_region', true);
+    $regions = kursagenten_get_region_mapping();
+    $region_labels = [
+        'sørlandet' => 'Sørlandet',
+        'østlandet' => 'Østlandet',
+        'vestlandet' => 'Vestlandet',
+        'midt-norge' => 'Midt-Norge',
+        'nord-norge' => 'Nord-Norge'
+    ];
+    ?>
+    <tr class="form-field">
+        <th scope="row"><label for="location_region">Region</label></th>
+        <td>
+            <select name="location_region" id="location_region">
+                <option value="">Ingen region</option>
+                <?php foreach ($regions as $region_key => $region_data) : 
+                    $region_label = $region_labels[$region_key] ?? ucfirst($region_key);
+                ?>
+                    <option value="<?php echo esc_attr($region_key); ?>" <?php selected($current_region, $region_key); ?>>
+                        <?php echo esc_html($region_label); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <p class="description">Velg hvilken region denne lokasjonen tilhører.</p>
+        </td>
+    </tr>
+    <?php
+}
+add_action('ka_course_location_edit_form_fields', 'add_location_region_field');
+
 // Callback functions for each taxonomy, passing the correct parameters
 function add_coursecategory_image_field($term) {
     add_taxonomy_image_field($term, 'ka_coursecategory', 'image_coursecategory', 'Hovedbilde', 'bilde', 'Hovedbilde som brukes på kategorisiden og i kategorioversikter');
@@ -227,6 +271,16 @@ function add_quick_edit_visibility_field($column_name, $taxonomy) {
 // Legg til kolonne i taksonomi-tabellen
 function add_taxonomy_visibility_column($columns) {
     $columns['visibility'] = 'Synlighet';
+    
+    // Add region column for location taxonomy if regions are enabled
+    global $current_screen;
+    if (isset($current_screen->taxonomy) && $current_screen->taxonomy === 'ka_course_location') {
+        $use_regions = get_option('kursagenten_use_regions', false);
+        if ($use_regions) {
+            $columns['region'] = 'Region';
+        }
+    }
+    
     return $columns;
 }
 
@@ -251,6 +305,27 @@ function manage_taxonomy_visibility_column($content, $column_name, $term_id) {
         
         return $output;
     }
+    
+    // Handle region column
+    if ($column_name === 'region') {
+        require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+        $region = get_term_meta($term_id, 'location_region', true);
+        
+        if (!empty($region)) {
+            $region_labels = [
+                'sørlandet' => 'Sørlandet',
+                'østlandet' => 'Østlandet',
+                'vestlandet' => 'Vestlandet',
+                'midt-norge' => 'Midt-Norge',
+                'nord-norge' => 'Nord-Norge'
+            ];
+            $region_label = $region_labels[$region] ?? ucfirst($region);
+            return '<span style="padding: 3px 8px; background: #f0f0f0; border-radius: 3px; font-size: 12px;">' . esc_html($region_label) . '</span>';
+        }
+        
+        return '<span style="color: #999; font-style: italic;">Ingen region</span>';
+    }
+    
     return $content;
 }
 
@@ -302,6 +377,7 @@ function save_taxonomy_field($term_id) {
         'hide_in_list' => 'sanitize_text_field',
         'hide_in_menu' => 'sanitize_text_field',
         'hide_in_course_list' => 'sanitize_text_field',
+        'location_region' => 'sanitize_key',
     ];
     
     // Sjekk om dette er en hurtigredigering
@@ -365,14 +441,37 @@ function save_taxonomy_field($term_id) {
         }
     }
     
+    // Check if regions are enabled before saving region field
+    $use_regions = get_option('kursagenten_use_regions', false);
+    
     // Oppdater feltene
     foreach ($fields as $field => $sanitize_callback) {
+        // Skip location_region if regions are disabled
+        if ($field === 'location_region' && !$use_regions) {
+            // Remove region data if regions are disabled
+            delete_term_meta($term_id, 'location_region');
+            continue;
+        }
+        
         if (isset($_POST[$field])) {
             $value = $_POST[$field];
             if (is_callable($sanitize_callback)) {
                 $value = call_user_func($sanitize_callback, $value);
             }
-            update_term_meta($term_id, $field, $value);
+            
+            // For location_region, only save if regions are enabled and value is not empty
+            if ($field === 'location_region') {
+                if ($use_regions && !empty($value)) {
+                    update_term_meta($term_id, $field, $value);
+                } else {
+                    delete_term_meta($term_id, $field);
+                }
+            } else {
+                update_term_meta($term_id, $field, $value);
+            }
+        } elseif ($field === 'location_region' && $use_regions) {
+            // If field is not set but regions are enabled, remove the region
+            delete_term_meta($term_id, 'location_region');
         }
     }
     

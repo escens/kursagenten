@@ -389,11 +389,30 @@ function update_existing_course($post_id, $data, $main_course_id, $location_id, 
     ];
     
     // Update slug (post_name) for sub-courses when location name changes
+    // This ensures slugs are updated during sync when location mappings have changed
     if ($is_parent_course !== 'yes') {
         $new_location_name = get_course_location($data);
+        $new_slug = sanitize_title($new_location_name);
         $current_post = get_post($post_id);
-        if ($current_post && $current_post->post_name !== $new_location_name) {
-            $update_data['post_name'] = sanitize_title($new_location_name);
+        
+        // Always update slug if it's different from the new location name slug
+        // This handles cases where location mappings have changed
+        if ($current_post && $current_post->post_name !== $new_slug) {
+            // Check if new slug already exists (avoid conflicts)
+            $existing_post = get_page_by_path($new_slug, OBJECT, 'ka_course');
+            $final_slug = $new_slug;
+            
+            if ($existing_post && $existing_post->ID != $post_id) {
+                // Slug conflict - append number
+                $counter = 1;
+                do {
+                    $final_slug = $new_slug . '-' . $counter;
+                    $existing_post = get_page_by_path($final_slug, OBJECT, 'ka_course');
+                    $counter++;
+                } while ($existing_post && $existing_post->ID != $post_id && $counter < 100); // Safety limit
+            }
+            
+            $update_data['post_name'] = $final_slug;
         }
     }
 
