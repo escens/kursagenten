@@ -31,7 +31,7 @@ class SEO {
         <div class="wrap options-form ka-wrap" id="toppen">
         <form method="post" action="options.php">
             <?php kursagenten_sticky_admin_menu(); ?>
-            <h2>Endre url-er</h2>
+            <h1>Endre url-er</h1>
             <p><strong>Viktig info om url-er</strong><br>Her kan du endre url for kurs, instruktør, kurskategori og kurssted. <span style="color:#b74444;font-weight:bold;">OBS! Ikke rør med mindre du vet hva du gjør.</span> Det kan ødelegge nettstedet, og gjøre disse sidene utilgjengelige. Husk å lagre <a href="/wp-admin/options-permalink.php" target="_blank">permalenkeinnstillingene</a> etter du har gjort en endring.</p>
 
                 <?php

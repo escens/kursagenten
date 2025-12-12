@@ -62,7 +62,7 @@ class Designmaler {
                 do_settings_sections('design-admin');
                 ?>
                 <?php kursagenten_sticky_admin_menu(); ?>
-                <h2>Kursdesign</h2>
+                <h1>Kursdesign</h1>
                 <!-- System-sider -->
                 <div class="options-card" id="section-systemsider" data-section="systemsider">
                     <h3>Wordpress sider</h3>
@@ -236,7 +236,7 @@ class Designmaler {
                     <p>Tilpass visningen av kurslisten. Denne vises på systemsiden "Kurs", og alle andre steder som bruker kortkoden <span class="copytext">[kursliste]</span>. Velg mellom standard liste og rutenett. Flere design kommer.</p>
                     <!-- Listevisning -->
                     <div class="option-row">
-                        <label class="option-label">Listevisning:</label>
+                        <label class="option-label">Listedesign:</label>
                         <div class="option-input">
                             <select name="kursagenten_archive_list_type" id="kursagenten_archive_list_type">
                                 <?php
@@ -569,8 +569,8 @@ class Designmaler {
                 </div>
 
                 <!-- Taxonomi -->
-                <div class="options-card" data-section="taksonomi">
-                    <h3>Taksonomi-sider</h3>
+                <div class="options-card" data-section="taksonomi" id="design-taksonomi">
+                    <h3>Taksonomisider</h3>
                     <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</br>
                     <strong>Layout</strong> bestemmer oppsettet av elementer på siden (header, kolonner, hooks).</br>
                      <strong>Listedesign</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). </br>
@@ -610,9 +610,9 @@ class Designmaler {
                                 $designs = [
                                     'default' => 'Standard - med bilde og beskrivelse',
                                     'simple' => 'Enkel - Kun tittel og kort beskrivelse',
-                                    'default-2' => 'Standard 2 - header bilde + innholdsbilde',
-                                    'profile' => 'Profil - rundt bilde og tittel',
-                                    'modern' => 'Moderne (kommer senere)'
+                                    //'default-2' => 'Standard 2 - header bilde + innholdsbilde',
+                                    'profile' => 'Profil - rundt bilde og tittel'
+                                    //'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {
                                     printf(
@@ -923,7 +923,7 @@ class Designmaler {
                                                 <option value="firstname" <?php selected($name_display, 'firstname'); ?>>Fornavn</option>
                                                 <option value="lastname" <?php selected($name_display, 'lastname'); ?>>Etternavn</option>
                                             </select>
-                                            <p class="description">Merk: på <a href="/wp-admin/admin.php?page=design#section-systemsider">siden</a> med instruktøroversikten må du legge til vis="fornavn" eller vis="etternavn" i kortkoden for å vise kun fornavn eller etternavn. Du kan gå direkte til redigering fra <a href="/wp-admin/admin.php?page=design#section-systemsider">Systemsider</a>.</p>
+                                            <p class="description">Merk: på <a href="/wp-admin/admin.php?page=design#section-systemsider">siden</a> med instruktøroversikten må du legge til vis="fornavn" eller vis="etternavn" i kortkoden for å vise kun fornavn eller etternavn. Du kan gå direkte til redigering fra <a href="/wp-admin/admin.php?page=design#section-systemsider">Wordpress sider</a>.</p>
                                         </div>
                                     </div>
                                     <?php endif; ?>

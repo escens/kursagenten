@@ -91,6 +91,7 @@ class Kursinnstillinger {
         do_settings_sections('kursinnstillinger-admin');
         ?>
         <?php kursagenten_sticky_admin_menu(); ?>
+        <h1>Kursinnstillinger</h1>
         <h2>Synkronisering</h2>
         <p>Her finner du innstillinger for synkronisering av kurs fra Kursagenten. <br>
         - Ved å klikke på "Hent alle kurs fra Kursagenten" overfører du alle kursene dine. Merk at det kun er enveis-synkronisering.<br>

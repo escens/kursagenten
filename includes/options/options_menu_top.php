@@ -69,7 +69,7 @@ function kursagenten_admin_footer() {
                 scrollTimeout = setTimeout(function() {
                     // Scroll spy code here
                     const scrollPosition = $(window).scrollTop();
-                    $('h3[id]').each(function() {
+                    $('h2[id], h3[id]').each(function() {
                         const target = $(this);
                         const id = target.attr('id');
                         const offset = target.offset().top - 100;
@@ -84,15 +84,18 @@ function kursagenten_admin_footer() {
             }
         });
 
-        // Finn alle h3-elementer og legg til i venstremeny
+        // Finn alle h2 og h3-elementer og legg til i venstremeny
         const $nav = $('.ka-section-nav');
-        $('h3').each(function() {
+        $('h2, h3').each(function() {
             const $heading = $(this);
             const id = $heading.attr('id') || 'section-' + $heading.text().toLowerCase().replace(/\s+/g, '-');
             $heading.attr('id', id);
             
             if ($heading.is(':visible')) {
-                $nav.append(`<li><a href="#${id}">${$heading.text()}</a></li>`);
+                // Add bold class for h2 headings
+                const isH2 = $heading.is('h2');
+                const boldClass = isH2 ? ' ka-h2-bold' : '';
+                $nav.append(`<li><a href="#${id}" class="${boldClass}">${$heading.text()}</a></li>`);
             }
         });
 
@@ -178,6 +181,7 @@ function kursagenten_admin_footer() {
     .ka-section-nav { list-style: none; margin: 0; padding: 0; }
     .ka-section-nav li { margin: 0; padding: .2em 0;}
     .ka-section-nav a { display: block; padding: 6px 8px; color: #1d2327; text-decoration: none; border-radius: 4px; }
+    .ka-section-nav a.ka-h2-bold { font-weight: bold; }
     .ka-section-nav a:hover { background: #f0f0f1; color: #2271b1; }
     .ka-section-nav a.active { background: #e7f1ff; color: #1d2327; }
     .ka-content { flex: 1 1 auto; min-width: 0; }

@@ -26,7 +26,7 @@ class Avansert {
         <div class="wrap options-form ka-wrap" id="toppen">
         <form method="post" action="options.php">
         <?php kursagenten_sticky_admin_menu(); ?>
-        <h2>Avanserte innstillinger</h2>
+        <h1>Avanserte innstillinger</h1>
         <p>Skru på de innstillingene du ønsker å bruke:</p>
 
         <?php
