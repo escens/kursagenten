@@ -2,10 +2,12 @@
 .wrap {
     font-family: "Open sans", "Poppins", Helvetica, Arial, sans-serif;
 }
+h1 {    margin: 0 0 1em 0.6em; }
 
 h2 {
-    margin-top: 30px;
+    margin-top: 3em;
     color: #333;
+    margin-left: 0.6em;
 }
 
 input[type=date], 
@@ -125,7 +127,9 @@ input[type=textarea] {
     cursor: pointer;
 }
 .ka-wrap h4 {
-    font-size: 1.15em;
+    font-size: 1.4em;
+    color: #18517f;
+    margin-top: 2em;
 }
 
 /* IKONER */
@@ -361,12 +365,7 @@ h4.welcome-panel-title {
     position: relative;
 }
 
-/* Menu separator for Kursagenten admin menu */
-#adminmenu .kag-menu-separator-before:not(a) {
-    border-top: 1px solid #62646778;
-    margin-top: 10px !important;
-    padding-top: 10px !important;
-}
+/* Menu separator styling moved to inline CSS in kursagenten.php for global admin access */
 .post-type-ka_course .page-title-action,
 .post-type-ka_coursedate .page-title-action {
     display: none;

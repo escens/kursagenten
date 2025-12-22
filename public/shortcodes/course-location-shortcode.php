@@ -135,20 +135,21 @@ class CourseLocationGrid {
 
         // Hvis region er spesifisert, hent alle term_ids fra den regionen
         if (!empty($region)) {
-            // Normaliser region-navn (støtt både med og uten bindestrek, case-insensitive)
-            $region = strtolower(trim($region));
-            $valid_regions = ['sørlandet', 'østlandet', 'vestlandet', 'midt-norge', 'nord-norge'];
+            // Convert region name to internal (ASCII) format
+            require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+            $internal_region = kursagenten_get_region_internal_name($region);
+            $valid_regions = kursagenten_get_valid_regions();
             
             // Sjekk om region er gyldig
-            if (in_array($region, $valid_regions, true)) {
-                // Hent alle steder med denne regionen
+            if (in_array($internal_region, $valid_regions, true)) {
+                // Hent alle steder med denne regionen (bruk intern versjon)
                 $region_terms = get_terms([
                     'taxonomy' => 'ka_course_location',
                     'hide_empty' => false,
                     'meta_query' => [
                         [
                             'key' => 'location_region',
-                            'value' => $region,
+                            'value' => $internal_region,
                             'compare' => '='
                         ]
                     ],

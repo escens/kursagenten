@@ -249,16 +249,9 @@ class Kursinnstillinger {
                 <div id="region-mapping-container" style="margin-top: 20px; display: flex; gap: 20px; flex-wrap: wrap;">
                     <?php
                     $region_mapping = kursagenten_get_region_mapping();
-                    $region_labels = [
-                        'sørlandet' => 'Sørlandet',
-                        'østlandet' => 'Østlandet',
-                        'vestlandet' => 'Vestlandet',
-                        'midt-norge' => 'Midt-Norge',
-                        'nord-norge' => 'Nord-Norge'
-                    ];
                     
                     foreach ($region_mapping as $region_key => $region_data) {
-                        $region_label = $region_labels[$region_key] ?? ucfirst($region_key);
+                        $region_label = kursagenten_get_region_display_name($region_key);
                         ?>
                         <div class="region-column" data-region="<?php echo esc_attr($region_key); ?>" style="flex: 1; min-width: 150px; border: 2px dashed #cccccc61; padding: 15px; border-radius: 5px; background: #f6f6f67a;">
                             <h4 style="margin-top: 0;"><?php echo esc_html($region_label); ?></h4>
@@ -458,6 +451,7 @@ class Kursinnstillinger {
             if (!empty($terms) && !is_wp_error($terms)) {
                 foreach ($terms as $term) {
                     delete_term_meta($term->term_id, 'location_region');
+                    delete_term_meta($term->term_id, 'location_region_manual');
                     $removed_count++;
                 }
             }
@@ -482,6 +476,11 @@ class Kursinnstillinger {
 
         $mapping_json = isset($_POST['mapping']) ? $_POST['mapping'] : '';
         
+        // Ensure proper UTF-8 encoding for Norwegian characters (æøå)
+        if (function_exists('mb_convert_encoding')) {
+            $mapping_json = mb_convert_encoding($mapping_json, 'UTF-8', 'UTF-8');
+        }
+        
         // Try to decode JSON - handle both with and without slashes
         $mapping = json_decode($mapping_json, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
@@ -501,19 +500,21 @@ class Kursinnstillinger {
         }
 
         // Sanitize mapping data
-        // Note: Don't use sanitize_key() for region names as it removes special characters
-        // Region names are predefined and safe
-        $valid_regions = ['sørlandet', 'østlandet', 'nord-norge', 'vestlandet', 'midt-norge'];
+        // Convert region names to internal (ASCII) format for storage
+        require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+        $valid_regions = kursagenten_get_valid_regions();
         $sanitized_mapping = array();
         foreach ($mapping as $region => $data) {
             if (!is_array($data) || !isset($data['counties'])) {
                 continue;
             }
+            // Convert region name to internal (ASCII) format
+            $internal_region = kursagenten_get_region_internal_name($region);
             // Only accept valid region names
-            if (!in_array($region, $valid_regions, true)) {
+            if (!in_array($internal_region, $valid_regions, true)) {
                 continue;
             }
-            $sanitized_mapping[$region] = array(
+            $sanitized_mapping[$internal_region] = array(
                 'counties' => array_map('sanitize_text_field', $data['counties'] ?? []),
                 'municipalities' => array() // Always empty
             );

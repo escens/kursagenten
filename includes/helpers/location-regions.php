@@ -11,18 +11,78 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Convert region name from internal (ASCII) to display version (with æøå)
+ * 
+ * @param string $internal_region Internal region name (e.g., 'ostlandet', 'sorlandet')
+ * @return string Display version (e.g., 'Østlandet', 'Sørlandet')
+ */
+function kursagenten_get_region_display_name($internal_region) {
+    $mapping = [
+        'sorlandet' => 'Sørlandet',
+        'ostlandet' => 'Østlandet',
+        'vestlandet' => 'Vestlandet',
+        'midt-norge' => 'Midt-Norge',
+        'nord-norge' => 'Nord-Norge',
+        // Support old format for backward compatibility
+        'sørlandet' => 'Sørlandet',
+        'østlandet' => 'Østlandet',
+    ];
+    
+    return $mapping[$internal_region] ?? ucfirst(str_replace('-', '-', $internal_region));
+}
+
+/**
+ * Convert region name from display version (with æøå) to internal (ASCII)
+ * 
+ * @param string $display_region Display region name (e.g., 'Østlandet', 'Sørlandet')
+ * @return string Internal version (e.g., 'ostlandet', 'sorlandet')
+ */
+function kursagenten_get_region_internal_name($display_region) {
+    $mapping = [
+        'Sørlandet' => 'sorlandet',
+        'sørlandet' => 'sorlandet',
+        'Østlandet' => 'ostlandet',
+        'østlandet' => 'ostlandet',
+        'Vestlandet' => 'vestlandet',
+        'vestlandet' => 'vestlandet',
+        'Midt-Norge' => 'midt-norge',
+        'midt-norge' => 'midt-norge',
+        'Nord-Norge' => 'nord-norge',
+        'nord-norge' => 'nord-norge',
+        // Support old short names for backward compatibility
+        'sør' => 'sorlandet',
+        'øst' => 'ostlandet',
+        'nord' => 'nord-norge',
+        'vest' => 'vestlandet',
+    ];
+    
+    $normalized = strtolower(trim($display_region));
+    return $mapping[$display_region] ?? $mapping[$normalized] ?? $normalized;
+}
+
+/**
+ * Get all valid internal region names
+ * 
+ * @return array Array of internal region names
+ */
+function kursagenten_get_valid_regions() {
+    return ['sorlandet', 'ostlandet', 'nord-norge', 'vestlandet', 'midt-norge'];
+}
+
+/**
  * Get default region mapping for counties
  * Only counties are used for region mapping, not municipalities
+ * Uses internal (ASCII) region names
  * 
  * @return array Array with counties mapped to regions
  */
 function kursagenten_get_default_region_mapping() {
     return [
-        'sørlandet' => [
+        'sorlandet' => [
             'counties' => ['Agder', 'Vest-Agder', 'Aust-Agder'],
             'municipalities' => []
         ],
-        'østlandet' => [
+        'ostlandet' => [
             'counties' => ['Oslo', 'Akershus', 'Buskerud', 'Østfold', 'Innlandet', 'Vestfold', 'Telemark', 'Hedmark', 'Oppland'],
             'municipalities' => []
         ],
@@ -51,13 +111,15 @@ function kursagenten_get_region_mapping() {
     $saved = get_option('kursagenten_region_mapping', []);
     
     // Merge saved with default, prioritizing saved values
-    // Support both old region names (sør, øst, nord, vest) and new names (sørlandet, østlandet, etc.)
-    $region_names = ['sørlandet', 'østlandet', 'nord-norge', 'vestlandet', 'midt-norge'];
+    // Use internal (ASCII) region names
+    $region_names = kursagenten_get_valid_regions();
     $old_to_new_mapping = [
-        'sør' => 'sørlandet',
-        'øst' => 'østlandet',
+        'sør' => 'sorlandet',
+        'sørlandet' => 'sorlandet',
+        'øst' => 'ostlandet',
+        'østlandet' => 'ostlandet',
         'nord' => 'nord-norge',
-        'vest' => 'vestlandet'
+        'vest' => 'vestlandet',
     ];
     
     $mapping = [];
@@ -149,15 +211,23 @@ function kursagenten_assign_regions_to_existing_terms() {
     $location_mappings = get_option('kursagenten_location_mappings', array());
     $updated_count = 0;
     
-    // Old to new region name mapping
+    // Old to new region name mapping (convert to internal ASCII names)
     $old_to_new_mapping = [
-        'sør' => 'sørlandet',
-        'øst' => 'østlandet',
+        'sør' => 'sorlandet',
+        'sørlandet' => 'sorlandet',
+        'øst' => 'ostlandet',
+        'østlandet' => 'ostlandet',
         'nord' => 'nord-norge',
-        'vest' => 'vestlandet'
+        'vest' => 'vestlandet',
     ];
     
     foreach ($all_terms as $term) {
+        // Respekter manuelle regionvalg gjort på enkelt-sted
+        $manual_region = get_term_meta($term->term_id, 'location_region_manual', true);
+        if ($manual_region === 'yes') {
+            continue;
+        }
+
         $existing_region = get_term_meta($term->term_id, 'location_region', true);
         
         // First, migrate old region names to new names
@@ -305,6 +375,12 @@ function kursagenten_update_all_terms_with_region_mapping() {
     $updated_count = 0;
     
     foreach ($all_terms as $term) {
+        // Respekter manuelle regionvalg gjort på enkelt-sted
+        $manual_region = get_term_meta($term->term_id, 'location_region_manual', true);
+        if ($manual_region === 'yes') {
+            continue;
+        }
+
         // Get identifier (current name)
         $identifier = get_term_meta($term->term_id, 'location_custom_name', true);
         if (empty($identifier)) {

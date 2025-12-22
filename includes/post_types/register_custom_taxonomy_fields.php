@@ -74,13 +74,6 @@ function add_location_region_field($term) {
     
     $current_region = get_term_meta($term->term_id, 'location_region', true);
     $regions = kursagenten_get_region_mapping();
-    $region_labels = [
-        'sørlandet' => 'Sørlandet',
-        'østlandet' => 'Østlandet',
-        'vestlandet' => 'Vestlandet',
-        'midt-norge' => 'Midt-Norge',
-        'nord-norge' => 'Nord-Norge'
-    ];
     ?>
     <tr class="form-field">
         <th scope="row"><label for="location_region">Region</label></th>
@@ -88,7 +81,7 @@ function add_location_region_field($term) {
             <select name="location_region" id="location_region">
                 <option value="">Ingen region</option>
                 <?php foreach ($regions as $region_key => $region_data) : 
-                    $region_label = $region_labels[$region_key] ?? ucfirst($region_key);
+                    $region_label = kursagenten_get_region_display_name($region_key);
                 ?>
                     <option value="<?php echo esc_attr($region_key); ?>" <?php selected($current_region, $region_key); ?>>
                         <?php echo esc_html($region_label); ?>
@@ -312,14 +305,7 @@ function manage_taxonomy_visibility_column($content, $column_name, $term_id) {
         $region = get_term_meta($term_id, 'location_region', true);
         
         if (!empty($region)) {
-            $region_labels = [
-                'sørlandet' => 'Sørlandet',
-                'østlandet' => 'Østlandet',
-                'vestlandet' => 'Vestlandet',
-                'midt-norge' => 'Midt-Norge',
-                'nord-norge' => 'Nord-Norge'
-            ];
-            $region_label = $region_labels[$region] ?? ucfirst($region);
+            $region_label = kursagenten_get_region_display_name($region);
             return '<span style="padding: 3px 8px; background: #f0f0f0; border-radius: 3px; font-size: 12px;">' . esc_html($region_label) . '</span>';
         }
         
@@ -377,7 +363,17 @@ function save_taxonomy_field($term_id) {
         'hide_in_list' => 'sanitize_text_field',
         'hide_in_menu' => 'sanitize_text_field',
         'hide_in_course_list' => 'sanitize_text_field',
-        'location_region' => 'sanitize_key',
+        'location_region' => function($value) {
+            // Convert to internal (ASCII) format and validate
+            require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+            $value = trim($value);
+            $internal_region = kursagenten_get_region_internal_name($value);
+            $valid_regions = kursagenten_get_valid_regions();
+            if (in_array($internal_region, $valid_regions, true)) {
+                return $internal_region;
+            }
+            return '';
+        },
     ];
     
     // Sjekk om dette er en hurtigredigering
@@ -462,16 +458,21 @@ function save_taxonomy_field($term_id) {
             // For location_region, only save if regions are enabled and value is not empty
             if ($field === 'location_region') {
                 if ($use_regions && !empty($value)) {
+                    // Lagre valgt region og marker at denne er satt manuelt
                     update_term_meta($term_id, $field, $value);
+                    update_term_meta($term_id, 'location_region_manual', 'yes');
                 } else {
+                    // Tøm region og fjern manuell-flagget
                     delete_term_meta($term_id, $field);
+                    delete_term_meta($term_id, 'location_region_manual');
                 }
             } else {
                 update_term_meta($term_id, $field, $value);
             }
         } elseif ($field === 'location_region' && $use_regions) {
-            // If field is not set but regions are enabled, remove the region
+            // Hvis feltet ikke er sendt inn, men regioner er aktive, fjern region og manuell-flagget
             delete_term_meta($term_id, 'location_region');
+            delete_term_meta($term_id, 'location_region_manual');
         }
     }
     

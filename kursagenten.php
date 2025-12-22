@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.1.07
+ * Version:           1.1.08
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -16,13 +16,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.1.07');
+ define('KURSAG_VERSION', '1.1.08');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.1.07');
+    define('KURSAG_VERSION', '1.1.08');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -286,9 +286,9 @@ require_once KURSAG_PLUGIN_DIR . '/includes/helpers/course_days_helper.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
-// Load migration script for admin pages
-if (is_admin() && file_exists(KURSAG_PLUGIN_DIR . '/includes/migrations/migrate-meta-fields.php')) {
-    require_once KURSAG_PLUGIN_DIR . '/includes/migrations/migrate-meta-fields.php';
+// Load dashboard widget for changelog
+if (is_admin()) {
+    require_once KURSAG_PLUGIN_DIR . '/includes/misc/dashboard-changelog-widget.php';
 }
 
 
@@ -530,6 +530,20 @@ add_action('admin_init', function() {
         }
     }
     add_action('admin_enqueue_scripts', 'enqueue_custom_admin_script');
+
+    // Add inline CSS for admin menu separator on all admin pages
+    function kursagenten_admin_menu_separator_style() {
+        if (is_admin()) {
+            echo '<style id="kursagenten-admin-menu-separator">
+                #adminmenu .kag-menu-separator-before:not(a) {
+                    border-top: 1px solid #62646778;
+                    margin-top: 10px !important;
+                    padding-top: 10px !important;
+                }
+            </style>';
+        }
+    }
+    add_action('admin_head', 'kursagenten_admin_menu_separator_style');
 
 
 

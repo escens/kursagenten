@@ -176,7 +176,7 @@ function kursagenten_admin_footer() {
     }*/
     /* Venstre admin-layout */
     .ka-admin-container { display: flex; gap: 24px; }
-    .ka-sidebar { position: sticky; top: 110px; align-self: flex-start; width: 240px; min-width: 180px; max-height: calc(100vh - 100px); overflow: auto; padding: 12px 4px 12px 8px; background: #fff; border-radius: 10px;}
+    .ka-sidebar { position: sticky; top: 110px; align-self: flex-start; width: 240px; min-width: 220px; max-height: calc(100vh - 100px); overflow: auto; padding: 12px 4px 12px 8px; background: #fff; border-radius: 10px;}
     .ka-section-nav-title { font-size: 1.1em; font-weight: 600; margin-bottom: 1em; padding-left: 8px; }
     .ka-section-nav { list-style: none; margin: 0; padding: 0; }
     .ka-section-nav li { margin: 0; padding: .2em 0;}

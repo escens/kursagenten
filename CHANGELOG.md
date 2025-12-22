@@ -1,4 +1,15 @@
-## 1.1.07 - 2025-12-
+## 1.1.09 - 2025-12-22
+- Fix: Region på kurssted ble overskrevet ved flytting av regioner under Synkronisering. Nå beholder kurssted manuelt valgt region.
+
+## 1.1.08 - 2025-12-15
+- Fix: Navngivning av Regioner ved lagring på engelsk Wordpress er nå korrekt
+- Endret: Lagt til alt nytt så all informasjon relatert til utvidelsen slettes fra WP ved avinstallering
+
+## 1.1.07 - 2025-12-12
+- Lagt til: Widget i kontrollpanel så du får se de nyeste endringene vi har gjort 🎉
+- Lagt til: Mulighet til å endre navn på kurssted fra Kursagenten -> Synkronisering. Navn blir endret ved henting/synkronisering av kurs.
+- Lagt til: Regioner. Kan aktiveres ved behov, og brukes i kortkode [kurssteder] med region="sørlandet/østlandet/vestlandet/midt-norge/nord-norge". Det er også mulig å legge til ekstra steder: [kurssteder region="østlandet" vis="bergen"]
+- Endret: Forbedret dokumentasjon
 - Intert: lagt inn performance-debug.php og dokumentasjon for feilsøking hvis utvidelsen blir treg
 - Internt: gjort endringer til secure updater, gjorde siden treg igjen
 
