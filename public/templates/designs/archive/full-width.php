@@ -326,13 +326,6 @@ if (empty($header_image)) {
                     endif;
                     ?>
                 </div>
-
-                <!-- Slide-in Panel -->
-                <div id="slidein-overlay"></div>
-                <div id="slidein-panel" class="modern-slidein">
-                    <button class="close-btn" aria-label="Close">&times;</button>
-                    <iframe id="kursagenten-iframe" src=""></iframe>
-                </div>
             </div>
         </div>
     </section>

@@ -5,7 +5,7 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.1.08
+ * Version:           1.1.11
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -16,13 +16,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.1.08');
+ define('KURSAG_VERSION', '1.1.11');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.1.08');
+    define('KURSAG_VERSION', '1.1.11');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -776,3 +776,23 @@ if (!is_admin()) {
         
     }
     add_action('wp_enqueue_scripts', 'kursagenten_enqueue_scripts');
+
+    /**
+     * Add slidein panel and overlay to footer (outside of #ka container)
+     * This ensures the panel is always visible above headers and menus
+     * Panel is only added if the slidein-panel script is enqueued
+     */
+    function kursagenten_add_slidein_panel() {
+        // Check if the slidein-panel script is enqueued
+        // This ensures we only add the panel when it's actually needed
+        if (wp_script_is('kursagenten-slidein-panel', 'enqueued')) {
+            ?>
+            <div id="slidein-overlay"></div>
+            <div id="slidein-panel">
+                <button class="close-btn" aria-label="Close">&times;</button>
+                <iframe id="kursagenten-iframe" src=""></iframe>
+            </div>
+            <?php
+        }
+    }
+    add_action('wp_footer', 'kursagenten_add_slidein_panel');

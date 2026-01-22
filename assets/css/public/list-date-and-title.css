@@ -1,20 +1,20 @@
 /* Compact Taxonomy Design - Unikt kompakt design */
-#ka .course-grid.col-1-4 {
+#ka .ka-container .course-grid.col-1-4 {
     grid-template-columns: 1fr 300fr;
     column-gap: 0;
 }
 
-#ka .filter-container,
-#ka .courselist-header,
-#ka .filter-toggle-button {
+#ka .ka-container .filter-container,
+#ka .ka-container .courselist-header,
+#ka .ka-container .filter-toggle-button {
     display: none!important;
 }
 
-#ka .compact-course-date {
+#ka .ka-container .compact-course-date {
     font-weight: 400;
     font-size: var(--ka-font-s);
 }
-#ka .compact-course-date i.ka-icon {
+#ka .ka-container .compact-course-date i.ka-icon {
     display: inline-block;
     width: var(--ka-font-s);
     height: var(--ka-font-s);
@@ -22,7 +22,7 @@
     margin-top: -3px;
 }
 
-#ka span.course-available:before {
+#ka .ka-container span.course-available:before {
     margin: 6px 3px 2px 0;
     /* margin: 0; */
 }
@@ -100,7 +100,7 @@
 
 
 /* Course Image */
-#ka .compact-course-image {
+#ka .ka-container .compact-course-image {
     flex-shrink: 0;
     width: 40px;
     height: 40px;
@@ -109,25 +109,25 @@
     background: var(--light-bg, #f5f5f5);
 }
 
-#ka .compact-course-image a {
+#ka .ka-container .compact-course-image a {
     display: block;
     width: 100%;
     height: 100%;
 }
 
-#ka .compact-course-image img {
+#ka .ka-container .compact-course-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.3s ease;
 }
 
-#ka .compact-item:hover .compact-course-image img {
+#ka .ka-container .compact-item:hover .compact-course-image img {
     transform: scale(1.05);
 }
 
 /* Title Styling */
-#ka .compact-course-title {
+#ka .ka-container .compact-course-title {
     margin: 0;
     font-size: var(--ka-font-s-plus);
     font-weight: 400;
@@ -141,29 +141,29 @@
     transition: color 0.2s;
 }
 
-#ka .compact-course-title a:hover {
+#ka .ka-container .compact-course-title a:hover {
     color: var(--ka-color, #3b82f6);
 }
 
-#ka .compact-course-title span.compact-course-location {
+#ka .ka-container .compact-course-title span.compact-course-location {
     opacity: 0.7;
 }
 
 /* Action Buttons */
-#ka .compact-course-actions {
+#ka .ka-container .compact-course-actions {
     display: flex;
     gap: 0.75rem;
     align-items: flex-start;
     flex-shrink: 0;
 }
 
-#ka .compact-btn {
+#ka .ka-container .compact-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     padding: 0.3rem 1rem;
     border-radius: 6px;
-    font-size: 0.9rem;
+    font-size: var(--ka-font-s);
     font-weight: 500;
     text-decoration: none;
     border: none;
@@ -171,18 +171,18 @@
     transition: all 0.2s ease;
     white-space: nowrap;
 }
-#ka .compact-btn:hover,
-#ka .compact-btn:focus {
+#ka .ka-container .compact-btn:hover,
+#ka .ka-container .compact-btn:focus {
     box-shadow: none;
     color: var(--ka-color, #3b82f6);
 }
-#ka .compact-btn-primary {
+#ka .ka-container .compact-btn-primary {
     background: transparent;
     color: inherit;
 }
 
 /* No Courses Message */
-#ka .no-courses {
+#ka .ka-container .no-courses {
     text-align: center;
     padding: 2rem;
     background: var(--light-bg, #f9f9f9);
@@ -202,13 +202,13 @@
     .compact-course-info > a {
         align-items: flex-start;
     }
-    #ka .compact-course-title {
+    #ka .ka-container .compact-course-title {
         margin-top: 5px!important;
     }
-    #ka .compact-course-actions{
+    #ka .ka-container .compact-course-actions{
       justify-content: flex-end;
     }
-    #ka .compact-btn-primary {
+    #ka .ka-container .compact-btn-primary {
         color: var(--ka-color, #3b82f6);
     }
 }
@@ -233,7 +233,7 @@
     flex: 0 0 10px;
   }
 
-  #ka .compact-btn-primary {
+  #ka .ka-container .compact-btn-primary {
       color: var(--ka-color, #3b82f6);
   }
 }

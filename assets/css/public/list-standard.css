@@ -1,4 +1,4 @@
-#ka .courselist-main {
+#ka .ka-container .courselist-main {
     border-radius: 10px;
     box-shadow: var(--ka-shadow);
     /*box-shadow: var(--ka-shadow-dark);
@@ -10,29 +10,29 @@
     padding: 0;
     background: white;
 }
-#ka .courselist-main:hover {
+#ka .ka-container .courselist-main:hover {
     box-shadow: var(--ka-shadow-darker);
   }
 
-#ka .courselist-main.with-image {
+#ka .ka-container .courselist-main.with-image {
     display: flex;
     align-items: stretch;
     min-height: 130px;
 }
-#ka .courselist-items {
+#ka .ka-container .courselist-items {
     display: flex;
     flex-direction: column;
-    row-gap: 1em;
+    row-gap: var(--ka-space-md);
 }
-#ka .courselist-item {
+#ka .ka-container .courselist-item {
     display: flex;
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
+    gap: var(--ka-space-md);
     /*background: white;*/
 }
 /* Image area */
-#ka .courselist-main .image {
+#ka .ka-container .courselist-main .image {
     min-width: 80px;
     overflow: hidden;
     background-repeat: no-repeat;
@@ -42,7 +42,7 @@
     border-radius: 10px 0 0 10px;
     position: relative;
 }
-#ka .courselist-main .image .image-inner {
+#ka .ka-container .courselist-main .image .image-inner {
     position: absolute;
     top: 0;
     left: 0;
@@ -50,84 +50,84 @@
     height: 100%;
     display: block;
 }
-#ka .courselist-main .image .image-inner img {
+#ka .ka-container .courselist-main .image .image-inner img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     object-position: center;
 }
 /* Text area */
-#ka .courselist-main .text-area-wrapper {
+#ka .ka-container .courselist-main .text-area-wrapper {
     display: flex;
     flex: 1;
     align-items: stretch;
 }
 
-#ka .courselist-main .text-area {
-    padding: 1.5em 1.5em 1.1em 1.5em;
+#ka .ka-container .courselist-main .text-area {
+    padding: var(--ka-space-lg) var(--ka-space-lg) var(--ka-space-sm) var(--ka-space-lg);
     display: flex;
     flex-direction: column;
     flex: 1;
 }
-#ka .courselist-main.with-image .text-area {
-    padding-left: 0.5em;
+#ka .ka-container .courselist-main.with-image .text-area {
+    padding-left: var(--ka-space-xs);
 }
 
-#ka .courselist-main .title-area {
+#ka .ka-container .courselist-main .title-area {
     display: flex;
     align-items: center;
 }
 
-#ka .courselist-main .title-area .course-title {
+#ka .ka-container .courselist-main .title-area .course-title {
 
 }
 
-#ka .courselist-main .title-area .course-title a {
+#ka .ka-container .courselist-main .title-area .course-title a {
     color: inherit;
     text-decoration: none;
 }
 
-#ka .courselist-main .title-area .course-title a:hover {
+#ka .ka-container .courselist-main .title-area .course-title a:hover {
     color: #222;
 }
 
-#ka .courselist-main .details-area {
+#ka .ka-container .courselist-main .details-area {
     margin-top: 0;
 }
-/*#ka .courselist-main .details-area .startdate {
+/*#ka .ka-container .courselist-main .details-area .startdate {
     color: var(--ka-color);
 }*/
-#ka .courselist-main .details-area .location i.ka-icon,
-#ka .courselist-main .details-area .coursetime i.ka-icon {
+#ka .ka-container .courselist-main .details-area .location i.ka-icon,
+#ka .ka-container .courselist-main .details-area .coursetime i.ka-icon {
     background-color: var(--ka-color-filter);
 }
 
 /* Links area */
-#ka .courselist-main .links-area {
+#ka .ka-container .courselist-main .links-area {
     padding: 2.4em 1.5em 1.6em 0;
     width: max-content;
     display: flex;
     flex-direction: column;
     align-items: center;
-    row-gap: .4em;
+    row-gap: var(--ka-space-xs);
     flex: 0 0 auto;
     gap: 0.5rem;
     justify-content: flex-start;
 }
-#ka .courselist-main .links-area button {
+#ka .ka-container .courselist-main .links-area button {
     font-size: var(--ka-font-s);
 }
 /* View type styles */
-#ka .view-type-maincourses .courselist-main .links-area {
+#ka .ka-container .view-type-maincourses .courselist-main .links-area {
     padding: 1.5em 1.5em 1.6em 0;
     justify-content: center;
 }
 
 /* Meta area */
-#ka .courselist-main .meta-area {
-    margin-top: 1em;
+#ka .ka-container .courselist-main .meta-area {
+    margin-top: var(--ka-space-md);
 }
-#ka .courselist-main .meta-area .accordion-icon {
+#ka .ka-container .courselist-main .meta-area .accordion-icon {
     display: flex;
     align-content: flex-start;
     align-items: center;
@@ -144,90 +144,90 @@
 }
 
 /* Courselist Content Panel */
-#ka .courselist-content {
+#ka .ka-container .courselist-content {
     background: transparent;
 }
-#ka .courselist-content.open {
-    margin-top: 1em;
+#ka .ka-container .courselist-content.open {
+    margin-top: var(--ka-space-md);
 }
-#ka .courselist-content p {
-    margin-bottom: 1em;
+#ka .ka-container .courselist-content p {
+    margin-bottom: var(--ka-space-md);
 }
 
 /* Mobile-friendly styles */
 @media screen and (max-width: 768px) {
-    #ka .courselist-main.with-image {
+    #ka .ka-container .courselist-main.with-image {
         flex-wrap: wrap;
         min-height: auto;
     }
 
-    #ka .courselist-main .image {
+    #ka .ka-container .courselist-main .image {
         flex: 0 0 100%;
         height: 200px;
         border-radius: 10px 10px 0 0;
     }
 
-    #ka .courselist-main .text-area-wrapper {
+    #ka .ka-container .courselist-main .text-area-wrapper {
         flex-direction: column;
         width: 100%;
     }
 
-    #ka .courselist-main .text-area,
-    #ka .courselist-main.with-image .text-area {
-        padding: 1.1em;
+    #ka .ka-container .courselist-main .text-area,
+    #ka .ka-container .courselist-main.with-image .text-area {
+        padding: var(--ka-space-md);
     }
 
-    #ka .courselist-main .title-area {
+    #ka .ka-container .courselist-main .title-area {
         flex-direction: row;
         align-items: flex-start;
-        gap: 0.5em;
+        gap: var(--ka-space-xs);
     }
-    #ka .iconlist .location {
+    #ka .ka-container .iconlist .location {
         flex-wrap: wrap;
     }
-    #ka .iconlist > div, #ka .iconlist.horizontal a {
+    #ka .ka-container .iconlist > div, #ka .ka-container .iconlist.horizontal a {
         align-items: flex-start;
     }
 
-    #ka .courselist-main .meta-area.iconlist.horizontal {
+    #ka .ka-container .courselist-main .meta-area.iconlist.horizontal {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.5em;
+        gap: var(--ka-space-xs);
     }
 
-    #ka .courselist-main .meta-area .accordion-icon {
+    #ka .ka-container .courselist-main .meta-area .accordion-icon {
         background: #f8f8f8;
         height: 1em;
         width: 1em;
         padding: 5px;
         min-height: 10px;
         border-radius: 50%;
-        margin-left: .3em;
+        margin-left: var(--ka-space-2xs);
     }
 
-    #ka .courselist-main .details-area.iconlist.horizontal {
+    #ka .ka-container .courselist-main .details-area.iconlist.horizontal {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.3em 0.5em
+        gap: 0.3em var(--ka-space-xs)
     }
 
-    #ka .courselist-main .links-area {
+    #ka .ka-container .courselist-main .links-area {
         flex: 0 0 auto;
         padding: 1em 1em 2em 1.5em;
         width: 100%;
         flex-direction: row;
         justify-content: flex-start;
-        gap: 1em;
+        gap: var(--ka-space-md);
         flex-wrap: wrap;
     }
-    #ka .courselist-main .course-title {
-        font-size: 1.1em;
+    #ka .ka-container .courselist-main .course-title {
+        font-size: var(--ka-font-md);
         line-height: 1.3;
-        margin-bottom: .5em;
+        margin-bottom: var(--ka-space-xs);
     }
 }
 @media screen and (max-width: 340px) {
-       #ka .courselist-main .links-area {
+       #ka .ka-container .courselist-main .links-area {
         flex-direction: column-reverse;
     }
 }
@@ -236,15 +236,15 @@
 @media screen and (min-width: 769px) and (max-width: 1024px) {
 
 
-    #ka .courselist-main .image {
+    #ka .ka-container .courselist-main .image {
         flex: 0 0 120px;
     }
 
-    #ka .courselist-main .text-area-wrapper {
+    #ka .ka-container .courselist-main .text-area-wrapper {
         flex-direction: column;
     }
 
-    #ka .courselist-main .links-area {
+    #ka .ka-container .courselist-main .links-area {
         flex: 0 0 auto;
         padding: 0 1.2em 1.2em 1.2em;
         flex-direction: row;
@@ -253,7 +253,7 @@
         align-items: center;
     }
 
-    #ka .courselist-main button {
+    #ka .ka-container .courselist-main button {
         flex: 0 1 auto;
         min-width: 120px;
         margin: 0;

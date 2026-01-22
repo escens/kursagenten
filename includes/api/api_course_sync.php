@@ -35,13 +35,12 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
     }
     
     // CRITICAL: Must check if location_id is in valid list before proceeding
-    // This applies to both regular sync and webhooks to prevent internal courses
-    if (!in_array($location_id, $valid_location_ids)) {
-        if ($is_webhook) {
-            error_log("ADVARSEL: Webhook hopper over internkurs med location_id: $location_id (finnes ikke i CourseList API)");
-        } else {
-            error_log("ADVARSEL: Hopper over internkurs med location_id: $location_id (finnes ikke i CourseList API)");
-        }
+    // For regular sync: always block courses that are not in CourseList (internal courses)
+    // For webhooks: CourseList-validering er allerede gjort i process_webhook_data()
+    // via get_main_course_id_by_location_id(). Her skal vi derfor ikke stoppe
+    // nye kurs bare fordi cache (valid_location_ids) er utdatert.
+    if (!$is_webhook && !in_array($location_id, $valid_location_ids)) {
+        error_log("ADVARSEL: Hopper over internkurs med location_id: $location_id (finnes ikke i CourseList API)");
         return false;
     }
     
@@ -56,6 +55,22 @@ function create_or_update_course_and_schedule($course_data, $is_webhook = false)
             error_log("FEIL: Kunne ikke hente kursdetaljer for location_id: $location_id");
             return false;
         }
+    }
+    
+    // Ekstra sikkerhet: aldri prosesser internkurs hentet fra enkeltkurs-API
+    // Selv om webhooks allerede filtrerer dette via get_main_course_id_by_location_id(),
+    // sørger vi her for at ingen kaller kan snike inn internkurs via single_course_data.
+    $is_internal_course = false;
+    if (isset($individual_course_data['internalCourse']) && $individual_course_data['internalCourse'] === true) {
+        $is_internal_course = true;
+    }
+    $single_main_category_id = isset($individual_course_data['mainCategory']['id']) ? (int) $individual_course_data['mainCategory']['id'] : null;
+    if ($single_main_category_id === 0) {
+        $is_internal_course = true;
+    }
+    if ($is_internal_course) {
+        error_log("ADVARSEL: Hopper over internkurs fra enkeltkurs-API med location_id: $location_id (internalCourse = true eller mainCategory.id = 0)");
+        return false;
     }
     
     // Additional safety check: Verify course is still in CourseList after fetching details

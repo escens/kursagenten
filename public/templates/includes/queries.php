@@ -768,7 +768,6 @@ function get_courses_for_taxonomy($args = []) {
             'paged'          => $current_page,
             'tax_query'      => $args['tax_query'] ?? ['relation' => 'AND'],
             'meta_query'     => [
-                'relation' => 'AND',
                 [
                     'relation' => 'OR',
                     [
@@ -780,10 +779,6 @@ function get_courses_for_taxonomy($args = []) {
                         'value'   => 'yes',
                         'compare' => '!='
                     ]
-                ],
-                [
-                    'key'     => 'ka_course_location_freetext',
-                    'compare' => 'EXISTS'
                 ]
             ]
         ];
@@ -950,7 +945,7 @@ function display_course_locations($post_id) {
     if (!empty($parent_main_course_id)) {
         $child_courses = get_posts(array(
             'post_type' => 'ka_course',
-            'post_status' => array('publish', 'draft'),
+            'post_status' => 'publish',
             'posts_per_page' => -1,
             'meta_query' => array(
                 'relation' => 'AND',
@@ -983,15 +978,16 @@ function display_course_locations($post_id) {
     $output .= '<a href="' . esc_url($main_course_url) . '" class="button-filter">Alle</a>';
     $output .= '</li>';
     
-    // Legg til alle lokasjoner
+    // Legg til alle lokasjoner - kun vis lokasjoner som har minst ett publisert child course
     foreach ($locations as $location) {
-        $is_active = ($current_location === $location['name']);
-        // Bruk barn-innleggets permalink hvis vi har en match på lokasjonsnavn; ellers fallback til taxonomi-slug
-        if (isset($child_location_links[$location['name']])) {
-            $location_url = $child_location_links[$location['name']];
-        } else {
-            $location_url = $main_course_url . $location['slug'] . '/';
+        // Skip lokasjoner som ikke har en publisert child course
+        if (!isset($child_location_links[$location['name']])) {
+            continue;
         }
+        
+        $is_active = ($current_location === $location['name']);
+        // Bruk barn-innleggets permalink (kun publiserte posts er i $child_location_links)
+        $location_url = $child_location_links[$location['name']];
         
         $output .= '<li class="' . ($is_active ? 'active' : '') . '">';
         $output .= '<a href="' . esc_url($location_url) . '" class="button-filter">' . esc_html($location['name']) . '</a>';

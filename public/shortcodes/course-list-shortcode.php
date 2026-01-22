@@ -938,15 +938,6 @@ function kursagenten_course_list_shortcode($atts) {
             </article>
         </div>
     </main>
-    <?php if ( ! is_tax(array('ka_coursecategory','ka_course_location','ka_instructors')) 
-        && ! is_post_type_archive('ka_course') 
-        && ! is_singular('ka_course') ) : ?>
-    <div id="slidein-overlay"></div>
-    <div id="slidein-panel">
-        <button class="close-btn" aria-label="Close">&times;</button>
-        <iframe id="kursagenten-iframe" src=""></iframe>
-    </div>
-    <?php endif; ?>
 </div>
 
     <!-- Filter Settings for JavaScript -->

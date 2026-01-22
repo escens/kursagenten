@@ -2,8 +2,8 @@
 
 /* Header Styles - Simple har mindre padding */
 #ka .ka-taxonomy-header {
-    padding: 2rem 0 0;
-    margin-bottom: 1rem;
+    padding: var(--ka-space-xl) 0 0;
+    margin-bottom: var(--ka-space-md);
 }
 
 /* Footer Content Styles - Kun for Simple design */

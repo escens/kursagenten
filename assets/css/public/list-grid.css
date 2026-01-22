@@ -1,5 +1,5 @@
 /* Grid Container */
-#ka .courselist-items {
+#ka .ka-container .courselist-items {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 30px;
@@ -7,7 +7,7 @@
 }
 
 /* Grid Item */
-#ka .courselist-item.grid-item {
+#ka .ka-container .courselist-item.grid-item {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -15,7 +15,7 @@
 }
 
 /* Card Styling */
-#ka .courselist-card {
+#ka .ka-container .courselist-card {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -26,13 +26,13 @@
     background-color: #fff;
 }
 
-#ka .courselist-card:hover {
+#ka .ka-container .courselist-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 /* Card Image */
-#ka .card-image {
+#ka .ka-container .card-image {
     position: relative;
     height: 180px;
     background-size: cover;
@@ -40,13 +40,13 @@
     flex-shrink: 0;
 }
 
-#ka .card-image .image-inner {
+#ka .ka-container .card-image .image-inner {
     display: block;
     width: 100%;
     height: 100%;
 }
 /*
-#ka .card-location-tag {
+#ka .ka-container .card-location-tag {
     position: absolute;
     bottom: 12px;
     left: 12px;
@@ -60,42 +60,50 @@
     gap: 5px;
 }
 
-#ka .card-location-tag i {
+#ka .ka-container .card-location-tag i {
     font-size: 1.1em;
 }*
 
 /* Card Content */
-#ka .card-content {
+#ka .ka-container .card-content {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
     padding: 20px;
 }
 
-#ka .card-content-upper {
+#ka .ka-container .card-content-upper {
     flex-grow: 1;
     position: relative;
 }
 
-#ka .card-content-lower {
+#ka .ka-container .card-content-lower {
     margin-top: auto;
 }
 
 /* Title Area */
-#ka .card-content .title-area {
+#ka .ka-container .card-content .title-area {
     margin-bottom: 15px;
 }
-
-#ka .card-content .course-title {
+/*
+//#ka .ka-container .card-location-tag {
+//    font-size: 0.85em;
+//}
+//
+//#ka .ka-container .card-location-tag i {
+//    font-size: 1.1em;
+//}
+*/
+#ka .ka-container .card-content .course-title {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin: 0;
-    font-size: 1.2em;
+    font-size: var(--ka-font-md);
     line-height: 1.3;
 }
 
-#ka .card-content .course-title a {
+#ka .ka-container .card-content .course-title a {
     color: #333;
     text-decoration: none;
     flex: 1;
@@ -103,25 +111,25 @@
 
 
 /* Excerpt */
-#ka .card-excerpt {
+#ka .ka-container .card-excerpt {
     margin-bottom: 15px;
-    font-size: 0.9em;
+    font-size: var(--ka-font-s);
     color: #666;
     line-height: 1.5;
 }
 
 /* Course Details */
-#ka .card-details {
+#ka .ka-container .card-details {
     margin-bottom: 15px;
 }
 
-#ka .card-details-list {
+#ka .ka-container .card-details-list {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-#ka .card-details-list li {
+#ka .ka-container .card-details-list li {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -130,49 +138,49 @@
     font-size: var(--ka-font-xs);
 }
 
-#ka .card-details-list i {
+#ka .ka-container .card-details-list i {
     background-color: #777;
     height: var(--ka-font-s);
     width: var(--ka-font-base);
 }
 
 /* Separator */
-#ka .card-separator {
+#ka .ka-container .card-separator {
     height: 1px;
     background-color: #eee;
     margin: 15px 0;
 }
 
 /* Footer Area */
-#ka .card-footer {
+#ka .ka-container .card-footer {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-top: auto;
 }
 
-#ka .card-price {
-    font-size: 1.1em;
+#ka .ka-container .card-price {
+    font-size: var(--ka-font-md);
     color: #333;
 }
 
-#ka .card-price strong {
+#ka .ka-container .card-price strong {
     font-weight: 600;
 }
 
 /* Button */
-#ka .card-footer .courselist-button {
+#ka .ka-container .card-footer .courselist-button {
     padding: 8px 16px;
     border-radius: 4px;
     border: none;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    font-size: 0.9em;
+    font-size: var(--ka-font-s);
 }
 
 /* Availability tag */
-#ka .card-availability {
+#ka .ka-container .card-availability {
     padding: 3px 8px;
     border-radius: 4px;
     margin-left: 10px;
@@ -183,80 +191,80 @@
     font-weight: 500;
     z-index: 2;
 }
-#ka .card-availability.full {
+#ka .ka-container .card-availability.full {
     background-color: #ffe1e0;
     color: #c74444;
 }
 
-#ka .card-availability.on-demand {
+#ka .ka-container .card-availability.on-demand {
     background-color: #f5f5f5;
     color: #666;
 }
-#ka .course-availability {
+#ka .ka-container .course-availability {
     position: absolute;
     right: 0;
     top: -1px;
 }
-#ka .course-availability span.course-available:before {
+#ka .ka-container .course-availability span.course-available:before {
     margin: 0;
 }
 
 /* Position absolute only when inside card-image */
-#ka .card-image .card-availability {
+#ka .ka-container .card-image .card-availability {
     position: absolute;
     top: 12px;
     right: 12px;
 }
 
-#ka span.course-available {
+#ka .ka-container span.course-available {
     color: #2e7d32;
 }
-#ka span.course-available:before {
+#ka .ka-container span.course-available:before {
     margin: 0 5px 0 0;
 }
 
-#ka span.course-available.on-demand:before {
+#ka .ka-container span.course-available.on-demand:before {
     background-color: #999;
 }
 
 /* Location styling */
-#ka .card-location {
+#ka .ka-container .card-location {
     margin-bottom: 15px;
     font-size: var(--ka-font-xs);
     color: var(--ka-color-lighter);
     text-transform: uppercase;
 }
 
-#ka .card-location strong {
+#ka .ka-container .card-location strong {
     font-weight: 600;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
-    #ka .courselist-items {
+    #ka .ka-container .courselist-items {
         grid-template-columns: repeat(2, 1fr);
         gap: 20px;
     }
 }
 
 @media (max-width: 768px) {
-    #ka .courselist-items {
+    #ka .ka-container .courselist-items {
         grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 576px) {
-    #ka .courselist-items {
+    #ka .ka-container .courselist-items {
         grid-template-columns: 1fr;
     }
     
-    #ka .card-footer {
+    #ka .ka-container .card-footer {
         flex-direction: column;
         gap: 15px;
         align-items: flex-start;
     }
     
-    #ka .card-footer .courselist-button {
+    #ka .ka-container .card-footer .courselist-button {
         width: 100%;
     }
 }

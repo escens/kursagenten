@@ -22,11 +22,6 @@ global $query, $top_filters, $left_filters, $filter_types, $available_filters,
                                 ?>
         </div>
     </main>
-    <div id="slidein-overlay"></div>
-    <div id="slidein-panel">
-        <button class="close-btn" aria-label="Close">&times;</button>
-        <iframe id="kursagenten-iframe" src=""></iframe>
-    </div>
 </div>
 
 <?php get_footer(); ?>

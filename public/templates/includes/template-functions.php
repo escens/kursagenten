@@ -147,11 +147,6 @@ function kursagenten_get_content() {
                 ?>
             </div>
         </main>
-        <div id="slidein-overlay"></div>
-        <div id="slidein-panel">
-            <button class="close-btn" aria-label="Close">&times;</button>
-            <iframe id="kursagenten-iframe" src=""></iframe>
-        </div>
     </div>
     <?php
 }

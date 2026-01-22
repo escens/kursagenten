@@ -1,3 +1,11 @@
+## 1.1.11 - 2026-01-08
+- Fix: Slide-in panel er flyttet så det alltid vises over header-rad og meny.
+- Fix: Lagt inn støtte for plugin Avada Builder, så stilene i utvidelsen ikke blir overskrevet.
+
+## 1.1.10 - 2026-01-05
+- Fix: Link til lokasjoner på enkeltkurs er nå skjult om de er deaktivert i Kursagenten.
+- Fix: Nettbasert kurs uten Fritekst sted-tekst ble skjult i lister. Nå rettet opp så de synes.
+
 ## 1.1.09 - 2025-12-22
 - Fix: Region på kurssted ble overskrevet ved flytting av regioner under Synkronisering. Nå beholder kurssted manuelt valgt region.
 

@@ -220,9 +220,9 @@ do_action('ka_singel_header_before');
                 <?php do_action('ka_singel_header_links_after'); ?>
                 <div class="course-buttons">
                     <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
-                        <a href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
+                        <button href="#" class="button pameldingskjema clickelement" data-url="<?php echo esc_url($selected_coursedate_data['signup_url']); ?>">
                             <?php echo esc_html($selected_coursedate_data['button_text'] ?? 'Påmelding'); ?>
-                        </a>
+                        </button>
                     <?php endif; ?>
                     <!--<a href="#" class="button">Legg til i ønskeliste</a>-->
                 </div>

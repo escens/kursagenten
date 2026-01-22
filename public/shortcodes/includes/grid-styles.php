@@ -42,6 +42,7 @@ class GridStyles {
             
             /* Box */
             .kursagenten-grid.rad .wrapper .box { display: flex; column-gap: 0; max-width: 100%; align-self: start; height: auto; }
+            .kursagenten-grid.rad.kort .wrapper .box { height: 100%; }
             .kursagenten-grid.kort .box { border-radius: 5px; width: 100%; max-width: 100%; width: 100%; background-color: #fff; -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); align-self: start; height: auto; }
             .kursagenten-grid.stablet .wrapper .box { align-self: start; height: auto; }
             .kursagenten-grid.kort .box:has(picture) { max-width: {$a['bildestr']}; }
@@ -91,7 +92,7 @@ class GridStyles {
             .kursagenten-grid:not(.utdrag) .description { display: none; }
             .kursagenten-grid .text:has(.tittel) a { text-decoration: none; }
             .kursagenten-grid .infowrapper ul {list-style: none; margin: 0; padding: 0; }
-            .kursagenten-grid .infowrapper .location-item { font-size: 0.9em; }
+            .kursagenten-grid .infowrapper .location-item { font-size: var(--ka-font-s); }
             
             /* Picture and Image */
             .kursagenten-grid picture {aspect-ratio: {$a['bildeformat']}; border-radius: {$a['bildeform']}; display: block;  width:100%; max-width:{$a['bildestr']}; overflow: hidden; }
@@ -195,6 +196,7 @@ class GridStyles {
 
             /* Box */
             {$class_id}.rad .wrapper .box { display: flex; column-gap: 0; max-width: 100%; align-self: start; height: auto; }
+            {$class_id}.rad.kort .wrapper .box { height: 100%; }
             {$class_id}.kort .box { border-radius: 5px;  max-width: {$a['bildestr']}; width: 100%; background-color: #fff; -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.1); align-self: start; height: auto; }
             {$class_id}.stablet .wrapper .box { align-self: start; height: auto; }
             {$class_id}.kort.rund .box { max-width: calc({$a['bildestr']} * 5.5)!important; }
@@ -254,7 +256,7 @@ class GridStyles {
             {$class_id}:not(.utdrag) .description { display: none; }
             {$class_id} .text:has(.tittel) a { text-decoration: none; }
             {$class_id} .infowrapper ul {list-style: none; margin: 0; padding: 0; }
-            {$class_id} .infowrapper .location-item { font-size: 0.9em; }
+            {$class_id} .infowrapper .location-item { font-size: var(--ka-font-s); }
             
 
 

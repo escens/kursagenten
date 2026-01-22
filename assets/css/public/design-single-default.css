@@ -23,7 +23,7 @@
   
   @media screen and (max-width: 768px){
     #ka .course-container .details {
-        padding: 1.5em;
+        padding: var(--ka-space-lg);
     }
     #ka .course-grid{
       grid-template-columns: 1fr;
@@ -35,10 +35,10 @@
       "nextcourse"  
       "courselist";
       grid-auto-flow:dense;
-      gap: 2em;
+      gap: var(--ka-space-xl);
     }
     #ka .details .course-grid.col-1-1{
-        gap: .5em;
+        gap: var(--ka-space-xs);
       } 
     #ka .course-information .course-grid{
       grid-template-rows: auto;
@@ -47,7 +47,7 @@
         "content"
         "aside"
         "footer";
-        gap: 2em;
+        gap: var(--ka-space-xl);
     }
     
   }
@@ -90,7 +90,7 @@
         position: relative;
         display: flex;
         flex-direction: column;
-        row-gap: .5em;
+        row-gap: var(--ka-space-sm);
     }
     #ka .course-container .header-content *{
         color: white;
@@ -104,7 +104,7 @@
         background-color: var(--ka-color-light);
     }
     #ka .course-container .header-content h1{
-        font-size: 32px;
+        font-size: var(--ka-font-xxxl);
         margin: 1.5em 0 .5em;
         padding: 0;
     }
@@ -113,7 +113,7 @@
         margin-top: 4em;
     }
     #ka .course-container .header-content .course-buttons .button{
-        margin-right: .5em;
+        margin-right: var(--ka-space-xs);
         font-size: var(--ka-font-base);
     }
     @media screen and (max-width: 768px) {
@@ -122,18 +122,18 @@
             text-align: center;
         }
         #ka .course-container .header-content {
-            row-gap: 2em;
+            row-gap: var(--ka-space-xl);
         }
         .taxonomy-list.horizontal {
             display: flex;
             flex-wrap: wrap;
-            row-gap: .3em;
+            row-gap: var(--ka-space-2xs);
         }
         #ka .course-container .header-content .course-buttons {
             display: flex;
             justify-content: center;
-            margin-top: .5em;
-            gap: .8em;
+            margin-top: var(--ka-space-xs);
+            gap: var(--ka-space-sm);
         }
         
     }
@@ -142,7 +142,7 @@
 /******************/
     #ka .course-container .details {
         background-color: var(--ka-alt-background);
-        padding-bottom: 2em;
+        padding-bottom: var(--ka-space-xl);
     }
     #ka .course-container .details .iconlist > div{
         align-items: center;
@@ -150,33 +150,33 @@
 
 /* -- courselist */
 
-    #ka .courselist-item {
+    #ka .ka-container .courselist-item {
         background-color: #ffffffd1;
         border-bottom: 1px solid #eee;
     }
-    #ka .courselist-item:hover {
+    #ka .ka-container .courselist-item:hover {
         background-color: #ffffff;
     }
-    #ka .courselist-item:last-child {
+    #ka .ka-container .courselist-item:last-child {
         border-bottom: none;
     }
 
-    #ka .courselist-main .text-area {
+    #ka .ka-container .courselist-main .text-area {
         display: flex;
         flex-direction: row;
         flex-grow: 1;
     }
-    #ka .courselist-main .links-area{
+    #ka .ka-container .courselist-main .links-area{
         flex-direction: row;
       }
-    #ka .courselist-main .links-area a{
+    #ka .ka-container .courselist-main .links-area a{
         color: #68c46b;
         text-transform: uppercase;
         background: transparent;
         font-size: 1em;
         margin-left: 1em;
       }
-      #ka .courselist-main .links-area a:hover{
+      #ka .ka-container .courselist-main .links-area a:hover{
         color: #3e8041;
         background: transparent;
         box-shadow: none;
@@ -210,7 +210,7 @@
 
     /* Next course */
     #ka .nextcourse .iconlist{
-        row-gap: .7em;
+        row-gap: var(--ka-space-sm);
     }
     #ka-main .nextcourse .iconlist i.ka-icon {
         width: var(--ka-font-md);
@@ -220,7 +220,7 @@
         height: var(--ka-font-xs);
     }
     #ka .nextcourse .iconlist .signup-link {
-        margin-top: .5em;
+        margin-top: var(--ka-space-xs);
     }
     
         /*#ka .location-tabs li a {
@@ -245,18 +245,18 @@
     }*/
 
     @media screen and (max-width: 768px) {
-        #ka .courselist-main{
+        #ka .ka-container .courselist-main{
             flex-direction: column;
             align-items: flex-start;
-            row-gap: 1em;
+            row-gap: var(--ka-space-md);
           }
-          #ka .courselist-main .text-area {
+          #ka .ka-container .courselist-main .text-area {
             flex-wrap: wrap;
         }
-        #ka .courselist-main .links-area {
+        #ka .ka-container .courselist-main .links-area {
             width: 100%;
             margin-left: 25px;
-            column-gap: 1em;
+            column-gap: var(--ka-space-md);
         }
     }
 
@@ -267,14 +267,14 @@
         padding-top: 3em;
     }
     #ka .course-information .excerpt {
-        font-size: 1.2em;
+        font-size: var(--ka-font-md);
     }
 
     #ka picture.course-image { aspect-ratio: 4/3; display: block; max-width: 100%; overflow: hidden; }
     #ka picture.course-image img{ width: 100%; height: 100%; max-width: 100%; object-fit: cover; object-position: center; border-radius: 10px; }
 
     @media screen and (max-width: 768px){
-        #ka picture.course-image.mobile { margin-bottom: 1em; }
+        #ka picture.course-image.mobile { margin-bottom: var(--ka-space-md); }
     }
 
 /* Course footer */

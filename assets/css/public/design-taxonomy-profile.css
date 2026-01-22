@@ -3,7 +3,7 @@
  */
 
 .taxonomy-design-profile .taxonomy-header-profile {
-    padding-top: 3rem;
+    padding-top: var(--ka-space-xl);
     padding-bottom: 0;
 }
 
@@ -12,7 +12,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1.8rem;
+    gap: var(--ka-space-xl);
     flex-wrap: wrap;
 }
 
@@ -33,7 +33,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .1rem;
+    gap: var(--ka-space-2xs);
     min-width: 220px;
 }
 
@@ -46,7 +46,7 @@
     align-items: center;
     justify-content: center;
     margin-left: -1em;
-    font-size: 0.9rem;
+    font-size: var(--ka-font-s);
     color: #666;
     text-decoration: none;
 }
@@ -75,7 +75,7 @@
     margin-bottom: 1.5rem;
 }
 #ka .taxonomy-header-profile__descriptions .taxonomy-description{
-    font-size: 1.3rem;
+    font-size: var(--ka-font-lg);
     color: inherit !important;
 }
 
