@@ -37,6 +37,7 @@ class SecureUpdater {
         // Ensure update-core.php also gets proper data by updating the transient before it's saved
         add_filter('pre_set_site_transient_update_plugins', [$this, 'pre_set_update']);
         add_action('upgrader_process_complete', [$this, 'purge'], 10, 2);
+        add_filter('upgrader_pre_download', [$this, 'upgrader_pre_download'], 10, 4);
         add_filter('plugin_row_meta', [$this, 'add_update_check_link'], 10, 2);
         add_filter('plugin_action_links_' . $this->plugin_slug . '/' . $this->plugin_slug . '.php', [$this, 'add_settings_link']);
 
@@ -70,19 +71,11 @@ class SecureUpdater {
             wp_schedule_event(time(), 'weekly', 'kursagenten_weekly_registration');
         }
 
-        // Sørg for fersk update-info når Plugins/Update-sider lastes (unngå gammel cache med feil URL)
-        add_action('load-plugins.php', function() { 
-            delete_transient($this->cache_key);
-            delete_transient($this->failed_request_key);
-        });
-        add_action('load-update.php', function() { 
-            delete_transient($this->cache_key);
-            delete_transient($this->failed_request_key);
-        });
-        add_action('load-update-core.php', function() { 
-            delete_transient($this->cache_key);
-            delete_transient($this->failed_request_key);
-        });
+        // Do NOT clear cache on every plugins/update page load – that forces a blocking HTTP
+        // request each time and causes slow admin pages. Cache is cleared only when:
+        // - User clicks "Sjekk for oppdateringer" (ajax_check_updates)
+        // - After a successful plugin update (purge)
+        // Cache TTL is 1 hour; use it to avoid repeated API calls.
     }
 
     /**
@@ -105,15 +98,19 @@ class SecureUpdater {
         
         // Determine current host
         $host = wp_parse_url(home_url(), PHP_URL_HOST);
-        $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+        $legacy_domain = defined('KURSAG_LEGACY_DOMAIN') ? KURSAG_LEGACY_DOMAIN : 'https://admin.lanseres.no';
+        $api_domain = defined('KURSAG_API_DOMAIN') ? KURSAG_API_DOMAIN : 'https://wpkursagenten.no';
+        $is_central_server = (
+            stripos((string) $host, 'admin.lanseres.no') !== false || 
+            stripos((string) $host, 'wpkursagenten.no') !== false
+        );
         
         // Use local endpoint only on central server instance
         if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
             $cached_url = home_url('/kursagenten-api/');
         } else {
-            // Use admin-ajax.php as proxy to bypass firewall restrictions
-            // admin-ajax.php is typically whitelisted in firewalls/WAF
-            $cached_url = 'https://admin.lanseres.no/wp-admin/admin-ajax.php?action=';
+            // Use Cloudflare-backed API domain to bypass firewall restrictions
+            $cached_url = $api_domain . '/wp-admin/admin-ajax.php?action=';
         }
         
         return $cached_url;
@@ -126,18 +123,23 @@ class SecureUpdater {
     private function get_alternative_api_endpoints() {
         $endpoints = [];
         
-        // Primary endpoint (admin-ajax.php proxy)
-        $endpoints[] = 'https://admin.lanseres.no/wp-admin/admin-ajax.php?action=';
+        // Get primary API domain (Cloudflare-backed) and legacy domain
+        $api_domain = defined('KURSAG_API_DOMAIN') ? KURSAG_API_DOMAIN : 'https://wpkursagenten.no';
+        $legacy_domain = defined('KURSAG_LEGACY_DOMAIN') ? KURSAG_LEGACY_DOMAIN : 'https://admin.lanseres.no';
         
-        // Alternative: Direct API endpoint (might work if admin-ajax.php is blocked)
-        $endpoints[] = 'https://admin.lanseres.no/kursagenten-api/';
+        // Primary endpoint (Cloudflare-backed API domain - admin-ajax.php proxy)
+        $endpoints[] = $api_domain . '/wp-admin/admin-ajax.php?action=';
+        
+        // Alternative: Direct API endpoint on primary domain
+        $endpoints[] = $api_domain . '/kursagenten-api/';
+        
+        // Fallback: Try legacy domain (admin.lanseres.no) in case primary domain fails
+        $endpoints[] = $legacy_domain . '/wp-admin/admin-ajax.php?action=';
+        $endpoints[] = $legacy_domain . '/kursagenten-api/';
         
         // Alternative: Try HTTP instead of HTTPS (some firewalls allow HTTP but block HTTPS)
-        $endpoints[] = 'http://admin.lanseres.no/wp-admin/admin-ajax.php?action=';
-        
-        // Alternative: Try with IP address instead of domain (if DNS is blocked but IP isn't)
-        // Note: This requires the IP to be known and stable
-        // $endpoints[] = 'https://[IP_ADDRESS]/wp-admin/admin-ajax.php?action=';
+        $api_domain_http = str_replace('https://', 'http://', $api_domain);
+        $endpoints[] = $api_domain_http . '/wp-admin/admin-ajax.php?action=';
         
         // Allow filtering for custom endpoints (e.g., CDN, alternative domains)
         $endpoints = apply_filters('kursagenten_alternative_api_endpoints', $endpoints);
@@ -467,7 +469,7 @@ class SecureUpdater {
             
             $response = wp_remote_post($endpoint, [
                 'body' => $data,
-                'timeout' => 8, // Shorter timeout per endpoint to try multiple quickly
+                'timeout' => 4, // Short timeout per endpoint when trying multiple; avoid long blocks
                 'blocking' => true,
                 'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'headers' => [
@@ -566,8 +568,8 @@ class SecureUpdater {
                             'changelog' => $changelog_text
                         ],
                         'banners' => [
-                            'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp',
-                            'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp'
+                            'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : (defined('KURSAG_UPDATE_DOMAIN') ? KURSAG_UPDATE_DOMAIN : 'https://wpkursagenten.no') . '/plugin-updates/kursagenten-banner-772x250.webp',
+                            'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : (defined('KURSAG_UPDATE_DOMAIN') ? KURSAG_UPDATE_DOMAIN : 'https://wpkursagenten.no') . '/plugin-updates/kursagenten-banner-1544x500.webp'
                         ],
                         'update_available' => false
                     ];
@@ -612,7 +614,10 @@ class SecureUpdater {
             error_log('Kursagenten: Fallback til JSON-metode');
         }*/
 
-        $remote = wp_remote_get('https://admin.lanseres.no/plugin-updates/kursagenten.json', [
+        // Use Cloudflare-backed update domain for JSON fallback
+        $update_domain = defined('KURSAG_UPDATE_DOMAIN') ? KURSAG_UPDATE_DOMAIN : 'https://wpkursagenten.no';
+        $json_url = $update_domain . '/plugin-updates/kursagenten.json';
+        $remote = wp_remote_get($json_url, [
             'timeout' => 10, // Increased timeout for one.com and other slow hosts
             'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'headers' => [
@@ -653,7 +658,7 @@ class SecureUpdater {
         if (200 !== $response_code) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 error_log('Kursagenten JSON HTTP feil: ' . $response_code);
-                error_log('JSON URL: https://admin.lanseres.no/plugin-updates/kursagenten.json');
+                error_log('JSON URL: ' . $json_url);
                 error_log('Response: ' . wp_remote_retrieve_body($remote));
             }
             // Mark as failed request for non-200 responses (but not for timeout which is already handled)
@@ -742,9 +747,10 @@ class SecureUpdater {
                 'changelog' => $changelog_text  // Use the changelog we fetched earlier
             ];
             
+            $update_domain = defined('KURSAG_UPDATE_DOMAIN') ? KURSAG_UPDATE_DOMAIN : 'https://wpkursagenten.no';
             $response->banners = [
-                'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp',
-                'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp'
+                'low' => defined('KURSAG_BANNER_LOW') ? KURSAG_BANNER_LOW : $update_domain . '/plugin-updates/kursagenten-banner-772x250.webp',
+                'high' => defined('KURSAG_BANNER_HIGH') ? KURSAG_BANNER_HIGH : $update_domain . '/plugin-updates/kursagenten-banner-1544x500.webp'
             ];
             $response->icons = [
                 '1x' => KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg',
@@ -1032,13 +1038,13 @@ class SecureUpdater {
             $error_type = get_transient($this->failed_request_key . '_type');
             if ($error_type === 'connection_blocked') {
                 wp_send_json_error([
-                    'message' => 'Kunne ikke koble til oppdateringsserver (admin.lanseres.no).',
+                    'message' => 'Kunne ikke koble til oppdateringsserver.',
                     'details' => 'Tilkoblingen blir blokkert av serverens firewall eller nettverkssikkerhet. Dette er et nettverksproblem som må løses på server-nivå.',
-                    'suggestion' => 'Kontakt din hostingleverandør (one.com) og be dem tillate utgående HTTPS-tilkoblinger til admin.lanseres.no på port 443. Dette er nødvendig for at plugin-oppdateringer skal fungere.'
+                    'suggestion' => 'Kontakt din hostingleverandør (one.com) og be dem tillate utgående HTTPS-tilkoblinger til oppdateringsserveren på port 443. Dette er nødvendig for at plugin-oppdateringer skal fungere.'
                 ]);
             } else {
                 wp_send_json_error([
-                    'message' => 'Kunne ikke koble til oppdateringsserver (admin.lanseres.no).',
+                    'message' => 'Kunne ikke koble til oppdateringsserver.',
                     'details' => 'Serveren svarer ikke innen timeout-tiden. Dette kan skyldes nettverksproblemer eller at serveren er nede.',
                     'suggestion' => 'Prøv igjen om noen minutter, eller kontakt support hvis problemet vedvarer.'
                 ]);
@@ -1164,6 +1170,190 @@ class SecureUpdater {
                 });
             }
         ');
+    }
+
+    /**
+     * Intercept plugin package download: fetch ourselves, validate ZIP, return temp path or WP_Error.
+     * Avoids PCLZIP_ERR_BAD_FORMAT when server returns HTML/JSON (e.g. error page, redirect).
+     *
+     * @param bool|string $reply      Optional. Filename to use, false to use default.
+     * @param string      $package    Package URL.
+     * @param \WP_Upgrader $upgrader  WP_Upgrader instance.
+     * @param array       $hook_extra Extra args.
+     * @return bool|string|\WP_Error  Temp file path, WP_Error on failure, false to use default.
+     */
+    public function upgrader_pre_download($reply, $package, $upgrader, $hook_extra) {
+        if ($reply !== false) {
+            return $reply;
+        }
+        // Only handle our plugin's package URL
+        if (strpos((string) $package, 'kursagenten-api/download_plugin') === false) {
+            return false;
+        }
+
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log('Kursagenten download: Fetching package from URL: ' . $package);
+        }
+
+        // Try direct download first, then fallback to admin-ajax.php proxy if Cloudflare blocks
+        $download_urls = [];
+        
+        // Primary: Direct API endpoint
+        $download_urls[] = $package;
+        
+        // Fallback: Try via admin-ajax.php proxy (often whitelisted in Cloudflare)
+        // Extract token from original URL
+        $parsed = wp_parse_url($package);
+        if (isset($parsed['query'])) {
+            parse_str($parsed['query'], $query_params);
+            if (isset($query_params['token'])) {
+                $api_domain = defined('KURSAG_API_DOMAIN') ? KURSAG_API_DOMAIN : 'https://wpkursagenten.no';
+                $download_urls[] = $api_domain . '/wp-admin/admin-ajax.php?action=kursagenten_download_plugin&token=' . urlencode($query_params['token']);
+            }
+        }
+        
+        $last_error = null;
+        $last_response = null;
+        
+        foreach ($download_urls as $download_url) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten download: Trying URL: ' . $download_url);
+            }
+            
+            $response = wp_remote_get($download_url, [
+                'timeout' => 120,
+                'redirection' => 5,
+                'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'headers' => [
+                    'Accept' => 'application/zip, application/octet-stream, */*',
+                    'Accept-Language' => 'en-US,en;q=0.9',
+                    'Accept-Encoding' => 'gzip, deflate, br',
+                    'Connection' => 'keep-alive',
+                    'Upgrade-Insecure-Requests' => '1',
+                    'Sec-Fetch-Dest' => 'document',
+                    'Sec-Fetch-Mode' => 'navigate',
+                    'Sec-Fetch-Site' => 'none',
+                    'Cache-Control' => 'max-age=0'
+                ],
+                'sslverify' => true,
+            ]);
+
+            if (is_wp_error($response)) {
+                $last_error = $response->get_error_message();
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten download: Error with URL ' . $download_url . ': ' . $last_error);
+                }
+                continue; // Try next URL
+            }
+
+            $code = (int) wp_remote_retrieve_response_code($response);
+            if ($code !== 200) {
+                $body = wp_remote_retrieve_body($response);
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    $preview = strlen($body) > 500 ? substr($body, 0, 500) . '...' : $body;
+                    error_log('Kursagenten download: HTTP ' . $code . ' with URL: ' . $download_url);
+                    error_log('Kursagenten download: Body preview: ' . $preview);
+                }
+                $last_response = $response;
+                continue; // Try next URL
+            }
+
+            $body = wp_remote_retrieve_body($response);
+            if (strlen($body) < 4) {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    error_log('Kursagenten download: Empty response from URL: ' . $download_url);
+                }
+                continue; // Try next URL
+            }
+
+            // ZIP magic: local file header starts with PK\x03\x04; central dir uses PK\x01\x02. Both start with PK.
+            $magic = substr($body, 0, 2);
+            if ($magic !== "PK") {
+                $ct = wp_remote_retrieve_header($response, 'content-type');
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    $preview = strlen($body) > 500 ? substr($body, 0, 500) . '...' : $body;
+                    error_log('Kursagenten download: Not a ZIP from URL: ' . $download_url);
+                    error_log('Kursagenten download: Content-Type: ' . ($ct ? $ct : 'not set'));
+                    error_log('Kursagenten download: First 500 chars: ' . $preview);
+                }
+                
+                // Check if it's Cloudflare bot verification
+                $is_cloudflare_challenge = (
+                    stripos($body, 'Bot Verification') !== false ||
+                    stripos($body, 'cf-browser-verification') !== false ||
+                    stripos($body, 'challenge-platform') !== false ||
+                    stripos($body, 'Just a moment') !== false
+                );
+                
+                if ($is_cloudflare_challenge && count($download_urls) > 1) {
+                    // Try next URL if this was Cloudflare challenge
+                    continue;
+                }
+                
+                $last_response = $response;
+                continue; // Try next URL
+            }
+
+            // Success! We got a valid ZIP
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                error_log('Kursagenten download: Successfully downloaded ZIP from URL: ' . $download_url);
+            }
+            
+            if (!function_exists('wp_tempnam')) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+            }
+            $tmp = wp_tempnam('kursagenten-update.zip');
+            if (!$tmp || file_put_contents($tmp, $body) === false) {
+                if ($tmp && file_exists($tmp)) {
+                    wp_delete_file($tmp);
+                }
+                return new \WP_Error('kursagenten_download_write', __('Kunne ikke skrive nedlastet pakke til midlertidig fil.', 'kursagenten'));
+            }
+
+            return $tmp;
+        }
+        
+        // All URLs failed - return appropriate error
+        if ($last_response) {
+            $code = (int) wp_remote_retrieve_response_code($last_response);
+            $body = wp_remote_retrieve_body($last_response);
+            $is_cloudflare_challenge = (
+                stripos($body, 'Bot Verification') !== false ||
+                stripos($body, 'cf-browser-verification') !== false ||
+                stripos($body, 'challenge-platform') !== false ||
+                stripos($body, 'Just a moment') !== false
+            );
+            
+            if ($is_cloudflare_challenge) {
+                return new \WP_Error(
+                    'kursagenten_download_cloudflare',
+                    sprintf(
+                        /* translators: %s: download URL */
+                        __('Cloudflare blokkerer nedlastingen med bot-verifisering. URL: %s. Løsning: Gå til Cloudflare Dashboard > Security > WAF > Custom Rules og legg til regel som tillater /kursagenten-api/download_plugin, eller deaktiver Bot Fight Mode for denne URL-en.', 'kursagenten'),
+                        esc_html($package)
+                    )
+                );
+            }
+            
+            return new \WP_Error(
+                'kursagenten_download_http',
+                sprintf(
+                    /* translators: 1: HTTP status code, 2: download URL */
+                    __('Serveren returnerte HTTP %1$s i stedet for ZIP-fil. URL: %2$s. Dette kan skyldes en feilside, omdirigering, eller Cloudflare bot-verifisering.', 'kursagenten'),
+                    $code,
+                    esc_html($package)
+                )
+            );
+        }
+        
+        return new \WP_Error(
+            'kursagenten_download_failed',
+            sprintf(
+                /* translators: %s: error message */
+                __('Kunne ikke hente oppdateringspakke: %s', 'kursagenten'),
+                $last_error ? $last_error : __('Ukjent feil', 'kursagenten')
+            )
+        );
     }
 
     /**

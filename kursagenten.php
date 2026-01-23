@@ -5,24 +5,24 @@
  * Plugin Name:       Kursagenten
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
- * Version:           1.1.11
+ * Version:           1.1.12
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
  * Domain Path:       /lang
  * Requires PHP:      7.4
  * Requires at least: 6.0
- * Update URI:        https://admin.lanseres.no/kursagenten
+ * Update URI:        https://wpkursagenten.no/kursagenten
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.1.11');
+ define('KURSAG_VERSION', '1.1.12');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.1.11');
+    define('KURSAG_VERSION', '1.1.12');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -50,11 +50,24 @@ if (!defined('KURSAG_WP_TESTED')) {
 if (!defined('KURSAG_PHP_REQUIRES')) {
     define('KURSAG_PHP_REQUIRES', '7.4');
 }
+// Primary domain - use Cloudflare-backed domain to bypass firewall restrictions
+// All API calls and updates now use this domain
+if (!defined('KURSAG_API_DOMAIN')) {
+    define('KURSAG_API_DOMAIN', 'https://wpkursagenten.no');
+}
+// Update domain - same as API domain now (everything moved to wpkursagenten.no)
+if (!defined('KURSAG_UPDATE_DOMAIN')) {
+    define('KURSAG_UPDATE_DOMAIN', KURSAG_API_DOMAIN);
+}
+// Legacy domain - kept for backward compatibility and central server detection
+if (!defined('KURSAG_LEGACY_DOMAIN')) {
+    define('KURSAG_LEGACY_DOMAIN', 'https://admin.lanseres.no');
+}
 if (!defined('KURSAG_BANNER_LOW')) {
-    define('KURSAG_BANNER_LOW', 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-772x250.webp');
+    define('KURSAG_BANNER_LOW', KURSAG_UPDATE_DOMAIN . '/plugin-updates/kursagenten-banner-772x250.webp');
 }
 if (!defined('KURSAG_BANNER_HIGH')) {
-    define('KURSAG_BANNER_HIGH', 'https://admin.lanseres.no/plugin-updates/kursagenten-banner-1544x500.webp');
+    define('KURSAG_BANNER_HIGH', KURSAG_UPDATE_DOMAIN . '/plugin-updates/kursagenten-banner-1544x500.webp');
 }
 
 
@@ -336,13 +349,15 @@ function kursagenten_plugin_activation() {
         's' => $signature
     ];
     
-    // Determine API URL
+    // Determine API URL - use primary API domain (wpkursagenten.no)
     $host = wp_parse_url(home_url(), PHP_URL_HOST);
-    $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+    $legacy_domain = defined('KURSAG_LEGACY_DOMAIN') ? KURSAG_LEGACY_DOMAIN : 'https://admin.lanseres.no';
+    $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false || stripos((string) $host, 'wpkursagenten.no') !== false);
     if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
         $api_url = home_url('/kursagenten-api/');
     } else {
-        $api_url = 'https://admin.lanseres.no/kursagenten-api/';
+        $api_domain = defined('KURSAG_API_DOMAIN') ? KURSAG_API_DOMAIN : 'https://wpkursagenten.no';
+        $api_url = $api_domain . '/kursagenten-api/';
     }
     
     $endpoint = $api_url . 'register_site?' . http_build_query($webhook_data);
@@ -393,13 +408,15 @@ function kursagenten_plugin_deactivation() {
         's' => $signature
     ];
     
-    // Determine API URL
+    // Determine API URL - use primary API domain (wpkursagenten.no)
     $host = wp_parse_url(home_url(), PHP_URL_HOST);
-    $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false);
+    $legacy_domain = defined('KURSAG_LEGACY_DOMAIN') ? KURSAG_LEGACY_DOMAIN : 'https://admin.lanseres.no';
+    $is_central_server = (stripos((string) $host, 'admin.lanseres.no') !== false || stripos((string) $host, 'wpkursagenten.no') !== false);
     if ($is_central_server && class_exists('\\KursagentenServer\\Server')) {
         $api_url = home_url('/kursagenten-api/');
     } else {
-        $api_url = 'https://admin.lanseres.no/kursagenten-api/';
+        $api_domain = defined('KURSAG_API_DOMAIN') ? KURSAG_API_DOMAIN : 'https://wpkursagenten.no';
+        $api_url = $api_domain . '/kursagenten-api/';
     }
     
     $endpoint = $api_url . 'deactivate_site?' . http_build_query($webhook_data);

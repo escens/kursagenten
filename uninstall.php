@@ -10,7 +10,9 @@ if (function_exists('wp_remote_post')) {
     $site_url = site_url();
     if (!empty($api_key)) {
         // Match server-plugin endpoints: /kursagenten-api/unregister_site
-        $endpoint = 'https://admin.lanseres.no/kursagenten-api/unregister_site';
+        // Use primary API domain (wpkursagenten.no)
+        $api_domain = defined('KURSAG_API_DOMAIN') ? KURSAG_API_DOMAIN : 'https://wpkursagenten.no';
+        $endpoint = $api_domain . '/kursagenten-api/unregister_site';
         $body = array(
             'api_key' => $api_key,
             'site_url' => $site_url,

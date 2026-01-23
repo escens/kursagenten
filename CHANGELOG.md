@@ -1,4 +1,7 @@
-## 1.1.11 - 2026-01-08
+## 1.1.12 - 2026-01-22
+- Fix: Endret oppdateringsserver.
+
+## 1.1.11 - 2026-01-15
 - Fix: Slide-in panel er flyttet så det alltid vises over header-rad og meny.
 - Fix: Lagt inn støtte for plugin Avada Builder, så stilene i utvidelsen ikke blir overskrevet.
 
