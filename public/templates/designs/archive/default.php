@@ -379,7 +379,8 @@ foreach ($available_filters as $filter_key => $filter_info) {
                         </div>
 
                         <!-- Template part from /list-types -->
-                        <div class="courselist-items" id="filter-results">
+                        <?php $archive_list_type = get_option('kursagenten_archive_list_type', 'standard'); ?>
+                        <div class="courselist-items" id="filter-results" data-list-type="<?php echo esc_attr($archive_list_type); ?>">
                             <?php
                             $args = [
                                 'course_count' => $query->found_posts,

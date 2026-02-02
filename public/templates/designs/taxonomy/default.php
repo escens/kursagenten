@@ -335,7 +335,7 @@ do_action('ka_taxonomy_header_before', $term);
                     <?php endif; ?>
                     
                     <!-- Kursliste - bruker valgt list-type -->
-                    <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results">
+                    <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results" data-list-type="<?php echo esc_attr($list_type); ?>">
                         <?php
                         // Map transport-parameter st -> lokasjonsnavn for filtrering av hovedkurs
                         $st_param = isset($_GET['st']) ? sanitize_text_field((string)$_GET['st']) : '';

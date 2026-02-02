@@ -61,7 +61,8 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
             $item_id = esc_attr($data_object->ID);
             $taxonomy = get_post_meta($item_id, '_menu_item_taxonomy', true);
             $parent_term_id = get_post_meta($item_id, '_menu_item_parent_term', true);
-            $main_url = get_post_meta($item_id, '_menu_item_main_url', true);
+            $st_filter = get_post_meta($item_id, '_menu_item_st_filter', true);
+            $skjul_sted_chip = get_post_meta($item_id, '_menu_item_skjul_sted_chip', true);
             
             // Finn posisjonen til dette menyelementet i output
             $item_start = strpos($output, 'id="menu-item-settings-' . $item_id . '"');
@@ -86,28 +87,19 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
                 'meta_query' => [
                     'relation' => 'OR',
                     [
-                        'key' => 'hide_in_list',
+                        'key' => 'hide_in_menu',
                         'compare' => 'NOT EXISTS'
                     ],
                     [
-                        'key' => 'hide_in_list',
-                        'value' => 'Skjul',
-                        'compare' => '!='
+                        'key' => 'hide_in_menu',
+                        'value' => 'Vis',
+                        'compare' => '='
                     ]
                 ]
             ]);
 
             $fields = '';
-          
-            // Legg til URL-felt for hovedmenypunkt
-            $fields .= '<p class="description description-wide" style="border-left: 1px solid #d3e1dd; padding: 0 10px 10px;">';
-            $fields .= '<label for="edit-menu-item-main-url-' . $item_id . '">';
-            $fields .= 'URL for hovedmenypunkt<br />';
-            $fields .= '<input type="text" id="edit-menu-item-main-url-' . $item_id . '" ';
-            $fields .= 'class="widefat" name="menu-item-main-url[' . $item_id . ']" ';
-            $fields .= 'value="' . esc_attr($main_url) . '" placeholder="f.eks. /kurskategorier /kurssteder eller /instruktorer" />';
-            $fields .= '</label></p>';
-            
+
             // Legg til dropdown bare hvis det finnes hovedtermer med undertermer
             $has_children_terms = array_filter($parent_terms, function($term) use ($taxonomy) {
                 $children = get_terms([
@@ -135,6 +127,27 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
                 
                 $fields .= '</select>';
                 $fields .= '</label></p>';
+            }
+
+            // Kun for Kurskategorier: stedsfilter og skjul sted-chip
+            if ($taxonomy === 'ka_coursecategory') {
+                $fields .= '<p class="description description-wide" style="border-left: 1px solid #d3e1dd; padding: 0 10px 10px;">';
+                $fields .= '<label for="edit-menu-item-st-filter-' . $item_id . '">';
+                $fields .= 'Vis kun kategorier med kurs på angitt sted (valgfritt)<br />';
+                $fields .= '<input type="text" id="edit-menu-item-st-filter-' . $item_id . '" ';
+                $fields .= 'class="widefat" name="menu-item-st-filter[' . $item_id . ']" ';
+                $fields .= 'value="' . esc_attr($st_filter) . '" placeholder="f.eks. oslo eller ikke-oslo" />';
+                $fields .= '</label>';
+                $fields .= '<br><small>Begrenser til termer med kurs på angitt sted. Start med "ikke-" for å ekskludere. La stå tom for alle.</small>';
+                $fields .= '</p>';
+
+                $fields .= '<p class="description description-wide" style="border-left: 1px solid #d3e1dd; padding: 0 10px 10px;">';
+                $fields .= '<label>';
+                $fields .= '<input type="checkbox" name="menu-item-skjul-sted-chip[' . $item_id . ']" value="1" ' . checked($skjul_sted_chip, '1', false) . ' /> ';
+                $fields .= 'Skjul stedsfilter i videre visning';
+                $fields .= '</label>';
+                $fields .= '<br><small>Kun for positiv filter (f.eks. nettbasert): skjuler stedsfilteret på kurslistesiden. Ved "ikke-"-filter vises filteret slik at bruker kan velge annet sted.</small>';
+                $fields .= '</p>';
             }
 
             // Legg til taxonomy felt
@@ -175,33 +188,17 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
  */
 
 class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
-    private $current_item_depth = array();
     private $items = array();
-    private $depth_cache = array();
-    private $processed_parents = array();
-    private $current_parent = 0;
 
-    public function __construct() {
-        error_log('=== WALKER CONSTRUCTED ===');
-        error_log('Walker instance created: ' . get_class($this));
-    }
-
-    // Ny metode for å sette menyelementer
     public function set_items($items) {
-        error_log('=== SETTING WALKER ITEMS ===');
-        error_log('Items count: ' . count($items));
         $this->items = $items;
         $this->sort_menu_items();
     }
 
     private function sort_menu_items() {
         if (empty($this->items)) {
-            error_log('No items to sort');
             return;
         }
-
-        error_log('=== SORTING MENU ITEMS ===');
-        error_log('Items before sort: ' . count($this->items));
         
         $sorted_items = array();
         $parent_items = array();
@@ -225,17 +222,6 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         }
 
         $this->items = $sorted_items;
-        
-        error_log('Items after sort: ' . count($this->items));
-        foreach ($this->items as $item) {
-            error_log(sprintf(
-                "Sorted item - ID: %d, Title: %s, Parent: %d, Order: %d",
-                $item->ID,
-                $item->title,
-                $item->menu_item_parent,
-                $item->menu_order
-            ));
-        }
     }
 
     private function add_child_items($parent_id, &$sorted_items) {
@@ -248,9 +234,6 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
     }
 
     public function start_lvl(&$output, $depth = 0, $args = null) {
-        error_log('=== WALKER START_LVL ===');
-        error_log('Depth: ' . $depth);
-        
         if (isset($args->item_spacing) && 'discard' === $args->item_spacing) {
             $t = '';
             $n = '';
@@ -264,15 +247,6 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
     }
 
     public function start_el(&$output, $data_object, $depth = 0, $args = null, $current_object_id = 0) {
-        error_log('=== WALKER START_EL ===');
-        error_log(sprintf(
-            "Processing item: %s (ID: %d, Parent: %d, Object: %s)",
-            $data_object->title,
-            $data_object->ID,
-            $data_object->menu_item_parent,
-            $data_object->object
-        ));
-        
         if (isset($args->item_spacing) && 'discard' === $args->item_spacing) {
             $t = '';
             $n = '';
@@ -342,21 +316,6 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         $item_output .= $args->after;
         
         $output .= apply_filters('walker_nav_menu_start_el', $item_output, $data_object, $depth, $args);
-        
-        // Hvis dette er et hovedmenypunkt med barn, start submeny
-        if ($has_children && $depth === 0) {
-            $this->start_lvl($output, $depth, $args);
-            
-            // Prosesser barn
-            foreach ($this->items as $child) {
-                if ($child->menu_item_parent == $data_object->ID) {
-                    $this->start_el($output, $child, $depth + 1, $args);
-                    $this->end_el($output, $child, $depth + 1, $args);
-                }
-            }
-            
-            $this->end_lvl($output, $depth, $args);
-        }
     }
 
     public function end_lvl(&$output, $depth = 0, $args = null) {
@@ -412,6 +371,7 @@ function kursagenten_auto_menus_metabox(): void {
 
     ?>
     <div id="kursagenten-auto-menu" class="posttypediv">
+        <p class="description" style="margin-bottom: 12px;"><?php esc_html_e('For best resultat: legg som undermenypunkt under en side. Kategoriene vises da direkte med subkategorier.', 'kursagenten'); ?></p>
         <div class="tabs-panel tabs-panel-active">
             <ul class="categorychecklist form-no-clear">
                 <?php foreach ($auto_menu_items as $key => $item): ?>
@@ -472,65 +432,34 @@ function kursagenten_edit_nav_menu_walker($walker) {
 add_filter('wp_edit_nav_menu_walker', 'kursagenten_edit_nav_menu_walker');
 
 /**
+ * Check if Max Mega Menu or similar menu plugin is active (uses its own walker)
+ */
+function kursagenten_is_megamenu_active(): bool {
+    if (function_exists('is_plugin_active') || (defined('ABSPATH') && file_exists(ABSPATH . 'wp-admin/includes/plugin.php'))) {
+        if (!function_exists('is_plugin_active')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+        if (is_plugin_active('megamenu/megamenu.php')) {
+            return true;
+        }
+    }
+    return class_exists('Mega_Menu');
+}
+
+/**
  * Filter the menu items before they are displayed
+ *
+ * In admin: Only show the parent item (Kurskategorier etc) - avoids save errors from virtual IDs.
+ * On frontend: Expand to full taxonomy tree.
  */
 function kursagenten_setup_auto_menu_items($items, $menu, $args) {
-    error_log('=== AUTO MENU ITEMS FILTER STARTING ===');
-    error_log('Menu ID: ' . $menu->term_id);
-    error_log('Original items count: ' . count($items));
-    
-    // Bruk en closure for loggefunksjonen
-    $log_menu_structure = function($items) {
-        $structure = array();
-        $lookup = array();
-        
-        // Først, bygg opp en lookup-tabell
-        foreach ($items as $item) {
-            $lookup[$item->ID] = $item;
-            if (!isset($structure[$item->menu_item_parent])) {
-                $structure[$item->menu_item_parent] = array();
-            }
-            $structure[$item->menu_item_parent][] = $item;
-        }
-        
-        // Bruk en closure for den rekursive funksjonen
-        $print_menu_items = function($parent_id, $structure, $lookup, $depth = 0) use (&$print_menu_items) {
-            if (!isset($structure[$parent_id])) {
-                return;
-            }
-            
-            foreach ($structure[$parent_id] as $item) {
-                $indent = str_repeat('  ', $depth);
-                error_log(sprintf(
-                    "%s- [%d] %s (Parent: %d, Order: %d, Type: %s, Object: %s)",
-                    $indent,
-                    $item->ID,
-                    $item->title,
-                    $item->menu_item_parent,
-                    $item->menu_order,
-                    $item->type,
-                    $item->object
-                ));
-                
-                if (isset($structure[$item->ID])) {
-                    $print_menu_items($item->ID, $structure, $lookup, $depth + 1);
-                }
-            }
-        };
-        
-        error_log('=== MENYSTRUKTUR START ===');
-        $print_menu_items(0, $structure, $lookup);
-        error_log('=== MENYSTRUKTUR SLUTT ===');
-    };
-    
-    // Logg original menystruktur
-    error_log('Original menystruktur:');
-    $log_menu_structure($items);
+    // In admin menu editor: do NOT expand - virtual items (90001, 90002) would cause
+    // "The given object ID is not that of a menu item" when saving (they're not real posts).
+    if (is_admin()) {
+        return $items;
+    }
 
     $new_items = array();
-    $base_id = 90000;
-    $term_counter = 0;
-    $original_order = array();
     
     // Behold alle originale items først
     foreach ($items as $item) {
@@ -542,50 +471,142 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
     // Prosesser auto-menyer
     foreach ($items as $original_item) {
         if ($original_item->object === 'kursagenten_auto_menu') {
+            $taxonomy = get_post_meta($original_item->ID, '_menu_item_taxonomy', true);
+            if (empty($taxonomy)) {
+                $menu_type = get_post_meta($original_item->ID, '_menu_item_menu_type', true);
+                $taxonomy_map = [
+                    'course_categories' => 'ka_coursecategory',
+                    'course_locations' => 'ka_course_location',
+                    'course_instructors' => 'ka_instructors',
+                ];
+                $taxonomy = $taxonomy_map[$menu_type] ?? '';
+            }
+            $parent_term_id = get_post_meta($original_item->ID, '_menu_item_parent_term', true);
+            $main_url = get_post_meta($original_item->ID, '_menu_item_main_url', true);
+            // Når elementet ligger under en side, injiser alltid kategoriene direkte (ingen egen etikett)
+            $inject_only = $original_item->menu_item_parent > 0;
+            $st_filter = get_post_meta($original_item->ID, '_menu_item_st_filter', true);
+            $skjul_sted_chip = get_post_meta($original_item->ID, '_menu_item_skjul_sted_chip', true) === '1';
+
+            if (empty($taxonomy)) {
+                continue;
+            }
+
+            // Inject-only: leg kategoriene direkte under forelder (f.eks. Kurskategorier-siden), uten eget menypunkt
+            $parent_menu_id = ($inject_only && $original_item->menu_item_parent > 0)
+                ? $original_item->menu_item_parent
+                : $original_item->ID;
+
             $item_position = array_search($original_item, $new_items);
-            if ($item_position === false) {
-                $item_position = count($new_items);
-                $new_items[] = $original_item;
+            $splice_position = 0;
+            if ($inject_only) {
+                if ($item_position !== false) {
+                    array_splice($new_items, $item_position, 1);
+                }
+                foreach ($new_items as $idx => $ni) {
+                    if (isset($ni->ID) && $ni->ID == $original_item->menu_item_parent) {
+                        $splice_position = $idx + 1;
+                        break;
+                    }
+                }
+            } else {
+                if ($item_position === false) {
+                    $item_position = count($new_items);
+                    $new_items[] = $original_item;
+                }
+                // Sett URL for hovedmenypunktet (både toppnivå og undermeny)
+                if (!empty($main_url)) {
+                    $url = $main_url;
+                    if (strpos($url, '/') === 0 && strpos($url, '//') !== 0) {
+                        $url = home_url($url);
+                    }
+                    $original_item->url = $url;
+                }
+                // Sikre at tittelen er satt (kan mangle fra metabox)
+                if (empty($original_item->title)) {
+                    $tax_obj = get_taxonomy($taxonomy);
+                    $original_item->title = $tax_obj && !is_wp_error($tax_obj)
+                        ? $tax_obj->labels->name
+                        : __('Kurskategorier', 'kursagenten');
+                }
+                $splice_position = $item_position + 1;
+            }
+
+            // Parse st-filter (sted eller ikke-sted)
+            $filter_location_term_id = null;
+            $exclude_location = false;
+            if (!empty($st_filter)) {
+                $neg_prefix = 'ikke-';
+                if (stripos($st_filter, $neg_prefix) === 0) {
+                    $exclude_location = true;
+                    $st_slug = sanitize_title(substr($st_filter, strlen($neg_prefix)));
+                } else {
+                    $st_slug = sanitize_title($st_filter);
+                }
+                $loc_term = get_term_by('slug', $st_slug, 'ka_course_location');
+                if ($loc_term && !is_wp_error($loc_term)) {
+                    $filter_location_term_id = (int) $loc_term->term_id;
+                }
             }
             
-            $taxonomy = get_post_meta($original_item->ID, '_menu_item_taxonomy', true);
-            $parent_term_id = get_post_meta($original_item->ID, '_menu_item_parent_term', true);
-            
-            // Hent terms med korrekt hierarki
+            // Hent ALLE termer først (filteret trenger hele treet for å bygge children_of)
             $terms_args = [
                 'taxonomy' => $taxonomy,
                 'hide_empty' => false,
+                'number' => 0,
                 'meta_query' => [
                     'relation' => 'OR',
                     [
-                        'key' => 'hide_in_list',
+                        'key' => 'hide_in_menu',
                         'compare' => 'NOT EXISTS'
                     ],
                     [
-                        'key' => 'hide_in_list',
-                        'value' => 'Skjul',
-                        'compare' => '!='
+                        'key' => 'hide_in_menu',
+                        'value' => 'Vis',
+                        'compare' => '='
                     ]
                 ],
-                'parent' => !empty($parent_term_id) ? $parent_term_id : 0,
-                'hierarchical' => true
+                'hierarchical' => true,
+                'orderby' => 'name'
             ];
 
-            $terms = get_terms($terms_args);
-            
+            $all_terms = get_terms($terms_args);
+            if (!is_wp_error($all_terms) && !empty($all_terms)) {
+                if ($taxonomy === 'ka_coursecategory' && $filter_location_term_id !== null && function_exists('ka_filter_terms_with_published_courses_by_location')) {
+                    $all_terms = ka_filter_terms_with_published_courses_by_location($all_terms, $taxonomy, $filter_location_term_id, $exclude_location);
+                } elseif (function_exists('ka_filter_terms_with_published_courses')) {
+                    $all_terms = ka_filter_terms_with_published_courses($all_terms, $taxonomy);
+                }
+            }
+            // Kun hovedtermer (eller undermeny fra parent_term_id) for starten
+            $parent_filter = !empty($parent_term_id) ? (int) $parent_term_id : 0;
+            $terms = array_filter($all_terms ?: [], function($t) use ($parent_filter) {
+                return (int) $t->parent === $parent_filter;
+            });
+            $terms = array_values($terms);
+
             if (!is_wp_error($terms) && !empty($terms)) {
                 $term_items = array();
-                
-                // Funksjon for å legge til term og dens barn rekursivt
-                $add_term_and_children = function($term, $parent_menu_id) use (&$term_items, &$term_counter, &$base_id, $taxonomy, $original_item, &$add_term_and_children) {
+                $term_counter = 0;
+                $base_id = 90000 + ((int) $original_item->ID * 1000);
+
+                $append_st = !empty($st_filter) ? $st_filter : '';
+                // Kun sc=0 for positiv st-filter – for "ikke-xxx" vis stedfilteret slik at bruker kan velge annet sted
+                $append_sc = ($skjul_sted_chip && !empty($st_filter) && stripos($st_filter, 'ikke-') !== 0) ? '0' : '';
+
+                $add_term_and_children = function($term, $parent_menu_id) use (&$term_items, &$term_counter, &$base_id, $taxonomy, $original_item, $append_st, $append_sc, &$add_term_and_children) {
                     $current_menu_id = $base_id + $term_counter;
                     
-                    // Opprett menypunkt for gjeldende term
+                    // Create menu item for this term - do NOT copy label from parent (would override title in admin)
                     $menu_item = new stdClass();
                     foreach (get_object_vars($original_item) as $key => $value) {
+                        if ($key === 'label') {
+                            continue;
+                        }
                         $menu_item->$key = $value;
                     }
                     
+                    $tax_obj = get_taxonomy($taxonomy);
                     $menu_item->ID = $current_menu_id;
                     $menu_item->db_id = $current_menu_id;
                     $menu_item->menu_item_parent = $parent_menu_id;
@@ -593,73 +614,89 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                     $menu_item->object = $taxonomy;
                     $menu_item->type = 'taxonomy';
                     $menu_item->title = $term->name;
-                    $menu_item->url = get_term_link($term);
+                    $menu_item->label = '';
+                    $menu_item->post_title = $term->name;
+                    $menu_item->type_label = $tax_obj && !is_wp_error($tax_obj) ? $tax_obj->labels->singular_name : $taxonomy;
+                    $term_link = get_term_link($term);
+                    if (!is_wp_error($term_link)) {
+                        $query_args = array();
+                        if ($append_st !== '') {
+                            $query_args['st'] = $append_st;
+                        }
+                        if ($append_sc !== '') {
+                            $query_args['sc'] = $append_sc;
+                        }
+                        if (!empty($query_args)) {
+                            $term_link = add_query_arg($query_args, $term_link);
+                        }
+                    }
+                    $menu_item->url = is_wp_error($term_link) ? '#' : $term_link;
                     $menu_item->classes = array(
                         'menu-item',
                         'menu-item-type-taxonomy',
                         'menu-item-object-' . $taxonomy,
                         'menu-item-' . $current_menu_id
                     );
-                    $menu_item->menu_order = $original_item->menu_order + $term_counter;
+                    $menu_item->menu_order = 0;
                     
-                    // Hent barnetermer
-                    $child_terms = get_terms([
+                    // Hent barnetermer (filtrert – kun de med publiserte kurs)
+                    $child_terms_raw = get_terms([
                         'taxonomy' => $taxonomy,
                         'hide_empty' => false,
+                        'number' => 0,
                         'parent' => $term->term_id,
+                        'orderby' => 'name',
                         'meta_query' => [
                             'relation' => 'OR',
                             [
-                                'key' => 'hide_in_list',
+                                'key' => 'hide_in_menu',
                                 'compare' => 'NOT EXISTS'
                             ],
                             [
-                                'key' => 'hide_in_list',
-                                'value' => 'Skjul',
-                                'compare' => '!='
+                                'key' => 'hide_in_menu',
+                                'value' => 'Vis',
+                                'compare' => '='
                             ]
                         ]
                     ]);
-                    
-                    if (!is_wp_error($child_terms) && !empty($child_terms)) {
-                        $menu_item->classes[] = 'menu-item-has-children'; 
+                    $child_terms = [];
+                    if (!is_wp_error($child_terms_raw) && !empty($child_terms_raw) && function_exists('ka_filter_terms_with_published_courses')) {
+                        $child_terms = ka_filter_terms_with_published_courses($child_terms_raw, $taxonomy);
+                    } elseif (!is_wp_error($child_terms_raw)) {
+                        $child_terms = $child_terms_raw;
                     }
-                    
+
+                    if (!empty($child_terms)) {
+                        $menu_item->classes[] = 'menu-item-has-children';
+                    }
+
                     $term_items[] = $menu_item;
                     $term_counter++;
-                    
+
                     // Rekursivt legg til barnetermer
-                    if (!is_wp_error($child_terms) && !empty($child_terms)) {
-                        foreach ($child_terms as $child_term) {
-                            $add_term_and_children($child_term, $current_menu_id);
-                        }
+                    foreach ($child_terms as $child_term) {
+                        $add_term_and_children($child_term, $current_menu_id);
                     }
                 };
                 
                 // Start rekursiv prosess for hver hovedterm
                 foreach ($terms as $term) {
-                    $add_term_and_children($term, $original_item->ID);
+                    $add_term_and_children($term, $parent_menu_id);
                 }
                 
-                // Sett inn alle term items etter hovedmenypunktet
-                array_splice($new_items, $item_position + 1, 0, $term_items);
+                array_splice($new_items, $splice_position, 0, $term_items);
             }
         }
     }
     
-    // Sorter menyen basert på menu_order og hierarki
-    usort($new_items, function($a, $b) {
-        if ($a->menu_order == $b->menu_order) {
-            // Hvis samme menu_order, sorter på parent
-            return $a->menu_item_parent - $b->menu_item_parent;
-        }
-        return $a->menu_order - $b->menu_order;
-    });
-    
-    // Logg den endelige menystrukturen
-    error_log('Endelig menystruktur:');
-    $log_menu_structure($new_items);
-    
+    // IKKE sorter – splice plasserer barn rett etter forelder, som Walker forventer.
+    // Tildel unike heltall for menu_order – WordPress bruker det som array-nøkkel,
+    // og duplikater overskriver hverandre (tap av menypunkter).
+    $menu_order = 1;
+    foreach ($new_items as $item) {
+        $item->menu_order = $menu_order++;
+    }
+
     // Oppdater menu_item_parent for å sikre riktig hierarki
     foreach ($new_items as $item) {
         if (isset($item->menu_item_parent) && $item->menu_item_parent > 0) {
@@ -679,18 +716,6 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
         }
     }
 
-    error_log('=== AUTO MENU ITEMS FILTER FINISHED ===');
-    error_log('Final items count: ' . count($new_items));
-    foreach ($new_items as $item) {
-        error_log(sprintf(
-            "Final menu item - ID: %d, Title: %s, Parent: %d, Type: %s",
-            $item->ID,
-            $item->title,
-            $item->menu_item_parent,
-            $item->object
-        ));
-    }
-    
     return $new_items;
 }
 add_filter('wp_get_nav_menu_items', 'kursagenten_setup_auto_menu_items', 5, 3);
@@ -733,10 +758,14 @@ function kursagenten_update_nav_menu_item($menu_id, $menu_item_db_id, $args) {
             }
         }
 
-        // Lagre hovedmenypunkt URL og parent term
+        // Lagre hovedmenypunkt URL – både i vår meta og i standard _menu_item_url
         if (isset($_POST['menu-item-main-url'][$menu_item_db_id])) {
             $main_url = sanitize_text_field($_POST['menu-item-main-url'][$menu_item_db_id]);
+            if (!empty($main_url) && (strpos($main_url, '/') === 0) && strpos($main_url, '//') !== 0) {
+                $main_url = home_url($main_url);
+            }
             update_post_meta($menu_item_db_id, '_menu_item_main_url', $main_url);
+            update_post_meta($menu_item_db_id, '_menu_item_url', $main_url);
         }
         
         if (isset($_POST['menu-item-parent-term'][$menu_item_db_id])) {
@@ -747,88 +776,28 @@ function kursagenten_update_nav_menu_item($menu_id, $menu_item_db_id, $args) {
                 delete_post_meta($menu_item_db_id, '_menu_item_parent_term');
             }
         }
+
+        if (isset($_POST['menu-item-st-filter'][$menu_item_db_id])) {
+            update_post_meta($menu_item_db_id, '_menu_item_st_filter', sanitize_text_field($_POST['menu-item-st-filter'][$menu_item_db_id]));
+        }
+        update_post_meta($menu_item_db_id, '_menu_item_skjul_sted_chip', isset($_POST['menu-item-skjul-sted-chip'][$menu_item_db_id]) ? '1' : '0');
     }
 }
 add_action('wp_update_nav_menu_item', 'kursagenten_update_nav_menu_item', 10, 3);
 
-/**
- * Copy menu item metadata when duplicating menu items
- */
-function kursagenten_duplicate_menu_item_meta($new_menu_id, $old_menu_id, $args) {
-    $menu_type = get_post_meta($old_menu_id, '_menu_item_menu_type', true);
-    $taxonomy = get_post_meta($old_menu_id, '_menu_item_taxonomy', true);
-    
-    if (!empty($menu_type)) {
-        update_post_meta($new_menu_id, '_menu_item_menu_type', $menu_type);
-    }
-    if (!empty($taxonomy)) {
-        update_post_meta($new_menu_id, '_menu_item_taxonomy', $taxonomy);
-    }
-}
-add_action('wp_update_nav_menu_item', 'kursagenten_duplicate_menu_item_meta', 10, 3);
 
-add_filter('wp_nav_menu_args', function($args) {
-    $args['menu_cache_key'] = time(); // Eller en annen unik verdi
-    return $args;
-});
-
-// Debug: Sjekk om filteret er registrert
-add_action('init', function() {
-    error_log('=== SJEKKER FILTER REGISTRERING ===');
-    error_log('Context: ' . (is_admin() ? 'Admin' : 'Frontend'));
-    error_log('Request URI: ' . $_SERVER['REQUEST_URI']);
-    error_log('Har wp_get_nav_menu_items filter: ' . (has_filter('wp_get_nav_menu_items', 'kursagenten_setup_auto_menu_items') ? 'Ja' : 'Nei'));
-});
-
-// Legg til en ekstra sjekk for å se når menyen hentes
-add_action('wp', function() {
-    if (!is_admin()) {
-        error_log('=== FRONTEND MENY SETUP ===');
-        $locations = get_nav_menu_locations();
-        error_log('Meny lokasjoner: ' . print_r($locations, true));
-        
-        // Tøm menycache
-        wp_cache_delete('wp_get_nav_menu_items', 'nav_menu_items');
-        foreach ($locations as $location => $menu_id) {
-            wp_cache_delete($menu_id, 'nav_menu_items');
-        }
-        error_log('Tømte meny cache');
-    }
-});
-
-// Prøv å tvinge oppdatering av menycache
-add_action('wp_loaded', function() {
-    if (!is_admin()) {
-        wp_cache_delete('wp_get_nav_menu_items', 'nav_menu_items');
-        error_log('Tømte nav_menu_items cache');
-    }
-});
-
-// Legg til en hook for å oppdatere menyen når den lagres
+// Clear menu cache when menu is updated
 add_action('wp_update_nav_menu', function($menu_id) {
-    error_log('=== MENY OPPDATERT ===');
-    error_log('Menu ID: ' . $menu_id);
     wp_cache_delete('wp_get_nav_menu_items', 'nav_menu_items');
     wp_cache_delete($menu_id, 'nav_menu_items');
 });
 
-// Prøv å tvinge ny versjon av menyen
-add_filter('wp_nav_menu_args', function($args) {
-    $args['menu_cache_key'] = time();
-    error_log('La til menu_cache_key: ' . $args['menu_cache_key']);
-    return $args;
-});
-
-// Oppdater ensure_menu_item_taxonomy funksjonen
 function ensure_menu_item_taxonomy($menu_id) {
-    error_log('=== ENSURE MENU ITEM TAXONOMY ===');
-    error_log('Menu ID: ' . $menu_id);
     
     // Hent alle meny items for denne menyen
     $menu_items = wp_get_nav_menu_items($menu_id);
     
     if (!is_array($menu_items)) {
-        error_log('Ingen meny items funnet');
         return;
     }
     
@@ -836,8 +805,6 @@ function ensure_menu_item_taxonomy($menu_id) {
         if ($item->object === 'kursagenten_auto_menu') {
             $menu_type = get_post_meta($item->ID, '_menu_item_menu_type', true);
             $current_taxonomy = get_post_meta($item->ID, '_menu_item_taxonomy', true);
-            
-            error_log("Sjekker menu item {$item->ID}: Type: {$menu_type}, Current Taxonomy: {$current_taxonomy}");
             
             if (empty($current_taxonomy)) {
                 $taxonomy = '';
@@ -855,7 +822,6 @@ function ensure_menu_item_taxonomy($menu_id) {
                 
                 if (!empty($taxonomy)) {
                     update_post_meta($item->ID, '_menu_item_taxonomy', $taxonomy);
-                    error_log("Oppdaterte taxonomy til {$taxonomy} for menu item {$item->ID}");
                 }
             }
         }
@@ -865,11 +831,7 @@ function ensure_menu_item_taxonomy($menu_id) {
 // Oppdater hooken til å bare bruke menu_id
 add_action('wp_update_nav_menu', 'ensure_menu_item_taxonomy', 10, 1);
 
-// Legg til en ekstra hook for når nye menypunkter legges til
 function ensure_new_menu_item_taxonomy($menu_id, $menu_item_db_id, $args) {
-    error_log('=== ENSURE NEW MENU ITEM TAXONOMY ===');
-    error_log("Menu ID: {$menu_id}, Item ID: {$menu_item_db_id}");
-    
     if (isset($args['menu-item-object']) && $args['menu-item-object'] === 'kursagenten_auto_menu') {
         $menu_type = isset($args['menu-item-object-id']) ? $args['menu-item-object-id'] : '';
         $taxonomy = '';
@@ -888,47 +850,29 @@ function ensure_new_menu_item_taxonomy($menu_id, $menu_item_db_id, $args) {
         
         if (!empty($taxonomy)) {
             update_post_meta($menu_item_db_id, '_menu_item_taxonomy', $taxonomy);
-            error_log("Satt initial taxonomy til {$taxonomy} for nytt menu item {$menu_item_db_id}");
         }
     }
 }
 add_action('wp_update_nav_menu_item', 'ensure_new_menu_item_taxonomy', 10, 3);
 
-// Legg til denne testen rett etter wp_cache_flush
-add_action('wp', function() {
-    if (!is_admin()) {
-        error_log('=== TESTING MENY FILTER ===');
-        $menu_id = 115; // Din meny ID
-        $original_items = wp_get_nav_menu_items($menu_id);
-        error_log('Antall menypunkter: ' . ($original_items ? count($original_items) : 0));
-        
-        if ($original_items) {
-            foreach ($original_items as $item) {
-                error_log(sprintf(
-                    "Menypunkt - ID: %d, Title: %s, Type: %s",
-                    $item->ID,
-                    $item->title,
-                    $item->object
-                ));
-            }
-        }
-    }
-});
-
-// Modifiser kursagenten_set_custom_walker for å logge menyelementene
+/**
+ * Use custom walker only when Megamenu is NOT active - Megamenu has its own walker
+ */
 function kursagenten_set_custom_walker($args) {
-    error_log('=== SETTING CUSTOM WALKER ===');
+    if (kursagenten_is_megamenu_active()) {
+        return $args;
+    }
     
-    // Opprett walker-instansen
     $walker = new Kursagenten_Walker_Nav_Menu();
     
-    // Hent menyelementene direkte fra filteret
     if (isset($args['menu'])) {
-        $menu_items = wp_get_nav_menu_items($args['menu']);
+        $menu_obj = wp_get_nav_menu_object($args['menu']);
+        if (!$menu_obj || is_wp_error($menu_obj)) {
+            return $args;
+        }
+        $menu_items = wp_get_nav_menu_items($menu_obj->term_id);
         if ($menu_items) {
-            // Kjør menyelementene gjennom auto-menu filteret
-            $menu_items = kursagenten_setup_auto_menu_items($menu_items, get_term($args['menu']), $args);
-            // Sett de behandlede elementene i walkeren
+            $menu_items = kursagenten_setup_auto_menu_items($menu_items, $menu_obj, $args);
             $walker->set_items($menu_items);
         }
     }

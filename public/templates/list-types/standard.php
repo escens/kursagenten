@@ -372,7 +372,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                         <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
                     <?php endif; ?>
                     
-                    <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
+                    <span class="accordion-icon clickopen ka-tooltip" data-title="Se detaljer">+</span>
                 </div>
                 <!-- Accordion content -->
                 <div class="courselist-content accordion-content">

@@ -542,17 +542,42 @@ function filter_courses_handler() {
         if ($query->have_posts()) {
             ob_start();
             $context = is_tax() ? 'taxonomy' : 'archive';
+
+            // Use list_type from client when valid - ensures AJAX returns same HTML structure as initial page (taxonomy/archive/shortcode may use different designs)
+            $list_type_param = isset($_POST['list_type']) ? sanitize_text_field(wp_unslash($_POST['list_type'])) : '';
+            $valid_list_types = ['standard', 'grid', 'compact', 'simple-cards', 'plain', 'date-and-title'];
+            if ($list_type_param !== '' && in_array($list_type_param, $valid_list_types, true)) {
+                $template_path_check = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$list_type_param}.php";
+                if (file_exists($template_path_check)) {
+                    $style = $list_type_param;
+                } else {
+                    $style = get_option('kursagenten_archive_list_type', 'standard');
+                }
+            } else {
+                // No valid list_type from client - use archive/taxonomy settings
+                $style = get_option('kursagenten_archive_list_type', 'standard');
+            }
+            $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$style}.php";
+            if (!file_exists($template_path)) {
+                $template_path = KURSAG_PLUGIN_DIR . 'public/templates/list-types/standard.php';
+            }
+
+            // Build args for list-type templates (view_type, etc.)
+            $template_args = [
+                'view_type' => 'all_coursedates',
+                'is_taxonomy_page' => false,
+                'query' => $query,
+            ];
             
             while ($query->have_posts()) {
                 $query->the_post();
                 try {
                     if (!function_exists('get_course_template_part')) {
                         $fallback_template = __DIR__ . '/../list-types/standard.php';
+                        $args = $template_args;
                         include $fallback_template;
                     } else {
-                        $style = get_option('kursagenten_archive_list_type', 'standard');
-                        $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$style}.php";
-                        
+                        $args = $template_args;
                         if (file_exists($template_path)) {
                             include $template_path;
                         } else {

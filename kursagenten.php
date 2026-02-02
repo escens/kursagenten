@@ -571,6 +571,11 @@ require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_f
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
 require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.php';
 
+// Menu shortcode helpers (ka_filter_terms_*) - needed by menu-taxonomies on frontend
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
+// Menus - must load in both admin (metabox) and frontend (menu filters)
+require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
+
 /* FRONT END */
 if (!is_admin()) {
     // Definer en konstant for plugin path som brukes i template-functions.php
@@ -588,10 +593,6 @@ if (!is_admin()) {
     require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/instructor-shortcode.php';
     require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/related-courses-shortcode.php';
     require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-location-shortcode.php';
-
-    // Menus
-    //require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
-    require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
 
     // General Kursagenten shortcodes
     require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';

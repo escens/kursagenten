@@ -1,4 +1,4 @@
-<?php
+            <?php
 // [kurstagger_meny]
 /** * Enable shortcodes for menu navigation. */
 if (!has_filter("wp_nav_menu", "do_shortcode")) {
@@ -17,7 +17,7 @@ function kurstagger($atts){
         // Parse attributes
         $atts = shortcode_atts(array(
             'type' => '',
-            'start' => '',
+               'start' => '',
             // Valgfritt: skjul sted-chip i videre visning (bærer sc=0)
             'skjul_sted_chip' => '',
             // Valgfritt: transport-parameter for sted (slug eller "ikke-slug"), brukes hvis satt
@@ -342,22 +342,26 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
     $options = get_option('kursagenten_theme_customizations');
     $structure = isset($options['menu_structure']) ? $options['menu_structure'] : [];
 
+    global $kursagenten_theme_customizations;
+    if (!$kursagenten_theme_customizations) {
+        $kursagenten_theme_customizations = new Kursagenten_Theme_Customizations();
+    }
+    $theme_structure = $kursagenten_theme_customizations->get_menu_structure($theme);
+
     // Hvis ingen lagrede innstillinger, bruk tema-spesifikk struktur
-    if (empty($structure)) {
-        global $kursagenten_theme_customizations;
-        if (!$kursagenten_theme_customizations) {
-            $kursagenten_theme_customizations = new Kursagenten_Theme_Customizations();
-        }
-        
-        $theme_structure = $kursagenten_theme_customizations->get_menu_structure($theme);
+    if (empty($structure) || empty($structure['item_simple'])) {
         $structure = [
             'item_simple' => $theme_structure['item_simple'],
             'item_with_children' => $theme_structure['item_with_children'],
             'item_with_children_mobile' => $theme_structure['item_with_children_mobile'],
             'item_simple_li_class' => $theme_structure['item_simple_li_class'],
             'item_with_children_li_class' => $theme_structure['item_with_children_li_class'],
-            'item_with_children_li_class_mobile' => $theme_structure['item_with_children_li_class_mobile']
+            'item_with_children_li_class_mobile' => $theme_structure['item_with_children_li_class_mobile'] ?? $theme_structure['item_with_children_li_class'],
+            'item_submenu_class' => $theme_structure['item_submenu_class'] ?? 'sub-menu'
         ];
+    } else {
+        // Ensure item_submenu_class from theme when not in saved options (e.g. Hestia/Megamenu)
+        $structure['item_submenu_class'] = $structure['item_submenu_class'] ?? $theme_structure['item_submenu_class'] ?? 'sub-menu';
     }
     
     if ($has_children) {
@@ -373,8 +377,8 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
             esc_attr($li_class) . ' menu-item-' . $term->term_id . '" data-desktop-class="automeny ' . esc_attr($li_class) . '" data-mobile-class="automeny ' . esc_attr($li_class_mobile) . '">';
             
         // Sjekk om temaet er ekskludert eller om meny-stilene er deaktivert
-        $excluded_themes = ['astra', 'oceanwp'];
-        $is_excluded = in_array($theme, $excluded_themes);
+        $excluded_themes = ['astra', 'oceanwp', 'hestia'];
+        $is_excluded = in_array($theme, $excluded_themes) || strpos($theme, 'hestia') === 0;
         $is_disabled = isset($options['disable_menu_styles']) && (
             $options['disable_menu_styles'] === true || 
             $options['disable_menu_styles'] === 'true' || 
@@ -384,9 +388,12 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
         
         if ($is_excluded || $is_disabled) {
             $desktop_html = strtr($structure['item_with_children'], $variables);
-            $mobile_html = strtr($structure['item_with_children_mobile'], $variables);
             $item_with_children .= $desktop_html;
-            $item_with_children .= $mobile_html;
+            // Hestia/Megamenu uses same structure for desktop and mobile - no duplicate output
+            if (strpos($theme, 'hestia') !== 0) {
+                $mobile_html = strtr($structure['item_with_children_mobile'], $variables);
+                $item_with_children .= $mobile_html;
+            }
         } else {
             $desktop_html = add_menu_class(strtr($structure['item_with_children'], $variables), 'desktop');
             $mobile_html = add_menu_class(strtr($structure['item_with_children_mobile'], $variables), 'mobile');
@@ -394,7 +401,8 @@ function get_menu_item_html($term, $url, $has_children = false, $theme = 'defaul
             $item_with_children .= $mobile_html;
         }
         
-        $item_with_children .= '<ul class="sub-menu">';
+        $submenu_class = isset($structure['item_submenu_class']) && !empty($structure['item_submenu_class']) ? $structure['item_submenu_class'] : 'sub-menu';
+        $item_with_children .= '<ul class="' . esc_attr($submenu_class) . '">';
         return $item_with_children;
     } else {
         $li_class = isset($structure['item_simple_li_class']) && !empty($structure['item_simple_li_class']) ? 
@@ -416,10 +424,10 @@ function add_menu_class($html, $type = 'desktop') {
     $current_theme = strtolower(wp_get_theme()->get('Name'));
 
     // Liste over temaer som håndterer meny-visning på sin egen måte
-    $excluded_themes = ['astra', 'oceanwp'];
+    $excluded_themes = ['astra', 'oceanwp', 'hestia'];
     
     // Sjekk om temaet er ekskludert eller om meny-stilene er deaktivert
-    if (in_array($current_theme, $excluded_themes) || 
+    if (in_array($current_theme, $excluded_themes) || strpos($current_theme, 'hestia') === 0 || 
         (isset($options['disable_menu_styles']) && (
             $options['disable_menu_styles'] === true || 
             $options['disable_menu_styles'] === 'true' || 

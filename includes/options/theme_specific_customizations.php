@@ -74,6 +74,7 @@ class Kursagenten_Theme_Customizations {
                             <div class="theme-selector-wrapper">
                                 <select id="theme-template-selector"> 
                                     <option value="">Velg tema</option>
+                                    <option value="hestia">Hestia (Megamenu)</option>
                                     <option value="kadence">Kadence</option>
                                     <option value="astra">Astra</option>
                                     <option value="generatepress">GeneratePress</option>
@@ -208,7 +209,7 @@ class Kursagenten_Theme_Customizations {
             // Hent alle tema-strukturer fra PHP
             const templates = <?php 
                 $all_templates = array();
-                $themes = array('kadence', 'astra', 'generatepress', 'blocksy');
+                $themes = array('hestia', 'kadence', 'astra', 'generatepress', 'blocksy');
                 foreach ($themes as $theme) {
                     $all_templates[$theme] = $this->get_theme_structure($theme, 'desktop');
                 }
@@ -506,6 +507,18 @@ class Kursagenten_Theme_Customizations {
 'item_with_children_li_class_mobile' => 'menu-item menu-item-type-taxonomy menu-item-object-category menu-item-has-children'
                 ]
             ],
+            'hestia' => [
+                'desktop' => [
+                    'item_breakpoint' => '1025px',
+                    'item_simple' => '<a class="mega-menu-link" href="{{term_url}}">{{term_name}}</a>',
+                    'item_with_children' => '<a class="mega-menu-link" href="{{term_url}}" aria-expanded="false">{{term_name}}<span class="mega-indicator" aria-hidden="true"></span></a>',
+                    'item_with_children_mobile' => '<a class="mega-menu-link" href="{{term_url}}" aria-expanded="false">{{term_name}}<span class="mega-indicator" aria-hidden="true"></span></a>',
+                    'item_simple_li_class' => 'mega-menu-item mega-menu-item-type-taxonomy mega-menu-item-object-course',
+                    'item_with_children_li_class' => 'mega-menu-item mega-menu-item-type-taxonomy mega-menu-item-object-category mega-menu-item-has-children',
+                    'item_with_children_li_class_mobile' => 'mega-menu-item mega-menu-item-type-taxonomy mega-menu-item-object-category mega-menu-item-has-children',
+                    'item_submenu_class' => 'mega-sub-menu'
+                ]
+            ],
             'blocksy' => [
                 'desktop' => [
                     'item_breakpoint' => '1025px',
@@ -535,6 +548,10 @@ class Kursagenten_Theme_Customizations {
             ]
         ];
         
+        // Hestia and Hestia Pro use same Megamenu structure
+        if (strpos($theme, 'hestia') === 0 && isset($structures['hestia'][$type])) {
+            return $structures['hestia'][$type];
+        }
         return isset($structures[$theme][$type]) ? $structures[$theme][$type] : $structures['default'][$type];
     }
     

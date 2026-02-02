@@ -72,8 +72,8 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
     <div class="courselist-main">
         <div class="text">
             <div class="title-area">
-                <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
-                <span class="title"><a href="<?php echo esc_url($related_course_info['permalink']); ?>" class="course-link small tooltip" data-title="Vis kurs"><h3 class="course-title"><?php echo esc_html($course_title); ?></h3></a></span>
+                <span class="accordion-icon clickopen ka-tooltip" data-title="Se detaljer">+</span>
+                <span class="title"><a href="<?php echo esc_url($related_course_info['permalink']); ?>" class="course-link small ka-tooltip" data-title="Vis kurs"><h3 class="course-title"><?php echo esc_html($course_title); ?></h3></a></span>
             </div>
             <div class="details-area iconlist horizontal">
                 <?php if (!empty($first_course_date)) : ?>

@@ -452,14 +452,14 @@ border-radius: 8px;
 }
 
 
-/* --Tooltip */
-/************/
-#ka .tooltip { 
+/* --Tooltip (ka-tooltip to avoid conflicts with Bootstrap/themes) */
+/***************************************************************/
+#ka .ka-tooltip { 
   position: relative; 
   cursor: pointer; 
 } 
 
-#ka .tooltip::after { 
+#ka .ka-tooltip::after { 
   content: attr(data-title); 
   position: absolute; 
   top: 50%; /* Plassering over elementet */ 
@@ -476,9 +476,9 @@ border-radius: 8px;
   visibility: hidden; 
   transition: opacity 0.8s, visibility 0.3s; 
   font-size: 12.5px;
-pointer-events: none; /* Hindrer musen i å trigge tooltip igjen */
+  pointer-events: none; /* Hindrer musen i å trigge ka-tooltip igjen */
 } 
-#ka .tooltip-left::after { 
+#ka .ka-tooltip-left::after { 
   top: auto;
   bottom: -40px;
   right: -5px; 
@@ -486,7 +486,7 @@ pointer-events: none; /* Hindrer musen i å trigge tooltip igjen */
   transform: none;
  } 
 
-#ka .tooltip:hover::after { 
+#ka .ka-tooltip:hover::after { 
   opacity: 0.9; 
   visibility: visible; 
 }
@@ -916,6 +916,7 @@ font-size: var(--ka-font-s);
 #ka span.remove-filter {
   padding: 0 5px 0 5px;
   cursor: pointer;
+  display: inline-block;
 }
 /* Filter: reset */
 /****************/

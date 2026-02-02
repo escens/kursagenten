@@ -262,6 +262,11 @@
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
 		data.nonce = kurskalender_data.filter_nonce;
+		// Send list_type from page so AJAX returns matching HTML structure (taxonomy/archive/shortcode may use different list designs)
+		const $filterResults = $('#filter-results');
+		if ($filterResults.length && $filterResults.data('list-type')) {
+			data.list_type = $filterResults.data('list-type');
+		}
 		// Send current URL so server can build correct pagination links (without current_url param to avoid nesting)
 		try { 
 			const url = new URL(window.location.href);
@@ -537,7 +542,7 @@
 					const [fromDate, toDate] = filters['dato'].split('-');
 					
 					const filterChip = $(`<span class="active-filter-chip button-filter" data-filter-key="date" data-filter-value="date">
-						${fromDate} - ${toDate} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
+						${fromDate} - ${toDate} <span class="remove-filter ka-tooltip" data-title="Fjern filter">×</span>
 					</span>`);
 
 					filterChip.find('.remove-filter').on('click', function() {
@@ -613,7 +618,7 @@
 					} 
 
 					const filterChip = $(`<span class="active-filter-chip button-filter" data-filter-key="${key}" data-url-key="${filterKey}" data-filter-value="${value}">
-						${displayText} <span class="remove-filter tooltip" data-title="Fjern filter">×</span>
+						${displayText} <span class="remove-filter ka-tooltip" data-title="Fjern filter">×</span>
 					</span>`);
 
 					// Handle filter removal

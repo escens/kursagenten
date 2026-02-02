@@ -292,15 +292,15 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     </h3>
                     <?php if ($show_images === 'no') : ?>
                     <?php if ($is_full) : ?>
-                        <div class="course-availability tooltip tooltip-left" data-title="Fullt">
+                        <div class="course-availability ka-tooltip ka-tooltip-left" data-title="Fullt">
                             <span class="card-availability course-available full"></span>
                         </div>
                     <?php elseif (!$show_registration) : ?>
-                        <div class="course-availability tooltip tooltip-left" data-title="På forespørsel">
+                        <div class="course-availability ka-tooltip ka-tooltip-left" data-title="På forespørsel">
                             <span class="card-availability course-available on-demand"></span>
                         </div>
                     <?php else : ?>
-                        <div class="course-availability tooltip tooltip-left" data-title="Ledige plasser">
+                        <div class="course-availability ka-tooltip ka-tooltip-left" data-title="Ledige plasser">
                             <span class="card-availability course-available"></span>
                         </div>
                     <?php endif; ?>

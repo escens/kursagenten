@@ -77,7 +77,7 @@ do_action('ka_taxonomy_header_before', $term);
                 <?php echo do_shortcode($shortcode); ?>
             <?php elseif ($query && $query->have_posts()): ?>
                 <!-- Vis hovedkurs -->
-                <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results">
+                <div class="courselist-items view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>" id="filter-results" data-list-type="<?php echo esc_attr($list_type); ?>">
                     <?php
                     $args = [
                         'course_count' => $query->found_posts,

@@ -287,7 +287,8 @@ if (empty($header_image)) {
                         </div>
 
                         <!-- Last inn listevisning -->
-                        <div class="courselist-items" id="filter-results">
+                        <?php $archive_list_type = get_option('kursagenten_archive_list_type', 'standard'); ?>
+                        <div class="courselist-items" id="filter-results" data-list-type="<?php echo esc_attr($archive_list_type); ?>">
                             <?php kursagenten_get_list_template(); ?>
                         </div>
 

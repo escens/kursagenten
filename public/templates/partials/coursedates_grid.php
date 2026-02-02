@@ -106,7 +106,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                 <?php if (!empty($instructor_links)) : ?>
                     <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
                 <?php endif; ?>
-                <span class="accordion-icon clickopen tooltip" data-title="Se detaljer">+</span>
+                <span class="accordion-icon clickopen ka-tooltip" data-title="Se detaljer">+</span>
             </div>
             <!-- Accordion content -->
             <div class="courselist-content accordion-content">

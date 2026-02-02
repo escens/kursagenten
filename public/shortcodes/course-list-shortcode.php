@@ -851,7 +851,7 @@ function kursagenten_course_list_shortcode($atts) {
                                         </div>
                                     </div>
 
-                                    <div class="courselist-items" id="filter-results">
+                                    <div class="courselist-items" id="filter-results" data-list-type="<?php echo esc_attr($list_type); ?>">
                                         <?php
                                         $args = [
                                             'course_count' => $query->found_posts,
@@ -2124,7 +2124,7 @@ function kursagenten_course_list_shortcode($atts) {
 
         .filter-empty {
             opacity: 0.4;
-            pointer-events: auto; /* Tillat hover for tooltip */
+            pointer-events: auto; /* Tillat hover for ka-tooltip */
             position: relative;
         }
 
@@ -2160,7 +2160,7 @@ function kursagenten_course_list_shortcode($atts) {
 
         .mobile-filter-content .filter-empty {
             opacity: 0.4;
-            pointer-events: auto; /* Tillat hover for tooltip */
+            pointer-events: auto; /* Tillat hover for ka-tooltip */
             position: relative;
         }
 
