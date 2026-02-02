@@ -1143,11 +1143,20 @@ font-size: var(--ka-filter-font-size);
   display: flex;
   cursor: pointer;
   position: relative;
+  margin: 0;
+  font-weight: 400;
 }
 
 #ka .filter-list-item > input[type="checkbox"],
 #ka .filter-list-item > input[type="radio"] {
   clip-path: polygon(0 0);
+}
+#ka .filter-list-item.radio input[type="radio"], 
+#ka .filter-list-item.radio-inline input[type="radio"], 
+#ka .filter-list-item.checkbox input[type="checkbox"], 
+#ka .filter-list-item.checkbox-inline input[type="checkbox"] {
+  position: unset;
+  margin-left: 0;
 }
 
 #ka .filter-list-item .checkbox-label {

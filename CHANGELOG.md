@@ -1,3 +1,7 @@
+## 1.1.13 - 2026-02-03
+- Lagt til: Ny menytype - automenyer. Generer lister med instruktører, kurssteder og kurskategorier i menyen. Dette betyr at du ikke trenger å legge til/fjerne punkter i menyen som er lagt til manuelt.
+- Fix: Justert design med støtte for tema Hestia og andre Bootstrap baserte temaer.
+
 ## 1.1.12 - 2026-01-22
 - Fix: Endret oppdateringsserver.
 
