@@ -46,6 +46,12 @@ if (!empty($back_link_url)) {
 // Sjekk visningstype-innstilling
 $view_type = get_option('kursagenten_taxonomy_view_type', 'main_courses');
 
+// Option: hide specific locations on course locations (both view types)
+$hide_specific_locations = (
+    $taxonomy === 'ka_course_location'
+    && get_option('kursagenten_taxonomy_hide_specific_locations', '0') === '1'
+);
+
 // Get list_type and show_images settings with proper override handling (used by both view types)
 $list_type = get_taxonomy_setting($taxonomy, 'list_type', 'standard');
 $show_images = get_taxonomy_setting($taxonomy, 'show_images', 'yes');
@@ -145,7 +151,21 @@ do_action('ka_taxonomy_header_before', $term);
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
         
-            <div class="taxonomy-content-grid">
+            <?php
+            // Determine content state for taxonomy-content-grid (image / text)
+            $has_image = !empty($image_url);
+            $has_text  = !empty($rich_description);
+            $grid_classes = 'taxonomy-content-grid';
+            if (!$has_image && !$has_text) {
+                $grid_classes .= ' ka-no-content';
+            } elseif ($has_image && !$has_text) {
+                $grid_classes .= ' ka-only-image';
+            } elseif (!$has_image && $has_text) {
+                $grid_classes .= ' ka-only-text';
+            }
+            ?>
+
+            <div class="<?php echo esc_attr($grid_classes); ?>">
                 <div class="left-column">
                     <?php if (!empty($image_url)): ?>
                         <?php
@@ -201,7 +221,7 @@ do_action('ka_taxonomy_header_before', $term);
             do_action('ka_taxonomy_below_description', $term);
             ?>
             
-            <?php if ($taxonomy === 'ka_course_location'): ?>
+            <?php if ($taxonomy === 'ka_course_location' && !$hide_specific_locations): ?>
                     <?php 
                     $specific_locations = get_term_meta($term_id, 'specific_locations', true);
                     if (!empty($specific_locations) && is_array($specific_locations)): 

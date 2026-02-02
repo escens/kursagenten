@@ -736,6 +736,24 @@ class Designmaler {
                         </div>
                     </div>
 
+                    <!-- Skjul spesifikke lokasjoner (for kurssteder) -->
+                    <div class="option-row taxonomy-specific-locations-setting" id="taxonomy_specific_locations_setting">
+                        <label class="option-label">Spesifikke lokasjoner:</label>
+                        <div class="option-input">
+                            <?php
+                            $hide_specific_locations = get_option('kursagenten_taxonomy_hide_specific_locations', '0');
+                            ?>
+                            <label class="checkbox-label-small">
+                                <input type="checkbox"
+                                       name="kursagenten_taxonomy_hide_specific_locations"
+                                       value="1"
+                                       <?php checked($hide_specific_locations, '1'); ?>>
+                                Skjul spesifikke lokasjoner på kurssteder
+                            </label>
+                            <p class="description" style="color: #666; font-style: italic;">Spesifikke lokasjoner viser adresser og link til Google maps over kurslisten.</p>
+                        </div>
+                    </div>
+
                     <!-- Vis bilder -->
                     <div class="option-row">
                         <label class="option-label">Vis bilder:</label>
@@ -1129,6 +1147,17 @@ class Designmaler {
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_text_field',
                 'default' => 'main_courses'
+            )
+        );
+
+        // Registrer innstilling for å skjule spesifikke lokasjoner på kurssteder (kun hovedkurs-visning)
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_hide_specific_locations',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => '0'
             )
         );
 

@@ -59,7 +59,43 @@
 @media (min-width: 768px) {
     #ka .taxonomy-content-grid {
         grid-template-columns: 1fr 2fr;
+        align-items: center;
     }
+}
+
+#ka .taxonomy-content-grid.ka-only-image {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+    margin: 0 auto;
+}
+/* Gjelder kun når .ka-only-image er på en forelder */
+.ka-only-image .taxonomy-image {
+    aspect-ratio: 16 / 9;   /* eller 4 / 3 for 4:3 */
+    overflow: hidden;
+    position: relative;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ka-only-image .taxonomy-image img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    height: auto;
+    width: auto;
+    
+}
+
+#ka .taxonomy-content-grid.ka-only-text {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+    margin: 0 auto;
+}
+#ka .taxonomy-content-grid.ka-only-text .left-column {
+    display: none;
 }
 
 #ka .taxonomy-image img {
@@ -537,7 +573,7 @@ box-shadow: none;
     
     #ka .category-btn {
        /* padding: 0.4rem 0.8rem;*/
-        font-size: 0.85rem;
+        /*font-size: 0.85rem;*/
     }
 }
 

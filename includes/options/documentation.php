@@ -34,8 +34,8 @@ class KA_Documentation_Page {
                         <li><a href="admin.php?page=design">Kursdesign</a> – Opprett ønskede sider for kurs, kategorier, steder og instruktører via "Wordpress sider". Kortkoder legges inn automatisk.</li>
                         <li>Velg filtre på kursliste i <a href="admin.php?page=design">Kursdesign</a>, og også andre designvalg (liste/grid, detaljer, og malvalg).</li>
                         <li>Sjekk <a href="admin.php?page=seo">Endre url-er</a> om du må tilpasse url-strukturer. Her kan du endre fra feks. "/kurs/ditt-kurs" til "/undervisning/ditt-kurs".</li>
-                        <li>Du kan legge inn menypunkter som automatisk generer kurskategorier, kurssteder og instruktører. Se "Meny" i seksjonen "Innholdsblokker".</li>
-                        <li>Kurskategorier, kurssteder og instruktører kan berikes med tekst og bilder om ønsket. Mer informasjon.</li>
+                        <li>Du kan legge inn menypunkter som automatisk generer kurskategorier, kurssteder og instruktører. Mer informasjon i seksjonen <a href="#menyer">Menyer</a>.</li>
+                        <li>Kurskategorier, kurssteder og instruktører kan berikes med tekst og bilder om ønsket. Mer informasjon i seksjonen <a href="#berike-taksonomisider">Berike taksonomisider</a>.</li>
                         <li>Test frontend: kursliste, enkeltkurs, kategorier, kurssteder og instruktører, og juster filtrene/design ved behov.</li>
                     </ol>
                 </div>
@@ -445,6 +445,39 @@ class KA_Documentation_Page {
                 </div>
 
                 <h2>Ekstra innhold</h2>
+                
+                <div id="menyer" class="options-card">
+                    <h3>Menyer</h3>
+                    <p>Kursagenten tilbyr både automenyer og meny-kortkoder, slik at du kan bygge dynamiske menyer som alltid speiler gjeldende kurskategorier, kurssteder og instruktører.</p>
+                    
+                    <h4>Automenyer i WordPress-menyen</h4>
+                    <p>Automenyer brukes når du vil at menyen automatisk skal vise taksonomier og/eller kurs uten at du manuelt må oppdatere menyelementer når noe endres.</p>
+                    <ul>
+                        <li>Gå til <strong>Utseende → Menyer</strong> i WordPress.</li>
+                        <li>Finn boksen <strong>"Kursagenten automenyer"</strong> i venstre kolonne. Hvis du ikke ser den, sjekk at den er aktivert under "Skjerminnstillinger" øverst.</li>
+                        <li>Velg ønsket automeny (f.eks. <strong>Kurskategorier</strong>, <strong>Kategorier og kurs</strong>, <strong>Kurssteder</strong> eller <strong>Instruktører</strong>) og klikk <strong>Legg til i meny</strong>.</li>
+                        <li>Dra automenyen til riktig plassering i menystrukturen. Som hovedmenypunkt kan den stå på toppnivå, eller du kan dra den innunder en eksisterende side (f.eks. "Kurs") for å bruke den som undermeny.</li>
+                        <li>Klikk på trekanten på menypunktet for å åpne innstillingene. Her kan du blant annet:
+                            <ul>
+                                <li>Velge om menyen skal vise <strong>hovedkategorier</strong>, <strong>subkategorier</strong> eller starte i en bestemt kategori.</li>
+                                <li>Begrense innholdet med <strong>stedsfilter</strong> (f.eks. bare "Oslo" eller "ikke-Oslo").</li>
+                                <li>For "Kategorier og kurs": velge om menyen bare skal vise kurs (uten kategorinivå).</li>
+                            </ul>
+                        </li>
+                        <li>Lagre menyen som vanlig. På forsiden vil automenyen automatisk utvides til riktig trestruktur basert på taksonomier og kurs i Kursagenten.</li>
+                    </ul>
+                    
+                    <h4>Meny-kortkoder</h4>
+                    <p>Meny-kortkoder brukes når du vil bygge menyer ved hjelp av kortkoden <code class="copytext">[ka-meny]</code>, typisk i en egendefinert meny eller i innhold der temaet støtter kortkoder.</p>
+                    <ul>
+                        <li>Opprett først en <strong>egendefinert meny</strong> eller et menypunkt av typen "Egendefinert lenke".</li>
+                        <li>I <strong>Link-tekst</strong> (eller tilsvarende felt) limer du inn ønsket <code>[ka-meny]</code>-kortkode, f.eks. <code>[ka-meny type="kurskategorier"]</code>.</li>
+                        <li>I URL-feltet skriver du <code>#</code> (slik at menypunktet kan lagres uten faktisk lenke).</li>
+                        <li>Dra menypunktet dit menyen skal vises, for eksempel som undermeny under siden "Kurs".</li>
+                        <li>Bruk parameterne <code>type</code>, <code>start</code> og eventuelt <code>st</code> for å styre hvilke kategorier/steder eller instruktører som skal vises.</li>
+                    </ul>
+                    <p>For flere eksempler på meny-kortkoder og hvordan du kan kombinere dem med andre kortkoder, se seksjonen <a href="#kortkoder">Kortkoder</a> lenger opp på denne siden.</p>
+                </div>
 
                 <div id="berike-taksonomisider" class="options-card">
                     <h3>Berike taksonomisider</h3>

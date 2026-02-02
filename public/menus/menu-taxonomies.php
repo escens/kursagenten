@@ -171,16 +171,6 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
                 $fields .= '<input type="hidden" name="menu-item[' . $item_id . '][menu-item-object-id]" value="' . esc_attr($menu_type) . '" />';
             }
 
-            // Legg til taxonomy felt
-            $fields .= '<p class="description description-wide">';
-            $fields .= '<label for="edit-menu-item-taxonomy-' . $item_id . '">';
-            $fields .= 'Taksonomi for automeny:';
-            $fields .= '<input type="text" id="edit-menu-item-taxonomy-' . $item_id . '" ';
-            $fields .= 'class="widefat code edit-menu-item-taxonomy" ';
-            $fields .= 'name="menu-item-taxonomy[' . $item_id . ']" ';
-            $fields .= 'value="' . esc_attr($taxonomy) . '" readonly style="background: white; font-size: 13px; border: 0; width: fit-content;" />';
-            $fields .= '</label></p>';
-
             // Sett inn feltene før move-combo eller actions
             if (strpos($item_html, '<div class="field-move-combo description-group">') !== false) {
                 $item_html = str_replace(

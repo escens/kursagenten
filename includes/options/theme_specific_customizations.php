@@ -46,7 +46,7 @@ class Kursagenten_Theme_Customizations {
             <h1>Tilpasninger for <?php echo esc_html($current_theme->get('Name')); ?> tema</h1>
             
             <div class="options-card">
-            <h3>Menytilpasninger</h3>
+            <h3>Menytilpasninger for kortkoder</h3>
                 <?php
                 // Sjekk om det finnes egendefinerte innstillinger
                 $has_custom_settings = !empty($options) && isset($options['menu_structure']) && 
