@@ -1,4 +1,7 @@
-## 1.1.13 - 2026-02-03
+## 1.1.13 - 2026-02-02
+- Lagt til: Ny menytype «Kategorier og kurs» i automenyer. Viser kategorier med hovedkurs som undermenypunkter. Legges som de andre under et menypunkt for best resultat. Nedtrekksmeny med valg: Vis hovedkategorier, Vis subkategorier, eller velg spesifikk undermeny. Avkrysning «Vis kun kurs, ikke kategorier» for kurstilbydere med få kurs.
+- Fix: menu_type for «Kategorier og kurs» ble ikke alltid lagret – lukk menyelementet og lagre menyen for å fikse.
+- Forbedring: Transient-caching (5 min) for automenyer for raskere sidlasting.
 - Lagt til: Ny menytype - automenyer. Generer lister med instruktører, kurssteder og kurskategorier i menyen. Dette betyr at du ikke trenger å legge til/fjerne punkter i menyen som er lagt til manuelt.
 - Fix: Justert design med støtte for tema Hestia og andre Bootstrap baserte temaer.
 
@@ -7,7 +10,7 @@
 
 ## 1.1.11 - 2026-01-15
 - Fix: Slide-in panel er flyttet så det alltid vises over header-rad og meny.
-- Fix: Lagt inn støtte for plugin Avada Builder, så stilene i utvidelsen ikke blir overskrevet.
+- Fix: Lagt inn støtte for plugi.\buildn Avada Builder, så stilene i utvidelsen ikke blir overskrevet.
 
 ## 1.1.10 - 2026-01-05
 - Fix: Link til lokasjoner på enkeltkurs er nå skjult om de er deaktivert i Kursagenten.
