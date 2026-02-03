@@ -494,13 +494,13 @@ function filter_courses_handler() {
     }
 
     try {
-        // Debug: Log måned-filter data
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            if (isset($_POST['mnd'])) {
-                error_log('MONTH DEBUG: POST mnd data: ' . print_r($_POST['mnd'], true));
-            }
-            error_log('AJAX DEBUG: Starting filter_courses_handler');
-        }
+        // Debug: Log måned-filter data (commented out to reduce log noise)
+        // if (defined('WP_DEBUG') && WP_DEBUG) {
+        //     if (isset($_POST['mnd'])) {
+        //         error_log('MONTH DEBUG: POST mnd data: ' . print_r($_POST['mnd'], true));
+        //     }
+        //     error_log('AJAX DEBUG: Starting filter_courses_handler');
+        // }
         
         // Håndter datofilteret
         $date_param = $_POST['dato'] ?? $_REQUEST['dato'] ?? null;
@@ -531,13 +531,13 @@ function filter_courses_handler() {
         $sort = $_POST['sort'] ?? $_REQUEST['sort'] ?? null;
         $order = $_POST['order'] ?? $_REQUEST['order'] ?? null;
 
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('AJAX DEBUG: About to call get_course_dates_query()');
-        }
+        // if (defined('WP_DEBUG') && WP_DEBUG) {
+        //     error_log('AJAX DEBUG: About to call get_course_dates_query()');
+        // }
         $query = get_course_dates_query();
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('AJAX DEBUG: Query completed, found_posts: ' . $query->found_posts);
-        }
+        // if (defined('WP_DEBUG') && WP_DEBUG) {
+        //     error_log('AJAX DEBUG: Query completed, found_posts: ' . $query->found_posts);
+        // }
         
         if ($query->have_posts()) {
             ob_start();
@@ -640,9 +640,9 @@ function filter_courses_handler() {
 
             $pagination = paginate_links($pagination_args);
 
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log('AJAX DEBUG: About to send success response');
-            }
+            // if (defined('WP_DEBUG') && WP_DEBUG) {
+            //     error_log('AJAX DEBUG: About to send success response');
+            // }
             wp_send_json_success([
                 'html' => ob_get_clean(),
                 'html_pagination' => $pagination,
@@ -666,10 +666,10 @@ function filter_courses_handler() {
             ]);
         }
     } catch (Exception $e) {
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            error_log('AJAX DEBUG: Exception caught: ' . $e->getMessage());
-            error_log('AJAX DEBUG: Exception trace: ' . $e->getTraceAsString());
-        }
+        // if (defined('WP_DEBUG') && WP_DEBUG) {
+        //     error_log('AJAX DEBUG: Exception caught: ' . $e->getMessage());
+        //     error_log('AJAX DEBUG: Exception trace: ' . $e->getTraceAsString());
+        // }
         wp_send_json_error([
             'message' => 'En feil oppstod under filtreringen.'
         ]);

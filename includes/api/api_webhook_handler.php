@@ -93,7 +93,7 @@ function process_webhook_data($request) {
         $course_data = get_main_course_id_by_location_id($location_id);
         
         if (!$course_data) {
-            error_log("DEBUG: location_id {$location_id} finnes ikke i CourseList API-et (kan være internkurs).");
+            // error_log("DEBUG: location_id {$location_id} finnes ikke i CourseList API-et (kan være internkurs).");
             // Even for webhooks, we should not process internal courses
             // Check if it exists in single course API to confirm it's an internal course
             $single_course_check = kursagenten_get_course_details($location_id);

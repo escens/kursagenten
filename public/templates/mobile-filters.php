@@ -27,9 +27,9 @@ function get_languages_from_meta() {
     }, $languages);
 }
 
-// Debug logging
-error_log('Loading mobile filters template');
-error_log('KURSAG_PLUGIN_DIR: ' . (defined('KURSAG_PLUGIN_DIR') ? KURSAG_PLUGIN_DIR : 'Not defined'));
+// Debug logging (commented out to reduce log noise)
+// error_log('Loading mobile filters template');
+// error_log('KURSAG_PLUGIN_DIR: ' . (defined('KURSAG_PLUGIN_DIR') ? KURSAG_PLUGIN_DIR : 'Not defined'));
 
 // Hent filter-innstillinger
 $top_filters = get_option('kursagenten_top_filters', []);
@@ -37,8 +37,8 @@ $left_filters = get_option('kursagenten_left_filters', []);
 $filter_types = get_option('kursagenten_filter_types', []);
 $available_filters = get_option('kursagenten_available_filters', []);
 
-error_log('Top filters: ' . print_r($top_filters, true));
-error_log('Left filters: ' . print_r($left_filters, true));
+// error_log('Top filters: ' . print_r($top_filters, true));
+// error_log('Left filters: ' . print_r($left_filters, true));
 
 // Konverter filter-innstillinger til arrays hvis de er lagret som komma-separerte strenger
 if (!is_array($top_filters)) {
@@ -62,9 +62,9 @@ if (in_array('search', $all_filters)) {
     array_unshift($all_filters, 'search');
 }
 
-// Debug logging for å se hvilke filtre som er aktive
-error_log('Combined filters for mobile: ' . print_r($all_filters, true));
-error_log('Available filters: ' . print_r($available_filters, true));
+// Debug logging for å se hvilke filtre som er aktive (commented out to reduce log noise)
+// error_log('Combined filters for mobile: ' . print_r($all_filters, true));
+// error_log('Available filters: ' . print_r($available_filters, true));
 
 // Spesiell håndtering for ka_coursecategory taksonomi-sider
 $category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('ka_coursecategory') : (function_exists('get_filtered_terms') ? get_filtered_terms('ka_coursecategory') : get_terms(['taxonomy' => 'ka_coursecategory', 'hide_empty' => true]));
@@ -118,10 +118,10 @@ $taxonomy_data = [
     ]
 ];
 
-// Debug logging for terms
-foreach ($taxonomy_data as $key => $data) {
-    error_log("Terms for {$key}: " . print_r($data['terms'], true));
-}
+// Debug logging for terms (commented out to reduce log noise)
+// foreach ($taxonomy_data as $key => $data) {
+//     error_log("Terms for {$key}: " . print_r($data['terms'], true));
+// }
 
 // Hent aktive filtre fra URL
 $active_filters = [];
@@ -169,7 +169,7 @@ ob_start();
         foreach ($all_filters as $filter) : 
             // Sjekk om filteret er gyldig
             if (!isset($available_filters[$filter])) {
-                error_log('Skipping invalid filter: ' . $filter);
+                // error_log('Skipping invalid filter: ' . $filter);
                 continue;
             }
             
@@ -341,5 +341,5 @@ ob_start();
 
 <?php
 $output = ob_get_clean();
-error_log('Template output length: ' . strlen($output));
+// error_log('Template output length: ' . strlen($output));
 echo $output; // Echo instead of return 

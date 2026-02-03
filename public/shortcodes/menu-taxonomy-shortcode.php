@@ -1,4 +1,4 @@
-            <?php
+<?php
 // [kurstagger_meny]
 /** * Enable shortcodes for menu navigation. */
 if (!has_filter("wp_nav_menu", "do_shortcode")) {

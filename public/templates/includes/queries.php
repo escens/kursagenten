@@ -500,8 +500,8 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
     try {
         $query = new WP_Query($query_args);
     } catch (Exception $e) {
-        error_log('QUERY DEBUG: WP_Query failed with error: ' . $e->getMessage());
-        error_log('QUERY DEBUG: Error trace: ' . $e->getTraceAsString());
+        // error_log('QUERY DEBUG: WP_Query failed with error: ' . $e->getMessage());
+        // error_log('QUERY DEBUG: Error trace: ' . $e->getTraceAsString());
         throw $e;
     }
     
