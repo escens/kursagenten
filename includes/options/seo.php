@@ -89,9 +89,23 @@ class SEO {
 
     public function kag_seo_sanitize($input) {
         $sanitary_values = array();
-        foreach ($input as $key => $value) {
-            $sanitary_values[$key] = sanitize_text_field($value);
+        // Defensiv sjekk for å unngå fatale feil ved uventede typer
+        if (!is_array($input)) {
+            error_log('Kursagenten: kag_seo_sanitize expected array, got ' . gettype($input));
+            $existing = get_option('kag_seo_option_name', array());
+            return is_array($existing) ? $existing : array();
         }
+
+        try {
+            foreach ($input as $key => $value) {
+                $sanitary_values[$key] = sanitize_text_field($value);
+            }
+        } catch (\Throwable $e) {
+            error_log('Kursagenten: kag_seo_sanitize error: ' . $e->getMessage());
+            $existing = get_option('kag_seo_option_name', array());
+            return is_array($existing) ? $existing : array();
+        }
+
         return $sanitary_values;
     }
     

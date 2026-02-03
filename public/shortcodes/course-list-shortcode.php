@@ -897,7 +897,7 @@ function kursagenten_course_list_shortcode($atts) {
                         // Legg til kortkode-parametre i add_args hvis de finnes
                         $add_args = array_map(function ($item) {
                             return is_array($item) ? join(',', $item) : $item;
-                        }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'current_url' => true]));
+                        }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'current_url' => true, 'list_type' => true]));
                                         
                                         // Legg til kortkode-parametre hvis de ikke allerede er i $_REQUEST
                                         if ($has_shortcode_filters) {

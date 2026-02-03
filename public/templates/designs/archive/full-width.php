@@ -310,7 +310,7 @@ if (empty($header_image)) {
                                 'next_text' => '<span>Neste</span> <i class="ka-icon icon-chevron-right"></i>',
                                 'add_args' => array_map(function ($item) {
                                     return is_array($item) ? join(',', $item) : $item;
-                                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true]))
+                                }, array_diff_key($_REQUEST, ['side' => true, 'action' => true, 'nonce' => true, 'list_type' => true]))
                             ]);
                             ?>
                             </div>

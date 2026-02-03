@@ -1304,63 +1304,78 @@ class Designmaler {
 
     public function design_sanitize($input) {
         $sanitary_values = array();
-        
-        // Sanitize all possible input fields
-        $valid_keys = [
-            'template_style',
-            'taxonomy_style',
-            'single_layout',
-            'single_design',
-            'archive_layout',
-            'archive_design',
-            'archive_list_type',
-            'taxonomy_layout',
-            'taxonomy_design',
-            'taxonomy_list_type',
-            'show_images',
-            'show_images_taxonomy',
-            'custom_css',
-            'ka_plassholderbilde_generelt',
-            'ka_plassholderbilde_kurs',
-            'ka_plassholderbilde_instruktor',
-            'ka_plassholderbilde_sted'
-        ];
 
-        foreach ($valid_keys as $key) {
-            if (isset($input[$key])) {
-                $sanitary_values[$key] = sanitize_text_field($input[$key]);
-            }
+        // Defensiv sjekk: sørg for at vi alltid jobber med et array for å unngå fatale feil.
+        if (!is_array($input)) {
+            error_log('Kursagenten: design_sanitize expected array, got ' . gettype($input));
+            $existing = get_option('design_option_name', array());
+            return is_array($existing) ? $existing : array();
         }
 
-        // Sanitize taxonomy-specific settings
-        $taxonomies = ['ka_coursecategory', 'ka_course_location', 'ka_instructors'];
-        foreach ($taxonomies as $taxonomy) {
-            $tax_keys = [
-                "taxonomy_{$taxonomy}_override",
-                "taxonomy_{$taxonomy}_layout",
-                "taxonomy_{$taxonomy}_design",
-                "taxonomy_{$taxonomy}_list_type",
-                "taxonomy_{$taxonomy}_show_images"
+        try {
+            // Sanitize all possible input fields
+            $valid_keys = [
+                'template_style',
+                'taxonomy_style',
+                'single_layout',
+                'single_design',
+                'archive_layout',
+                'archive_design',
+                'archive_list_type',
+                'taxonomy_layout',
+                'taxonomy_design',
+                'taxonomy_list_type',
+                'show_images',
+                'show_images_taxonomy',
+                'custom_css',
+                'ka_plassholderbilde_generelt',
+                'ka_plassholderbilde_kurs',
+                'ka_plassholderbilde_instruktor',
+                'ka_plassholderbilde_sted'
             ];
 
-            foreach ($tax_keys as $key) {
+            foreach ($valid_keys as $key) {
                 if (isset($input[$key])) {
-                    if (strpos($key, '_override') !== false) {
-                        $sanitary_values[$key] = rest_sanitize_boolean($input[$key]);
-                    } else {
-                        $sanitary_values[$key] = sanitize_text_field($input[$key]);
+                    $sanitary_values[$key] = sanitize_text_field($input[$key]);
+                }
+            }
+
+            // Sanitize taxonomy-specific settings
+            $taxonomies = ['ka_coursecategory', 'ka_course_location', 'ka_instructors'];
+            foreach ($taxonomies as $taxonomy) {
+                $tax_keys = [
+                    "taxonomy_{$taxonomy}_override",
+                    "taxonomy_{$taxonomy}_layout",
+                    "taxonomy_{$taxonomy}_design",
+                    "taxonomy_{$taxonomy}_list_type",
+                    "taxonomy_{$taxonomy}_show_images"
+                ];
+
+                foreach ($tax_keys as $key) {
+                    if (isset($input[$key])) {
+                        if (strpos($key, '_override') !== false) {
+                            // Bruk intern checkbox-sanitizer for bedre kompatibilitet
+                            $sanitary_values[$key] = $this->sanitize_checkbox_boolean($input[$key]);
+                        } else {
+                            $sanitary_values[$key] = sanitize_text_field($input[$key]);
+                        }
                     }
                 }
             }
+
+            // Sanitize filter no-collapse settings
+            if (isset($input['kursagenten_filter_no_collapse']) && is_array($input['kursagenten_filter_no_collapse'])) {
+                foreach ($input['kursagenten_filter_no_collapse'] as $filter => $value) {
+                    $sanitary_values['kursagenten_filter_no_collapse'][$filter] = $this->sanitize_checkbox_boolean($value);
+                }
+            }
+        } catch (\Throwable $e) {
+            // Logg feilen og behold eksisterende verdier i stedet for hvit skjerm
+            error_log('Kursagenten: design_sanitize error: ' . $e->getMessage());
+            $existing = get_option('design_option_name', array());
+            return is_array($existing) ? $existing : array();
         }
 
-        // Sanitize filter no-collapse settings
-        if (isset($input['kursagenten_filter_no_collapse']) && is_array($input['kursagenten_filter_no_collapse'])) {
-            foreach ($input['kursagenten_filter_no_collapse'] as $filter => $value) {
-                $sanitary_values['kursagenten_filter_no_collapse'][$filter] = rest_sanitize_boolean($value);
-            }
-        }
-        
         return $sanitary_values;
     }
 
@@ -1373,10 +1388,21 @@ class Designmaler {
     public function sanitize_css($css) {
         // Allow CSS properties and values, but strip potentially dangerous content
         // This is a basic sanitization - consider using a more robust solution for production
-        $css = wp_strip_all_tags($css);
-        $css = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css);
-        $css = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $css);
-        
+        try {
+            if (!is_string($css)) {
+                // Cast non-string input defensively to avoid fatale feil
+                $css = (string) $css;
+            }
+
+            $css = wp_strip_all_tags($css);
+            $css = preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', '', $css);
+            $css = preg_replace('/<style\b[^>]*>(.*?)<\/style>/is', '', $css);
+        } catch (\Throwable $e) {
+            error_log('Kursagenten: sanitize_css error: ' . $e->getMessage());
+            // Ved feil returnerer vi en tom streng fremfor å kaste fatal feil
+            return '';
+        }
+
         return $css;
     }
 

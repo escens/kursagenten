@@ -541,30 +541,30 @@ function filter_courses_handler() {
         
         if ($query->have_posts()) {
             ob_start();
-            $context = is_tax() ? 'taxonomy' : 'archive';
 
-            // Use list_type from client when valid - ensures AJAX returns same HTML structure as initial page (taxonomy/archive/shortcode may use different designs)
-            $list_type_param = isset($_POST['list_type']) ? sanitize_text_field(wp_unslash($_POST['list_type'])) : '';
-            $valid_list_types = ['standard', 'grid', 'compact', 'simple-cards', 'plain', 'date-and-title'];
-            if ($list_type_param !== '' && in_array($list_type_param, $valid_list_types, true)) {
-                $template_path_check = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$list_type_param}.php";
-                if (file_exists($template_path_check)) {
-                    $style = $list_type_param;
-                } else {
-                    $style = get_option('kursagenten_archive_list_type', 'standard');
-                }
+            // Try to respect the list type that was used on initial render (internal only, not a filter param).
+            $incoming_list_type = isset($_POST['internal_list_type'])
+                ? sanitize_text_field(wp_unslash($_POST['internal_list_type']))
+                : '';
+
+            if ($incoming_list_type !== '') {
+                $style = $incoming_list_type;
             } else {
-                // No valid list_type from client - use archive/taxonomy settings
-                $style = get_option('kursagenten_archive_list_type', 'standard');
+                // Fallback to global archive list type (legacy behaviour).
+                $style = (string) get_option('kursagenten_archive_list_type', 'standard');
             }
-            $template_path = KURSAG_PLUGIN_DIR . "public/templates/list-types/{$style}.php";
-            if (!file_exists($template_path)) {
-                $template_path = KURSAG_PLUGIN_DIR . 'public/templates/list-types/standard.php';
+            if ($style === '') {
+                $style = 'standard';
             }
+
+            // For AJAX-filtreringen viser vi alltid alle kursdatoer,
+            // akkurat som [kursliste] gjør.
+            $view_type = 'all_coursedates';
 
             // Build args for list-type templates (view_type, etc.)
             $template_args = [
-                'view_type' => 'all_coursedates',
+                'list_type' => $style,
+                'view_type' => $view_type,
                 'is_taxonomy_page' => false,
                 'query' => $query,
             ];
@@ -572,17 +572,13 @@ function filter_courses_handler() {
             while ($query->have_posts()) {
                 $query->the_post();
                 try {
-                    if (!function_exists('get_course_template_part')) {
-                        $fallback_template = __DIR__ . '/../list-types/standard.php';
-                        $args = $template_args;
-                        include $fallback_template;
+                    $args = $template_args;
+                    if (function_exists('get_course_template_part')) {
+                        // Central resolver handles which list-type template to include.
+                        get_course_template_part($args);
                     } else {
-                        $args = $template_args;
-                        if (file_exists($template_path)) {
-                            include $template_path;
-                        } else {
-                            include KURSAG_PLUGIN_DIR . 'public/templates/list-types/standard.php';
-                        }
+                        // Fallback to standard list type if template functions are missing.
+                        include KURSAG_PLUGIN_DIR . 'public/templates/list-types/standard.php';
                     }
                 } catch (Exception $e) {
                     // Logg bare faktiske feil
@@ -632,6 +628,8 @@ function filter_courses_handler() {
                         'action' => true,
                         'nonce' => true,
                         'current_url' => true,
+                        'list_type' => true, // View layout, not a filter - do not propagate in pagination
+                        'internal_list_type' => true, // Internal layout hint, never part of URL filters
                         'ka_coursedate' => true,
                         'ka_course' => true,
                         'coursedate' => true,
@@ -803,6 +801,9 @@ add_action('wp_ajax_get_filter_counts', 'get_filter_counts_handler');
 add_action('wp_ajax_nopriv_get_filter_counts', 'get_filter_counts_handler');
 
 function get_filter_counts_handler() {
+    // Prevent caching - counts depend on active filters and must be fresh
+    nocache_headers();
+
     // Verifiser nonce
     if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'filter_nonce')) {
         wp_send_json_error(['message' => 'Sikkerhetssjekk feilet']);

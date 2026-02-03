@@ -133,16 +133,30 @@ class Avansert {
     public function kag_avansert_sanitize($input) {
         $sanitary_values = array();
 
-        foreach ($input as $key => $value) {
-            // Sjekk om nøkkelen er en av checkbox-feltene
-            if (in_array($key, array('ka_security', 'ka_sitereviews', 'ka_jquery_support', 'ka_rename_posts'))) {
-                // Hvis feltet er en checkbox, sett verdien til 1 eller 0
-                $sanitary_values[$key] = isset($value) ? 1 : 0;
-            } else {
-                // Standard sanitering for andre felter
-                $sanitary_values[$key] = sanitize_text_field($value);
-            }
+        // Defensiv sjekk for å unngå fatale feil ved uventede typer
+        if (!is_array($input)) {
+            error_log('Kursagenten: kag_avansert_sanitize expected array, got ' . gettype($input));
+            $existing = get_option('kag_avansert_option_name', array());
+            return is_array($existing) ? $existing : array();
         }
+
+        try {
+            foreach ($input as $key => $value) {
+                // Sjekk om nøkkelen er en av checkbox-feltene
+                if (in_array($key, array('ka_security', 'ka_sitereviews', 'ka_jquery_support', 'ka_rename_posts'), true)) {
+                    // Hvis feltet er en checkbox, sett verdien til 1 eller 0
+                    $sanitary_values[$key] = !empty($value) ? 1 : 0;
+                } else {
+                    // Standard sanitering for andre felter
+                    $sanitary_values[$key] = sanitize_text_field($value);
+                }
+            }
+        } catch (\Throwable $e) {
+            error_log('Kursagenten: kag_avansert_sanitize error: ' . $e->getMessage());
+            $existing = get_option('kag_avansert_option_name', array());
+            return is_array($existing) ? $existing : array();
+        }
+
         return $sanitary_values;
     }
 

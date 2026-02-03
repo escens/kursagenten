@@ -1,4 +1,20 @@
 (function($) {
+	// DEBUG: Set to true to enable detailed console logging for filter troubleshooting
+	const KA_FILTER_DEBUG = false;
+
+	function kaLog() {
+		if (KA_FILTER_DEBUG && typeof console !== 'undefined' && console.log) {
+			const args = ['[KA Filter]'].concat(Array.prototype.slice.call(arguments));
+			console.log.apply(console, args);
+		}
+	}
+	function kaError() {
+		if (typeof console !== 'undefined' && console.error) {
+			const args = ['[KA Filter ERROR]'].concat(Array.prototype.slice.call(arguments));
+			console.error.apply(console, args);
+		}
+	}
+
 	// Store a reference to $ in the outer scope
 	let previousData = {};
 
@@ -18,6 +34,10 @@
 
 	// Dynamic handling of filter chips
 	$(document).on('click', '.filter-chip', function () {
+		// Prevent selection of unavailable options (greyed out)
+		if ($(this).hasClass('filter-empty')) {
+			return;
+		}
 		const filterKey = $(this).data('filter-key'); // Internal filter reference
 		const urlKey = $(this).data('url-key') || filterKey; // Use data-url-key if available
 		const filterValue = $(this).data('filter');
@@ -120,7 +140,9 @@
 
 
 	function updateFiltersAndFetch(newFilters) {
+		kaLog('updateFiltersAndFetch called with newFilters:', JSON.stringify(newFilters));
 		const currentFilters = getCurrentFiltersFromURL();
+		kaLog('currentFilters from URL:', JSON.stringify(currentFilters));
 		const updatedFilters = { ...currentFilters, ...newFilters };
 		
 		// Fjern null/undefined verdier
@@ -147,6 +169,7 @@
 		delete updatedFilters.nonce;
 		delete updatedFilters.action;
 		
+		kaLog('calling fetchCourses with:', JSON.stringify(updatedFilters));
 		updateURLParams(updatedFilters);
 		fetchCourses(updatedFilters);
 		updateActiveFiltersList(updatedFilters);
@@ -259,20 +282,32 @@
 	}
 
 	function fetchCourses(data) {
+		kaLog('fetchCourses START, incoming data:', JSON.stringify(data));
 		// Add required AJAX parameters
 		data.action = 'filter_courses';
-		data.nonce = kurskalender_data.filter_nonce;
-		// Send list_type from page so AJAX returns matching HTML structure (taxonomy/archive/shortcode may use different list designs)
-		const $filterResults = $('#filter-results');
-		if ($filterResults.length && $filterResults.data('list-type')) {
-			data.list_type = $filterResults.data('list-type');
+		data.nonce = typeof kurskalender_data !== 'undefined' ? kurskalender_data.filter_nonce : '(undefined)';
+		// Send internal list type so server can reuse the same list-types template after filtering
+		try {
+			const $results = $('#filter-results');
+			if ($results.length) {
+				const listTypeAttr = $results.data('list-type');
+				if (listTypeAttr) {
+					// Important: internal only, never used as a filter or URL param
+					data.internal_list_type = listTypeAttr;
+				}
+			}
+		} catch (e) {
+			kaError('Error reading list_type from #filter-results:', e);
 		}
+		kaLog('kurskalender_data.ajax_url:', typeof kurskalender_data !== 'undefined' ? kurskalender_data.ajax_url : '(undefined)');
 		// Send current URL so server can build correct pagination links (without current_url param to avoid nesting)
 		try { 
 			const url = new URL(window.location.href);
 			url.searchParams.delete('current_url');
 			data.current_url = url.toString(); 
-		} catch(e) {}
+		} catch(e) {
+			kaError('Error building current_url:', e);
+		}
 
 		// Behold side-parameteren fra URL hvis den finnes og ingen ny side er spesifisert
 		if (!data.side) {
@@ -283,6 +318,8 @@
 			}
 		}
 
+		kaLog('fetchCourses sending AJAX to:', data.action, 'with data keys:', Object.keys(data).join(', '));
+
 		// Vis loading indikator
 		$('.course-loading').show();
 
@@ -290,17 +327,44 @@
 			url: kurskalender_data.ajax_url,
 			type: 'POST',
 			data: data,
+			dataType: 'json', // Expect JSON; if server returns HTML/error page, will trigger error callback
 			success: function(response) {
+				kaLog('AJAX success callback received. typeof response:', typeof response);
+				if (typeof response !== 'object' || response === null) {
+					kaError('UNEXPECTED: response is not an object! value:', response, 'type:', typeof response);
+				}
+				kaLog('response.success:', response ? response.success : '(no response)');
+				kaLog('response.data type:', response && response.data !== undefined ? typeof response.data : 'undefined');
+				if (response && response.data) {
+					kaLog('response.data keys:', typeof response.data === 'object' ? Object.keys(response.data).join(', ') : 'N/A');
+					kaLog('response.data.html length:', response.data.html ? response.data.html.length : 0);
+					kaLog('response.data.html (first 200 chars):', response.data.html ? response.data.html.substring(0, 200) + '...' : 'null');
+				} else {
+					kaLog('response.data is', response ? (response.data === undefined ? 'undefined' : response.data) : 'N/A');
+				}
+				// Log raw response for debugging (truncate if huge)
+				try {
+					const rawStr = JSON.stringify(response);
+					kaLog('Raw response length:', rawStr ? rawStr.length : 0);
+					if (rawStr && rawStr.length < 500) {
+						kaLog('Raw response:', rawStr);
+					} else if (rawStr) {
+						kaLog('Raw response (first 500 chars):', rawStr.substring(0, 500));
+					}
+				} catch (e) {
+					kaError('Could not stringify response:', e);
+				}
+
 				if (response.success) {
 					// Legg til null-sjekk for html_pagination
-					if (response.data.html_pagination) {
+					if (response.data && response.data.html_pagination) {
 						updatePagination(response.data.html_pagination);
 					} else {
 						updatePagination('');
 					}
 					
-					$('#filter-results').html(response.data.html);
-					$('#course-count').html(response.data['course-count']);
+					$('#filter-results').html(response.data ? response.data.html : '');
+					$('#course-count').html(response.data ? response.data['course-count'] : '');
 					initAccordion();
 					initSlideInPanel();
 
@@ -384,22 +448,36 @@
 						updateDropdownText('months', formattedMonths);
 					}
 				} else {
-					console.error('Filter Error:', response.data);
-					$('#filter-results').html(response.data.message);
+					// Defensive: response.data may be undefined when server returns error
+					kaError('ENTERING ERROR BRANCH - response.success is false or missing');
+					kaError('Full response object:', response);
+					kaError('response.data:', response ? response.data : 'N/A');
+					kaError('response.data.message:', response && response.data && response.data.message ? response.data.message : 'N/A');
+					const errorMsg = (response.data && typeof response.data === 'object' && response.data.message)
+						? response.data.message
+						: (typeof response.data === 'string' ? response.data : 'En ukjent feil oppstod under filtreringen.');
+					kaError('Using error message:', errorMsg);
+					const escapedMsg = $('<div>').text(errorMsg).html();
+					$('#filter-results').html('<div class="filter-no-results"><p>' + escapedMsg + '</p></div>');
 					$('#course-count').html('');
 				}
 			},
 			error: function(xhr, status, error) {
-				console.error('AJAX Error:', {
+				kaError('AJAX error callback fired');
+				kaError('status:', status, 'error:', error);
+				kaError('xhr.status:', xhr ? xhr.status : 'N/A');
+				kaError('xhr.statusText:', xhr ? xhr.statusText : 'N/A');
+				kaError('xhr.responseText (first 800 chars):', xhr && xhr.responseText ? xhr.responseText.substring(0, 800) : '(empty)');
+				kaError('xhr.responseJSON:', xhr && xhr.responseJSON ? xhr.responseJSON : 'N/A');
+				console.error('[KA Filter] AJAX Error summary:', {
 					status: status,
 					error: error,
-					response: xhr.responseText,
-					statusCode: xhr.status,
-					headers: xhr.getAllResponseHeaders()
+					statusCode: xhr ? xhr.status : null,
+					responsePreview: xhr && xhr.responseText ? xhr.responseText.substring(0, 500) : '(empty)'
 				});
 			},
 			complete: function() {
-				// Skjul loading indikator
+				kaLog('AJAX complete callback');
 				$('.course-loading').hide();
 			}
 		});
@@ -413,7 +491,7 @@
 				delete obj[propName];
 			}
 		}
-		return obj
+		return obj;
 	}
 
 
@@ -441,8 +519,8 @@
 
 		// Process all URL parameters
 		for (const [key, value] of url.searchParams.entries()) {
-			// Skip current_url parameter entirely
-			if (key === 'current_url' || key === 'st' || key === 'sc' || key === 'ka_course_location' || key === 'ka_coursecategory') {
+			// Skip transport/technical parameters
+			if (key === 'current_url' || key === 'st' || key === 'sc' || key === 'ka_course_location' || key === 'ka_coursecategory' || key === 'internal_list_type') {
 				continue;
 			}
 			// Spesiell håndtering for dato-parameter
@@ -466,7 +544,7 @@
 			});
 		}
 
-		// Sikkerhet: fjern transport-parametre fra filtersettet
+		// Remove transport params from filter set
 		delete params.st;
 		delete params.sc;
 		delete params.ka_course_location;
@@ -518,16 +596,12 @@
 		const $activeFiltersContainer = $('#active-filters');
 		$activeFiltersContainer.empty();
 
-		// Sikkerhet: klon og fjern transport-parametre eksplisitt
+		// Clone and remove transport / internal params
 		const cleaned = { ...filters };
-		if (cleaned.st !== undefined) { delete cleaned.st; }
-		if (cleaned.sc !== undefined) { delete cleaned.sc; }
-		if (cleaned.ka_course_location !== undefined) { delete cleaned.ka_course_location; }
-		if (cleaned.ka_coursecategory !== undefined) { delete cleaned.ka_coursecategory; }
+		['st', 'sc', 'ka_course_location', 'ka_coursecategory', 'internal_list_type'].forEach(k => { if (cleaned[k] !== undefined) delete cleaned[k]; });
 
 		// Create chips for each active filter
 		Object.keys(cleaned).forEach(key => {
-			// Ekskluder sorteringsparametere og andre systemparametere
 			if (key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'per_page' && key !== 'order' && key !== 'side' && key !== 'current_url' &&
 				cleaned[key] && cleaned[key].length > 0) {
 				
@@ -688,14 +762,13 @@
 				});
 			}
 		});
-
 	}
 
 	function toggleResetFiltersButton(filters) {
 		const $resetButton = $('#reset-filters');
         const $activeFiltersContainer = $('#active-filters-container');
 		const hasActiveFilters = Object.keys(filters).some(key =>
-			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' && key !== 'side' && key !== 'current_url' && key !== 'st' && key !== 'sc' &&
+			key !== 'nonce' && key !== 'action' && key !== 'sort' && key !== 'order' && key !== 'per_page' && key !== 'side' && key !== 'current_url' && key !== 'st' && key !== 'sc' && key !== 'internal_list_type' &&
 			filters[key] && filters[key].length > 0 &&
 			// Ekskluder kortkode-parametere fra aktive filtre
 			!(typeof kurskalender_data !== 'undefined' && kurskalender_data.has_shortcode_filters && 
@@ -708,6 +781,14 @@
 	// Oppdater filter counts når filtre endres
 	function updateFilterCounts() {
 		const currentFilters = getCurrentFiltersFromURL();
+		// Build clean filter payload - exclude non-filter params so server gets correct active filters
+		const filterPayload = {};
+		const filterKeys = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
+		filterKeys.forEach(function (key) {
+			if (currentFilters[key] !== undefined && currentFilters[key] !== null && currentFilters[key] !== '') {
+				filterPayload[key] = currentFilters[key];
+			}
+		});
 		
 		$.ajax({
 			url: kurskalender_data.ajax_url,
@@ -715,61 +796,66 @@
 			data: {
 				action: 'get_filter_counts',
 				nonce: kurskalender_data.filter_nonce,
-				...currentFilters
+				_ka_t: Date.now(), // Cache bust - ensures fresh counts (filter-empty logic)
+				...filterPayload
 			},
 			success: function(response) {
-				if (response.success && response.data.counts) {
+				if (response.success && response.data && response.data.counts) {
 					updateFilterCountsDisplay(response.data.counts);
 				}
+			},
+			error: function() {
+				// On AJAX error, leave display unchanged - avoid overwriting with wrong state
 			}
+		});
+	}
+
+	// Find checkbox/label by filter type and value - avoids selector injection with special chars
+	function findFilterElement(filterType, value, isChip) {
+		const selector = isChip ? '.filter-chip[data-filter-key="' + filterType + '"]' : '.filter-checkbox[data-filter-key="' + filterType + '"]';
+		const valueAttr = isChip ? 'data-filter' : 'value';
+		return $(selector).filter(function () {
+			return $(this).attr(valueAttr) === String(value);
 		});
 	}
 
 	// Oppdater visning av filter counts - kun visuell indikator
 	function updateFilterCountsDisplay(counts) {
-		// Reset all states before applying new counts to avoid lingering classes
-		// Inkluder både desktop og mobile filtere
+		// Reset all states before applying new counts
 		const $allLabels = $('.filter-list-item.checkbox, .mobile-filter-content .filter-list-item.checkbox');
 		const $allCheckboxes = $allLabels.find('.filter-checkbox');
+		const $allChips = $('.filter-chip, .mobile-filter-content .filter-chip');
 		$allLabels.removeClass('filter-empty filter-available');
+		$allChips.removeClass('filter-empty filter-available');
 		$allCheckboxes.prop('disabled', false);
+		
+		function applyCount(filterType, value, count) {
+			const isEmpty = count === 0;
+			// Checkboxes (list layout)
+			const $checkbox = findFilterElement(filterType, value, false);
+			if ($checkbox.length) {
+				const $label = $checkbox.closest('label');
+				$label.addClass(isEmpty ? 'filter-empty' : 'filter-available');
+				$checkbox.prop('disabled', isEmpty);
+			}
+			// Chips (button layout)
+			const $chip = findFilterElement(filterType, value, true);
+			if ($chip.length) {
+				$chip.addClass(isEmpty ? 'filter-empty' : 'filter-available');
+			}
+		}
 		
 		// Oppdater kategorier
 		if (counts.categories) {
-			Object.keys(counts.categories).forEach(slug => {
-				const count = counts.categories[slug];
-				const $element = $(`.filter-checkbox[data-filter-key="categories"][value="${slug}"]`);
-				if ($element.length) {
-					const $label = $element.closest('label');
-					
-				if (count === 0) {
-					$label.addClass('filter-empty');
-					$element.prop('disabled', true);
-				} else {
-					$label.addClass('filter-available');
-					$element.prop('disabled', false);
-				}
-				}
+			Object.keys(counts.categories).forEach(function (slug) {
+				applyCount('categories', slug, counts.categories[slug]);
 			});
 		}
-
-		// Oppdater andre filtre på samme måte
-		['locations', 'instructors', 'language', 'months'].forEach(filterType => {
+		// Oppdater andre filtre
+		['locations', 'instructors', 'language', 'months'].forEach(function (filterType) {
 			if (counts[filterType]) {
-				Object.keys(counts[filterType]).forEach(value => {
-					const count = counts[filterType][value];
-					const $element = $(`.filter-checkbox[data-filter-key="${filterType}"][value="${value}"]`);
-					if ($element.length) {
-						const $label = $element.closest('label');
-						
-				if (count === 0) {
-					$label.addClass('filter-empty');
-					$element.prop('disabled', true);
-				} else {
-					$label.addClass('filter-available');
-					$element.prop('disabled', false);
-				}
-					}
+				Object.keys(counts[filterType]).forEach(function (value) {
+					applyCount(filterType, value, counts[filterType][value]);
 				});
 			}
 		});
@@ -799,14 +885,18 @@
 	});
 
 	// Initialize filters on page load
+	kaLog('initializeFiltersFromURL called');
 	initializeFiltersFromURL();
 
 	// Sjekk om vi har en side-parameter i URL-en ved sidelasting
 	$(document).ready(function() {
+		kaLog('document.ready - checking URL params');
 		const urlParams = new URLSearchParams(window.location.search);
 		const sideParam = urlParams.get('side');
+		kaLog('side param:', sideParam, 'full URL:', window.location.href);
 		
 		if (sideParam) {
+			kaLog('Side param found - triggering fetchCourses');
 			const currentFilters = getCurrentFiltersFromURL();
 			fetchCourses(currentFilters);
 		}
@@ -815,6 +905,7 @@
 	$(document).on('click', '.pagination-wrapper .pagination a', function (e) {
 		e.preventDefault();
 		const href = $(this).attr('href');
+		kaLog('Pagination link clicked, href:', href);
 		const locate = new URL(href);
 		
 		// Hent alle parametere fra pagineringslenken (ikke fra current URL for å unngå duplikater)
@@ -830,6 +921,7 @@
 		}
 
 		// Oppdater URL og hent resultater
+		kaLog('Pagination - pushState and fetchCourses with newFilters:', JSON.stringify(newFilters));
 		window.history.pushState({}, '', href);
 		fetchCourses(newFilters);
 	});

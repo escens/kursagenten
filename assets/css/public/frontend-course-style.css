@@ -1029,6 +1029,16 @@ text-align: center;
     background: var(--ka-color);
     color: white;
   }
+  /* Greyed-out chips (no courses with current filter combo) */
+  #ka .chip.filter-empty {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: auto;
+  }
+  #ka .chip.filter-empty:hover {
+    background: white;
+    color: var(--ka-color-filter);
+  }
 
 
 
