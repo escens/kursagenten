@@ -82,6 +82,16 @@
 					}
 				}
 			}
+
+			// Ekstra UX-logikk for kurskategorisider med "Vis kategorifilter":
+			// Når enkelvalg er aktivert for kategorier, skal bare én kategori kunne være krysset av om gangen
+			// (chips-adferd), selv om UI-et er avkrysningsbokser.
+			const singleSelectCategories = !!(filterSettings.single_select_categories);
+			if (singleSelectCategories && $checkbox.is(':checked')) {
+				$('.filter-checkbox[data-filter-key="categories"]').not($checkbox).each(function () {
+					$(this).prop('checked', false);
+				});
+			}
 		}
 		
 		const selectedValues = $('.filter-checkbox[data-filter-key="' + filterKey + '"]:checked').map(function () {

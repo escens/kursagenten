@@ -1,144 +1,96 @@
 <?php
 
-// Add the "Show Hidden Files" option to the list view in the media library
-function add_show_hidden_files_option($views) {
-    $current = (isset($_GET['invisible_files']) && $_GET['invisible_files'] === '1') ? 'current' : '';
+/**
+ * Hide course images (attachments with meta key `is_course_image`) in Media Library by default.
+ *
+ * Important:
+ * - Grid view and most "select image" modals use AJAX (`query-attachments`).
+ * - If we only hide items via JS/CSS, pagination becomes confusing (you must click "Load more" many times).
+ * - Therefore we filter at query level for both upload.php (list view) and AJAX attachment queries.
+ */
 
-    // Add back the default "All Media Items" link
-    $views['all'] = '<a href="' . remove_query_arg('invisible_files') . '" class="' . (!$current ? 'current' : '') . '">Alle mediefiler</a>';
+/**
+ * Add the "Vis kursbilder" toggle to the Media Library list view.
+ *
+ * UI text is Norwegian by design.
+ *
+ * @param array $views Views.
+ * @return array
+ */
+function kursagenten_add_show_hidden_files_option( $views ) {
+	$current = ( isset( $_GET['invisible_files'] ) && '1' === $_GET['invisible_files'] ) ? 'current' : '';
 
-    // Add the "Show Hidden Files" link
-    $views['hidden_files'] = '<a href="' . esc_url(add_query_arg('invisible_files', '1')) . '" class="' . $current . '">Vis kursbilder</a>';
+	// "All media items" (default).
+	$views['all'] = '<a href="' . esc_url( remove_query_arg( 'invisible_files' ) ) . '" class="' . ( ! $current ? 'current' : '' ) . '">Websidens bilder</a>';
 
-    // Add back the default "All Media Items" link
-    $views['all'] = '<a href="' . remove_query_arg('invisible_files') . '" class="' . (!$current ? 'current' : '') . '">Alle mediefiler</a>';
+	// Toggle to show course images.
+	$views['hidden_files'] = '<a href="' . esc_url( add_query_arg( 'invisible_files', '1' ) ) . '" class="' . esc_attr( $current ) . '">Kursbilder (fra Kursagenten)</a>';
 
-    return $views;
+	return $views;
 }
-add_filter('views_upload', 'add_show_hidden_files_option');
+add_filter( 'views_upload', 'kursagenten_add_show_hidden_files_option' );
 
-// Modify the media library query to show or hide hidden files in the list view
-function filter_media_library_query_for_hidden_files($query) {
-    if (!is_admin() || !$query->is_main_query()) {
-        return;
-    }
+/**
+ * Apply meta_query filtering to upload.php list view.
+ *
+ * @param WP_Query $query WP query.
+ * @return void
+ */
+function kursagenten_filter_media_library_query_for_hidden_files( $query ) {
+	if ( ! is_admin() || ! $query->is_main_query() ) {
+		return;
+	}
 
-    // Adjust the query based on the "invisible_files" parameter
-    if (isset($_GET['invisible_files']) && $_GET['invisible_files'] === '1') {
-        $meta_query = array(
-            array(
-                'key'     => 'is_course_image',
-                'value'   => true,
-                'compare' => 'EXISTS',
-            ),
-        );
-        $query->set('meta_query', $meta_query);
-    } else {
-        // Exclude hidden files by default
-        $meta_query = array(
-            array(
-                'key'     => 'is_course_image',
-                'value'   => true,
-                'compare' => 'NOT EXISTS',
-            ),
-        );
-        $query->set('meta_query', $meta_query);
-    }
+	// Only affect the Media Library screen (upload.php) list table query.
+	global $pagenow;
+	if ( 'upload.php' !== $pagenow ) {
+		return;
+	}
+
+	if ( 'attachment' !== $query->get( 'post_type' ) ) {
+		return;
+	}
+
+	$show_course_images = isset( $_GET['invisible_files'] ) && '1' === $_GET['invisible_files'];
+
+	// If toggle is on: show only course images. Otherwise: hide course images.
+	$query->set(
+		'meta_query',
+		array(
+			array(
+				'key'     => 'is_course_image',
+				'compare' => $show_course_images ? 'EXISTS' : 'NOT EXISTS',
+			),
+		)
+	);
 }
-add_action('pre_get_posts', 'filter_media_library_query_for_hidden_files');
+add_action( 'pre_get_posts', 'kursagenten_filter_media_library_query_for_hidden_files' );
 
-// Add JavaScript to hide specific images in the media grid view based on the aria-label attribute
-function load_more_if_hidden_items() {
-    ?>
-    <script type="text/javascript">
-        jQuery(document).ready(function($) {
-            // Function to hide images whose aria-label starts with 'kursbilde-zrs'
-            function hideImagesByAriaLabel() {
-                $('.attachment').each(function() {
-                    var ariaLabel = $(this).attr('aria-label');
-                    if (ariaLabel && ariaLabel.startsWith('kursbilde-')) {
-                        $(this).hide();
-                    }
-                });
-            }
+/**
+ * Apply the same filtering to media modal / grid queries (AJAX query-attachments).
+ *
+ * This prevents the "only one visible image + click 'Load more' many times" issue,
+ * because course images are excluded at the database query level (not hidden after render).
+ *
+ * @param array $args Query args.
+ * @return array
+ */
+function kursagenten_filter_ajax_query_attachments_args( $args ) {
+	// Respect the same toggle if it is passed along (rare, but harmless).
+	$show_course_images = false;
+	if ( isset( $_REQUEST['invisible_files'] ) ) {
+		$show_course_images = ( '1' === (string) $_REQUEST['invisible_files'] );
+	} elseif ( isset( $_REQUEST['query']['invisible_files'] ) ) {
+		$show_course_images = ( '1' === (string) $_REQUEST['query']['invisible_files'] );
+	}
 
-            // Function to check if we need to load more items
-            function checkHiddenItems() {
-                var hiddenCount = $('.attachments .attachment[style*="display: none"]').length;
-                var visibleCount = $('.attachments .attachment:not([style*="display: none"])').length;
+	$meta_query   = isset( $args['meta_query'] ) && is_array( $args['meta_query'] ) ? $args['meta_query'] : array();
+	$meta_query[] = array(
+		'key'     => 'is_course_image',
+		'compare' => $show_course_images ? 'EXISTS' : 'NOT EXISTS',
+	);
+	$args['meta_query'] = $meta_query;
 
-                // If more than 80 items are hidden, trigger the "Load More" button
-                if (hiddenCount >= 80 && visibleCount === 0) {
-                    $('.load-more-wrapper .load-more').trigger('click');
-                }
-            }
-
-            // Initial hide on page load
-            hideImagesByAriaLabel();
-            checkHiddenItems();
-
-            // Monitor for changes in the media library and Insert Media views
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.type === 'childList' && $(mutation.target).find('.attachment').length > 0) {
-                        hideImagesByAriaLabel();
-                        checkHiddenItems();
-                    }
-                });
-            });
-
-            // Observe the media library and modal for changes
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            // Hide images in the Insert Media view when it's opened
-            $(document).on('click', '.media-modal .media-frame-menu .media-menu-item', function() {
-                setTimeout(function() {
-                    hideImagesByAriaLabel();
-                    checkHiddenItems();
-                }, 500); // Delay to ensure content has loaded
-            });
-
-            // Monitor category or folder change within Insert Media view
-            $(document).on('click', '.media-modal .attachments-browser .media-toolbar .media-button', function() {
-                setTimeout(function() {
-                    hideImagesByAriaLabel();
-                    checkHiddenItems();
-                }, 500); // Delay to ensure new images are loaded
-            });
-        });
-    </script>
-    <?php
+	return $args;
 }
-add_action('admin_footer', 'load_more_if_hidden_items');
-
-// Add CSS to hide course images in grid view
-function hide_course_images_css() {
-    if (!is_admin()) {
-        return;
-    }
-    ?>
-    <style>
-        /* Skjul bilder merket med is_course_image i gridvisning */
-        body.upload-php .media-frame.mode-grid .attachment[data-is-course-image="true"],
-        .media-modal .media-frame.mode-grid .attachment[data-is-course-image="true"] {
-            display: none !important;
-        }
-    </style>
-    <?php
-}
-add_action('admin_head', 'hide_course_images_css');
-
-// Add data attribute to attachments for course images
-function add_course_image_data_attribute($form_fields, $post) {
-    if (get_post_meta($post->ID, 'is_course_image', true)) {
-        $form_fields['is_course_image'] = array(
-            'input' => 'html',
-            'html' => '<input type="hidden" data-is-course-image="true" />'
-        );
-    }
-    return $form_fields;
-}
-add_filter('attachment_fields_to_edit', 'add_course_image_data_attribute', 10, 2);
+add_filter( 'ajax_query_attachments_args', 'kursagenten_filter_ajax_query_attachments_args', 20 );

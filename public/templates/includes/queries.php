@@ -220,6 +220,40 @@ add_filter('posts_join', function (string $join, WP_Query $query) {
 }, 10, 2);
 
 /**
+ * Parse current_url (from AJAX) to detect if we're on a ka_coursecategory taxonomy page
+ * and if the term has "show_category_filter_on_archive" (AND mode).
+ *
+ * @param string $url Full URL e.g. https://example.com/kurskategori/sertifisert-opplaring/?k=truckførerkurs
+ * @return array|null ['slug' => string, 'use_and' => bool] or null if not a matching taxonomy page
+ */
+function ka_get_archive_category_from_url($url) {
+    if (empty($url) || !is_string($url)) {
+        return null;
+    }
+    $parsed = wp_parse_url($url);
+    $path = isset($parsed['path']) ? trim($parsed['path'], '/') : '';
+    if (empty($path)) {
+        return null;
+    }
+    $url_options = get_option('kag_seo_option_name', []);
+    $kurskategori_slug = !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori';
+    $parts = explode('/', $path);
+    $slug_index = array_search($kurskategori_slug, $parts, true);
+    if ($slug_index === false || !isset($parts[$slug_index + 1])) {
+        return null;
+    }
+    $term_slug = $parts[$slug_index + 1];
+    $term = get_term_by('slug', $term_slug, 'ka_coursecategory');
+    if (!$term || is_wp_error($term)) {
+        return null;
+    }
+    // Enable AND mode for any coursecategory term (parent or child)
+    // when "show_category_filter_on_archive" is enabled on that term.
+    $use_and = (get_term_meta($term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+    return ['slug' => $term->slug, 'use_and' => $use_and];
+}
+
+/**
  * Retrieve and sort all coursedates by date.
  * For use in archive-course.php, course calendar.
  *
@@ -395,18 +429,55 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         ];
     }
     
-    // Legg til kategori filter hvis valgt
-    if (!empty($categories)) {
-        // Bruk hierarkisk kategorifiltrering
-        $hierarchical_categories = get_hierarchical_category_filter($categories);
-        
-        if (!empty($hierarchical_categories)) {
+    // Legg til kategori filter
+    // On taxonomy page with "show_category_filter_on_archive": use AND (archive category AND filter selection)
+    $use_category_and = false;
+    $archive_category_slug = null;
+    if (is_tax('ka_coursecategory')) {
+        $current_term = get_queried_object();
+        if ($current_term && $current_term->taxonomy === 'ka_coursecategory') {
+            // Enable AND mode for both parent and child taxonomy pages
+            // when "show_category_filter_on_archive" is enabled on the current term.
+            $use_category_and = (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+            if ($use_category_and) {
+                $archive_category_slug = $current_term->slug;
+            }
+        }
+    }
+    // AJAX context: is_tax() is false, detect taxonomy page from current_url and get archive slug
+    if (empty($archive_category_slug) && !empty($_REQUEST['current_url'])) {
+        $parsed = ka_get_archive_category_from_url(sanitize_text_field(wp_unslash($_REQUEST['current_url'])));
+        if ($parsed) {
+            $archive_category_slug = $parsed['slug'];
+            $use_category_and = $parsed['use_and'];
+        }
+    }
+
+    if ($use_category_and && !empty($archive_category_slug)) {
+        // Always include archive category (the page we're on) - courses must belong to it
+        // Plus any filter selections from the user (e.g. subcategory "Truckførerkurs")
+        $categories_sanitized = array_map('sanitize_title', array_filter($categories));
+        $all_cats = array_unique(array_merge([$archive_category_slug], $categories_sanitized));
+        foreach ($all_cats as $cat_slug) {
             $tax_query[] = [
                 'taxonomy' => 'ka_coursecategory',
                 'field' => 'slug',
-                'terms' => $hierarchical_categories,
+                'terms' => [$cat_slug],
                 'operator' => 'IN'
             ];
+        }
+    } else {
+        if (!empty($categories)) {
+            // Standard OR logic
+            $hierarchical_categories = get_hierarchical_category_filter($categories);
+            if (!empty($hierarchical_categories)) {
+                $tax_query[] = [
+                    'taxonomy' => 'ka_coursecategory',
+                    'field' => 'slug',
+                    'terms' => $hierarchical_categories,
+                    'operator' => 'IN'
+                ];
+            }
         }
     }
     
@@ -1279,6 +1350,21 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
     // Fjern filteret vi sjekker fra aktive filtre for å unngå sirkulær referanse
     $test_filters = $active_filters;
     
+    // Check if we're on taxonomy page with AND mode for categories
+    $category_and_mode = false;
+    $base_category_slug = '';
+    if ($filter_type === 'categories' && is_tax('ka_coursecategory')) {
+        $current_term = get_queried_object();
+        if ($current_term && $current_term->taxonomy === 'ka_coursecategory') {
+            // Enable AND mode for both parent and child taxonomy pages
+            // when "show_category_filter_on_archive" is enabled on the current term.
+            if (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes') {
+                $category_and_mode = true;
+                $base_category_slug = $current_term->slug;
+            }
+        }
+    }
+    
     switch ($filter_type) {
         case 'categories':
             unset($test_filters['k']);
@@ -1364,7 +1450,12 @@ function get_filter_value_counts($filter_type, $active_filters = []) {
         $test_filters_with_term = $test_filters;
         switch ($filter_type) {
             case 'categories':
-                $test_filters_with_term['k'] = [$term_value];
+                if ($category_and_mode && !empty($base_category_slug)) {
+                    $test_filters_with_term['k'] = [$base_category_slug, $term_value];
+                    $test_filters_with_term['_category_and_mode'] = true;
+                } else {
+                    $test_filters_with_term['k'] = [$term_value];
+                }
                 break;
             case 'locations':
                 $test_filters_with_term['sted'] = [$term_value];
@@ -1474,8 +1565,10 @@ function get_course_dates_query_for_count($filters) {
     }
     
     // Legg til kategori filter hvis det er spesifisert
+    $use_category_and = !empty($filters['_category_and_mode']);
     if (!empty($filters['k'])) {
         $categories = is_array($filters['k']) ? $filters['k'] : [$filters['k']];
+        $categories = array_map('sanitize_title', array_filter($categories));
         
         // Hent skjulte kategorier
         $hidden_categories = get_terms([
@@ -1502,13 +1595,23 @@ function get_course_dates_query_for_count($filters) {
             ];
         }
         
-        // Legg til valgte kategorier
-        $args['tax_query'][] = [
-            'taxonomy' => 'ka_coursecategory',
-            'field' => 'slug',
-            'terms' => $categories,
-            'operator' => 'IN'
-        ];
+        if ($use_category_and && !empty($categories)) {
+            foreach ($categories as $cat_slug) {
+                $args['tax_query'][] = [
+                    'taxonomy' => 'ka_coursecategory',
+                    'field' => 'slug',
+                    'terms' => [$cat_slug],
+                    'operator' => 'IN'
+                ];
+            }
+        } else {
+            $args['tax_query'][] = [
+                'taxonomy' => 'ka_coursecategory',
+                'field' => 'slug',
+                'terms' => $categories,
+                'operator' => 'IN'
+            ];
+        }
     } else {
         // Hvis ingen kategori-filter er spesifisert, ekskluder skjulte kategorier
         $hidden_categories = get_terms([

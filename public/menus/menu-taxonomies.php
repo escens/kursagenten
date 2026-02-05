@@ -106,11 +106,17 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
 
             // Dropdown for ka_coursecategory: Vis hovedkategorier, Vis subkategorier, eller velg spesifikk undermeny
             if ($taxonomy === 'ka_coursecategory') {
-                $has_children_terms = array_filter($parent_terms, function($term) use ($taxonomy) {
+                $hide_in_menu_meta = [
+                    'relation' => 'OR',
+                    ['key' => 'hide_in_menu', 'compare' => 'NOT EXISTS'],
+                    ['key' => 'hide_in_menu', 'value' => 'Vis', 'compare' => '=']
+                ];
+                $has_children_terms = array_filter($parent_terms, function($term) use ($taxonomy, $hide_in_menu_meta) {
                     $children = get_terms([
                         'taxonomy' => $taxonomy,
                         'hide_empty' => false,
-                        'parent' => $term->term_id
+                        'parent' => $term->term_id,
+                        'meta_query' => $hide_in_menu_meta
                     ]);
                     return !empty($children) && !is_wp_error($children);
                 });
@@ -344,6 +350,64 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
 }
 
 /**
+ * Extract custom CSS classes from a menu item (user-added in admin "CSS Classes" field).
+ * WordPress standard classes (menu-item, menu-item-type-*, menu-item-object-*, menu-item-{id})
+ * are filtered out so they can be replaced with correct values for virtual items.
+ *
+ * @param object $item Nav menu item (page, post, kursagenten_auto_menu, etc.)
+ * @return array Custom class names to merge into virtual menu items
+ */
+function kursagenten_get_custom_menu_classes_from_original(object $item): array {
+    $classes = isset($item->classes) && is_array($item->classes)
+        ? $item->classes
+        : [];
+    $custom = [];
+    foreach ($classes as $class) {
+        $class = trim((string) $class);
+        if ($class === '') {
+            continue;
+        }
+        // Skip WordPress standard menu item classes (we set these ourselves for virtual items)
+        if ($class === 'menu-item'
+            || strpos($class, 'menu-item-type-') === 0
+            || strpos($class, 'menu-item-object-') === 0
+            || preg_match('/^menu-item-\d+$/', $class)
+        ) {
+            continue;
+        }
+        $custom[] = $class;
+    }
+    return array_unique(array_filter($custom));
+}
+
+/**
+ * Get custom CSS classes to inherit for virtual menu items.
+ * When inject_only: inherit from parent (e.g. page with "featured-menu").
+ * Otherwise: inherit from the automeny item itself.
+ *
+ * @param array $new_items Current menu items (to find parent)
+ * @param int $parent_menu_id Parent item ID when inject_only
+ * @param bool $inject_only Whether categories are injected under a parent
+ * @param object $original_item The kursagenten_auto_menu item
+ * @return array Custom class names to merge into virtual menu items
+ */
+function kursagenten_get_custom_classes_for_virtual_items(
+    array $new_items,
+    int $parent_menu_id,
+    bool $inject_only,
+    object $original_item
+): array {
+    if ($inject_only && $parent_menu_id > 0) {
+        foreach ($new_items as $ni) {
+            if (isset($ni->ID) && (int) $ni->ID === (int) $parent_menu_id) {
+                return kursagenten_get_custom_menu_classes_from_original($ni);
+            }
+        }
+    }
+    return kursagenten_get_custom_menu_classes_from_original($original_item);
+}
+
+/**
  * Add custom menu metabox for Kursagenten auto-menus
  */
 function add_custom_nav_menu_metabox(): void {
@@ -501,6 +565,8 @@ function kursagenten_get_main_courses_in_category(
 
 /**
  * Inject "Kategorier og kurs" or "Vis kun kurs" menu structure
+ *
+ * @param array $manual_item_custom_classes Map [taxonomy][object_id] => custom classes from manually added siblings
  */
 function kursagenten_inject_categories_and_courses_menu(
     array &$new_items,
@@ -514,9 +580,18 @@ function kursagenten_inject_categories_and_courses_menu(
     string $st_filter,
     bool $skjul_sted_chip,
     bool $vis_kun_kurs,
-    bool $vis_kun_subkategorier = false
+    bool $vis_kun_subkategorier = false,
+    array $manual_item_custom_classes = []
 ): void {
     $taxonomy = 'ka_coursecategory';
+
+    // Inherit custom CSS classes from parent when inject_only (e.g. page with "featured-menu")
+    $custom_classes = kursagenten_get_custom_classes_for_virtual_items(
+        $new_items,
+        $parent_menu_id,
+        $inject_only,
+        $original_item
+    );
 
     // Parse st-filter
     $filter_location_term_id = null;
@@ -546,24 +621,39 @@ function kursagenten_inject_categories_and_courses_menu(
                 $splice_position--;
             }
         }
+        $hide_in_menu_meta = [
+            'relation' => 'OR',
+            ['key' => 'hide_in_menu', 'compare' => 'NOT EXISTS'],
+            ['key' => 'hide_in_menu', 'value' => 'Vis', 'compare' => '=']
+        ];
         $term_ids = [0];
         if (!empty($parent_term_id)) {
+            $parent_id = (int) $parent_term_id;
+            $parent_hide = get_term_meta($parent_id, 'hide_in_menu', true);
             $child_terms = get_terms([
                 'taxonomy' => $taxonomy,
                 'hide_empty' => false,
-                'parent' => (int) $parent_term_id,
+                'parent' => $parent_id,
+                'meta_query' => $hide_in_menu_meta,
             ]);
-            $term_ids = array_merge([(int) $parent_term_id], wp_list_pluck($child_terms, 'term_id'));
+            $term_ids = ($parent_hide !== 'Skjul') ? [$parent_id] : [];
+            $term_ids = array_merge($term_ids, wp_list_pluck($child_terms, 'term_id'));
         } else {
             $top_terms = get_terms([
                 'taxonomy' => $taxonomy,
                 'hide_empty' => false,
                 'parent' => 0,
+                'meta_query' => $hide_in_menu_meta,
             ]);
             if (!is_wp_error($top_terms)) {
                 $term_ids = wp_list_pluck($top_terms, 'term_id');
                 foreach ($top_terms as $t) {
-                    $sub = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => false, 'parent' => $t->term_id]);
+                    $sub = get_terms([
+                        'taxonomy' => $taxonomy,
+                        'hide_empty' => false,
+                        'parent' => $t->term_id,
+                        'meta_query' => $hide_in_menu_meta,
+                    ]);
                     if (!is_wp_error($sub)) {
                         $term_ids = array_merge($term_ids, wp_list_pluck($sub, 'term_id'));
                     }
@@ -643,7 +733,10 @@ function kursagenten_inject_categories_and_courses_menu(
                 $permalink = add_query_arg('sc', $append_sc, $permalink);
             }
             $menu_item->url = $permalink;
-            $menu_item->classes = ['menu-item', 'menu-item-type-post_type', 'menu-item-object-ka_course', 'menu-item-' . $cid];
+            $menu_item->classes = array_merge(
+                ['menu-item', 'menu-item-type-post_type', 'menu-item-object-ka_course'],
+                $custom_classes
+            );
             $menu_item->menu_order = 0;
             $course_items[] = $menu_item;
         }
@@ -746,7 +839,16 @@ function kursagenten_inject_categories_and_courses_menu(
 
     foreach ($terms as $term) {
         $term_ids_for_courses = [$term->term_id];
-        $child_terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => false, 'parent' => $term->term_id]);
+        $child_terms = get_terms([
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+            'parent' => $term->term_id,
+            'meta_query' => [
+                'relation' => 'OR',
+                ['key' => 'hide_in_menu', 'compare' => 'NOT EXISTS'],
+                ['key' => 'hide_in_menu', 'value' => 'Vis', 'compare' => '=']
+            ]
+        ]);
         if (!is_wp_error($child_terms)) {
             $term_ids_for_courses = array_merge($term_ids_for_courses, wp_list_pluck($child_terms, 'term_id'));
         }
@@ -790,7 +892,14 @@ function kursagenten_inject_categories_and_courses_menu(
         $menu_item->post_title = $term->name;
         $menu_item->type_label = get_taxonomy($taxonomy)->labels->singular_name ?? $taxonomy;
         $menu_item->url = $term_link;
-        $menu_item->classes = ['menu-item', 'menu-item-type-taxonomy', 'menu-item-object-' . $taxonomy, 'menu-item-has-children', 'menu-item-' . $current_menu_id];
+        $term_custom = $custom_classes;
+        if (!empty($manual_item_custom_classes[$taxonomy][$term->term_id])) {
+            $term_custom = array_merge($term_custom, $manual_item_custom_classes[$taxonomy][$term->term_id]);
+        }
+        $menu_item->classes = array_merge(
+            ['menu-item', 'menu-item-type-taxonomy', 'menu-item-object-' . $taxonomy, 'menu-item-has-children'],
+            $term_custom
+        );
         $menu_item->menu_order = 0;
         $term_items[] = $menu_item;
         $term_counter++;
@@ -820,7 +929,10 @@ function kursagenten_inject_categories_and_courses_menu(
                 $permalink = add_query_arg('sc', $append_sc, $permalink);
             }
             $course_item->url = $permalink;
-            $course_item->classes = ['menu-item', 'menu-item-type-post_type', 'menu-item-object-ka_course', 'menu-item-' . $cid];
+            $course_item->classes = array_merge(
+                ['menu-item', 'menu-item-type-post_type', 'menu-item-object-ka_course'],
+                $custom_classes
+            );
             $course_item->menu_order = 0;
             $term_items[] = $course_item;
             $term_counter++;
@@ -866,8 +978,25 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
     }
 
     $new_items = array();
+
+    // Build map of custom CSS classes from manually added taxonomy items (siblings of automeny).
+    // These items are excluded below but their custom classes must be merged into generated items.
+    $manual_item_custom_classes = [];
+    foreach ($items as $item) {
+        if (in_array($item->object, ['ka_coursecategory', 'ka_instructors', 'ka_course_location'])) {
+            $custom = kursagenten_get_custom_menu_classes_from_original($item);
+            if (!empty($custom)) {
+                $tax = $item->object;
+                $oid = (int) $item->object_id;
+                if (!isset($manual_item_custom_classes[$tax])) {
+                    $manual_item_custom_classes[$tax] = [];
+                }
+                $manual_item_custom_classes[$tax][$oid] = $custom;
+            }
+        }
+    }
     
-    // Behold alle originale items først
+    // Behold alle originale items unntatt taxonomy (erstattes av automeny)
     foreach ($items as $item) {
         if (!in_array($item->object, ['ka_coursecategory', 'ka_instructors', 'ka_course_location'])) {
             $new_items[] = $item;
@@ -912,11 +1041,14 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
             if ($inject_only) {
                 if ($item_position !== false) {
                     array_splice($new_items, $item_position, 1);
-                }
-                foreach ($new_items as $idx => $ni) {
-                    if (isset($ni->ID) && $ni->ID == $original_item->menu_item_parent) {
-                        $splice_position = $idx + 1;
-                        break;
+                    // Insert at the automeny's original position to preserve menu order (e.g. Betaling before automeny)
+                    $splice_position = $item_position;
+                } else {
+                    foreach ($new_items as $idx => $ni) {
+                        if (isset($ni->ID) && $ni->ID == $original_item->menu_item_parent) {
+                            $splice_position = $idx + 1;
+                            break;
+                        }
                     }
                 }
             } else {
@@ -957,7 +1089,8 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                     $st_filter,
                     $skjul_sted_chip,
                     $vis_kun_kurs,
-                    $vis_kun_subkategorier
+                    $vis_kun_subkategorier,
+                    $manual_item_custom_classes
                 );
                 continue;
             }
@@ -1031,7 +1164,14 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                 // Kun sc=0 for positiv st-filter – for "ikke-xxx" vis stedfilteret slik at bruker kan velge annet sted
                 $append_sc = ($skjul_sted_chip && !empty($st_filter) && stripos($st_filter, 'ikke-') !== 0) ? '0' : '';
 
-                $add_term_and_children = function($term, $parent_menu_id) use (&$term_items, &$term_counter, &$base_id, $taxonomy, $original_item, $append_st, $append_sc, &$add_term_and_children) {
+                $custom_classes = kursagenten_get_custom_classes_for_virtual_items(
+                    $new_items,
+                    (int) $parent_menu_id,
+                    $inject_only,
+                    $original_item
+                );
+
+                $add_term_and_children = function($term, $parent_menu_id) use (&$term_items, &$term_counter, &$base_id, $taxonomy, $original_item, $append_st, $append_sc, $custom_classes, $manual_item_custom_classes, &$add_term_and_children) {
                     $current_menu_id = $base_id + $term_counter;
                     
                     // Create menu item for this term - do NOT copy label from parent (would override title in admin)
@@ -1068,11 +1208,17 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                         }
                     }
                     $menu_item->url = is_wp_error($term_link) ? '#' : $term_link;
-                    $menu_item->classes = array(
-                        'menu-item',
-                        'menu-item-type-taxonomy',
-                        'menu-item-object-' . $taxonomy,
-                        'menu-item-' . $current_menu_id
+                    $term_custom = $custom_classes;
+                    if (!empty($manual_item_custom_classes[$taxonomy][$term->term_id])) {
+                        $term_custom = array_merge($term_custom, $manual_item_custom_classes[$taxonomy][$term->term_id]);
+                    }
+                    $menu_item->classes = array_merge(
+                        [
+                            'menu-item',
+                            'menu-item-type-taxonomy',
+                            'menu-item-object-' . $taxonomy
+                        ],
+                        $term_custom
                     );
                     $menu_item->menu_order = 0;
                     
@@ -1232,6 +1378,26 @@ add_action('wp_update_nav_menu', function($menu_id) {
     wp_cache_delete($menu_id, 'nav_menu_items');
     delete_transient('kursagenten_menu_items_' . $menu_id);
 });
+
+/**
+ * Clear all Kursagenten menu transients when a taxonomy term is updated.
+ * Needed because hide_in_menu (and other term meta) affects menu output,
+ * but changing it does not trigger wp_update_nav_menu.
+ */
+function kursagenten_clear_menu_cache_on_term_edit(): void {
+    $menus = wp_get_nav_menus();
+    if (is_array($menus)) {
+        foreach ($menus as $menu) {
+            delete_transient('kursagenten_menu_items_' . $menu->term_id);
+        }
+    }
+}
+add_action('edited_ka_coursecategory', 'kursagenten_clear_menu_cache_on_term_edit');
+add_action('edited_ka_course_location', 'kursagenten_clear_menu_cache_on_term_edit');
+add_action('edited_ka_instructors', 'kursagenten_clear_menu_cache_on_term_edit');
+add_action('created_ka_coursecategory', 'kursagenten_clear_menu_cache_on_term_edit');
+add_action('created_ka_course_location', 'kursagenten_clear_menu_cache_on_term_edit');
+add_action('created_ka_instructors', 'kursagenten_clear_menu_cache_on_term_edit');
 
 function ensure_menu_item_taxonomy($menu_id) {
     

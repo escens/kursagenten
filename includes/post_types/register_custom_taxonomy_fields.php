@@ -150,7 +150,7 @@ function add_taxonomy_visibility_field($term) {
     }
     ?>
     <tr class="form-field">
-        <th scope="row"><label for="hide_in_list">Synlighet</label></th>
+        <th scope="row"><label for="hide_in_list">Synlighet lister</label></th>
         <td>
             <label style="margin-right: 15px;">
                 <input type="radio" name="hide_in_list" value="Vis" <?php checked($visibility, 'Vis'); ?>>
@@ -192,6 +192,19 @@ function add_taxonomy_visibility_field($term) {
             <p class="description">Velg om denne kategorien og tilhørende kurs skal vises i kurslisten.</p>
         </td>
     </tr>
+    <tr class="form-field">
+        <th scope="row"><label for="show_category_filter_on_archive">Kategorifilter på kategorisiden</label></th>
+        <td>
+            <?php
+            $show_filter_on_archive = get_term_meta($term->term_id, 'show_category_filter_on_archive', true);
+            ?>
+            <label>
+                <input type="checkbox" name="show_category_filter_on_archive" value="yes" <?php checked($show_filter_on_archive, 'yes'); ?>>
+                Vis kategorifilter (visningstype Alle kursdatoer)
+            </label>
+            <p class="description">Vis filter med kategorier som også er brukt på kurs med denne kategorien, i tillegg til underkategoriene. Nyttig om du ikke kan lage en hovedkategori med underkategorier, men vil ha mulighet til å filtrere litkevel.</p>
+        </td>
+    </tr>
     <?php endif; ?>
     <?php
 }
@@ -210,7 +223,7 @@ function add_quick_edit_visibility_field($column_name, $taxonomy) {
     <fieldset>
         <div class="inline-edit-col">
             <label>
-                <span class="title">Synlighet</span>
+                <span class="title">Synlighet lister</span>
                 <span class="input-text-wrap">
                     <label class="alignleft" style="margin-right: 15px;">
                         <input type="radio" name="quick_edit_hide_in_list" value="Vis">
@@ -258,12 +271,25 @@ function add_quick_edit_visibility_field($column_name, $taxonomy) {
             </label>
         </div>
     </fieldset>
+    <fieldset class="category-filter-visibility" style="display:none">
+        <div class="inline-edit-col">
+            <label>
+                <span class="title">Kursfilter</span>
+                <span class="input-text-wrap">
+                    <label class="alignleft">
+                        <input type="checkbox" name="quick_edit_show_category_filter_on_archive" value="yes">
+                        <span class="checkbox-title">Vis kursfilter på kategoriside</span>
+                    </label>
+                </span>
+            </label>
+        </div>
+    </fieldset>
     <?php
 }
 
 // Legg til kolonne i taksonomi-tabellen
 function add_taxonomy_visibility_column($columns) {
-    $columns['visibility'] = 'Synlighet';
+    $columns['visibility'] = 'Synlighet lister';
     
     // Add region column for location taxonomy if regions are enabled
     global $current_screen;
@@ -294,6 +320,10 @@ function manage_taxonomy_visibility_column($content, $column_name, $term_id) {
         }
         if ($course_list_visibility === 'Skjul') {
             $output .= '<span class="visibility-tag" style="color: rgb(226, 91, 102);">Skjult i kursliste</span>';
+        }
+        $show_filter_on_archive = get_term_meta($term_id, 'show_category_filter_on_archive', true);
+        if ($show_filter_on_archive === 'yes') {
+            $output .= '<span class="visibility-tag" style="color: #2271b1;">Vis kategorifilter</span>';
         }
         
         return $output;
@@ -476,6 +506,16 @@ function save_taxonomy_field($term_id) {
         }
     }
     
+    // Handle checkbox fields that don't submit when unchecked (ka_coursecategory only).
+    // Skip during AJAX requests (e.g. bulk updates) so those handlers can control the value.
+    if (!(defined('DOING_AJAX') && DOING_AJAX)) {
+        $current_term = get_term($term_id);
+        if ($current_term && $current_term->taxonomy === 'ka_coursecategory') {
+            $show_filter = (isset($_POST['show_category_filter_on_archive']) && $_POST['show_category_filter_on_archive'] === 'yes') ? 'yes' : '';
+            update_term_meta($term_id, 'show_category_filter_on_archive', $show_filter);
+        }
+    }
+
     // Håndter image_instructor_ka separat siden det er spesialtilfelle
     if (isset($_POST['image_instructor_ka'])) {
         $image_edited = get_term_meta($term_id, 'instructor_image_edited', true) === 'yes';
@@ -524,10 +564,25 @@ foreach ($taxonomies as $taxonomy) {
     
     // Lagre hurtigredigering
     add_action("edited_{$taxonomy}", 'save_quick_edit_visibility');
+
+    // Registrer bulk-handling for masseredigering
+    add_filter("bulk_actions-edit-{$taxonomy}", 'kursagenten_register_bulk_visibility_action');
 }
 
 // Legg til quick edit
 add_action('quick_edit_custom_box', 'add_quick_edit_visibility_field', 10, 2);
+
+/**
+ * Register custom bulk action label for taxonomy list tables.
+ *
+ * @param array $bulk_actions Existing bulk actions.
+ * @return array
+ */
+function kursagenten_register_bulk_visibility_action($bulk_actions) {
+    // Key used in JS to trigger our modal
+    $bulk_actions['kursagenten_bulk_edit_visibility'] = __('Kursagenten: Masserediger synlighet', 'kursagenten');
+    return $bulk_actions;
+}
 
 // JavaScript for å håndtere hurtigredigering
 function add_quick_edit_javascript() {
@@ -554,17 +609,21 @@ function add_quick_edit_javascript() {
                     var list_visibility = visibilityText.includes('Skjult i lister') ? 'Skjul' : 'Vis';
                     var menu_visibility = visibilityText.includes('Skjult i menyer') ? 'Skjul' : 'Vis';
                     var course_list_visibility = visibilityText.includes('Skjult i kursliste') ? 'Skjul' : 'Vis';
+                    var show_category_filter = visibilityText.includes('Vis kategorifilter');
                     
                     // Sett radio-knappene
                     $('input[name="quick_edit_hide_in_list"][value="' + list_visibility + '"]').prop('checked', true);
                     $('input[name="quick_edit_hide_in_menu"][value="' + menu_visibility + '"]').prop('checked', true);
                     $('input[name="quick_edit_hide_in_course_list"][value="' + course_list_visibility + '"]').prop('checked', true);
+                    $('input[name="quick_edit_show_category_filter_on_archive"]').prop('checked', show_category_filter);
                     
                     // Vis/skjul kursliste-feltet basert på taksonomi
                     if (isCourseCategory) {
                         $('.course-list-visibility').show();
+                        $('.category-filter-visibility').show();
                     } else {
                         $('.course-list-visibility').hide();
+                        $('.category-filter-visibility').hide();
                     }
                 }
             };
@@ -573,6 +632,289 @@ function add_quick_edit_javascript() {
     <?php
 }
 add_action('admin_footer-edit-tags.php', 'add_quick_edit_javascript');
+
+/**
+ * Output bulk visibility modal and JS for taxonomy list screens.
+ * Works for: ka_coursecategory, ka_course_location, ka_instructors.
+ */
+function kursagenten_add_bulk_visibility_modal() {
+    $screen = function_exists('get_current_screen') ? get_current_screen() : null;
+    if (!$screen || $screen->base !== 'edit-tags' || empty($screen->taxonomy)) {
+        return;
+    }
+
+    $taxonomy = $screen->taxonomy;
+    $supported_taxonomies = array('ka_coursecategory', 'ka_course_location', 'ka_instructors');
+    if (!in_array($taxonomy, $supported_taxonomies, true)) {
+        return;
+    }
+
+    // Fetch top-level terms for parent dropdown
+    $parent_terms = get_terms(array(
+        'taxonomy'   => $taxonomy,
+        'hide_empty' => false,
+        'parent'     => 0,
+        'orderby'    => 'name',
+        'order'      => 'ASC',
+    ));
+
+    $ajax_url = admin_url('admin-ajax.php');
+    $nonce    = wp_create_nonce('kursagenten_bulk_visibility');
+    ?>
+    <div id="kursagenten-bulk-visibility-backdrop" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:100000;"></div>
+    <div id="kursagenten-bulk-visibility-modal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); background:#fff; padding:24px 28px; max-width:640px; width:95%; box-shadow:0 12px 40px rgba(0,0,0,.25); border-radius:8px; z-index:100001;">
+        <h2 style="margin-top:0; margin-bottom:12px;">Masseredigering av synlighet</h2>
+        <p style="margin-top:0; color:#555;">Endringene under gjelder for alle valgte termer. Felter satt til «Ikke endre» blir hoppet over.</p>
+
+        <form id="kursagenten-bulk-visibility-form">
+            <input type="hidden" id="kursagenten-bulk-visibility-taxonomy" name="taxonomy" value="<?php echo esc_attr($taxonomy); ?>">
+            <input type="hidden" id="kursagenten-bulk-visibility-term-ids" name="term_ids" value="">
+
+            <table class="form-table" role="presentation" style="margin-top:10px;">
+                <tbody>
+                <tr>
+                    <th scope="row"><label for="bulk_visibility">Synlighet lister</label></th>
+                    <td>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_visibility" value="" checked>
+                            Ikke endre
+                        </label>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_visibility" value="Vis">
+                            Vis
+                        </label>
+                        <label>
+                            <input type="radio" name="bulk_visibility" value="Skjul">
+                            Skjul i oversiktslister
+                        </label>
+                    </td>
+                </tr>
+                <tr>
+                    <th scope="row"><label for="bulk_menu_visibility">Menyer</label></th>
+                    <td>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_menu_visibility" value="" checked>
+                            Ikke endre
+                        </label>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_menu_visibility" value="Vis">
+                            Vis
+                        </label>
+                        <label>
+                            <input type="radio" name="bulk_menu_visibility" value="Skjul">
+                            Skjul i automenyer
+                        </label>
+                    </td>
+                </tr>
+                <tr class="bulk-course-list-row">
+                    <th scope="row"><label for="bulk_course_list_visibility">Kursliste</label></th>
+                    <td>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_course_list_visibility" value="" checked>
+                            Ikke endre
+                        </label>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_course_list_visibility" value="Vis">
+                            Vis
+                        </label>
+                        <label>
+                            <input type="radio" name="bulk_course_list_visibility" value="Skjul">
+                            Skjul tilhørende kurs, og i kategorifilter
+                        </label>
+                    </td>
+                </tr>
+                <tr class="bulk-category-filter-row">
+                    <th scope="row"><label for="bulk_category_filter">Kursfilter på kategoriside</label></th>
+                    <td>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_category_filter" value="" checked>
+                            Ikke endre
+                        </label>
+                        <label style="margin-right:15px;">
+                            <input type="radio" name="bulk_category_filter" value="on">
+                            Slå på
+                        </label>
+                        <label>
+                            <input type="radio" name="bulk_category_filter" value="off">
+                            Slå av
+                        </label>
+                    </td>
+                </tr>
+                <tr class="bulk-parent-row">
+                    <th scope="row"><label for="bulk_parent_action">Foreldrekategori</label></th>
+                    <td>
+                        <p style="margin-top:0; margin-bottom:6px;">Gjelder foreldrekategori for alle valgte kurskategorier.</p>
+                        <label style="display:block; margin-bottom:4px;">
+                            <input type="radio" name="bulk_parent_action" value="" checked>
+                            Ikke endre foreldrekategori
+                        </label>
+                        <label style="display:block; margin-bottom:4px;">
+                            <input type="radio" name="bulk_parent_action" value="set">
+                            Sett foreldrekategori til:
+                        </label>
+                        <select name="bulk_parent_term_id" id="bulk_parent_term_id" class="widefat" style="max-width:280px; margin:4px 0 8px 22px;" disabled>
+                            <option value=""><?php echo esc_html__('Velg foreldrekategori', 'kursagenten'); ?></option>
+                            <option value="0"><?php echo esc_html__('Ingen foreldrekategori (toppnivå)', 'kursagenten'); ?></option>
+                            <?php
+                            if (!is_wp_error($parent_terms) && !empty($parent_terms)) :
+                                foreach ($parent_terms as $term) :
+                                    ?>
+                                    <option value="<?php echo esc_attr($term->term_id); ?>">
+                                        <?php echo esc_html($term->name); ?>
+                                    </option>
+                                    <?php
+                                endforeach;
+                            endif;
+                            ?>
+                        </select>
+                        <label style="display:block; margin-bottom:0;">
+                            <input type="radio" name="bulk_parent_action" value="unset">
+                            Fjern foreldrekategori (flytt til toppnivå)
+                        </label>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <p class="submit" style="margin-top:18px; display:flex; gap:8px; justify-content:flex-end;">
+                <button type="button" class="button button-secondary" id="kursagenten-bulk-visibility-cancel">Avbryt</button>
+                <button type="submit" class="button button-primary" id="kursagenten-bulk-visibility-save">Lagre</button>
+            </p>
+        </form>
+    </div>
+    <script type="text/javascript">
+        jQuery(document).ready(function($) {
+            var ajaxUrl = <?php echo wp_json_encode($ajax_url); ?>;
+            var bulkNonce = <?php echo wp_json_encode($nonce); ?>;
+            var currentTaxonomy = <?php echo wp_json_encode($taxonomy); ?>;
+
+            // Hide rows that are only relevant for course categories
+            if (currentTaxonomy !== 'ka_coursecategory') {
+                $('.bulk-course-list-row').hide();
+                $('.bulk-category-filter-row').hide();
+                $('.bulk-parent-row').hide();
+            }
+
+            function openBulkModal(termIds) {
+                $('#kursagenten-bulk-visibility-term-ids').val(termIds.join(','));
+                $('#kursagenten-bulk-visibility-backdrop').show();
+                $('#kursagenten-bulk-visibility-modal').show();
+            }
+
+            function closeBulkModal() {
+                $('#kursagenten-bulk-visibility-backdrop').hide();
+                $('#kursagenten-bulk-visibility-modal').hide();
+            }
+
+            function getSelectedTermIds() {
+                var ids = [];
+                $('input[name="delete_tags[]"]:checked').each(function() {
+                    var val = parseInt($(this).val(), 10);
+                    if (!isNaN(val)) {
+                        ids.push(val);
+                    }
+                });
+                return ids;
+            }
+
+            function handleBulkClick(e) {
+                var actionTop = $('#bulk-action-selector-top').val();
+                var actionBottom = $('#bulk-action-selector-bottom').val();
+                var action = actionTop !== '-1' ? actionTop : actionBottom;
+
+                if (action !== 'kursagenten_bulk_edit_visibility') {
+                    return;
+                }
+
+                e.preventDefault();
+
+                var termIds = getSelectedTermIds();
+                if (!termIds.length) {
+                    alert('Velg minst én rad før du bruker masseredigering.');
+                    return;
+                }
+
+                // Reset form to default
+                $('#kursagenten-bulk-visibility-form')[0].reset();
+                $('#bulk_parent_term_id').prop('disabled', true);
+
+                openBulkModal(termIds);
+            }
+
+            $('#doaction, #doaction2').on('click', handleBulkClick);
+
+            // Parent action: enable/disable select
+            $('body').on('change', 'input[name="bulk_parent_action"]', function() {
+                var val = $('input[name="bulk_parent_action"]:checked').val();
+                if (val === 'set') {
+                    $('#bulk_parent_term_id').prop('disabled', false);
+                } else {
+                    $('#bulk_parent_term_id').prop('disabled', true);
+                }
+            });
+
+            $('#kursagenten-bulk-visibility-cancel, #kursagenten-bulk-visibility-backdrop').on('click', function(e) {
+                e.preventDefault();
+                closeBulkModal();
+            });
+
+            $('#kursagenten-bulk-visibility-form').on('submit', function(e) {
+                e.preventDefault();
+
+                var termIdsValue = $('#kursagenten-bulk-visibility-term-ids').val();
+                if (!termIdsValue) {
+                    closeBulkModal();
+                    return;
+                }
+
+                var termIds = termIdsValue.split(',').map(function(id) {
+                    return parseInt(id, 10);
+                }).filter(function(id) {
+                    return !isNaN(id);
+                });
+
+                if (!termIds.length) {
+                    closeBulkModal();
+                    return;
+                }
+
+                var data = {
+                    action: 'kursagenten_bulk_update_visibility',
+                    nonce: bulkNonce,
+                    taxonomy: currentTaxonomy,
+                    term_ids: termIds,
+                    bulk_visibility: $('input[name="bulk_visibility"]:checked').val() || '',
+                    bulk_menu_visibility: $('input[name="bulk_menu_visibility"]:checked').val() || '',
+                    bulk_course_list_visibility: $('input[name="bulk_course_list_visibility"]:checked').val() || '',
+                    bulk_category_filter: $('input[name="bulk_category_filter"]:checked').val() || '',
+                    bulk_parent_action: $('input[name="bulk_parent_action"]:checked').val() || '',
+                    bulk_parent_term_id: $('#bulk_parent_term_id').val()
+                };
+
+                $('#kursagenten-bulk-visibility-save').prop('disabled', true);
+
+                $.post(ajaxUrl, data)
+                    .done(function(response) {
+                        if (response && response.success) {
+                            // Reload to reflect changes
+                            window.location.reload();
+                        } else {
+                            alert(response && response.data ? response.data : 'Noe gikk galt ved masseredigering.');
+                        }
+                    })
+                    .fail(function() {
+                        alert('Noe gikk galt ved kommunikasjon med serveren.');
+                    })
+                    .always(function() {
+                        $('#kursagenten-bulk-visibility-save').prop('disabled', false);
+                        closeBulkModal();
+                    });
+            });
+        });
+    </script>
+    <?php
+}
+add_action('admin_footer-edit-tags.php', 'kursagenten_add_bulk_visibility_modal');
 
 // Endre "Beskrivelse" til "Kort beskrivelse" for alle taksonomier
 function kursagenten_change_description_label($translated_text, $text, $domain) {
@@ -730,6 +1072,13 @@ function kursagenten_add_instructor_styles() {
         }
         
         body.taxonomy-ka_coursecategory .course-list-visibility {
+            display: block !important;
+        }
+        .category-filter-visibility {
+            display: none;
+        }
+        
+        body.taxonomy-ka_coursecategory .category-filter-visibility {
             display: block !important;
         }
     </style>
@@ -1439,8 +1788,132 @@ function save_quick_edit_visibility($term_id) {
     $term = get_term($term_id);
     if ($term && $term->taxonomy === 'ka_coursecategory') {
         update_term_meta($term_id, 'hide_in_course_list', $hide_in_course_list);
+        
+        // Håndter kursfilter på kategoriside
+        $show_filter = (isset($_POST['quick_edit_show_category_filter_on_archive']) && $_POST['quick_edit_show_category_filter_on_archive'] === 'yes') ? 'yes' : '';
+        update_term_meta($term_id, 'show_category_filter_on_archive', $show_filter);
     }
 }
+
+/**
+ * Handle AJAX bulk update of visibility and parent for taxonomy terms.
+ */
+function kursagenten_bulk_update_visibility() {
+    if (!isset($_POST['nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['nonce'])), 'kursagenten_bulk_visibility')) {
+        wp_send_json_error('Sikkerhetsverifisering feilet');
+    }
+
+    if (!current_user_can('manage_categories')) {
+        wp_send_json_error('Du har ikke tilgang til å utføre denne handlingen');
+    }
+
+    $taxonomy = isset($_POST['taxonomy']) ? sanitize_key(wp_unslash($_POST['taxonomy'])) : '';
+    $supported_taxonomies = array('ka_coursecategory', 'ka_course_location', 'ka_instructors');
+    if (!in_array($taxonomy, $supported_taxonomies, true)) {
+        wp_send_json_error('Ugyldig taksonomi');
+    }
+
+    $term_ids_raw = isset($_POST['term_ids']) ? (array) $_POST['term_ids'] : array();
+    $term_ids = array();
+    foreach ($term_ids_raw as $id) {
+        $id = (int) $id;
+        if ($id > 0) {
+            $term_ids[] = $id;
+        }
+    }
+
+    if (empty($term_ids)) {
+        wp_send_json_error('Ingen termer valgt');
+    }
+
+    // Tri-state values for visibility and menu
+    $bulk_visibility       = isset($_POST['bulk_visibility']) ? sanitize_text_field(wp_unslash($_POST['bulk_visibility'])) : '';
+    $bulk_menu_visibility  = isset($_POST['bulk_menu_visibility']) ? sanitize_text_field(wp_unslash($_POST['bulk_menu_visibility'])) : '';
+    $bulk_course_list_vis  = isset($_POST['bulk_course_list_visibility']) ? sanitize_text_field(wp_unslash($_POST['bulk_course_list_visibility'])) : '';
+    $bulk_category_filter  = isset($_POST['bulk_category_filter']) ? sanitize_text_field(wp_unslash($_POST['bulk_category_filter'])) : '';
+    $bulk_parent_action    = isset($_POST['bulk_parent_action']) ? sanitize_text_field(wp_unslash($_POST['bulk_parent_action'])) : '';
+    $bulk_parent_term_id   = isset($_POST['bulk_parent_term_id']) ? (int) $_POST['bulk_parent_term_id'] : null;
+
+    $allowed_visibility_values = array('', 'Vis', 'Skjul');
+    if (!in_array($bulk_visibility, $allowed_visibility_values, true)) {
+        $bulk_visibility = '';
+    }
+    if (!in_array($bulk_menu_visibility, $allowed_visibility_values, true)) {
+        $bulk_menu_visibility = '';
+    }
+    if (!in_array($bulk_course_list_vis, $allowed_visibility_values, true)) {
+        $bulk_course_list_vis = '';
+    }
+
+    $allowed_category_filter_values = array('', 'on', 'off');
+    if (!in_array($bulk_category_filter, $allowed_category_filter_values, true)) {
+        $bulk_category_filter = '';
+    }
+
+    $allowed_parent_actions = array('', 'set', 'unset');
+    if (!in_array($bulk_parent_action, $allowed_parent_actions, true)) {
+        $bulk_parent_action = '';
+    }
+
+    foreach ($term_ids as $term_id) {
+        // Validate that term exists and belongs to taxonomy
+        $term = get_term($term_id, $taxonomy);
+        if (!$term || is_wp_error($term)) {
+            continue;
+        }
+
+        // Visibility in lists
+        if ($bulk_visibility !== '') {
+            update_term_meta($term_id, 'hide_in_list', $bulk_visibility);
+        }
+
+        // Menu visibility
+        if ($bulk_menu_visibility !== '') {
+            update_term_meta($term_id, 'hide_in_menu', $bulk_menu_visibility);
+        }
+
+        // Course list visibility and category filter only for course categories
+        if ($taxonomy === 'ka_coursecategory') {
+            if ($bulk_course_list_vis !== '') {
+                update_term_meta($term_id, 'hide_in_course_list', $bulk_course_list_vis);
+            }
+
+            if ($bulk_category_filter === 'on') {
+                update_term_meta($term_id, 'show_category_filter_on_archive', 'yes');
+            } elseif ($bulk_category_filter === 'off') {
+                update_term_meta($term_id, 'show_category_filter_on_archive', '');
+            }
+        }
+
+        // Parent handling: only for course categories
+        if ($taxonomy === 'ka_coursecategory') {
+            if ($bulk_parent_action === 'set') {
+                // Use provided parent term id (0 = no parent / top level)
+                if ($bulk_parent_term_id !== null && $bulk_parent_term_id >= 0) {
+                    wp_update_term(
+                        $term_id,
+                        $taxonomy,
+                        array(
+                            'parent' => $bulk_parent_term_id,
+                        )
+                    );
+                }
+            } elseif ($bulk_parent_action === 'unset') {
+                // Move to top level
+                wp_update_term(
+                    $term_id,
+                    $taxonomy,
+                    array(
+                        'parent' => 0,
+                    )
+                );
+            }
+        }
+    }
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_kursagenten_bulk_update_visibility', 'kursagenten_bulk_update_visibility');
 
 // Legg til ny AJAX-handler for å fjerne kun profil-edited-felter
 function remove_instructor_profile_edited() {

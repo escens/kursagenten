@@ -308,13 +308,21 @@ function kursagenten_course_list_shortcode($atts) {
         function should_hide_filter($filter_key, $active_shortcode_filters) {
             // Spesiell håndtering for ka_coursecategory taksonomi-sider
             if ($filter_key === 'categories' && is_tax('ka_coursecategory')) {
-                // Sjekk om vi er på en foreldrekategori (som har barn)
                 $current_term = get_queried_object();
-                if ($current_term && $current_term->parent == 0) {
-                    // Vi er på en foreldrekategori - vis barnekategorier
-                    return false;
-                } else {
-                    // Vi er på en underkategori - skjul hele kategori-filteret
+                if ($current_term) {
+                    // Parent category: always show category filter
+                    if ($current_term->parent == 0) {
+                        return false;
+                    }
+
+                    // Child category: respect "show_category_filter_on_archive" setting
+                    $show_filter_on_archive = (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+                    if ($show_filter_on_archive) {
+                        // Allow category filter on child category when explicitly enabled
+                        return false;
+                    }
+
+                    // Default behavior for child categories without the setting: hide category filter
                     return true;
                 }
             }
@@ -943,12 +951,27 @@ function kursagenten_course_list_shortcode($atts) {
     <!-- Filter Settings for JavaScript -->
     <script id="filter-settings" type="application/json">
         <?php
+        // Base filter konfigurasjon
         $filter_data = [
-            'top_filters' => get_option('kursagenten_top_filters', []),
-            'left_filters' => get_option('kursagenten_left_filters', []),
-            'filter_types' => get_option('kursagenten_filter_types', []),
+            'top_filters'   => get_option('kursagenten_top_filters', []),
+            'left_filters'  => get_option('kursagenten_left_filters', []),
+            'filter_types'  => get_option('kursagenten_filter_types', []),
             'available_filters' => get_option('kursagenten_available_filters', []),
         ];
+
+        // Ekstra flagg: enkelvalg for kategorier på kurskategorisider
+        // Når vi står på en ka_coursecategory-side og termen har "show_category_filter_on_archive",
+        // skal kategori-filteret oppføre seg som chips (kun én aktiv om gangen), selv om UI-et er avkrysningsbokser.
+        $single_select_categories = false;
+        if (is_tax('ka_coursecategory')) {
+            $current_term = get_queried_object();
+            if ($current_term && $current_term->taxonomy === 'ka_coursecategory') {
+                $single_select_categories = (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+            }
+        }
+
+        $filter_data['single_select_categories'] = $single_select_categories;
+
         echo json_encode($filter_data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
         ?>
     </script>

@@ -143,13 +143,21 @@ if (!function_exists('should_hide_filter_mobile')) {
     function should_hide_filter_mobile($filter_key, $active_shortcode_filters) {
         // Spesiell håndtering for ka_coursecategory taksonomi-sider
         if ($filter_key === 'categories' && is_tax('ka_coursecategory')) {
-            // Sjekk om vi er på en foreldrekategori (som har barn)
             $current_term = get_queried_object();
-            if ($current_term && $current_term->parent == 0) {
-                // Vi er på en foreldrekategori - vis barnekategorier
-                return false;
-            } else {
-                // Vi er på en underkategori - skjul hele kategori-filteret
+            if ($current_term) {
+                // Parent category: always show category filter
+                if ($current_term->parent == 0) {
+                    return false;
+                }
+
+                // Child category: respect "show_category_filter_on_archive" setting
+                $show_filter_on_archive = (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+                if ($show_filter_on_archive) {
+                    // Allow category filter on child category when explicitly enabled
+                    return false;
+                }
+
+                // Default behavior for child categories without the setting: hide category filter
                 return true;
             }
         }

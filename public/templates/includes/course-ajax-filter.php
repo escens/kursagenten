@@ -31,45 +31,145 @@ function get_filtered_terms_for_context($taxonomy) {
         if ($current_term && $current_term->taxonomy === 'ka_coursecategory') {
             // Sjekk om vi er på en foreldrekategori (parent = 0)
             if ($current_term->parent == 0) {
-                // Vi er på en foreldrekategori, vis kun barnekategoriene
+                $meta_query = [
+                    'relation' => 'OR',
+                    [
+                        'key' => 'hide_in_course_list',
+                        'value' => 'Vis',
+                    ],
+                    [
+                        'key' => 'hide_in_course_list',
+                        'compare' => 'NOT EXISTS'
+                    ]
+                ];
+
+                // Vi er på en foreldrekategori, vis barnekategoriene
                 $child_categories = get_terms([
                     'taxonomy' => $normalized_taxonomy,
                     'hide_empty' => true,
                     'parent' => $current_term->term_id,
                     'orderby' => 'menu_order',
                     'order' => 'ASC',
-                    'meta_query' => [
-                        'relation' => 'OR',
-                        [
-                            'key' => 'hide_in_course_list',
-                            'value' => 'Vis',
-                        ],
-                        [
-                            'key' => 'hide_in_course_list',
-                            'compare' => 'NOT EXISTS'
-                        ]
-                    ]
+                    'meta_query' => $meta_query
                 ]);
-                
+
+                $candidates = [];
                 if (!is_wp_error($child_categories) && !empty($child_categories)) {
-                    // IKKE legg til parent-informasjon når barnekategoriene skal vises som flat liste
-                    // Dette forhindrer at de får ka-child klassen og blir skjult av CSS
                     foreach ($child_categories as $child) {
                         $child->parent_class = '';
                         $child->parent_id = 0;
+                        $candidates[] = $child;
                     }
-                    return $child_categories;
-                } else {
-                    // Ingen barnekategorier, returner tom array
-                    return [];
                 }
+
+                // Hvis innstillingen er aktivert: legg til søskenkategorier (andre toppnivå-kategorier)
+                $show_siblings = (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+                if ($show_siblings) {
+                    $sibling_categories = get_terms([
+                        'taxonomy' => $normalized_taxonomy,
+                        'hide_empty' => true,
+                        'parent' => 0,
+                        'exclude' => [$current_term->term_id],
+                        'orderby' => 'menu_order',
+                        'order' => 'ASC',
+                        'meta_query' => $meta_query
+                    ]);
+                    if (!is_wp_error($sibling_categories) && !empty($sibling_categories)) {
+                        foreach ($sibling_categories as $sibling) {
+                            $sibling->parent_class = '';
+                            $sibling->parent_id = 0;
+                            $candidates[] = $sibling;
+                        }
+                    }
+                }
+
+                // Filter: kun vis kategorier som har minst ett kurs med BÅDE current_term OG denne kategorien (AND)
+                $result = ka_filter_terms_with_intersection($candidates, $current_term->term_id, $normalized_taxonomy);
+                return $result;
+            } else {
+                // We are on a child category. If archive category filter is enabled for this term,
+                // limit the filter options to categories that share at least one visible coursedate
+                // with the current child category.
+                $show_filter_on_archive = (get_term_meta($current_term->term_id, 'show_category_filter_on_archive', true) === 'yes');
+
+                if ($show_filter_on_archive) {
+                    // Start from the standard visible terms for this taxonomy
+                    $all_terms = get_filtered_terms($normalized_taxonomy);
+
+                    if (!empty($all_terms)) {
+                        // Reuse the intersection helper so we only keep terms that actually
+                        // intersect with the current child category via shared coursedates.
+                        return ka_filter_terms_with_intersection($all_terms, $current_term->term_id, $normalized_taxonomy);
+                    }
+                }
+                // If the setting is not enabled or no intersecting terms are found,
+                // fall back to the default behavior below.
             }
-            // Hvis vi er på en barnekategori, bruk standard funksjon
         }
     }
     
     // For alle andre tilfeller, bruk standard get_filtered_terms
     return get_filtered_terms($normalized_taxonomy);
+}
+
+/**
+ * Filter terms to only those that have at least one visible coursedate with BOTH the base term AND the candidate term.
+ * Used when showing sibling categories with AND logic - only show categories that have overlapping courses.
+ *
+ * @param array  $terms      Array of term objects (candidates)
+ * @param int    $base_term_id Base term ID (e.g. current page category)
+ * @param string $taxonomy   Taxonomy name
+ * @return array Filtered terms
+ */
+function ka_filter_terms_with_intersection($terms, $base_term_id, $taxonomy = 'ka_coursecategory') {
+    if (empty($terms)) {
+        return [];
+    }
+
+    $hidden_categories = get_terms([
+        'taxonomy' => 'ka_coursecategory',
+        'hide_empty' => true,
+        'meta_query' => [
+            ['key' => 'hide_in_course_list', 'value' => 'Skjul']
+        ],
+        'fields' => 'ids'
+    ]);
+    $hidden_ids = !empty($hidden_categories) && !is_wp_error($hidden_categories) ? $hidden_categories : [];
+
+    $base_args = [
+        'post_type' => 'ka_coursedate',
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+        'meta_query' => [
+            'relation' => 'OR',
+            ['key' => 'hide_in_course_list', 'value' => 'Vis'],
+            ['key' => 'hide_in_course_list', 'compare' => 'NOT EXISTS']
+        ],
+        'tax_query' => [
+            'relation' => 'AND',
+            ['taxonomy' => $taxonomy, 'field' => 'term_id', 'terms' => [$base_term_id]],
+        ]
+    ];
+    if (!empty($hidden_ids)) {
+        $base_args['tax_query'][] = [
+            'taxonomy' => $taxonomy,
+            'field' => 'term_id',
+            'terms' => $hidden_ids,
+            'operator' => 'NOT IN'
+        ];
+    }
+
+    $filtered = [];
+    foreach ($terms as $term) {
+        $args = $base_args;
+        $args['tax_query'][] = ['taxonomy' => $taxonomy, 'field' => 'term_id', 'terms' => [$term->term_id]];
+        $q = new WP_Query($args);
+        if ($q->found_posts > 0) {
+            $filtered[] = $term;
+        }
+    }
+    return $filtered;
 }
 
 // Funksjon for å hente filtrerte taksonomier
