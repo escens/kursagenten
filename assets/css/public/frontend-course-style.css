@@ -62,6 +62,14 @@
   --ka-shadow-darker4: 0px 20px 70px 0px rgba(15, 107, 92, 0.2);  
 }
 
+/* Background classes - set via Designvariabler (Bakgrunn fremhevede områder / Alternativ farge for bokser) */
+.ka-highlight-background {
+  background-color: var(--ka-highlight-background, var(--ka-alt-background));
+}
+.ka-box-background {
+  background-color: var(--ka-box-background, var(--ka-highlight-background, var(--ka-alt-background)));
+}
+
 /* Screen reader only class - hides content visually but keeps it for SEO and accessibility */
 .sr-only {
   position: absolute;
@@ -207,7 +215,6 @@ button{
 /* --Box */
 /****************/
 #ka .ka-box {
-background: var(--ka-box-background);
 margin: 1em 0;
 padding: 1em 1.5em;
 border-radius: 10px;

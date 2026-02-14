@@ -189,6 +189,20 @@ class Designmaler {
                                        value="<?php echo esc_attr(get_option('kursagenten_highlight_background', '')); ?>"
                                        class="ka-color-picker"
                                        data-default-color="">
+                                <p class="description">Normalt sett er disse områdene litt mørkere enn bakgrunnen. Brukes også som hovedfarge på bokser i "Bokser"-design.</p>
+                            </div>
+                        </div>
+
+                        <!-- Alternativ farge for bokser -->
+                        <div class="option-row">
+                            <label class="option-label">Alternativ farge for bokser:</label>
+                            <div class="option-input">
+                                <input type="text" 
+                                       name="kursagenten_box_background" 
+                                       value="<?php echo esc_attr(get_option('kursagenten_box_background', '')); ?>"
+                                       class="ka-color-picker"
+                                       data-default-color="">
+                                <p class="description">Brukes for å fremheve enkelte bokser i "Bokser"-design. Hvis kun «Bakgrunn fremhevede områder» er satt, får begge samme farge.</p>
                             </div>
                         </div>
                     </div>
@@ -551,8 +565,9 @@ class Designmaler {
                                 $current_design = get_option('kursagenten_single_design', 'default');
                                 $designs = [
                                     'default' => 'Standard',
-                                    'modern' => 'Moderne',
-                                    'minimal' => 'Minimal'
+                                    'modern'  => 'Moderne',
+                                    'minimal' => 'Minimal',
+                                    'boxes'   => 'Bokser - standard',
                                 ];
                                 foreach ($designs as $value => $label) {
                                     printf(
@@ -609,9 +624,10 @@ class Designmaler {
                                 $current_design = get_option('kursagenten_taxonomy_design', 'default');
                                 $designs = [
                                     'default' => 'Standard - med bilde og beskrivelse',
-                                    'simple' => 'Enkel - Kun tittel og kort beskrivelse',
+                                    'simple'  => 'Enkel - Kun tittel og kort beskrivelse',
                                     //'default-2' => 'Standard 2 - header bilde + innholdsbilde',
-                                    'profile' => 'Profil - rundt bilde og tittel'
+                                    'profile' => 'Profil - rundt bilde og tittel',
+                                    'hero'    => 'Hero - stort bakgrunnsbilde'
                                     //'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {
@@ -1080,6 +1096,7 @@ class Designmaler {
         register_setting('design_option_group', 'kursagenten_icon_color');
         register_setting('design_option_group', 'kursagenten_background_color');
         register_setting('design_option_group', 'kursagenten_highlight_background');
+        register_setting('design_option_group', 'kursagenten_box_background');
         register_setting('design_option_group', 'kursagenten_base_font');
         register_setting('design_option_group', 'kursagenten_heading_font');
         register_setting('design_option_group', 'kursagenten_main_font');
@@ -1336,7 +1353,13 @@ class Designmaler {
 
             foreach ($valid_keys as $key) {
                 if (isset($input[$key])) {
-                    $sanitary_values[$key] = sanitize_text_field($input[$key]);
+
+                    // Use esc_url_raw for image URL fields to avoid sanitize_text_field corrupting URLs
+                    if (in_array($key, ['ka_plassholderbilde_generelt', 'ka_plassholderbilde_kurs', 'ka_plassholderbilde_instruktor', 'ka_plassholderbilde_sted'], true)) {
+                        $sanitary_values[$key] = esc_url_raw($input[$key]);
+                    } else {
+                        $sanitary_values[$key] = sanitize_text_field($input[$key]);
+                    }
                 }
             }
 

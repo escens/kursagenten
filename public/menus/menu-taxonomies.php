@@ -970,6 +970,27 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
         return $items;
     }
 
+    // Hvis menyen ikke inneholder noen Kursagenten automenyer, skal vi ikke
+    // endre strukturen i det hele tatt. Dette sikrer at helt vanlige menyer
+    // (bygd manuelt med sider/kurs som i standard WordPress) forblir urørt
+    // og beholder parent/child‑relasjoner slik temaet forventer.
+    $has_auto_menu = false;
+    foreach ((array) $items as $maybe_auto_item) {
+        if (isset($maybe_auto_item->object) && $maybe_auto_item->object === 'kursagenten_auto_menu') {
+            $has_auto_menu = true;
+            break;
+        }
+    }
+    if (!$has_auto_menu) {
+        // Fjern eventuell gammel Kursagenten‑transient for denne menyen slik
+        // at vi ikke serverer et tidligere manipulert resultat.
+        $menu_id = is_object($menu) ? $menu->term_id : (int) $menu;
+        if ($menu_id > 0) {
+            delete_transient('kursagenten_menu_items_' . $menu_id);
+        }
+        return $items;
+    }
+
     $menu_id = is_object($menu) ? $menu->term_id : (int) $menu;
     $cache_key = 'kursagenten_menu_items_' . $menu_id;
     $cached = get_transient($cache_key);

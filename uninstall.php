@@ -62,6 +62,7 @@ $options_to_delete = array(
     'kursagenten_icon_color',
     'kursagenten_background_color',
     'kursagenten_highlight_background',
+    'kursagenten_box_background',
     'kursagenten_base_font',
     'kursagenten_heading_font',
     'kursagenten_main_font',

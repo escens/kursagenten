@@ -49,7 +49,7 @@
 }
 
 /* Main Content Styles */
-#ka .taxonomy-content-grid {
+#ka .taxonomy-content-grid:not(.ka-no-content) {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--ka-space-xl);
@@ -57,7 +57,7 @@
 }
 
 @media (min-width: 768px) {
-    #ka .taxonomy-content-grid {
+    #ka .taxonomy-content-grid:not(.ka-no-content)  {
         grid-template-columns: 1fr 2fr;
         align-items: center;
     }
@@ -122,9 +122,10 @@
 }
 
 #ka .taxonomy-coursedates h2 {
-    font-size: var(--ka-font-xl);
+    text-align: center;
+    font-size: var(--ka-font-xxl);
+    margin-top: var(--ka-space-lg);
     margin-bottom: var(--ka-space-lg);
-    color: #333;
 }
 
 #ka .coursedates-grid {
@@ -496,6 +497,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--ka-space-md);
+    align-items: center;
 }
 
 #ka .filter-label {

@@ -49,6 +49,8 @@ class InstructorGrid {
         ];
 
         $a = shortcode_atts($defaults, $atts);
+        // Track if 'radavstand' was explicitly provided in the shortcode attributes
+        $a['_radavstand_provided'] = array_key_exists('radavstand', $atts) && $atts['radavstand'] !== '';
         $random_id = \StableIdGenerator::generate_id('instruktorer');
         
         // Prosesser attributter

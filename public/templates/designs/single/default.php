@@ -233,7 +233,7 @@ do_action('ka_singel_header_before');
     <?php do_action('ka_singel_header_after'); ?>
 
     <!-- DETAILS -->
-    <section class="ka-section details">
+    <section class="ka-section details ka-highlight-background">
         <div class="ka-content-container">
             <div class="course-grid col-3-1">
                 <!-- Course list -->
@@ -487,7 +487,7 @@ do_action('ka_singel_header_before');
                 <div class="aside">
                     <?php do_action('ka_singel_aside_before'); ?>
                     <?php if (!empty($contact_name)) : ?>
-                        <div class="contact-info ka-box">
+                        <div class="contact-info ka-box ka-highlight-background ka-box-background">
                             <h3>Kontaktinformasjon</h3>
                             <p>
                             <?php if (!empty($contact_name)) : ?><?php echo esc_html($contact_name); ?><br><?php endif; ?>
@@ -505,7 +505,7 @@ do_action('ka_singel_header_before');
         </div>
     </section>
     <?php do_action('ka_singel_footer_before'); ?>
-    <section class="ka-section ka-footer">
+    <section class="ka-section ka-footer ka-highlight-background">
         <div class="ka-content-container title-section">
             <h3>Kurs i samme kategori</h3>
         <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" bildeform=firkantet fontmin="13px" fontmaks="15px" avstand="2em .5em"]'); ?>

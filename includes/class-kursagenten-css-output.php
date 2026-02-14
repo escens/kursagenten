@@ -209,6 +209,7 @@ class Kursagenten_CSS_Output {
                 $css .= '#ka .taxonomy-list .ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
                 $css .= '#ka .course-container .header-content i.ka-icon { background-color: var(--ka-icon-color-lighter); }';
                 $css .= '#ka .course-container .header-content i.ka-icon:hover { background-color: var(--ka-icon-color-darker); }';
+                $css .= '#ka .ka-container .courselist-main .meta-area .accordion-icon { color: var(--ka-icon-color); }';
                 
                 // Generell regel for alle ikoner som ikke er knapper eller linker
                 $css .= '#ka i.ka-icon:not(.courselist-button i):not(.course-link i):not(.ka-button i):not(.button i):not(.course-container .header-content i) { background-color: var(--ka-icon-color); }';
@@ -228,7 +229,7 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-background-color-darker: ' . $this->adjust_lightness($background_color, -10) . ';';
                 
                 // Endre sidebakgrunn
-                $css .= '#ka { background-color: var(--ka-background-color); }';
+                $css .= '.ka-default-width, .kursagenten-full-width, #ka { background-color: var(--ka-background-color); }';
                 //$css .= '#ka .ka-section { background-color: var(--ka-background-color); }';
             }
             
@@ -237,17 +238,30 @@ class Kursagenten_CSS_Output {
                 $css .= '#ka { color: inherit; }';
             }
 
-            // Bakgrunn fremhevede områder - overskriver --ka-box-background
+            // Bakgrunn fremhevede områder og Alternativ farge for bokser
+            // If only highlight is set: both --ka-highlight-background and --ka-box-background get the same color
+            // If only box is set: only --ka-box-background gets the color
             $highlight_background = get_option('kursagenten_highlight_background', '');
+            $box_background = get_option('kursagenten_box_background', '');
+
             if ($highlight_background) {
-                // Override the default --ka-alt-background with custom color
-                $css .= '--ka-box-background: ' . esc_attr($highlight_background) . ';';
-                $css .= '--ka-box-background-lighter: ' . $this->adjust_lightness($highlight_background, 5) . ';';
-                $css .= '--ka-box-background-darker: ' . $this->adjust_lightness($highlight_background, -10) . ';';
+                $css .= '--ka-highlight-background: ' . esc_attr($highlight_background) . ';';
+                $css .= '--ka-highlight-background-lighter: ' . $this->adjust_lightness($highlight_background, 5) . ';';
+                $css .= '--ka-highlight-background-darker: ' . $this->adjust_lightness($highlight_background, -10) . ';';
+                if (!$box_background) {
+                    $css .= '--ka-box-background: ' . esc_attr($highlight_background) . ';';
+                    $css .= '--ka-box-background-lighter: ' . $this->adjust_lightness($highlight_background, 5) . ';';
+                    $css .= '--ka-box-background-darker: ' . $this->adjust_lightness($highlight_background, -10) . ';';
+                }
             }
-            
-            // Hvis kun fremhevet bakgrunnsfarge er satt, bruk standard tekstfarge
-            if ($highlight_background) {
+            if ($box_background) {
+                $css .= '--ka-box-background: ' . esc_attr($box_background) . ';';
+                $css .= '--ka-box-background-lighter: ' . $this->adjust_lightness($box_background, 5) . ';';
+                $css .= '--ka-box-background-darker: ' . $this->adjust_lightness($box_background, -10) . ';';
+            }
+
+            // If either background is set, ensure text inherits properly
+            if ($highlight_background || $box_background) {
                 $css .= '#ka .ka-section, #ka .options-card, #ka .courselist-item { color: inherit; }';
             }
         }

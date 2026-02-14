@@ -10,10 +10,12 @@ get_header();
 
 <div id="ka" class="kursagenten-wrapper ka-full-width">
     <main id="ka-main" class="kursagenten-main" role="main">
-        <?php 
-        // Last inn riktig design-template basert på kontekst
-        kursagenten_get_design_template();
-        ?>
+        <div class="ka-container">
+            <?php
+            // Last inn riktig design-template basert på kontekst
+            kursagenten_get_design_template();
+            ?>
+        </div>
     </main>
 </div>
 

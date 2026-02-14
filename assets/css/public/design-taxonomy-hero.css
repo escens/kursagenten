@@ -1,0 +1,144 @@
+/* Hero taxonomy design - works together with design-taxonomy-default.css */
+#ka .taxonomy-container {
+    max-width: 100%;
+    padding: 0;
+}
+
+/* Hero header */
+#ka .taxonomy-hero-header {
+    min-height: 40vh;
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: start;
+    overflow: hidden;
+}
+#ka .taxonomy-hero-header .background-blur {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(1px);
+    z-index: 1;
+}
+#ka .taxonomy-hero-header .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9));
+    z-index: 2;
+}
+
+#ka .taxonomy-hero-header .header-content {
+    z-index: 3;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--ka-space-sm);
+    margin-bottom: 5vh;
+}
+#ka .taxonomy-header-content h1 {
+    font-size: var(--ka-font-xxxxl);
+    color: white;
+}
+#ka .page-back-link {
+    background: #ffffff1f;
+}
+#ka .page-back-link:hover {
+    background: #ffffff;
+}
+#ka .taxonomy-description {
+    color: #ffffffe3;
+}
+
+/* When taxonomy has no own image, use a soft background color and a much lighter overlay */
+#ka .taxonomy-hero-header.no-hero-image .background-blur {
+    background-image: none;
+    background-color: var(--ka-alt-background, #f5f5f5);
+}
+
+#ka .taxonomy-hero-header.no-hero-image .overlay {
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.08));
+}
+
+/* Beskrivelse under hero (maks bredde) */
+#ka .taxonomy-hero-description-wrapper {
+    max-width: 800px;
+    margin: var(--ka-space-xl) auto var(--ka-space-lg);
+}
+
+@media (max-width: 767px) {
+    #ka .taxonomy-hero-description-wrapper {
+        padding: 0 var(--ka-space-md);
+    }
+}
+
+/* Lenkerad (chips) under beskrivelsen */
+#ka .taxonomy-hero-links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--ka-space-sm);
+    margin: 0 auto var(--ka-space-xl);
+    max-width: var(--ka-max-width);
+    align-items: center;
+}
+
+#ka .taxonomy-hero-links-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--ka-space-xs);
+}
+
+#ka .taxonomy-hero-links-group h3 {
+    margin: 0;
+    font-size: var(--ka-font-base);
+    font-weight: 600;
+    color: #333;
+}
+
+#ka .taxonomy-hero-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+#ka .taxonomy-hero-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid #e0e0e0;
+    background-color: #ffffff;
+    font-size: var(--ka-font-xs);
+    color: #444;
+    text-decoration: none;
+    line-height: 1.4;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+#ka .taxonomy-hero-chip:hover {
+    border-color: var(--ka-color, #eb2599);
+    background-color: rgba(235, 37, 153, 0.06);
+    color: #222;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+#ka .taxonomy-hero-chip--primary {
+    border-color: var(--ka-color, #eb2599);
+    background-color: var(--ka-color, #eb2599);
+    color: #fff;
+}
+
+#ka .taxonomy-hero-chip--primary:hover {
+    background-color: var(--ka-color-darker, #c41f80);
+    border-color: var(--ka-color-darker, #c41f80);
+    color: #fff;
+}
+
+/* Course list */

@@ -1,0 +1,345 @@
+/* design-single-boxes.css */
+
+/* GENERELT */
+#ka .course-container .ka-content-container {
+    max-width: var(--ka-max-width);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#ka .course-container .ka-box {
+    border-radius: 30px;
+    padding: var(--ka-space-2xl) var(--ka-space-xl);
+}
+#ka .course-container .course-image {
+    margin-top: 1em;
+}
+
+
+/* HEADER */
+#ka .course-container .ka-header {
+    background: none;
+    padding-top: var(--ka-space-xl);
+    padding-bottom: var(--ka-space-xl);
+}
+
+/* Use fr units so gap is included in layout; 65% 35% would overflow by gap amount */
+#ka .course-container .ka-header .course-grid {
+    display: grid;
+    grid-template-columns: 65fr 35fr;
+    gap: var(--ka-space-xl);
+    align-items: stretch;
+}
+
+#ka .course-container .ka-header .content,
+#ka .course-container .ka-header .aside {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+#ka .course-container .ka-header .header-links {
+    margin-bottom: var(--ka-space-md);
+    font-size: 13px;
+}
+#ka .course-container .ka-header .header-links a {
+    color: #00000094;
+}
+
+#ka .course-container .ka-header .course-title {
+    margin: 0 0 var(--ka-space-sm);
+    font-size: var(--ka-font-xxxl);
+    line-height: var(--ka-line-height-normal);
+}
+
+#ka .course-container .ka-header .course-subtitle {
+    margin-top: .2em;
+    display: block;
+    font-size: var(--ka-font-lg);
+    font-weight: 300;
+}
+
+#ka .course-container .ka-header .course-intro {
+    margin-bottom: var(--ka-space-md);
+    font-size: var(--ka-font-xl);
+}
+#ka .course-container .ka-header .course-intro p{
+    margin-bottom: 0;
+}
+
+#ka .course-container .ka-header .read-more-link {
+    align-self: flex-start;
+    margin-top: auto;
+    display: none;
+    color: #00000094!important;
+}
+
+
+/* Show link when course has image (intro may be truncated due to layout) */
+#ka .course-container.has-course-image .ka-header .read-more-link {
+    display: block;
+}
+
+#ka .course-container .nextcourse .iconlist {
+    row-gap: var(--ka-space-xs);
+    font-size: var(--ka-font-md);
+}
+
+#ka .course-container .nextcourse .iconlist .signup-link {
+    margin-top: var(--ka-space-xs);
+}
+
+#ka .course-container .nextcourse-button-wrapper {
+    margin-top: var(--ka-space-sm);
+}
+
+
+/* HOVEDRAD / BOKSER */
+#ka .course-container .course-information {
+    padding-top: 0;
+    padding-bottom: var(--ka-space-xl);
+}
+
+#ka .course-container .course-information .course-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--ka-space-xl);
+}
+
+#ka .course-container .course-information .content > *:not(:last-child) {
+    margin-bottom: var(--ka-space-md);
+}
+
+#ka .course-container .course-information .course-image {
+    margin-bottom: var(--ka-space-md);
+}
+
+#ka .course-container .course-information .course-image {
+    aspect-ratio: 4 / 3;
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+#ka .course-container .course-information .course-image img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 30px;
+}
+
+#ka .course-container .course-information h2 {
+    margin-top: 0;
+    margin-bottom: var(--ka-space-sm);
+}
+
+#ka .course-container .course-information .course-extra {
+    margin-top: var(--ka-space-sm);
+}
+
+#ka .course-container .course-information .edit-link {
+    margin-top: var(--ka-space-sm);
+    margin-bottom: 0 !important;
+}
+#ka .admin-view.content-text {
+    border: 3px dashed #00000021;
+    padding: .6em;
+}
+
+#ka .course-container .aside .ka-box {
+    margin-bottom: var(--ka-space-md);
+}
+
+/* Kurstted linker over kurslisten */
+#ka .course-locations-list {
+    margin: 2em 0 -1.5em 0;
+}
+#ka .location-tabs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+#ka .button-filter.active, #ka .active .button-filter {
+    background: var(--ka-box-background);
+    color: var(--ka-color-filter);
+    color: #222222;
+}
+
+/* Accordion-basestil for kurslisten i bokslayouten */
+#ka .accordion {
+    border: none;
+    border-radius: 10px;
+}
+#ka .ka-container .courselist-item{
+    border-bottom: 1px solid #0000000a;
+    border-radius: 10px;
+}
+#ka .ka-container .courselist-item.active,
+#ka .ka-container .courselist-item:hover {
+    background: #0000000a;
+    border-bottom: none;
+    cursor: pointer;
+}
+
+#ka .course-container .courselist .courselist-content {
+    height: 0;
+    overflow: hidden;
+    padding: 0 10px;
+    transition: height 0.3s ease, padding 0.3s ease;
+    background: transparent;
+}
+
+#ka .course-container .courselist .courselist-content.open {
+    padding: .75em 2vw .75em 2vw;
+
+}
+#ka .course-container .courselist .courselist-content .course-grid-info {
+    grid-template-columns: 1fr 1fr;
+
+}
+
+/* KURSLISTE STIL (overstyr standard) */
+#ka .ka-container .courselist-item:last-child {
+    border-bottom: none;
+}
+#ka .ka-container .courselist-main {
+    padding: 1.5em 10px;
+}
+#ka .ka-container .courselist-main .all-coursedates {
+    width: 100%;
+}
+#ka .ka-container .courselist-main .text-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+#ka .ka-container .courselist-main .content-area {
+    margin: 10px 0 0 18px;
+}
+#ka .ka-container .courselist-main .title-area .courselist-title{
+    font-size: var(--ka-font-base);
+}
+#ka .ka-container .courselist-main .links-area{
+    flex-direction: row;
+    align-items: flex-start;
+  }
+#ka .ka-container .courselist-main .links-area a{
+    color: #68c46b;
+    text-transform: uppercase;
+    background: transparent;
+    font-size: 1em;
+    margin-left: 1em;
+  }
+  #ka .ka-container .courselist-main .links-area a:hover{
+    color: #3e8041;
+    background: transparent;
+    box-shadow: none;
+  }
+  #ka .ka-container span.course-available {
+    width: 10px;
+    display: inline-block;
+    overflow: hidden;
+    height: 13px;
+    margin-right: 5px;
+}
+#ka .ka-container .full .courselist-main .content-area  {
+    color: #989898;
+}
+
+
+/* Tablet-kursliste i header vs. hovedkolonne */
+#ka .course-container .courselist-tablet {
+    display: none;
+}
+
+/* KONTAKTINFO-BOKS */
+#ka .course-container .aside .aside {
+    margin-top: var(--ka-space-md);
+}
+
+/* FOOTER */
+#ka .course-container .ka-footer {
+    background-color: var(--ka-alt-background);
+    padding: 2em 0 3em;
+}
+
+/* RESPONSIVT */
+@media screen and (max-width: 1200px) {
+    /* Header-rad full bredde per kolonne */
+    #ka .course-container .ka-header .course-grid {
+        grid-template-columns: 1fr;
+        gap: var(--ka-space-sm);
+    }
+
+    #ka .course-container .ka-header .read-more-link {
+        display: block;
+    }
+    /* Bytt innhold i kolonne 2 til kursliste på tablet */
+    #ka .course-container .ka-header .nextcourse {
+        display: none;
+    }
+
+    #ka .course-container .courselist-tablet {
+        display: block;
+        margin-top: var(--ka-space-md);
+    }
+
+    #ka .course-container .desktop-only {
+        display: none;
+    }
+
+    /* Neste rad: venstre kolonne bredere enn høyre */
+    #ka .course-container .course-information .course-grid {
+        grid-template-columns: 3fr 2fr;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    /* Rad 2: full bredde på mobil */
+    #ka .course-container .course-information .course-grid {
+        grid-template-columns: 1fr;
+        gap: var(--ka-space-sm);
+    }
+    #ka .course-container .ka-box {
+        padding: var(--ka-space-xl);
+    }
+
+    #ka .iconlist.horizontal {
+        align-items: flex-start;
+    }
+
+
+    /* Samme mobilbryting på kurslisten som i standarddesign */
+
+
+    #ka .course-container .courselist .courselist-main .text-area {
+        flex-wrap: wrap;
+    }
+
+    #ka .course-container .ka-header .course-title {
+        font-size: var(--ka-font-xxl);
+    }
+    #ka .course-container .ka-header .course-intro {
+        font-size: var(--ka-font-lg);
+    }
+
+}
+@media screen and (max-width: 600px) {
+    #ka .course-container .courselist .courselist-main {
+        flex-direction: column;
+        align-items: flex-start;
+        row-gap: var(--ka-space-md);
+    }
+    #ka .course-container .courselist .courselist-main .links-area {
+        width: 100%;
+        margin-left: 15px;
+        column-gap: var(--ka-space-md);
+    }
+}

@@ -37,7 +37,7 @@ class GridStyles {
             }
             .kursagenten-grid.stablet.kort .wrapper { justify-items: center; max-width: calc(({$a['bildestr']} * {$a['grid']}) + (clamp(1vw, 2vw, 2rem) * ({$a['grid']} - 1 )));}
             .kursagenten-grid.kort.rund .wrapper { max-width: calc((calc({$a['bildestr']} * 5.5) * {$a['grid']}) + (clamp(1vw, 2vw, 2rem) * ({$a['grid']} - 1 )));}
-            .kursagenten-grid.liste .wrapper { grid-template-columns: repeat(1, 1fr); row-gap: " . (!empty($a['_radavstand_provided']) ? $a['radavstand'] : '0.6em') . "; width: auto; }
+            {$class_id}.liste .wrapper { grid-template-columns: repeat(1, 1fr); row-gap: " . (!empty($a['_radavstand_provided']) ? $a['radavstand'] : '0.6em') . "; width: auto; }
             .kursagenten-grid.rad.utdrag .wrapper { row-gap: 3rem; }
             
             /* Box */
@@ -233,6 +233,7 @@ class GridStyles {
 
             /* Text */
             {$class_id} .text {font-size: clamp(0.875rem, 0.75rem + 0.5714vw, 1rem); flex-shrink: 2; flex-grow: 3; line-height: 1.5; padding-left: 1em;}
+            {$class_id}.liste .text {padding-left: 0; }
             {$class_id} .text a.infowrapper { color: #555; }
             {$class_id}:not(.utdrag) .text a { width: 100%; height: 100%; }
             {$class_id}.stablet .text { flex-direction: column; align-items: center; justify-content: flex-start; text-align: center; padding-left: 0; }

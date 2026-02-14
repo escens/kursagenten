@@ -71,23 +71,39 @@ add_shortcode('youtube', function($atts) {
     return isset($options['ka_youtube']) ? esc_url($options['ka_youtube']) : '';
 });
 
-// Placeholder image shortcodes
+// Placeholder image shortcodes (with fallback to plugin default images)
 add_shortcode('plassholderbilde-generelt', function($atts) {
-    $options = get_option('design_option_name');
-    return isset($options['ka_plassholderbilde_generelt']) ? esc_url($options['ka_plassholderbilde_generelt']) : '';
+    $options = get_option('design_option_name', array());
+    $url = !empty($options['ka_plassholderbilde_generelt']) ? $options['ka_plassholderbilde_generelt'] : '';
+    if (empty($url) && defined('KURSAG_PLUGIN_URL')) {
+        $url = rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-generell.jpg';
+    }
+    return $url ? esc_url($url) : '';
 });
 
 add_shortcode('plassholderbilde-kurs', function($atts) {
-    $options = get_option('design_option_name');
-    return isset($options['ka_plassholderbilde_kurs']) ? esc_url($options['ka_plassholderbilde_kurs']) : '';
+    $options = get_option('design_option_name', array());
+    $url = !empty($options['ka_plassholderbilde_kurs']) ? $options['ka_plassholderbilde_kurs'] : '';
+    if (empty($url) && defined('KURSAG_PLUGIN_URL')) {
+        $url = rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
+    }
+    return $url ? esc_url($url) : '';
 });
 
 add_shortcode('plassholderbilde-instruktor', function($atts) {
-    $options = get_option('design_option_name');
-    return isset($options['ka_plassholderbilde_instruktor']) ? esc_url($options['ka_plassholderbilde_instruktor']) : '';
+    $options = get_option('design_option_name', array());
+    $url = !empty($options['ka_plassholderbilde_instruktor']) ? $options['ka_plassholderbilde_instruktor'] : '';
+    if (empty($url) && defined('KURSAG_PLUGIN_URL')) {
+        $url = rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-instruktor.jpg';
+    }
+    return $url ? esc_url($url) : '';
 });
 
 add_shortcode('plassholderbilde-sted', function($atts) {
-    $options = get_option('design_option_name');
-    return isset($options['ka_plassholderbilde_sted']) ? esc_url($options['ka_plassholderbilde_sted']) : '';
+    $options = get_option('design_option_name', array());
+    $url = !empty($options['ka_plassholderbilde_sted']) ? $options['ka_plassholderbilde_sted'] : '';
+    if (empty($url) && defined('KURSAG_PLUGIN_URL')) {
+        $url = rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-location.jpg';
+    }
+    return $url ? esc_url($url) : '';
 }); 
