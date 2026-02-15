@@ -547,7 +547,7 @@ do_action('ka_singel_header_before');
                 <div class="aside">
                     <div class="ka-box ka-highlight-background desktop-only courselist-box">
                         <?php
-                        $render_courselist('courselist-main');
+                        $render_courselist('courselist-wrapper');
                         ?>
                     </div>
 
@@ -573,7 +573,7 @@ do_action('ka_singel_header_before');
                                 <!-- Kurs i samme kategori -->
                                     <div class="ka-content-container title-section">
                                         <h3>Kurs i samme kategori</h3>
-                                        <?php echo do_shortcode('[kurs-i-samme-kategori overskrift="h4" layout="liste" grid="1" gridtablet="1" gridmobil="1" bildestr="0" fontmin="13px" fontmaks="15px" avstand="2em 0" radavstand="1em"]'); ?>
+                                        <?php echo do_shortcode('[kurs-i-samme-kategori overskrift="div" layout="liste" grid="1" gridtablet="1" gridmobil="1" bildestr="0" fontmin="13px" fontmaks="15px" avstand="2em 0" radavstand="1em"]'); ?>
                                     </div>
                             </div>
                             <?php do_action('ka_singel_aside_after'); ?>

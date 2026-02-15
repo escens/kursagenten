@@ -40,7 +40,7 @@
 
 
 #ka .course-container .ka-header .header-links {
-    margin-bottom: var(--ka-space-md);
+    margin-bottom: var(--ka-space-xl);
     font-size: 13px;
 }
 #ka .course-container .ka-header .header-links a {
@@ -91,7 +91,7 @@
 }
 
 #ka .course-container .nextcourse-button-wrapper {
-    margin-top: var(--ka-space-sm);
+    margin-top: var(--ka-space-lg);
 }
 
 
@@ -209,7 +209,7 @@
     border-bottom: none;
 }
 #ka .ka-container .courselist-main {
-    padding: 1.5em 10px;
+    padding: 1.5em 0;
 }
 #ka .ka-container .courselist-main .all-coursedates {
     width: 100%;
@@ -229,6 +229,9 @@
 #ka .ka-container .courselist-main .links-area{
     flex-direction: row;
     align-items: flex-start;
+  }
+#ka .ka-container .courselist-main .links-area .courselist-button {
+    font-size: var(--ka-font-xs);
   }
 #ka .ka-container .courselist-main .links-area a{
     color: #68c46b;
