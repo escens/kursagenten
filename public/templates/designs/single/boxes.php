@@ -353,33 +353,36 @@ do_action('ka_singel_header_before');
 
     <!-- Location navigation -->
     <nav class="location-navigation">
-        <div class="ka-content-container">
-            <?php echo display_course_locations(get_the_ID()); ?>
+        <div class="header-links iconlist horizontal uppercase">
+            <?php
+            $kurs_url = Designmaler::get_system_page_url('kurs', true);
+            if (!empty($kurs_url)) :
+                ?>
+                <div>
+                    <a href="<?php echo esc_url($kurs_url); ?>">
+                        <i class="ka-icon icon-vertical-bars"></i> Alle kurs
+                    </a>
+                </div>
+            <?php endif; ?>
+            <div class="taxonomy-list horizontal">
+                <?php if (!empty($coursecategory_links)) : ?>
+                    <i class="ka-icon icon-vertical-bars"></i>
+                    <?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
+                <?php endif; ?>
+            </div>
         </div>
+
     </nav>
+
     <!-- HEADER RAD (Bokser) -->
     <header class="ka-section ka-header">
         <div class="ka-content-container">
             <div class="course-grid">
                 <!-- Kolonne 1: Hovedinfo -->
                 <div class="content ka-box ka-highlight-background main-info-box">
-                    <div class="header-links iconlist horizontal uppercase">
-                        <?php
-                        $kurs_url = Designmaler::get_system_page_url('kurs', true);
-                        if (!empty($kurs_url)) :
-                            ?>
-                            <div>
-                                <a href="<?php echo esc_url($kurs_url); ?>">
-                                    <i class="ka-icon icon-vertical-bars"></i> Alle kurs
-                                </a>
-                            </div>
-                        <?php endif; ?>
-                        <div class="taxonomy-list horizontal">
-                            <?php if (!empty($coursecategory_links)) : ?>
-                                <i class="ka-icon icon-vertical-bars"></i>
-                                <?php echo implode('<span class="separator">|</span>', $coursecategory_links); ?>
-                            <?php endif; ?>
-                        </div>
+
+                    <div class="ka-content-container">
+                        <?php echo display_course_locations(get_the_ID()); ?>
                     </div>
 
                     <?php if ($is_parent_course === 'yes') : ?>
@@ -573,7 +576,7 @@ do_action('ka_singel_header_before');
                                 <!-- Kurs i samme kategori -->
                                     <div class="ka-content-container title-section">
                                         <h3>Kurs i samme kategori</h3>
-                                        <?php echo do_shortcode('[kurs-i-samme-kategori overskrift="div" layout="liste" grid="1" gridtablet="1" gridmobil="1" bildestr="0" fontmin="13px" fontmaks="15px" avstand="2em 0" radavstand="1em"]'); ?>
+                                        <?php echo do_shortcode('[kurs-i-samme-kategori overskrift="div" layout="liste" grid="1" gridtablet="1" gridmobil="1" bildestr="0" fontmin="13px" fontmaks="18px" avstand="2em 0" radavstand="1em"]'); ?>
                                     </div>
                             </div>
                             <?php do_action('ka_singel_aside_after'); ?>

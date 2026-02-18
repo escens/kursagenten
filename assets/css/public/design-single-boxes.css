@@ -14,7 +14,19 @@
 #ka .course-container .course-image {
     margin-top: 1em;
 }
-
+/* Location navigation */
+#ka .course-container .location-navigation {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin: 2em 0 1em 0;
+}
+#ka .course-container .location-navigation .header-links {
+    font-size: 13px;
+}
+#ka .course-container .location-navigation .header-links a {
+    color: #00000094;
+}
 
 /* HEADER */
 #ka .course-container .ka-header {
@@ -37,14 +49,22 @@
     flex-direction: column;
     justify-content: center;
 }
-
-
-#ka .course-container .ka-header .header-links {
-    margin-bottom: var(--ka-space-xl);
-    font-size: 13px;
+    /* Location list */
+#ka header .course-locations-list {
+    display: flex;
 }
-#ka .course-container .ka-header .header-links a {
-    color: #00000094;
+#ka .location-tabs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+#ka .button-filter.active, #ka .active .button-filter {
+    background: var(--ka-box-background);
+    color: var(--ka-color-filter);
+    color: #222222;
 }
 
 #ka .course-container .ka-header .course-title {
@@ -135,6 +155,9 @@
     margin-top: 0;
     margin-bottom: var(--ka-space-sm);
 }
+#ka .course-container .course-information .course-description-box {
+    font-size: var(--ka-font-md);
+}
 
 #ka .course-container .course-information .course-extra {
     margin-top: var(--ka-space-sm);
@@ -153,23 +176,6 @@
     margin-bottom: var(--ka-space-md);
 }
 
-/* Kurstted linker over kurslisten */
-#ka .course-locations-list {
-    margin: 2em 0 -1.5em 0;
-}
-#ka .location-tabs {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-#ka .button-filter.active, #ka .active .button-filter {
-    background: var(--ka-box-background);
-    color: var(--ka-color-filter);
-    color: #222222;
-}
 
 /* Accordion-basestil for kurslisten i bokslayouten */
 #ka .accordion {

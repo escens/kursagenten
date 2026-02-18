@@ -225,6 +225,7 @@ border-radius: 10px;
 #ka .pameldingskjema {
   padding-bottom: .5em;
   padding-top: .5em;
+  white-space: nowrap;
 }
 
 #ka .signup-link {
