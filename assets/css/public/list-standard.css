@@ -64,7 +64,7 @@
 }
 
 #ka .ka-container .courselist-main .text-area {
-    padding: var(--ka-space-lg) var(--ka-space-lg) var(--ka-space-sm) var(--ka-space-lg);
+    padding: var(--ka-space-lg) var(--ka-space-lg) var(--ka-space-lg) var(--ka-space-lg);
     display: flex;
     flex-direction: column;
     flex: 1;

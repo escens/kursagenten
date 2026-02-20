@@ -508,7 +508,7 @@ do_action('ka_singel_header_before');
     <section class="ka-section ka-footer ka-highlight-background">
         <div class="ka-content-container title-section">
             <h3>Kurs i samme kategori</h3>
-        <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" bildeform=firkantet fontmin="13px" fontmaks="15px" avstand="2em .5em"]'); ?>
+        <?php echo do_shortcode('[kurs-i-samme-kategori stil="kort" overskrift="h4" layout="rad" bildestr="100px" bildeformat="4/3" bildeform=firkantet fontmin="13px" fontmaks="15px" avstand="2em .5em" klasse="enkeltkurs-relaterte"]'); ?>
         </div>
     </section>
     <?php do_action('ka_singel_footer_after'); ?>

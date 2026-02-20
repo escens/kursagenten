@@ -736,6 +736,7 @@ z-index: 10000;
   row-gap: .4em;
   font-size: .75em;
   cursor: pointer;
+  white-space: nowrap;
 }
 #ka .ka-container .courselist-main .links-area a {
   text-decoration: none;

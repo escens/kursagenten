@@ -1569,7 +1569,7 @@ function get_course_dates_query_for_count($filters) {
     if (!empty($filters['k'])) {
         $categories = is_array($filters['k']) ? $filters['k'] : [$filters['k']];
         $categories = array_map('sanitize_title', array_filter($categories));
-        
+
         // Hent skjulte kategorier
         $hidden_categories = get_terms([
             'taxonomy' => 'ka_coursecategory',
@@ -1582,9 +1582,9 @@ function get_course_dates_query_for_count($filters) {
             ],
             'fields' => 'ids'
         ]);
-        
+
         $args['tax_query'] = ['relation' => 'AND'];
-        
+
         // Hvis vi har skjulte kategorier, legg til en enkel NOT IN query
         if (!empty($hidden_categories) && !is_wp_error($hidden_categories)) {
             $args['tax_query'][] = [
@@ -1594,23 +1594,35 @@ function get_course_dates_query_for_count($filters) {
                 'operator' => 'NOT IN'
             ];
         }
-        
+
         if ($use_category_and && !empty($categories)) {
+            // AND mode: expand each category to include its children (parent shows all subcategory coursedates)
             foreach ($categories as $cat_slug) {
+                $expanded = function_exists('get_hierarchical_category_filter')
+                    ? get_hierarchical_category_filter([$cat_slug])
+                    : [$cat_slug];
+                if (!empty($expanded)) {
+                    $args['tax_query'][] = [
+                        'taxonomy' => 'ka_coursecategory',
+                        'field' => 'slug',
+                        'terms' => $expanded,
+                        'operator' => 'IN'
+                    ];
+                }
+            }
+        } else {
+            // Standard mode: expand parents to children for correct count when parent has no direct coursedates
+            if (function_exists('get_hierarchical_category_filter')) {
+                $categories = get_hierarchical_category_filter($categories);
+            }
+            if (!empty($categories)) {
                 $args['tax_query'][] = [
                     'taxonomy' => 'ka_coursecategory',
                     'field' => 'slug',
-                    'terms' => [$cat_slug],
+                    'terms' => $categories,
                     'operator' => 'IN'
                 ];
             }
-        } else {
-            $args['tax_query'][] = [
-                'taxonomy' => 'ka_coursecategory',
-                'field' => 'slug',
-                'terms' => $categories,
-                'operator' => 'IN'
-            ];
         }
     } else {
         // Hvis ingen kategori-filter er spesifisert, ekskluder skjulte kategorier

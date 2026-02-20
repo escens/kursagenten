@@ -229,7 +229,7 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-background-color-darker: ' . $this->adjust_lightness($background_color, -10) . ';';
                 
                 // Endre sidebakgrunn
-                $css .= '.ka-default-width, .kursagenten-full-width, #ka { background-color: var(--ka-background-color); }';
+                $css .= '.ka-default-width, .kursagenten-full-width, #ka, .content-area { background-color: var(--ka-background-color); }';
                 //$css .= '#ka .ka-section { background-color: var(--ka-background-color); }';
             }
             

@@ -166,6 +166,9 @@
         flex-direction: row;
         flex-grow: 1;
     }
+    #ka .ka-container .courselist-main .title-area {
+        display: flex;
+    }
     #ka .ka-container .courselist-main .links-area{
         flex-direction: row;
       }

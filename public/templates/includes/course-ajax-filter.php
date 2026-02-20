@@ -223,42 +223,91 @@ function get_filtered_terms($taxonomy) {
     $visible_coursedates = get_posts($coursedate_args);
 
     // Hent alle taksonomier med riktige parametre
-    $args = [
-        'taxonomy' => $taxonomy,
-        'hide_empty' => true,
-        'meta_query' => [
-            'relation' => 'OR',
-            [
-                'key' => 'hide_in_course_list',
-                'value' => 'Vis',
-            ],
-            [
-                'key' => 'hide_in_course_list',
-                'compare' => 'NOT EXISTS'
-            ]
+    $meta_query = [
+        'relation' => 'OR',
+        [
+            'key' => 'hide_in_course_list',
+            'value' => 'Vis',
+        ],
+        [
+            'key' => 'hide_in_course_list',
+            'compare' => 'NOT EXISTS'
         ]
     ];
 
     // Legg til spesielle parametre for kategorier
     if ($taxonomy === 'ka_coursecategory') {
-        $args['orderby'] = 'menu_order';
-        $args['order'] = 'ASC';
-        $args['hierarchical'] = true;
-        $args['parent'] = 0; // Start med toppnivå kategorier
+        // Use hide_empty => false for parents so we can include empty parents that have children with coursedates
+        $args = [
+            'taxonomy' => $taxonomy,
+            'hide_empty' => false,
+            'parent' => 0,
+            'orderby' => 'menu_order',
+            'order' => 'ASC',
+            'hierarchical' => true,
+            'meta_query' => $meta_query
+        ];
+    } else {
+        $args = [
+            'taxonomy' => $taxonomy,
+            'hide_empty' => true,
+            'meta_query' => $meta_query
+        ];
     }
 
     $all_terms = get_terms($args);
 
-    // Filtrer ut taksonomier som ikke har noen synlige coursedates
-    $filtered_terms = array_filter($all_terms, function($term) use ($visible_coursedates, $taxonomy) {
-        // Sjekk om minst én av de synlige coursedates har denne termen
-        foreach ($visible_coursedates as $coursedate_id) {
-            if (has_term($term->term_id, $taxonomy, $coursedate_id)) {
-                return true;
+    // For ka_coursecategory: custom visibility logic
+    // Show parent if: (1) has direct coursedates, OR (2) has at least one child with coursedates
+    // Hide parent if: no coursedates and no children with coursedates, or has hide_in_course_list = Skjul
+    if ($taxonomy === 'ka_coursecategory') {
+        $filtered_terms = [];
+        foreach ($all_terms as $term) {
+            $has_direct_coursedate = false;
+            foreach ($visible_coursedates as $coursedate_id) {
+                if (has_term($term->term_id, $taxonomy, $coursedate_id)) {
+                    $has_direct_coursedate = true;
+                    break;
+                }
+            }
+
+            // Check if any child has coursedates (child must pass meta_query - fetched separately)
+            $child_terms = get_terms([
+                'taxonomy' => $taxonomy,
+                'hide_empty' => false,
+                'parent' => $term->term_id,
+                'fields' => 'ids',
+                'meta_query' => $meta_query
+            ]);
+            $has_child_with_coursedate = false;
+            if (!is_wp_error($child_terms) && !empty($child_terms)) {
+                foreach ($child_terms as $child_id) {
+                    foreach ($visible_coursedates as $coursedate_id) {
+                        if (has_term($child_id, $taxonomy, $coursedate_id)) {
+                            $has_child_with_coursedate = true;
+                            break 2;
+                        }
+                    }
+                }
+            }
+
+            // Show parent if it has direct coursedates OR has at least one child with coursedates
+            // Hide if: empty parent with no children, or empty parent whose children are all empty
+            if ($has_direct_coursedate || $has_child_with_coursedate) {
+                $filtered_terms[] = $term;
             }
         }
-        return false;
-    });
+    } else {
+        // Standard filter for non-category taxonomies
+        $filtered_terms = array_filter($all_terms, function($term) use ($visible_coursedates, $taxonomy) {
+            foreach ($visible_coursedates as $coursedate_id) {
+                if (has_term($term->term_id, $taxonomy, $coursedate_id)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+    }
 
     // For kategorier, hent også underkategorier for de filtrerte termene
     if ($taxonomy === 'ka_coursecategory') {
@@ -269,28 +318,17 @@ function get_filtered_terms($taxonomy) {
             $term->parent_id = 0;
             $final_terms[] = $term;
 
-            // Hent underkategorier for denne termen
+            // Hent underkategorier - only those with coursedates (hide empty subcategories)
             $child_terms = get_terms([
                 'taxonomy' => $taxonomy,
-                'hide_empty' => true,
+                'hide_empty' => false,
                 'parent' => $term->term_id,
                 'orderby' => 'menu_order',
                 'order' => 'ASC',
-                'meta_query' => [
-                    'relation' => 'OR',
-                    [
-                        'key' => 'hide_in_course_list',
-                        'value' => 'Vis',
-                    ],
-                    [
-                        'key' => 'hide_in_course_list',
-                        'compare' => 'NOT EXISTS'
-                    ]
-                ]
+                'meta_query' => $meta_query
             ]);
-            
+
             if (!is_wp_error($child_terms)) {
-                // Filtrer også barnekategoriene mot synlige coursedates
                 foreach ($child_terms as $child) {
                     $has_visible_coursedate = false;
                     foreach ($visible_coursedates as $coursedate_id) {
@@ -299,9 +337,9 @@ function get_filtered_terms($taxonomy) {
                             break;
                         }
                     }
-                    
+
+                    // Only add child if it has coursedates (hide empty subcategories)
                     if ($has_visible_coursedate) {
-                        // Legg til parent-informasjon på underkategoriene
                         $child->parent_class = 'has-parent';
                         $child->parent_id = $term->term_id;
                         $final_terms[] = $child;
