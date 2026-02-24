@@ -1,8 +1,9 @@
-## 1.1.14 - 2026-02-02
+## 1.1.14 - 2026-02-24
 - Fix: Skjult kursbilder i Mediebibliotek. De skal ikke kunne brukes på sider, da de kan slettes via Kursagenten og kan skape ødelagte linker.
 - Lagt til: Mulighet for overstyre filterinnstillinger på kurskategorier, med listetype *Vis alle kursdatoer*. Normalt vises kun underkategorier på en gitt hovedkategori. Kryss av på "Vis kursfilter på kateogoriside" for å vise kategorier som kursene deler. 
 - Fix: Lagt inn mulighet for å legge til klasser på menypunkter, slik standard funksjonalitet i WP er.
 - Lagt til: Ny designmal for enkeltkurs: Bokser. Dette er en ny stil, og det kan senere komme nye varianter. 
+- Fix: Når man lagrer hovedkurs, samt alle underkurs samtidig i Kursagenten, blir nå underkursene også oppdatert på siden.
 
 ## 1.1.13 - 2026-02-02
 - Fix: Justert design på standardmal for taksonomier. Visning blir nå fin både med bilde og tekst, kun bilde eller tekst, eller uten tekst og bilde.

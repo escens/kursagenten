@@ -117,12 +117,39 @@ $course_data['is_active'] = (bool) $body['Enabled'];
             $result = create_or_update_course_and_schedule($course_data, true);
             if ($result) {
                 error_log("Successfully processed course update for CourseId: $location_id");
-                
+
+                // If this is a main course with multiple locations, sync all sub-locations too
+                // (Kursagenten sends webhook only for main course when "oppdater alle underlokasjoner" is used)
+                $all_location_ids = $course_data['all_location_ids'] ?? [];
+                if (count($all_location_ids) > 1) {
+                    error_log("Hovedkurs med " . count($all_location_ids) . " lokasjoner - synkroniserer alle underkurs");
+                    foreach ($all_location_ids as $sub_location_id) {
+                        if ((int) $sub_location_id === (int) $location_id) {
+                            continue; // Already processed
+                        }
+                        $sub_course_data = get_main_course_id_by_location_id($sub_location_id);
+                        if ($sub_course_data) {
+                            $sub_course_data['location_id'] = (int) $sub_location_id;
+                            // Use API data only - do not override is_active from webhook
+                            try {
+                                $sub_result = create_or_update_course_and_schedule($sub_course_data, true);
+                                if ($sub_result) {
+                                    error_log("Synkroniserte underkurs for location_id: $sub_location_id");
+                                } else {
+                                    error_log("Kunne ikke synkronisere underkurs for location_id: $sub_location_id");
+                                }
+                            } catch (Exception $sub_e) {
+                                error_log("Feil ved synk av underkurs $sub_location_id: " . $sub_e->getMessage());
+                            }
+                        }
+                    }
+                }
+
                 // Oppdater hovedkurs status etter vellykket oppdatering
                 $main_course_id = $course_data['main_course_id'] ?? null;
                 error_log("Oppdaterer hovedkurs status for main_course_id: $main_course_id");
                 kursagenten_update_main_course_status($main_course_id);
-                
+
                 return new WP_REST_Response('Webhook processed successfully.', 200);
             } else {
                 error_log("Failed to process course update for CourseId: $location_id");
@@ -152,12 +179,17 @@ function get_main_course_id_by_location_id($location_id) {
     $target_county = null;
 
     // Finn først hovedkurset og target location
+    $all_location_ids_for_course = [];
     foreach ($courses as $course) {
         foreach ($course['locations'] as $location) {
             if ((int) $location['courseId'] === (int) $location_id) {
                 $main_course_id = $course['id'];
                 $target_municipality = $location['municipality'] ?? null;
                 $target_county = $location['county'] ?? null;
+                // Collect all location IDs for this course (for syncing sub-locations when main course is updated)
+                $all_location_ids_for_course = array_map(function ($loc) {
+                    return (int) $loc['courseId'];
+                }, $course['locations']);
                 $course_data = [
                     'main_course_id' => $course['id'],
                     'course_name' => $location['courseName'],
@@ -165,7 +197,8 @@ function get_main_course_id_by_location_id($location_id) {
                     'county' => $target_county,
                     'language' => $course['language'],
                     'is_active' => $location['active'] ?? false,
-                    'all_locations' => []
+                    'all_locations' => [],
+                    'all_location_ids' => $all_location_ids_for_course,
                 ];
                 break 2; // Bryt ut av begge løkkene
             }

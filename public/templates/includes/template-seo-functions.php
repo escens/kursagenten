@@ -14,16 +14,30 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Check if Kursagenten SEO is manually disabled
+ *
+ * @return bool True if SEO should be disabled
+ */
+function kursagenten_seo_disabled() {
+    $opts = get_option('kag_seo_option_name', array());
+    return !empty($opts['ka_seo_disable']);
+}
+
+/**
  * Add meta tags to single course pages
  * 
  * Handles SEO meta tags including Open Graph and Twitter Cards.
- * Automatically detects if SEO plugins (Rank Math, Yoast, All in One SEO) are active
+ * Automatically detects if SEO plugins (Yoast, Rank Math, AIOSEO, Slim SEO, SEOPress, The SEO Framework) are active
  * and adjusts output accordingly to avoid conflicts.
  * 
  * @return void
  */
 function kursagenten_add_meta_tags() {
     global $post;
+    
+    if (kursagenten_seo_disabled()) {
+        return;
+    }
     
     // Only run on single course posts
     if (!is_singular('ka_course') || !isset($post->ID)) {
@@ -34,7 +48,10 @@ function kursagenten_add_meta_tags() {
     $seo_plugins_active = (
         defined('WPSEO_VERSION') || // Yoast SEO
         class_exists('RankMath') || // Rank Math
-        defined('AIOSEO_VERSION') || // All in One SEO
+        defined('AIOSEO_VERSION') || defined('AIOSEO_DIR') || // All in One SEO
+        defined('SLIM_SEO_VER') || // Slim SEO
+        defined('SEOPRESS_VERSION') || function_exists('seopress_get_service') || // SEOPress
+        defined('THE_SEO_FRAMEWORK_PRESENT') || defined('THE_SEO_FRAMEWORK_VERSION') || // The SEO Framework
         class_exists('WPSEO_Frontend') // Yoast alternative check
     );
     
@@ -114,24 +131,27 @@ function kursagenten_add_meta_tags() {
  * Add Course Schema.org structured data
  * 
  * Outputs JSON-LD structured data for Course type according to Schema.org specification.
- * This runs even when SEO plugins are active (unless Rank Math handles it),
- * as it adds course-specific data that generic SEO plugins may not include.
+ * This runs even when SEO plugins are active (unless Rank Math Pro handles it).
+ * Slim SEO free does not include Course schema for custom post types, so we output ours.
  * 
  * @return void
  */
 function kursagenten_add_course_schema() {
     global $post;
     
+    if (kursagenten_seo_disabled()) {
+        return;
+    }
+    
     if (!isset($post->ID)) {
         echo '<!-- Kursagenten Schema: No post ID -->' . PHP_EOL;
         return;
     }
     
-    // Check if Rank Math is handling the schema (don't duplicate)
-    $rank_math_active = class_exists('RankMath');
-    
-    if ($rank_math_active) {
-        echo '<!-- Kursagenten Schema: Rank Math active, schema handled by Rank Math -->' . PHP_EOL;
+    // Rank Math Pro has built-in Course schema – skip ours to avoid duplicates.
+    // Slim SEO free does NOT have Course schema for custom post types, so we output ours.
+    if (class_exists('RankMath')) {
+        echo '<!-- Kursagenten Schema: Rank Math active, Course schema handled by Rank Math -->' . PHP_EOL;
         return;
     }
     
@@ -462,6 +482,10 @@ function kursagenten_build_course_instance_from_data($coursedate_data) {
  * @return void
  */
 function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
+    if (kursagenten_seo_disabled()) {
+        return;
+    }
+    
     // Check if we're on a taxonomy archive
     if (!is_tax() && !is_category() && !is_tag()) {
         return;
@@ -471,7 +495,10 @@ function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
     $seo_plugins_active = (
         defined('WPSEO_VERSION') ||
         class_exists('RankMath') ||
-        defined('AIOSEO_VERSION') ||
+        defined('AIOSEO_VERSION') || defined('AIOSEO_DIR') ||
+        defined('SLIM_SEO_VER') ||
+        defined('SEOPRESS_VERSION') || function_exists('seopress_get_service') ||
+        defined('THE_SEO_FRAMEWORK_PRESENT') || defined('THE_SEO_FRAMEWORK_VERSION') ||
         class_exists('WPSEO_Frontend')
     );
     
@@ -584,9 +611,15 @@ function kursagenten_add_taxonomy_meta_tags($taxonomy = '') {
  * @return void
  */
 function kursagenten_init_seo() {
+    if (kursagenten_seo_disabled()) {
+        return;
+    }
+    
     // Add meta tags for single course pages
     if (is_singular('ka_course')) {
         add_action('wp_head', 'kursagenten_add_meta_tags', 1);
+        // Remove WordPress core canonical to avoid duplicate (we output our own)
+        add_action('wp_head', 'kursagenten_remove_wp_canonical', 0);
     }
     
     // Add meta tags for taxonomy archives
@@ -595,6 +628,179 @@ function kursagenten_init_seo() {
     }
 }
 
+/**
+ * Remove WordPress core rel_canonical to avoid duplicate when we output our own.
+ * WordPress adds canonical for singular posts (including ka_course).
+ */
+function kursagenten_remove_wp_canonical() {
+    remove_action('wp_head', 'rel_canonical', 10);
+}
+
 // Auto-initialize SEO on template_redirect (runs before wp_head)
 add_action('template_redirect', 'kursagenten_init_seo');
+
+/**
+ * Slim SEO integration: Provide custom title and description for course posts
+ */
+add_filter('slim_seo_meta_title', 'kursagenten_filter_slim_seo_title', 10, 2);
+add_filter('slim_seo_meta_description', 'kursagenten_filter_slim_seo_description', 10, 2);
+
+/**
+ * SEOPress integration: Provide custom title and description for course posts
+ */
+add_filter('seopress_titles_title', 'kursagenten_filter_seopress_course_title');
+add_filter('seopress_titles_desc', 'kursagenten_filter_seopress_course_description');
+
+/**
+ * The SEO Framework integration: Provide custom title and description for course posts
+ */
+add_filter('the_seo_framework_title_from_generation', 'kursagenten_filter_tsf_course_title', 10, 2);
+add_filter('the_seo_framework_description_excerpt', 'kursagenten_filter_tsf_course_description', 10, 2);
+
+/**
+ * Filter Slim SEO meta title for ka_course posts
+ *
+ * @param string $title Current title
+ * @param int    $object_id Post ID or term ID
+ * @return string
+ */
+function kursagenten_filter_slim_seo_title($title, $object_id) {
+    if (kursagenten_seo_disabled()) {
+        return $title;
+    }
+    if (get_post_type($object_id) === 'ka_course') {
+        $custom = get_post_meta($object_id, 'custom_title', true);
+        if (!empty($custom)) {
+            return $custom;
+        }
+    }
+    return $title;
+}
+
+/**
+ * Filter Slim SEO meta description for ka_course posts
+ *
+ * @param string $description Current description
+ * @param int    $object_id Post ID or term ID
+ * @return string
+ */
+function kursagenten_filter_slim_seo_description($description, $object_id) {
+    if (kursagenten_seo_disabled()) {
+        return $description;
+    }
+    if (get_post_type($object_id) === 'ka_course') {
+        $meta = get_post_meta($object_id, 'meta_description', true);
+        if (empty($meta)) {
+            $meta = get_post_meta($object_id, 'ka_meta_description', true);
+        }
+        if (!empty($meta)) {
+            return wp_trim_words(wp_strip_all_tags($meta), 30, '...');
+        }
+    }
+    return $description;
+}
+
+/**
+ * Filter SEOPress meta title for ka_course posts
+ *
+ * @param string $title Current title
+ * @return string
+ */
+function kursagenten_filter_seopress_course_title($title) {
+    if (kursagenten_seo_disabled()) {
+        return $title;
+    }
+    if (is_singular('ka_course')) {
+        global $post;
+        if (isset($post->ID)) {
+            $custom = get_post_meta($post->ID, 'custom_title', true);
+            if (!empty($custom)) {
+                return $custom;
+            }
+        }
+    }
+    return $title;
+}
+
+/**
+ * Filter SEOPress meta description for ka_course posts
+ *
+ * @param string $description Current description
+ * @return string
+ */
+function kursagenten_filter_seopress_course_description($description) {
+    if (kursagenten_seo_disabled()) {
+        return $description;
+    }
+    if (is_singular('ka_course')) {
+        global $post;
+        if (isset($post->ID)) {
+            $meta = get_post_meta($post->ID, 'meta_description', true);
+            if (empty($meta)) {
+                $meta = get_post_meta($post->ID, 'ka_meta_description', true);
+            }
+            if (!empty($meta)) {
+                return wp_trim_words(wp_strip_all_tags($meta), 30, '...');
+            }
+        }
+    }
+    return $description;
+}
+
+/**
+ * Filter The SEO Framework title for ka_course posts
+ *
+ * @param string $title Current title
+ * @param array|null $args Query args (null when in the loop)
+ * @return string
+ */
+function kursagenten_filter_tsf_course_title($title, $args) {
+    if (kursagenten_seo_disabled()) {
+        return $title;
+    }
+    if (!function_exists('tsf')) {
+        return $title;
+    }
+    $tsf = tsf();
+    $post_id = null === $args
+        ? $tsf->query()->get_the_real_id()
+        : ($args['id'] ?? null);
+    if ($post_id && get_post_type($post_id) === 'ka_course') {
+        $custom = get_post_meta($post_id, 'custom_title', true);
+        if (!empty($custom)) {
+            return $custom;
+        }
+    }
+    return $title;
+}
+
+/**
+ * Filter The SEO Framework description for ka_course posts
+ *
+ * @param string $excerpt Current excerpt/description
+ * @param array|null $args Query args (null when in the loop)
+ * @return string
+ */
+function kursagenten_filter_tsf_course_description($excerpt, $args) {
+    if (kursagenten_seo_disabled()) {
+        return $excerpt;
+    }
+    if (!function_exists('tsf')) {
+        return $excerpt;
+    }
+    $tsf = tsf();
+    $post_id = null === $args
+        ? $tsf->query()->get_the_real_id()
+        : ($args['id'] ?? null);
+    if ($post_id && get_post_type($post_id) === 'ka_course') {
+        $meta = get_post_meta($post_id, 'meta_description', true);
+        if (empty($meta)) {
+            $meta = get_post_meta($post_id, 'ka_meta_description', true);
+        }
+        if (!empty($meta)) {
+            return wp_trim_words(wp_strip_all_tags($meta), 30, '...');
+        }
+    }
+    return $excerpt;
+}
 

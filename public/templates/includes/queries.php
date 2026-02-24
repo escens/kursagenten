@@ -1040,34 +1040,77 @@ function display_course_locations($post_id) {
         }
     }
     
-    // Start HTML output
-    $output = '<div class="course-locations-list">';
-    $output .= '<ul class="location-tabs">';
-    
-    // Legg til "Alle" link
-    $output .= '<li class="' . ($is_parent_course === 'yes' ? 'active' : '') . '">';
-    $output .= '<a href="' . esc_url($main_course_url) . '" class="button-filter">Alle</a>';
-    $output .= '</li>';
-    
-    // Legg til alle lokasjoner - kun vis lokasjoner som har minst ett publisert child course
+    // Build list of location items (Alle + each location with published child)
+    $location_items = [];
+    $location_items[] = [
+        'url'   => $main_course_url,
+        'name'  => 'Alle',
+        'active' => ($is_parent_course === 'yes'),
+    ];
     foreach ($locations as $location) {
-        // Skip lokasjoner som ikke har en publisert child course
         if (!isset($child_location_links[$location['name']])) {
             continue;
         }
-        
-        $is_active = ($current_location === $location['name']);
-        // Bruk barn-innleggets permalink (kun publiserte posts er i $child_location_links)
-        $location_url = $child_location_links[$location['name']];
-        
-        $output .= '<li class="' . ($is_active ? 'active' : '') . '">';
-        $output .= '<a href="' . esc_url($location_url) . '" class="button-filter">' . esc_html($location['name']) . '</a>';
+        $location_items[] = [
+            'url'    => $child_location_links[$location['name']],
+            'name'   => $location['name'],
+            'active' => ($current_location === $location['name']),
+        ];
+    }
+
+    $visible_limit = 8;
+    $has_more      = count($location_items) > $visible_limit;
+    if ($has_more) {
+        // Ensure active location is always in visible list
+        $active_index = null;
+        foreach ($location_items as $i => $item) {
+            if ($item['active']) {
+                $active_index = $i;
+                break;
+            }
+        }
+        $visible_items = array_slice($location_items, 0, $visible_limit);
+        $hidden_items  = array_slice($location_items, $visible_limit);
+        if ($active_index !== null && $active_index >= $visible_limit) {
+            $active_item   = $location_items[$active_index];
+            $hidden_items  = array_values(array_filter($hidden_items, static function ($i) use ($active_item) {
+                return $i['name'] !== $active_item['name'];
+            }));
+            $visible_items = array_slice($location_items, 0, $visible_limit - 1);
+            $visible_items[] = $active_item;
+        }
+    } else {
+        $visible_items = $location_items;
+        $hidden_items  = [];
+    }
+
+    // Start HTML output - single ul with toggle as last visible li
+    $output = '<div class="course-locations-list' . ($has_more ? ' has-more' : '') . '">';
+    $output .= '<ul class="location-tabs">';
+    foreach ($visible_items as $item) {
+        $output .= '<li class="' . ($item['active'] ? 'active' : '') . '">';
+        $output .= '<a href="' . esc_url($item['url']) . '" class="button-filter">' . esc_html($item['name']) . '</a>';
         $output .= '</li>';
     }
-    
+    if ($has_more && !empty($hidden_items)) {
+        $output .= '<li class="location-tabs-hidden-wrapper">';
+        $output .= '<ul class="location-tabs-sublist">';
+        foreach ($hidden_items as $item) {
+            $output .= '<li class="' . ($item['active'] ? 'active' : '') . '">';
+            $output .= '<a href="' . esc_url($item['url']) . '" class="button-filter">' . esc_html($item['name']) . '</a>';
+            $output .= '</li>';
+        }
+        $output .= '</ul>';
+        $output .= '</li>';
+        $output .= '<li class="location-tabs-toggle-item">';
+        $output .= '<a href="#" class="button-filter location-tabs-toggle" aria-expanded="false">';
+        $output .= esc_html__('Vis flere lokasjoner +', 'kursagenten');
+        $output .= '</a>';
+        $output .= '</li>';
+    }
     $output .= '</ul>';
     $output .= '</div>';
-    
+
     return $output;
 }
 

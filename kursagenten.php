@@ -809,7 +809,7 @@ if (!is_admin()) {
             <div id="slidein-overlay"></div>
             <div id="slidein-panel">
                 <button class="close-btn" aria-label="Close">&times;</button>
-                <iframe id="kursagenten-iframe" src=""></iframe>
+                <iframe title="Kurspåmelding" id="kursagenten-iframe" src=""></iframe>
             </div>
             <?php
         }

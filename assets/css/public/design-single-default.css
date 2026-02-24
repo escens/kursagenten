@@ -211,6 +211,11 @@
         margin: 0;
     }
 
+    #ka .location-tabs-toggle-item .location-tabs-toggle {
+        cursor: pointer;
+        font: inherit;
+    }
+
     /* Next course */
     #ka .nextcourse .iconlist{
         row-gap: var(--ka-space-sm);

@@ -277,10 +277,13 @@ function kursagenten_add_body_classes($classes) {
         }
     }
     
-    if (isset($layout) && $layout === 'full-width') {
-        $classes[] = 'kag kursagenten-full-width';
-    } else {
-        $classes[] = 'kag ka-default-width';
+    // Only add kag layout classes on Kursagenten pages (uses coursedesign: template pages, shortcode pages, assigned WordPress pages)
+    if (class_exists('Designmaler') && Designmaler::is_kursagenten_page()) {
+        if (isset($layout) && $layout === 'full-width') {
+            $classes[] = 'kag kursagenten-full-width';
+        } else {
+            $classes[] = 'kag ka-default-width';
+        }
     }
     
     return $classes;

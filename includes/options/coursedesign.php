@@ -37,6 +37,15 @@ class Designmaler {
         add_filter('rank_math/frontend/title', array($this, 'filter_rank_math_title'));
         add_filter('rank_math/opengraph/facebook/title', array($this, 'filter_rank_math_title'));
         add_filter('rank_math/opengraph/twitter/title', array($this, 'filter_rank_math_title'));
+
+        // Slim SEO støtte
+        add_filter('slim_seo_meta_title', array($this, 'filter_slim_seo_title'), 10, 2);
+
+        // SEOPress støtte
+        add_filter('seopress_titles_title', array($this, 'filter_seopress_title'));
+
+        // The SEO Framework støtte
+        add_filter('the_seo_framework_title_from_generation', array($this, 'filter_tsf_title'), 10, 2);
     }
 
     public function design_add_plugin_page() {
@@ -2069,6 +2078,17 @@ class Designmaler {
      * @return bool
      */
     private function is_kursagenten_frontend_context() {
+        return self::is_kursagenten_page();
+    }
+
+    /**
+     * Check if current page is a Kursagenten page (template-based or assigned WordPress page).
+     * Use this for body classes, CSS output, etc. to limit plugin styling to relevant pages.
+     * Only includes pages assigned in Kursdesign > WordPress sider, not arbitrary pages with shortcodes.
+     *
+     * @return bool
+     */
+    public static function is_kursagenten_page() {
         if (is_singular('ka_course') || is_post_type_archive('ka_course')) {
             return true;
         }
@@ -2086,19 +2106,7 @@ class Designmaler {
             return false;
         }
 
-        $kursagenten_shortcodes = array(
-            'kursliste',
-            'kurskategorier',
-            'kurssteder',
-            'instruktorer',
-        );
-
-        foreach ($kursagenten_shortcodes as $shortcode) {
-            if (has_shortcode($post->post_content, $shortcode)) {
-                return true;
-            }
-        }
-
+        // Only assigned WordPress pages from Kursdesign, not pages that merely contain shortcodes
         $required_pages = self::get_required_pages();
         foreach (array_keys($required_pages) as $page_key) {
             $page_id = get_option('ka_page_' . $page_key);
@@ -2960,6 +2968,9 @@ if (queryString) {
      * @return array
      */
     public function filter_document_title_parts($title_parts) {
+        if (function_exists('kursagenten_seo_disabled') && kursagenten_seo_disabled()) {
+            return $title_parts;
+        }
         if (is_tax('ka_instructors')) {
             $term = get_queried_object();
             if ($term instanceof WP_Term) {
@@ -2979,6 +2990,9 @@ if (queryString) {
      * @return string
      */
     public function filter_wpseo_title($title) {
+        if (function_exists('kursagenten_seo_disabled') && kursagenten_seo_disabled()) {
+            return $title;
+        }
         if (is_tax('ka_instructors')) {
             $term = get_queried_object();
             if ($term instanceof WP_Term) {
@@ -2998,12 +3012,95 @@ if (queryString) {
      * @return string
      */
     public function filter_rank_math_title($title) {
+        if (function_exists('kursagenten_seo_disabled') && kursagenten_seo_disabled()) {
+            return $title;
+        }
         if (is_tax('ka_instructors')) {
             $term = get_queried_object();
             if ($term instanceof WP_Term) {
                 $display = $this->get_instructor_display_name($term);
                 if (!empty($display)) {
                     return $display;
+                }
+            }
+        }
+        return $title;
+    }
+
+    /**
+     * Adjust Slim SEO title for instructor taxonomy
+     *
+     * @param string $title Current title
+     * @param int    $object_id Term ID when on taxonomy archive
+     * @return string
+     */
+    public function filter_slim_seo_title($title, $object_id) {
+        if (function_exists('kursagenten_seo_disabled') && kursagenten_seo_disabled()) {
+            return $title;
+        }
+        if (is_tax('ka_instructors')) {
+            $term = get_term($object_id);
+            if ($term instanceof WP_Term && $term->taxonomy === 'ka_instructors') {
+                $display = $this->get_instructor_display_name($term);
+                if (!empty($display)) {
+                    return $display;
+                }
+            }
+        }
+        return $title;
+    }
+
+    /**
+     * Adjust SEOPress title for instructor taxonomy
+     *
+     * @param string $title Current title
+     * @return string
+     */
+    public function filter_seopress_title($title) {
+        if (function_exists('kursagenten_seo_disabled') && kursagenten_seo_disabled()) {
+            return $title;
+        }
+        if (is_tax('ka_instructors')) {
+            $term = get_queried_object();
+            if ($term instanceof WP_Term) {
+                $display = $this->get_instructor_display_name($term);
+                if (!empty($display)) {
+                    return $display;
+                }
+            }
+        }
+        return $title;
+    }
+
+    /**
+     * Adjust The SEO Framework title for instructor taxonomy
+     *
+     * @param string $title Current title
+     * @param array|null $args Query args (null when in the loop)
+     * @return string
+     */
+    public function filter_tsf_title($title, $args) {
+        if (function_exists('kursagenten_seo_disabled') && kursagenten_seo_disabled()) {
+            return $title;
+        }
+        if (!function_exists('tsf')) {
+            return $title;
+        }
+        $tsf = tsf();
+        $taxonomy = null === $args
+            ? $tsf->query()->get_current_taxonomy()
+            : ($args['taxonomy'] ?? null);
+        if ('ka_instructors' === $taxonomy) {
+            $term_id = null === $args
+                ? $tsf->query()->get_the_real_id()
+                : ($args['id'] ?? null);
+            if ($term_id) {
+                $term = get_term($term_id, 'ka_instructors');
+                if ($term instanceof WP_Term) {
+                    $display = $this->get_instructor_display_name($term);
+                    if (!empty($display)) {
+                        return $display;
+                    }
                 }
             }
         }

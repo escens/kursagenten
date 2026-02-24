@@ -160,8 +160,26 @@ function handleAccordionClick(event) {
     toggleAccordion(event.target);
 }
 
+/**
+ * Location tabs "Vis flere lokasjoner" toggle
+ */
+function initLocationTabsToggle() {
+    const toggles = document.querySelectorAll('.location-tabs-toggle');
+    toggles.forEach((btn) => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const ul = this.closest('.location-tabs');
+            if (!ul) return;
+            const isExpanded = ul.classList.toggle('expanded');
+            this.setAttribute('aria-expanded', isExpanded);
+            this.textContent = isExpanded ? 'Vis færre' : 'Vis flere lokasjoner';
+        });
+    });
+}
+
 // Kjør når DOM er lastet
 document.addEventListener('DOMContentLoaded', function() {
     initExpandableContent();
     initAccordion();
+    initLocationTabsToggle();
 });

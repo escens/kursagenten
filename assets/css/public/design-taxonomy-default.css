@@ -37,7 +37,7 @@
         padding: 0;
     }
     #ka .taxonomy-header-content h1 {
-        font-size: var(--ka-font-xxxl);
+        font-size: var(--ka-font-xl);
     }
 
 }
@@ -573,10 +573,6 @@ box-shadow: none;
         gap: 0.5rem;
     }
     
-    #ka .category-btn {
-       /* padding: 0.4rem 0.8rem;*/
-        /*font-size: 0.85rem;*/
-    }
 }
 
 /* Melding når ingen kurs matcher filteret */
