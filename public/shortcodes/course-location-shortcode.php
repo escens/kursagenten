@@ -101,11 +101,8 @@ class CourseLocationGrid {
         // Prosesser skygge
         $atts['skygge'] = ($atts['skygge'] === 'ja') ? ' skygge' : '';
         
-        // Kalkuler font størrelse
-        $base_font_size = 16;
-        $min_rem = floatval($atts['fontmin']) / $base_font_size;
-        $max_rem = floatval($atts['fontmaks']) / $base_font_size;
-        $atts['fontstr'] = "clamp({$min_rem}rem, 3.5vw - 0.219rem, {$max_rem}rem)";
+        // Kalkuler font størrelse (bruker --ka-base-font, uavhengig av temaets root)
+        $atts['fontstr'] = \GridStyles::build_font_clamp($atts['fontmin'], $atts['fontmaks']);
         
         return $atts;
     }
@@ -310,8 +307,8 @@ class CourseLocationGrid {
             $bildeformen = '';
         }
 
-        $output = "<div class='outer-wrapper {$layout} {$stil}{$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
-        $output .= "<div class='wrapper'>";
+        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil}{$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
+        $output .= "<div class='k-wrapper wrapper'>";
 
         foreach ($terms as $term) {
             // Hent thumbnail
@@ -364,7 +361,7 @@ class CourseLocationGrid {
             }
             
             $image_html = "
-                <a class='image box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
+                <a class='k-image image k-box-inner box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
                     <picture>
                         <img src='{$thumbnail}' 
                              width='" . esc_attr($width) . "' 
@@ -377,24 +374,24 @@ class CourseLocationGrid {
         }
         
         $output = "
-            <div class='box term-{$term->term_id}'>
+            <div class='k-box box term-{$term->term_id}'>
                 {$image_html}
-                <div class='text box-inner'>
-                    <a class='title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
+                <div class='k-text text k-box-inner box-inner'>
+                    <a class='k-title title' href='" . get_term_link($term) . "' title='{$term->name}'>
+                        <{$a['overskrift']} class='k-tittel tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
-                    <div class='description info'>" . wp_kses_post($description) . "</div>";
+                    <div class='k-description description info'>" . wp_kses_post($description) . "</div>";
 
                         // Hent spesifikke steder (fritekst sted fra Kursagenten) - kun hvis stedinfo="ja"
                         if ($a['stedinfo'] === 'ja') {
                             $specific_locations = get_term_meta($term->term_id, 'specific_locations', true);
                             
                             if (!empty($specific_locations) && is_array($specific_locations)) {
-                                $output .= "<a class='infowrapper' href='" . get_term_link($term) . "'><div class='specific-locations info'>";
+                                $output .= "<a class='k-infowrapper infowrapper' href='" . get_term_link($term) . "'><div class='k-specific-locations specific-locations info'>";
                                 $output .= "<ul>";
                                 
                                 foreach ($specific_locations as $location) {
-                                    $output .= "<li class='location-item'>";
+                                    $output .= "<li class='k-location-item location-item'>";
                                     $output .= "" . esc_html($location['description']) . "";                         
                                     $output .= "</li>";
                                 }

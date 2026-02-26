@@ -146,13 +146,13 @@ class Kursagenten_CSS_Output {
                 $css .= '#ka button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
                 $css .= '#ka .courselist-button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
                 $css .= '#ka .ka-button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
-                $css .= '#ka .pamelding { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
+                $css .= '#ka .pamelding:not(.signup-link) { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
                 $css .= '#ka .button { background: var(--ka-button-background); color: var(--ka-button-color); border: none; }';
                 
                 // Hover-effekter for knapper
-                $css .= '#ka button:hover, #ka .courselist-button:hover, #ka .ka-button:hover, #ka .pamelding:hover, #ka .button:hover { background: var(--ka-button-background-darker); }';
-                $css .= '#ka button:focus, #ka .courselist-button:focus, #ka .ka-button:focus, #ka .pamelding:focus, #ka .button:focus { background: var(--ka-button-background-darker); }';
-                $css .= '#ka button:active, #ka .courselist-button:active, #ka .ka-button:active, #ka .pamelding:active, #ka .button:active { background: var(--ka-button-background-darker); }';
+                $css .= '#ka button:hover, #ka .courselist-button:hover, #ka .ka-button:hover, #ka .pamelding:not(.signup-link):hover, #ka .button:hover { background: var(--ka-button-background-darker); }';
+                $css .= '#ka button:focus, #ka .courselist-button:focus, #ka .ka-button:focus, #ka .pamelding:not(.signup-link):focus, #ka .button:focus { background: var(--ka-button-background-darker); }';
+                $css .= '#ka button:active, #ka .courselist-button:active, #ka .ka-button:active, #ka .pamelding:not(.signup-link):active, #ka .button:active { background: var(--ka-button-background-darker); }';
             }
             if ($button_color) {
                 $css .= '--ka-button-color: ' . esc_attr($button_color) . ';';
@@ -160,12 +160,12 @@ class Kursagenten_CSS_Output {
             
             // Hvis kun bakgrunnsfarge er satt, bruk standard tekstfarge
             if ($button_background && !$button_color) {
-                $css .= '#ka button, #ka .courselist-button, #ka .ka-button, #ka .pamelding, #ka .button { color: #ffffff; }';
+                $css .= '#ka button, #ka .courselist-button, #ka .ka-button, #ka .pamelding:not(.signup-link), #ka .button { color: #ffffff; }';
             }
             
             // Hvis kun tekstfarge er satt, bruk standard bakgrunnsfarge
             if ($button_color && !$button_background) {
-                $css .= '#ka button, #ka .courselist-button, #ka .ka-button, #ka .pamelding, #ka .button { background: var(--ka-color); }';
+                $css .= '#ka button, #ka .courselist-button, #ka .ka-button, #ka .pamelding:not(.signup-link), #ka .button { background: var(--ka-color); }';
             }
 
             // Linker

@@ -134,14 +134,15 @@
 
 /* COMMON */
 /**********/
-#ka-main h1 { font-size: var(--ka-font-xxl); line-height: var(--ka-line-height-tight); margin-bottom: 0.5em;}
-#ka-main h1.medium { font-size: var(--ka-font-lg); }
-#ka-main h2 { font-size: var(--ka-font-lg); line-height: var(--ka-line-height-tight); margin-bottom: .5em;}
-#ka-main h2.small { font-size: var(--ka-font-md);}
-#ka-main h3 { font-size: var(--ka-font-md); line-height: var(--ka-line-height-tight);}
-#ka-main h4 { font-size: var(--ka-font-base); font-weight: 600;}
-#ka-main h5 { font-size: var(--ka-font-s); font-weight: 600;}
-#ka-main h6 { font-size: var(--ka-font-xs); font-weight: 600;}
+/* Exclude .tittel (shortcode/block grid titles) so fontmin/fontmaks and user overrides apply */
+#ka-main h1:not(.k-tittel) { font-size: var(--ka-font-xxl); line-height: var(--ka-line-height-tight); margin-bottom: 0.5em;}
+#ka-main h1.medium:not(.k-tittel) { font-size: var(--ka-font-lg); }
+#ka-main h2:not(.k-tittel) { font-size: var(--ka-font-lg); line-height: var(--ka-line-height-tight); margin-bottom: .5em;}
+#ka-main h2.small:not(.k-tittel) { font-size: var(--ka-font-md);}
+#ka-main h3:not(.k-tittel) { font-size: var(--ka-font-md); line-height: var(--ka-line-height-tight);}
+#ka-main h4:not(.k-tittel) { font-size: var(--ka-font-base); font-weight: 600;}
+#ka-main h5:not(.k-tittel) { font-size: var(--ka-font-s); font-weight: 600;}
+#ka-main h6:not(.k-tittel) { font-size: var(--ka-font-xs); font-weight: 600;}
 #ka-main .small { font-size: var(--ka-font-xs); line-height: 1.5;}
 #ka-main .medium { font-size: var(--ka-font-s); line-height: 1.5;}
 #ka-main .medium i.ka-icon { width: var(--ka-font-s); height: var(--ka-font-s);}

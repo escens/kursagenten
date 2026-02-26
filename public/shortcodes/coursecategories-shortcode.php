@@ -95,11 +95,8 @@ class CourseCategories {
         // Prosesser skygge
         $atts['skygge'] = ($atts['skygge'] === 'ja') ? ' skygge' : '';
         
-        // Kalkuler font størrelse
-        $base_font_size = 16;
-        $min_rem = floatval($atts['fontmin']) / $base_font_size;
-        $max_rem = floatval($atts['fontmaks']) / $base_font_size;
-        $atts['fontstr'] = "clamp({$min_rem}rem, 3.5vw - 0.219rem, {$max_rem}rem)";
+        // Kalkuler font størrelse (bruker --ka-base-font, uavhengig av temaets root)
+        $atts['fontstr'] = \GridStyles::build_font_clamp($atts['fontmin'], $atts['fontmaks']);
         
         return $atts;
     }
@@ -257,8 +254,8 @@ class CourseCategories {
             $bildeformen = '';
         }
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
-        $output .= "<div class='wrapper'>";
+        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil} {$kilde}{$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
+        $output .= "<div class='k-wrapper wrapper'>";
 
         foreach ($terms as $term) {
             $thumbnail = $this->get_term_thumbnail($term);
@@ -343,7 +340,7 @@ class CourseCategories {
                 }
             }
             $image_html = "
-                <a class='image box-inner' href='" . esc_url($link_url) . "' title='{$term->name}'>
+                <a class='k-image image k-box-inner box-inner' href='" . esc_url($link_url) . "' title='{$term->name}'>
                     <picture>
                         <img src='{$thumbnail}' 
                              width='" . esc_attr($width) . "' 
@@ -369,20 +366,20 @@ class CourseCategories {
             }
         }
         return "
-            <div class='box term-{$term->term_id}'>
+            <div class='k-box box term-{$term->term_id}'>
                 {$image_html}
-                <div class='text box-inner'>
-                    <a class='title' href='" . esc_url($title_link) . "' title='{$term->name}'>
-                        <{$a['overskrift']} class='tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
+                <div class='k-text text k-box-inner box-inner'>
+                    <a class='k-title title' href='" . esc_url($title_link) . "' title='{$term->name}'>
+                        <{$a['overskrift']} class='k-tittel tittel'>" . ucfirst($term->name) . "</{$a['overskrift']}>
                     </a>
-                    <div class='description info'>" . $short_description . "</div>
+                    <div class='k-description description info'>" . $short_description . "</div>
                 </div>
             </div>";
     }
 
     private function get_category_specific_styles(string $id): string {
         return "<style>
-            #{$id}.skygge:not(.kort) .box img {
+            .{$id}.skygge:not(.kort) .k-box img {
                 -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
                 -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
                 box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.15);

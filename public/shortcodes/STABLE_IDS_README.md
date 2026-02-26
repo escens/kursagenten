@@ -15,19 +15,44 @@ Alle kortkoder i Kursagenten-pluginen genererer nå stabile ID-er som ikke endre
 - `[kurs-i-samme-kategori]` → `kag1`, `kag2`, osv.
 
 ## Eksempel på bruk
+Kortkodene har både `id` og `class` med samme verdi (f.eks. `id="kag1"` og `class="kag1 ..."`).
+Klasser brukes i plugin-CSS for å tillate brukerens egne klasser (via `klasse="min-klasse"`) å overstyre med lik spesifisitet.
+
+Alle kortkode-elementer bruker prefikset `k-` for å unngå konflikter med tema og andre plugins.
+
+**Bakoverkompatibilitet:** Elementene har også de gamle klassene (`wrapper`, `box`, `text`, `tittel`, `title`, `image`, `description`, `infowrapper`, `specific-locations`, `location-item`) ved siden av de nye. Eksisterende custom CSS som bruker de gamle klassene vil fortsatt fungere.
+
+### Tilgjengelige k-klasser
+- `.k-wrapper` – grid-wrapper
+- `.k-box` – enkelt kort/box
+- `.k-box-inner` – innhold i box
+- `.k-text` – tekstområde
+- `.k-tittel` – overskrift (h3)
+- `a.k-title` – lenke rundt tittel
+- `a.k-image` – bilde-lenke
+- `.k-description` – beskrivelse
+- `.k-infowrapper` – info-wrapper (kurssteder)
+- `.k-specific-locations` – stedsliste
+- `.k-location-item` – enkelt sted
+
 ```css
 /* Style den første kortkoden på siden */
-#kag1 .box {
+.kag1 .k-box {
     border: 2px solid #007cba;
 }
 
 /* Style den andre kortkoden på siden */
-#kag2 .box {
+.kag2 .k-box {
     background-color: #f0f0f0;
 }
 
+/* Overstyr med egen klasse fra kortkoden */
+.min-klasse.kort .k-box {
+    border-radius: 12px;
+}
+
 /* Style alle kortkoder */
-[id^="kag"] .box {
+[class^="kag"] .k-box {
     margin-bottom: 2rem;
 }
 ```

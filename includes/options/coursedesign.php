@@ -1007,12 +1007,13 @@ class Designmaler {
                     <p class="description">
                         <strong>Nyttige selectorer:</strong><br>
                         <code class="copytext" title="Kopier til utklippstavle">#ka</code> - Den ytterste wrapperen på alle frontend-sider som hører til utvidelsen<br>
-                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-single</code> - Enkeltkurs-sider<br>
-                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-archive</code> - Kurslister<br>
-                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy</code> - Taksonomi-sider<br>
-                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-course-card</code> - Kurskort i lister<br>
+                        <code class="copytext" title="Kopier til utklippstavle">body[class*="kursagenten-single"] #ka</code> - Enkeltkurs-sider<br>
+                        <code class="copytext" title="Kopier til utklippstavle">body[class*="kursagenten-archive"] #ka</code> - Kurslister (archive)<br>
+                        <code class="copytext" title="Kopier til utklippstavle">body[class*="kursagenten-taxonomy"] #ka</code> - Taksonomi-sider<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .courselist-item</code> - Kurskort i lister<br>
                         <code class="copytext" title="Kopier til utklippstavle">#ka .ka-button</code> - Standard knapper<br>
-                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-section</code> - Seksjoner i kursinnhold
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-section</code> - Seksjoner i kursinnhold<br>
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy-header</code> - Header på taksonomi-sider
                     </p>
                 </div>
 
@@ -2074,11 +2075,29 @@ class Designmaler {
 
     /**
      * Determine whether we are rendering a Kursagenten frontend context.
+     * Used for custom CSS output - includes shortcode pages so styling works when [kursliste] etc. is used on any page.
      *
      * @return bool
      */
     private function is_kursagenten_frontend_context() {
-        return self::is_kursagenten_page();
+        if (self::is_kursagenten_page()) {
+            return true;
+        }
+        // Also include pages with Kursagenten shortcodes (for custom CSS to apply)
+        if (!is_page()) {
+            return false;
+        }
+        $post = get_post();
+        if (!($post instanceof WP_Post)) {
+            return false;
+        }
+        $kursagenten_shortcodes = array('kursliste', 'kurskategorier', 'kurssteder', 'instruktorer');
+        foreach ($kursagenten_shortcodes as $shortcode) {
+            if (has_shortcode($post->post_content, $shortcode)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

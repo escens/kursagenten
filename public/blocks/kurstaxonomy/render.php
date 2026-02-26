@@ -58,7 +58,7 @@ function render_kurstaxonomy_block($attributes) {
         esc_attr($class_string)
     );
     
-    $output .= '<div class="wrapper">';
+    $output .= '<div class="k-wrapper wrapper">';
 
     foreach ($terms as $term) {
         // Get term image (assuming you have a term meta for image)
@@ -66,28 +66,28 @@ function render_kurstaxonomy_block($attributes) {
         $image_url = $image_id ? wp_get_attachment_image_url($image_id, 'medium') : '';
         $default_image = plugin_dir_url(__FILE__) . '../../assets/images/default.jpg'; // Adjust path as needed
         
-        $output .= '<div class="box">';
-        $output .= '<div class="box-inner">';
+        $output .= '<div class="k-box box">';
+        $output .= '<div class="k-box-inner box-inner">';
         
         // Image section
         $output .= sprintf(
-            '<a href="%s" class="image"><picture><img src="%s" alt="%s"></picture></a>',
+            '<a href="%s" class="k-image image"><picture><img src="%s" alt="%s"></picture></a>',
             esc_url(get_term_link($term)),
             esc_url($image_url ?: $default_image),
             esc_attr($term->name)
         );
         
         // Text section
-        $output .= '<div class="text">';
+        $output .= '<div class="k-text text">';
         $output .= sprintf(
-            '<a href="%s" class="title"><h3 class="tittel">%s</h3></a>',
+            '<a href="%s" class="k-title title"><h3 class="k-tittel tittel">%s</h3></a>',
             esc_url(get_term_link($term)),
             esc_html($term->name)
         );
         
         if ($attributes['visBeskrivelse'] && !empty($term->description)) {
             $output .= sprintf(
-                '<p class="description">%s</p>',
+                '<p class="k-description description">%s</p>',
                 wp_kses_post($term->description)
             );
         }

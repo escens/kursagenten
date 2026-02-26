@@ -86,11 +86,8 @@ class RelatedCourses {
         // Prosesser skygge
         $atts['skygge'] = ($atts['skygge'] === 'ja') ? ' skygge' : '';
         
-        // Kalkuler font størrelse
-        $base_font_size = 16;
-        $min_rem = floatval($atts['fontmin']) / $base_font_size;
-        $max_rem = floatval($atts['fontmaks']) / $base_font_size;
-        $atts['fontstr'] = "clamp({$min_rem}rem, 3.5vw - 0.219rem, {$max_rem}rem)";
+        // Kalkuler font størrelse (bruker --ka-base-font, uavhengig av temaets root)
+        $atts['fontstr'] = \GridStyles::build_font_clamp($atts['fontmin'], $atts['fontmaks']);
         
         return $atts;
     }
@@ -131,7 +128,7 @@ class RelatedCourses {
 
     private function get_course_specific_styles(string $id): string {
         return "<style>
-            #{$id}.skygge:not(.kort) .box img {
+            .{$id}.skygge:not(.kort) .k-box img {
                 -webkit-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
                 -moz-box-shadow: 0px 2px 8px 0px rgba(0,0,0,0.15);
                 box-shadow: 0px 2px 8px 0px rgba(53, 53, 53, 0.15);
@@ -156,8 +153,8 @@ class RelatedCourses {
             $bildeformen = '';
         }
 
-        $output = "<div class='outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
-        $output .= "<div class='wrapper'>";
+        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
+        $output .= "<div class='k-wrapper wrapper'>";
 
         foreach ($posts as $related_post) {
             $thumbnail_data = $this->get_thumbnail_data($related_post);
@@ -218,8 +215,8 @@ class RelatedCourses {
         }
         
         return "
-            <div class='box term-{$post->ID}'>
-                <a class='image box-inner' href='" . esc_url($link_url) . "' title='{$title}'>
+            <div class='k-box box term-{$post->ID}'>
+                <a class='k-image image k-box-inner box-inner' href='" . esc_url($link_url) . "' title='{$title}'>
                     <picture>
                         <img src='{$thumbnail_url}' 
                              width='{$thumbnail_width}' 
@@ -229,11 +226,11 @@ class RelatedCourses {
                              decoding='async'>
                     </picture>
                 </a>
-                <div class='text box-inner'>
-                    <a class='title' href='" . esc_url($link_url) . "' title='{$title}'>
-                        <{$a['overskrift']} class='tittel'>{$title}</{$a['overskrift']}>
+                <div class='k-text text k-box-inner box-inner'>
+                    <a class='k-title title' href='" . esc_url($link_url) . "' title='{$title}'>
+                        <{$a['overskrift']} class='k-tittel tittel'>{$title}</{$a['overskrift']}>
                     </a>
-                    <div class='description'>" . get_the_excerpt($post->ID) . "</div>
+                    <div class='k-description description'>" . get_the_excerpt($post->ID) . "</div>
                 </div>
             </div>";
     }

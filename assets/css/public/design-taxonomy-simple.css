@@ -17,18 +17,18 @@
     opacity: 0.8;
 }
 
-#ka .ka-footer-content #kag1.kort .box {
+#ka .ka-footer-content .kag1.kort .k-box {
     -webkit-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
     -moz-box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
     box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.05);
 }
 
-#ka .ka-footer-content #kag1.kort:hover .box {
+#ka .ka-footer-content .kag1.kort:hover .k-box {
     -webkit-box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1);
     -moz-box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1);
     box-shadow: 0px 1px 6px 0px rgba(0, 0, 0, 0.1);
 }
 
-#ka .ka-footer-content #kag1.rad .text a.title {
+#ka .ka-footer-content .kag1.rad .k-text a.k-title {
     justify-content: center;
 }
