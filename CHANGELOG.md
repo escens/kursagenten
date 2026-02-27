@@ -1,5 +1,6 @@
 ## 1.1.15 - 2026-02-24
-- Fix: Forbedret css styling av kortkoder.
+- Fix: Forbedret css styling av egne klasser i kortkoder.
+- Lagt til: Mulighet for å vise/skjule link til flere kategorier, intstruktører eller kurssteder under kurslisten på taksonomisider. Skrudd på standard.
 
 ## 1.1.14 - 2026-02-24
 - Fix: Skjult kursbilder i Mediebibliotek. De skal ikke kunne brukes på sider, da de kan slettes via Kursagenten og kan skape ødelagte linker.

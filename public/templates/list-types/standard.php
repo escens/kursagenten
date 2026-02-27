@@ -299,9 +299,9 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     <h3 class="course-title">
                         <a href="<?php echo esc_url($course_link); ?>" class="course-link"><?php echo esc_html($course_title); ?></a>
                         <?php if ($is_full) : ?>
-                            <span class="course-available full">Fullt</span>
+                            <span class="course-available ka-full">Fullt</span>
                         <?php elseif (!$show_registration) : ?>
-                            <span class="course-available on-demand">På forespørsel</span>
+                            <span class="course-available ka-on-demand">På forespørsel</span>
                         <?php else : ?>
                             <span class="course-available">Ledige plasser</span>
                         <?php endif; ?>

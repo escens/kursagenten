@@ -191,19 +191,19 @@ $render_courselist = static function ($extra_class = '') use ($all_coursedates, 
 
                     // Normaliser status for ledige plasser / fullt / på forespørsel
                     if (isset($coursedate['course_isFull']) && $coursedate['course_isFull'] === true) {
-                        $item_class      .= ' full';
+                        $item_class      .= ' ka-full';
                         $available_text   = 'Kurset er fullt';
-                        $available_class  = 'full';
+                        $available_class  = 'ka-full';
                     } else {
                         $show_registration = get_post_meta($coursedate['id'], 'ka_course_showRegistrationForm', true);
                         if (empty($show_registration) || $show_registration === 'false') {
-                            $item_class     .= ' on-demand';
+                            $item_class     .= ' ka-on-demand';
                             $available_text  = 'På forespørsel';
-                            $available_class = 'on-demand';
+                            $available_class = 'ka-on-demand';
                         } else {
-                            $item_class     .= ' available';
+                            $item_class     .= ' ka-available';
                             $available_text  = 'Ledige plasser';
-                            $available_class = 'available';
+                            $available_class = 'ka-available';
                         }
                     }
                     ?>
@@ -576,7 +576,11 @@ do_action('ka_singel_header_before');
                                 <!-- Kurs i samme kategori -->
                                     <div class="ka-content-container title-section">
                                         <h3>Kurs i samme kategori</h3>
-                                        <?php echo do_shortcode('[kurs-i-samme-kategori overskrift="div" layout="liste" grid="1" gridtablet="1" gridmobil="1" bildestr="0" fontmin="15px" fontmaks="18px" avstand="2em 0" radavstand="1em"]'); ?>
+                                        <?php
+                                        $archive_show_images = get_option('kursagenten_show_images', 'yes');
+                                        $related_bildestr = ($archive_show_images === 'yes') ? '80px' : '0';
+                                        echo do_shortcode('[kurs-i-samme-kategori overskrift="div" layout="liste" grid="1" gridtablet="1" gridmobil="1" bildestr="' . esc_attr($related_bildestr) . '" fontmin="15px" fontmaks="18px" avstand="2em 0" radavstand="1em"]');
+                                        ?>
                                     </div>
                             </div>
                             <?php do_action('ka_singel_aside_after'); ?>

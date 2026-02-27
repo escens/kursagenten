@@ -42,7 +42,8 @@ class RelatedCourses {
             'fontmin' => '13px',
             'fontmaks' => '18px',
             'avstand' => '2em .5em',
-            'vis' => 'standard'
+            'vis' => 'standard',
+            'klasse' => ''
         ];
 
         $a = shortcode_atts($defaults, $atts);
@@ -146,6 +147,7 @@ class RelatedCourses {
         $utdrag = $a['utdrag'];
         $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
+        $custom_class = !empty($a['klasse']) ? ' ' . esc_attr($a['klasse']) : '';
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
@@ -153,7 +155,7 @@ class RelatedCourses {
             $bildeformen = '';
         }
 
-        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}' id='{$id}'>";
+        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
         $output .= "<div class='k-wrapper wrapper'>";
 
         foreach ($posts as $related_post) {

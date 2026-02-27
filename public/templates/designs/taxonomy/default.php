@@ -477,6 +477,31 @@ do_action('ka_taxonomy_header_before', $term);
             ?>
         </div>
     </section>
+    <?php if (get_taxonomy_setting($taxonomy, 'show_footer_links', '1') === '1') : ?>
+    <?php $footer_bildestr = (get_taxonomy_setting($taxonomy, 'show_images', 'yes') === 'yes') ? '80px' : '0px'; ?>
+    <section class="ka-section ka-footer">
+        <div class="ka-content-container">
+            <?php if ($taxonomy === 'ka_coursecategory') : ?>
+                <h2>Flere kurskategorier</h2>
+                <?php 
+                // Viderefør transport-parametere st og sc til kurskategorier-shortcoden
+                $st = isset($_GET['st']) ? sanitize_text_field((string)$_GET['st']) : '';
+                $sc = isset($_GET['sc']) ? sanitize_text_field((string)$_GET['sc']) : '';
+                $skjul_chip = ($sc === '0') ? ' skjul_sted_chip="ja"' : '';
+                $st_attr = ($st !== '') ? ' st="' . esc_attr($st) . '"' : '';
+                echo do_shortcode('[kurskategorier layout="rad" stil="kort" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" bildestr="' . esc_attr($footer_bildestr) . '" overskrift="h4" fontmin="13px" fontmaks="16px" avstand="2em .5em" klasse="kurskategorier-footer"' . $st_attr . $skjul_chip . ']'); 
+                ?>
+            <?php elseif ($taxonomy === 'ka_instructors') : ?>
+                <h2>Flere instruktører</h2>
+                <?php echo do_shortcode('[instruktorer layout="rad" stil="kort" grid=3 gridtablet=2 gridmobil=1 radavstand="1rem" bildestr="' . esc_attr($footer_bildestr) . '" overskrift="h4" fontmin="13px" fontmaks="16px" avstand="2em .5em" klasse="instruktorer-footer"]'); ?>
+            <?php elseif ($taxonomy === 'ka_course_location') : ?>
+                <h2>Flere kurssteder</h2>
+                <?php echo do_shortcode('[kurssteder layout="rad" stil="kort" grid=5 gridtablet=2 gridmobil=1 radavstand="1rem" bildestr="' . esc_attr($footer_bildestr) . '" overskrift="h4" fontmin="13px" fontmaks="16px" avstand="2em .5em" klasse="kurssteder-footer"]'); ?>
+            <?php endif; ?>
+        </div>
+    </section>
+    <?php endif; ?>
+
 </article>
 
 <?php

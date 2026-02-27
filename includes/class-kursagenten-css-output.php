@@ -176,10 +176,10 @@ class Kursagenten_CSS_Output {
                 $css .= '--ka-link-color-darker: ' . $this->adjust_lightness($link_color, -10) . ';';
                 
                 // Endre farger på linker
-                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter) { color: var(--ka-link-color); }';
-                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):hover { color: var(--ka-link-color-darker); }';
-                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):focus { color: var(--ka-link-color-darker); }';
-                $css .= '#ka a:not(.courselist-button):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):active { color: var(--ka-link-color-darker); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-title a):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter) { color: var(--ka-link-color); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-title a):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):hover { color: var(--ka-link-color-darker); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-title a):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):focus { color: var(--ka-link-color-darker); }';
+                $css .= '#ka a:not(.courselist-button):not(.course-title a):not(.course-linkk):not(.ka-button):not(.button):not(.header-links a):not(.button-filter):active { color: var(--ka-link-color-darker); }';
             }
             
             // Hvis kun linkfarge er satt, bruk standard hover-farge

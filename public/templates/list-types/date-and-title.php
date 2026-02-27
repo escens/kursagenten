@@ -251,9 +251,9 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                 <a href="<?php echo esc_url($course_link); ?>">
                     <div class="compact-course-first-column">
                         <?php if ($is_full) : ?>
-                                <span class="course-available full"></span>
+                                <span class="course-available ka-full"></span>
                             <?php elseif (!$show_registration) : ?>
-                                <span class="course-available on-demand"></span>
+                                <span class="course-available ka-on-demand"></span>
                             <?php else : ?>
                                 <span class="course-available"></span>
                         <?php endif; ?>

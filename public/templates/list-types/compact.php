@@ -253,11 +253,11 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                          <?php echo esc_html($course_title); ?>
                      </a>
                      <?php if ($is_full) : ?>
-                         <span class="compact-availability full">Fullt</span>
+                         <span class="compact-availability ka-full">Fullt</span>
                      <?php elseif (!$show_registration) : ?>
-                         <span class="compact-availability on-demand">På forespørsel</span>
+                         <span class="compact-availability ka-on-demand">På forespørsel</span>
                      <?php else : ?>
-                         <span class="compact-availability available">Ledige plasser</span>
+                         <span class="compact-availability ka-available">Ledige plasser</span>
                      <?php endif; ?>
                  </h3>
                  

@@ -573,7 +573,7 @@ class Designmaler {
                                 <?php
                                 $current_design = get_option('kursagenten_single_design', 'default');
                                 $designs = [
-                                    'default' => 'Standard',
+                                    'default' => 'Hero - stort bakgrunnsbilde',
                                     'modern'  => 'Moderne',
                                     'minimal' => 'Minimal',
                                     'boxes'   => 'Bokser - standard',
@@ -797,6 +797,19 @@ class Designmaler {
                         </div>
                     </div>
 
+                    <!-- Vis link-bokser til flere kategorier/steder/instruktører -->
+                    <div class="option-row">
+                        <label class="option-label">Vis link-bokser:</label>
+                        <div class="option-input">
+                            <?php
+                            $show_footer_links = get_option('kursagenten_taxonomy_show_footer_links', '1');
+                            ?>
+                            <input type="hidden" name="kursagenten_taxonomy_show_footer_links" value="0">
+                            <input type="checkbox" name="kursagenten_taxonomy_show_footer_links" value="1" <?php checked($show_footer_links, '1'); ?>>
+                            Vis link-bokser til flere kategorier/steder/instruktører etter kurslisten
+                        </div>
+                    </div>
+
                     <!-- Spesifikke innstillinger per taksonomi -->
                     <div class="taxonomy-specific-settings">
                         <h4>Overstyr innstillinger for spesifikke taksonomier</h4>
@@ -952,6 +965,21 @@ class Designmaler {
                                         </div>
                                     </div>
 
+                                    <!-- Vis link-bokser til flere kategorier/steder/instruktører -->
+                                    <div class="option-row">
+                                        <label class="option-label">Vis link-bokser etter kurslisten:</label>
+                                        <div class="option-input">
+                                            <?php
+                                            $show_footer_links_specific = get_option("kursagenten_taxonomy_{$tax_name}_show_footer_links", '');
+                                            ?>
+                                            <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_show_footer_links">
+                                                <option value="" <?php selected($show_footer_links_specific, ''); ?>>Bruk standard innstilling</option>
+                                                <option value="1" <?php selected($show_footer_links_specific, '1'); ?>>Ja</option>
+                                                <option value="0" <?php selected($show_footer_links_specific, '0'); ?>>Nei</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                             <?php if ($tax_name === 'ka_instructors'): ?>
                                     <!-- Navnevisning -->
                                     <div class="option-row">
@@ -1013,7 +1041,8 @@ class Designmaler {
                         <code class="copytext" title="Kopier til utklippstavle">#ka .courselist-item</code> - Kurskort i lister<br>
                         <code class="copytext" title="Kopier til utklippstavle">#ka .ka-button</code> - Standard knapper<br>
                         <code class="copytext" title="Kopier til utklippstavle">#ka .ka-section</code> - Seksjoner i kursinnhold<br>
-                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy-header</code> - Header på taksonomi-sider
+                        <code class="copytext" title="Kopier til utklippstavle">#ka .ka-taxonomy-header</code> - Header på taksonomi-sider<br>
+                        <code class="copytext" title="Kopier til utklippstavle">[id^="kag"]</code> - Alle elementer med id som starter med "kag"
                     </p>
                 </div>
 
@@ -1155,6 +1184,17 @@ class Designmaler {
             )
         );
 
+        // Registrer innstilling for link-bokser etter kurslisten på taksonomi-sider
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_show_footer_links',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => '1'
+            )
+        );
+
         // Registrer innstilling for antall kurs per side
         register_setting(
             'design_option_group',
@@ -1264,7 +1304,7 @@ class Designmaler {
             );
 
             // Registrer spesifikke innstillinger for hver taksonomi
-            foreach (['layout', 'design', 'list_type', 'show_images'] as $setting) {
+            foreach (['layout', 'design', 'list_type', 'show_images', 'show_footer_links'] as $setting) {
                 register_setting(
                     'design_option_group',
                     "kursagenten_taxonomy_{$tax_name}_{$setting}",

@@ -191,12 +191,12 @@
     font-weight: 500;
     z-index: 2;
 }
-#ka .ka-container .card-availability.full {
+#ka .ka-container .card-availability.ka-full {
     background-color: #ffe1e0;
     color: #c74444;
 }
 
-#ka .ka-container .card-availability.on-demand {
+#ka .ka-container .card-availability.ka-on-demand {
     background-color: #f5f5f5;
     color: #666;
 }
@@ -223,7 +223,7 @@
     margin: 0 5px 0 0;
 }
 
-#ka .ka-container span.course-available.on-demand:before {
+#ka .ka-container span.course-available.ka-on-demand:before {
     background-color: #999;
 }
 

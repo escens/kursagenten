@@ -274,9 +274,9 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                 <span class="sr-only">Se kurs: <?php echo esc_html($course_title); ?></span>
             </a>
             <?php if ($is_full) : ?>
-                <span class="card-availability course-available full">Fullt</span>
+                <span class="card-availability course-available ka-full">Fullt</span>
             <?php elseif (!$show_registration) : ?>
-                <span class="card-availability course-available on-demand">På forespørsel</span>
+                <span class="card-availability course-available ka-on-demand">På forespørsel</span>
             <?php else : ?>
                 <span class="card-availability course-available">Ledige plasser</span>
             <?php endif; ?>
@@ -293,11 +293,11 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     <?php if ($show_images === 'no') : ?>
                     <?php if ($is_full) : ?>
                         <div class="course-availability ka-tooltip ka-tooltip-left" data-title="Fullt">
-                            <span class="card-availability course-available full"></span>
+                            <span class="card-availability course-available ka-full"></span>
                         </div>
                     <?php elseif (!$show_registration) : ?>
                         <div class="course-availability ka-tooltip ka-tooltip-left" data-title="På forespørsel">
-                            <span class="card-availability course-available on-demand"></span>
+                            <span class="card-availability course-available ka-on-demand"></span>
                         </div>
                     <?php else : ?>
                         <div class="course-availability ka-tooltip ka-tooltip-left" data-title="Ledige plasser">
