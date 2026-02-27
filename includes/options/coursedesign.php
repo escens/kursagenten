@@ -590,6 +590,69 @@ class Designmaler {
                             </select>
                         </div>
                     </div>
+
+                    <!-- Bakgrunn i toppfelt – Enkeltkurs (viser kun når Hero er valgt) -->
+                    <?php
+                    $single_design = get_option('kursagenten_single_design', 'default');
+                    $single_hero_bg_mode = get_option('kursagenten_single_hero_header_bg_mode', 'image_placeholder');
+                    $single_hero_overlay = get_option('kursagenten_single_hero_header_overlay', 'dark');
+                    $single_hero_font_color = get_option('kursagenten_single_hero_header_font_color', '');
+                    $single_hero_bg_color = get_option('kursagenten_single_hero_header_bg_color', '');
+                    ?>
+                    <div class="option-row hero-header-settings-row hero-single-settings-row" id="hero-single-settings-row" style="<?php echo ($single_design === 'default') ? '' : 'display: none;'; ?>">
+                        <label class="option-label">Bakgrunn i toppfelt:</label>
+                        <div class="option-input">
+                            <div class="taxonomy-override hero-header-settings-box">
+                                <div class="taxonomy-override-settings">
+                                    <div class="option-row">
+                                        <label class="option-label">Bakgrunnstype:</label>
+                                        <div class="option-input">
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_single_hero_header_bg_mode" value="image_placeholder" <?php checked($single_hero_bg_mode, 'image_placeholder'); ?>>
+                                                Bruk kursbilde, og <a href="/wp-admin/admin.php?page=design&ka_open=valg-for-bilder%2Cenkeltkurs#valg-for-bilder">plassholderbilde for kurs</a> om kursbilde mangler
+                                            </label><br>
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_single_hero_header_bg_mode" value="image_bgcolor" <?php checked($single_hero_bg_mode, 'image_bgcolor'); ?>>
+                                                Bruk kursbilde, og bakgrunnsfarge om kursbilde mangler
+                                            </label><br>
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_single_hero_header_bg_mode" value="bgcolor_only" <?php checked($single_hero_bg_mode, 'bgcolor_only'); ?>>
+                                                Bruk kun bakgrunnsfarge
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="option-row hero-overlay-settings" id="hero-single-overlay-settings" style="<?php echo in_array($single_hero_bg_mode, ['image_placeholder', 'image_bgcolor']) ? '' : 'display: none;'; ?>">
+                                        <label class="option-label">Bakgrunnsbilde og overlay:</label>
+                                        <div class="option-input">
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_single_hero_header_overlay" value="dark" <?php checked($single_hero_overlay, 'dark'); ?>>
+                                                Lys tekst og mørkt overlay (standard)
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_single_hero_header_overlay" value="light" <?php checked($single_hero_overlay, 'light'); ?>>
+                                                Mørk tekst og lyst overlay
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="option-row hero-color-settings" id="hero-single-color-settings">
+                                        <label class="option-label">Farger:</label>
+                                        <div class="option-input">
+                                            <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: center;">
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 4px; font-size: 0.9em;">Velg font-farge:</label>
+                                                    <input type="text" name="kursagenten_single_hero_header_font_color" value="<?php echo esc_attr($single_hero_font_color); ?>" class="ka-color-picker" data-default-color="">
+                                                </div>
+                                                <div id="hero-single-bg-color-setting" style="<?php echo in_array($single_hero_bg_mode, ['image_bgcolor', 'bgcolor_only']) ? '' : 'display: none;'; ?>">
+                                                    <label style="display: block; margin-bottom: 4px; font-size: 0.9em;">Velg bakgrunnsfarge:</label>
+                                                    <input type="text" name="kursagenten_single_hero_header_bg_color" value="<?php echo esc_attr($single_hero_bg_color); ?>" class="ka-color-picker" data-default-color="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Taxonomi -->
@@ -649,6 +712,69 @@ class Designmaler {
                                 }
                                 ?>
                             </select>
+                        </div>
+                    </div>
+
+                    <!-- Bakgrunn i toppfelt – Taksonomisider (viser kun når Hero er valgt) -->
+                    <?php
+                    $taxonomy_design = get_option('kursagenten_taxonomy_design', 'default');
+                    $taxonomy_hero_bg_mode = get_option('kursagenten_taxonomy_hero_header_bg_mode', 'image_placeholder');
+                    $taxonomy_hero_overlay = get_option('kursagenten_taxonomy_hero_header_overlay', 'dark');
+                    $taxonomy_hero_font_color = get_option('kursagenten_taxonomy_hero_header_font_color', '');
+                    $taxonomy_hero_bg_color = get_option('kursagenten_taxonomy_hero_header_bg_color', '');
+                    ?>
+                    <div class="option-row hero-header-settings-row hero-taxonomy-settings-row" id="hero-taxonomy-settings-row" style="<?php echo ($taxonomy_design === 'hero') ? '' : 'display: none;'; ?>">
+                        <label class="option-label">Bakgrunn i toppfelt:</label>
+                        <div class="option-input">
+                            <div class="taxonomy-override hero-header-settings-box">
+                                <div class="taxonomy-override-settings">
+                                    <div class="option-row">
+                                        <label class="option-label">Bakgrunnstype:</label>
+                                        <div class="option-input">
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_taxonomy_hero_header_bg_mode" value="image_placeholder" <?php checked($taxonomy_hero_bg_mode, 'image_placeholder'); ?>>
+                                                Bruk taksonomibilde, og <a href="/wp-admin/admin.php?page=design&ka_open=valg-for-bilder%2Ctaksonomi#valg-for-bilder">generelt plassholderbilde</a> om bilde mangler
+                                            </label><br>
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_taxonomy_hero_header_bg_mode" value="image_bgcolor" <?php checked($taxonomy_hero_bg_mode, 'image_bgcolor'); ?>>
+                                                Bruk taksonomibilde, og bakgrunnsfarge om bilde mangler
+                                            </label><br>
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_taxonomy_hero_header_bg_mode" value="bgcolor_only" <?php checked($taxonomy_hero_bg_mode, 'bgcolor_only'); ?>>
+                                                Bruk kun bakgrunnsfarge
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="option-row hero-overlay-settings" id="hero-taxonomy-overlay-settings" style="<?php echo in_array($taxonomy_hero_bg_mode, ['image_placeholder', 'image_bgcolor']) ? '' : 'display: none;'; ?>">
+                                        <label class="option-label">Bakgrunnsbilde og overlay:</label>
+                                        <div class="option-input">
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_taxonomy_hero_header_overlay" value="dark" <?php checked($taxonomy_hero_overlay, 'dark'); ?>>
+                                                Lys tekst og mørkt overlay (standard)
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="kursagenten_taxonomy_hero_header_overlay" value="light" <?php checked($taxonomy_hero_overlay, 'light'); ?>>
+                                                Mørk tekst og lyst overlay
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="option-row hero-color-settings" id="hero-taxonomy-color-settings">
+                                        <label class="option-label">Farger:</label>
+                                        <div class="option-input">
+                                            <div style="display: flex; flex-wrap: wrap; gap: 1em; align-items: center;">
+                                                <div>
+                                                    <label style="display: block; margin-bottom: 4px; font-size: 0.9em;">Velg font-farge:</label>
+                                                    <input type="text" name="kursagenten_taxonomy_hero_header_font_color" value="<?php echo esc_attr($taxonomy_hero_font_color); ?>" class="ka-color-picker" data-default-color="">
+                                                </div>
+                                                <div id="hero-taxonomy-bg-color-setting" style="<?php echo in_array($taxonomy_hero_bg_mode, ['image_bgcolor', 'bgcolor_only']) ? '' : 'display: none;'; ?>">
+                                                    <label style="display: block; margin-bottom: 4px; font-size: 0.9em;">Velg bakgrunnsfarge:</label>
+                                                    <input type="text" name="kursagenten_taxonomy_hero_header_bg_color" value="<?php echo esc_attr($taxonomy_hero_bg_color); ?>" class="ka-color-picker" data-default-color="">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -1067,18 +1193,30 @@ class Designmaler {
                     .taxonomy-override {
                         margin: 1em 0;
                         padding: 1em;
-                        background: #f8f8f8;
-                        border-radius: 4px;
+                        background: #f8f8f85e;
+                        border-radius: 8px;
+                        border: 1px solid #00000014;    
                     }
                     .taxonomy-override-settings {
                         margin-top: 1em;
-                        background: #fff;
-                        border: 1px solid #ddd;
+
                         border-radius: 4px;
                         padding: 1em;
                     }
                     .taxonomy-override .option-row {
                         margin-bottom: 15px;
+                        padding-bottom: 20px;
+                        align-items: start;
+                    }
+                    .taxonomy-override .option-row:not(:last-child) {
+                        border-bottom: 1px solid #0000000f;
+                    }
+                    .taxonomy-override .option-row .radio-label {
+                        padding-bottom: 4px;
+                        display: inline-block;
+                    }
+                    .taxonomy-override .option-row .wp-picker-container:has(.ka-color-picker[value=""]) {
+                        opacity: 0.6;
                     }
             .checkbox-label {
                 font-weight: 600;
@@ -1366,6 +1504,18 @@ class Designmaler {
         register_setting('design_option_group', 'kursagenten_available_filters');
         register_setting('design_option_group', 'kursagenten_filter_default_height');
         register_setting('design_option_group', 'kursagenten_filter_no_collapse');
+
+        // Hero header background settings – Enkeltkurs (single default)
+        register_setting('design_option_group', 'kursagenten_single_hero_header_bg_mode', array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'image_placeholder'));
+        register_setting('design_option_group', 'kursagenten_single_hero_header_overlay', array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'dark'));
+        register_setting('design_option_group', 'kursagenten_single_hero_header_font_color', array('type' => 'string', 'sanitize_callback' => array($this, 'sanitize_color_value'), 'default' => ''));
+        register_setting('design_option_group', 'kursagenten_single_hero_header_bg_color', array('type' => 'string', 'sanitize_callback' => array($this, 'sanitize_color_value'), 'default' => ''));
+
+        // Hero header background settings – Taksonomisider
+        register_setting('design_option_group', 'kursagenten_taxonomy_hero_header_bg_mode', array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'image_placeholder'));
+        register_setting('design_option_group', 'kursagenten_taxonomy_hero_header_overlay', array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'dark'));
+        register_setting('design_option_group', 'kursagenten_taxonomy_hero_header_font_color', array('type' => 'string', 'sanitize_callback' => array($this, 'sanitize_color_value'), 'default' => ''));
+        register_setting('design_option_group', 'kursagenten_taxonomy_hero_header_bg_color', array('type' => 'string', 'sanitize_callback' => array($this, 'sanitize_color_value'), 'default' => ''));
         
     }
 
@@ -1493,6 +1643,24 @@ class Designmaler {
         }
         // Otherwise return true (checkbox is checked)
         return true;
+    }
+
+    /**
+     * Sanitize color value (hex, rgb, rgba, hsl)
+     *
+     * @param string $value The color value to sanitize
+     * @return string Sanitized color value or empty string
+     */
+    public function sanitize_color_value($value) {
+        if (!is_string($value) || trim($value) === '') {
+            return '';
+        }
+        $value = trim($value);
+        // Allow hex, rgb, rgba, hsl, hsla
+        if (preg_match('/^(#[0-9a-fA-F]{3,8}|rgb\([^)]+\)|rgba\([^)]+\)|hsl\([^)]+\)|hsla\([^)]+\))$/', $value)) {
+            return $value;
+        }
+        return sanitize_text_field($value);
     }
 
     public function enqueue_admin_scripts($hook) {
@@ -1836,12 +2004,74 @@ class Designmaler {
                     setTimeout(function() {
                         toggleGridColumnsSettings();
                         toggleTaxonomySpecificGridColumns();
+                        if (typeof updateHeroHeaderRowVisibility === "function") updateHeroHeaderRowVisibility();
+                        if (typeof updateHeroSingleOverlayVisibility === "function") updateHeroSingleOverlayVisibility();
+                        if (typeof updateHeroSingleColorVisibility === "function") updateHeroSingleColorVisibility();
+                        if (typeof updateHeroTaxonomyOverlayVisibility === "function") updateHeroTaxonomyOverlayVisibility();
+                        if (typeof updateHeroTaxonomyColorVisibility === "function") updateHeroTaxonomyColorVisibility();
                     }, 10);
                 });
                 
                 // Initial toggle on page load
                 toggleGridColumnsSettings();
                 toggleTaxonomySpecificGridColumns();
+
+                // Hero header settings: separate for Single and Taxonomy, show only when Hero is selected AND section is expanded
+                function updateHeroSingleRowVisibility() {
+                    var singleDesign = $("select[name='kursagenten_single_design']").val();
+                    var $row = $("#hero-single-settings-row");
+                    var $card = $row.closest(".options-card");
+                    var isCollapsed = ($card.length && $card.attr("data-collapsed") === "true");
+                    var show = (singleDesign === 'default' && !isCollapsed);
+                    $row.toggle(show);
+                }
+                function updateHeroTaxonomyRowVisibility() {
+                    var taxonomyDesign = $("select[name='kursagenten_taxonomy_design']").val();
+                    var $row = $("#hero-taxonomy-settings-row");
+                    var $card = $row.closest(".options-card");
+                    var isCollapsed = ($card.length && $card.attr("data-collapsed") === "true");
+                    var show = (taxonomyDesign === 'hero' && !isCollapsed);
+                    $row.toggle(show);
+                }
+                function updateHeroHeaderRowVisibility() {
+                    updateHeroSingleRowVisibility();
+                    updateHeroTaxonomyRowVisibility();
+                }
+                function updateHeroSingleOverlayVisibility() {
+                    var bgMode = $("input[name='kursagenten_single_hero_header_bg_mode']:checked").val();
+                    var show = (bgMode === 'image_placeholder' || bgMode === 'image_bgcolor');
+                    $("#hero-single-overlay-settings").toggle(show);
+                }
+                function updateHeroSingleColorVisibility() {
+                    var bgMode = $("input[name='kursagenten_single_hero_header_bg_mode']:checked").val();
+                    var showBgColor = (bgMode === 'image_bgcolor' || bgMode === 'bgcolor_only');
+                    $("#hero-single-bg-color-setting").toggle(showBgColor);
+                }
+                function updateHeroTaxonomyOverlayVisibility() {
+                    var bgMode = $("input[name='kursagenten_taxonomy_hero_header_bg_mode']:checked").val();
+                    var show = (bgMode === 'image_placeholder' || bgMode === 'image_bgcolor');
+                    $("#hero-taxonomy-overlay-settings").toggle(show);
+                }
+                function updateHeroTaxonomyColorVisibility() {
+                    var bgMode = $("input[name='kursagenten_taxonomy_hero_header_bg_mode']:checked").val();
+                    var showBgColor = (bgMode === 'image_bgcolor' || bgMode === 'bgcolor_only');
+                    $("#hero-taxonomy-bg-color-setting").toggle(showBgColor);
+                }
+                $("select[name='kursagenten_single_design']").on("change", updateHeroSingleRowVisibility);
+                $("select[name='kursagenten_taxonomy_design']").on("change", updateHeroTaxonomyRowVisibility);
+                $("input[name='kursagenten_single_hero_header_bg_mode']").on("change", function() {
+                    updateHeroSingleOverlayVisibility();
+                    updateHeroSingleColorVisibility();
+                });
+                $("input[name='kursagenten_taxonomy_hero_header_bg_mode']").on("change", function() {
+                    updateHeroTaxonomyOverlayVisibility();
+                    updateHeroTaxonomyColorVisibility();
+                });
+                updateHeroHeaderRowVisibility();
+                updateHeroSingleOverlayVisibility();
+                updateHeroSingleColorVisibility();
+                updateHeroTaxonomyOverlayVisibility();
+                updateHeroTaxonomyColorVisibility();
         });
         JS    
         );

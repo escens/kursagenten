@@ -43,6 +43,14 @@ $options_to_delete = array(
     'kursagenten_taxonomy_design',
     'kursagenten_taxonomy_list_type',
     'kursagenten_taxonomy_view_type',
+    'kursagenten_single_hero_header_bg_mode',
+    'kursagenten_single_hero_header_overlay',
+    'kursagenten_single_hero_header_font_color',
+    'kursagenten_single_hero_header_bg_color',
+    'kursagenten_taxonomy_hero_header_bg_mode',
+    'kursagenten_taxonomy_hero_header_overlay',
+    'kursagenten_taxonomy_hero_header_font_color',
+    'kursagenten_taxonomy_hero_header_bg_color',
     
     // Filter options
     'kursagenten_top_filters',

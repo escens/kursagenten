@@ -372,6 +372,45 @@ function get_taxonomy_meta($term_id, $taxonomy) {
 }
 
 /**
+ * Henter innstillinger for hero-header (toppfelt med bakgrunn)
+ * Brukes av single default og taxonomy hero templates
+ *
+ * @param string $context 'single' eller 'taxonomy'
+ * @return array Keys: bg_mode, overlay, font_color, bg_color, use_image, header_classes
+ */
+function get_hero_header_settings($context = 'single') {
+    $prefix = ($context === 'taxonomy') ? 'kursagenten_taxonomy_hero_header_' : 'kursagenten_single_hero_header_';
+
+    $bg_mode = get_option($prefix . 'bg_mode', 'image_placeholder');
+    $overlay = get_option($prefix . 'overlay', 'dark');
+    $font_color = get_option($prefix . 'font_color', '');
+    $bg_color = get_option($prefix . 'bg_color', '');
+
+    $use_image = ($bg_mode !== 'bgcolor_only');
+    $header_classes = ['hero-header'];
+
+    if ($use_image) {
+        $header_classes[] = 'hero-overlay-' . $overlay;
+    } else {
+        $header_classes[] = 'hero-bgcolor-only';
+    }
+    if ($overlay === 'light') {
+        $header_classes[] = 'hero-overlay-light';
+    } else {
+        $header_classes[] = 'hero-overlay-dark';
+    }
+
+    return [
+        'bg_mode' => $bg_mode,
+        'overlay' => $overlay,
+        'font_color' => $font_color,
+        'bg_color' => $bg_color,
+        'use_image' => $use_image,
+        'header_classes' => implode(' ', $header_classes),
+    ];
+}
+
+/**
  * Henter layout-innstilling og returnerer riktig CSS-klasse
  * 
  * @param string $context Kontekst (single, archive, taxonomy)

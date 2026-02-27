@@ -24,5 +24,6 @@
                 $settings.slideUp(300);
             }
         });
+
     });
 })(jQuery); 

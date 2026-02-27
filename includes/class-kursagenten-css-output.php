@@ -268,6 +268,52 @@ class Kursagenten_CSS_Output {
         
         $css .= '}';
 
+        // Hero header overrides – Enkeltkurs (single default)
+        $single_hero_overlay = get_option('kursagenten_single_hero_header_overlay', 'dark');
+        $single_hero_font_color = get_option('kursagenten_single_hero_header_font_color', '');
+        $single_hero_bg_color = get_option('kursagenten_single_hero_header_bg_color', '');
+
+        if ($single_hero_overlay === 'light') {
+            $css .= '#ka .course-container .ka-header.hero-overlay-light .overlay { ';
+            $css .= 'background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.9)); } ';
+            $css .= '#ka .course-container .ka-header.hero-overlay-light .header-content * { color: #222 !important; } ';
+        }
+        if (!empty($single_hero_font_color)) {
+            $css .= '#ka .course-container .ka-header.hero-overlay-light .header-content *, ';
+            $css .= '#ka .course-container .ka-header .header-content * { color: ' . esc_attr($single_hero_font_color) . ' !important; } ';
+        }
+        if (!empty($single_hero_bg_color)) {
+            $css .= '#ka .course-container .ka-header.hero-bgcolor-only .background-blur, ';
+            $css .= '#ka .course-container .ka-header.hero-bgcolor-only .ka-content-container, ';
+            $css .= '#ka .course-container .ka-header.no-hero-image .background-blur, ';
+            $css .= '#ka .course-container .ka-header.no-hero-image .ka-content-container { ';
+            $css .= 'background-color: ' . esc_attr($single_hero_bg_color) . ' !important; background-image: none !important; } ';
+            $css .= '#ka .course-container .ka-header.no-hero-image .overlay { display: none !important; } ';
+        }
+
+        // Hero header overrides – Taksonomisider
+        $taxonomy_hero_overlay = get_option('kursagenten_taxonomy_hero_header_overlay', 'dark');
+        $taxonomy_hero_font_color = get_option('kursagenten_taxonomy_hero_header_font_color', '');
+        $taxonomy_hero_bg_color = get_option('kursagenten_taxonomy_hero_header_bg_color', '');
+
+        if ($taxonomy_hero_overlay === 'light') {
+            $css .= '#ka .taxonomy-hero-header.hero-overlay-light .overlay { ';
+            $css .= 'background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.9)); } ';
+            $css .= '#ka .taxonomy-hero-header.hero-overlay-light .header-content *, ';
+            $css .= '#ka .taxonomy-hero-header.hero-overlay-light .taxonomy-description { color: #222 !important; } ';
+        }
+        if (!empty($taxonomy_hero_font_color)) {
+            $css .= '#ka .taxonomy-hero-header .header-content *, ';
+            $css .= '#ka .taxonomy-hero-header.hero-overlay-light .header-content *, ';
+            $css .= '#ka .taxonomy-hero-header .taxonomy-description { color: ' . esc_attr($taxonomy_hero_font_color) . ' !important; } ';
+        }
+        if (!empty($taxonomy_hero_bg_color)) {
+            $css .= '#ka .taxonomy-hero-header.no-hero-image .background-blur, ';
+            $css .= '#ka .taxonomy-hero-header.no-hero-image .ka-content-container { ';
+            $css .= 'background-color: ' . esc_attr($taxonomy_hero_bg_color) . ' !important; background-image: none !important; } ';
+            $css .= '#ka  .taxonomy-hero-header.no-hero-image .overlay { display: none !important; } ';
+        }
+
         // Output CSS
         echo '<style type="text/css" id="kursagenten-custom-css">' . $css . '</style>';
     }

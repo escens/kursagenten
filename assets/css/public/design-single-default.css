@@ -76,6 +76,10 @@
         filter: blur(1px);
         z-index: 1;
     }
+    #ka .course-container .ka-header.no-hero-image .background-blur {
+        background-image: none;
+        background-color: var(--ka-alt-background, #f5f5f5);
+    }
     #ka .course-container .ka-header .overlay {
         position: absolute;
         top: 0;
@@ -84,6 +88,12 @@
         height: 100%;
         background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.9));
         z-index: 2;
+    }
+    #ka .course-container .ka-header.no-hero-image .overlay {
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.08));
+    }
+    #ka .course-container .ka-header.no-hero-image .header-content * {
+        color: #222 !important;
     }
     #ka .course-container .header-content{
         z-index: 3;

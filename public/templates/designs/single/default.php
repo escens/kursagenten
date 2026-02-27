@@ -134,10 +134,23 @@ if (current_user_can('editor') || current_user_can('administrator')) {
         ? $kursinnst_options['ka_plassholderbilde_kurs']
         : KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';
 
-    $featured_image_full = get_the_post_thumbnail_url(get_the_ID(), 'full') ?: $placeholder_image;
-    $featured_image_thumb = get_the_post_thumbnail_url(get_the_ID(), 'thumbnail') ?: $placeholder_image;
-    $featured_image_medium = get_the_post_thumbnail_url(get_the_ID(), 'medium') ?: $placeholder_image;
-    $featured_image_large = get_the_post_thumbnail_url(get_the_ID(), 'large') ?: $placeholder_image;
+    $hero_settings = get_hero_header_settings('single');
+    $has_featured_image = (bool) get_the_post_thumbnail_url(get_the_ID(), 'full');
+
+    // Determine if we should use background image (for performance: avoid loading when not needed)
+    $use_bg_image = false;
+    if ($hero_settings['use_image']) {
+        if ($hero_settings['bg_mode'] === 'image_placeholder') {
+            $use_bg_image = true; // Always use image (featured or placeholder)
+        } elseif ($hero_settings['bg_mode'] === 'image_bgcolor' && $has_featured_image) {
+            $use_bg_image = true; // Only use image when we have one
+        }
+    }
+
+    $featured_image_full = $use_bg_image ? (get_the_post_thumbnail_url(get_the_ID(), 'full') ?: $placeholder_image) : '';
+    $featured_image_thumb = $use_bg_image ? (get_the_post_thumbnail_url(get_the_ID(), 'thumbnail') ?: $placeholder_image) : '';
+    $featured_image_medium = $use_bg_image ? (get_the_post_thumbnail_url(get_the_ID(), 'medium') ?: $placeholder_image) : '';
+    $featured_image_large = $use_bg_image ? (get_the_post_thumbnail_url(get_the_ID(), 'large') ?: $placeholder_image) : '';
 
     $wp_content = get_the_content();
 
@@ -174,12 +187,14 @@ if (current_user_can('editor') || current_user_can('administrator')) {
     $all_coursedates = get_all_sorted_coursedates($related_coursedate);
  ?>
 
+<?php if ($use_bg_image && !empty($featured_image_full)) : ?>
 <style>
-    .background-blur { background-image: url('<?php echo esc_url($featured_image_full); ?>'); }
-    @media (max-width: 1600px) { .background-blur { background-image: url('<?php echo esc_url($featured_image_large); ?>'); } }
-    @media (max-width: 1024px) { .background-blur { background-image: url('<?php echo esc_url($featured_image_medium); ?>'); } }
-    @media (max-width: 768px) { .background-blur { background-image: url('<?php echo esc_url($featured_image_thumb); ?>'); } }
+    .course-container .ka-header .background-blur { background-image: url('<?php echo esc_url($featured_image_full); ?>'); }
+    @media (max-width: 1600px) { .course-container .ka-header .background-blur { background-image: url('<?php echo esc_url($featured_image_large); ?>'); } }
+    @media (max-width: 1024px) { .course-container .ka-header .background-blur { background-image: url('<?php echo esc_url($featured_image_medium); ?>'); } }
+    @media (max-width: 768px) { .course-container .ka-header .background-blur { background-image: url('<?php echo esc_url($featured_image_thumb); ?>'); } }
 </style>
+<?php endif; ?>
 
 <?php
 // Hook before the entire header section
@@ -191,7 +206,14 @@ do_action('ka_singel_header_before');
     <div class="edit-course edit-link"><a href="<?php echo "https://www.kursagenten.no/User.aspx?page=regKurs&id=" . $course_id; ?>" target="_blank"><span class="ka-icon-button"><i class="ka-icon icon-edit"></i></span><span class="edit-text">Rediger kurs</span></a></div>
     <?php endif; ?>
     <!-- HEADER -->
-    <header class="ka-section ka-header">
+    <header class="ka-section ka-header <?php echo esc_attr($hero_settings['header_classes']); ?><?php echo !$use_bg_image ? ' no-hero-image' : ''; ?>"<?php
+        if (!empty($hero_settings['bg_color'])) {
+            echo ' data-hero-bg-color="' . esc_attr($hero_settings['bg_color']) . '"';
+        }
+        if (!empty($hero_settings['font_color'])) {
+            echo ' data-hero-font-color="' . esc_attr($hero_settings['font_color']) . '"';
+        }
+    ?>>
         <div class="ka-content-container">
             <div class="background-blur"></div>
             <div class="overlay"></div>

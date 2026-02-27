@@ -27,16 +27,29 @@ $taxonomy         = $term->taxonomy;
 $rich_description = get_term_meta($term_id, 'rich_description', true);
 $image_url        = get_taxonomy_image($term_id, $taxonomy);
 
-// Sett opp hero-bakgrunn: bruk taksonomibilde hvis det finnes, ellers plassholder
+// Sett opp hero-bakgrunn basert på innstillinger
 $has_taxonomy_image = !empty($image_url);
 
 $kursinnst_options = get_option('design_option_name');
-$placeholder_image = !empty($kursinnst_options['ka_plassholderbilde_kurs'])
-    ? $kursinnst_options['ka_plassholderbilde_kurs']
-    : KURSAG_PLUGIN_URL . 'assets/images/placeholder-kurs.jpg';
+$placeholder_image = !empty($kursinnst_options['ka_plassholderbilde_generelt'])
+    ? $kursinnst_options['ka_plassholderbilde_generelt']
+    : KURSAG_PLUGIN_URL . 'assets/images/placeholder-generell.jpg';
 
-// Bruk samme URL for alle breakpoints hvis vi ikke har flere størrelser tilgjengelig
-$hero_image_full   = $has_taxonomy_image ? $image_url : $placeholder_image;
+$hero_settings = get_hero_header_settings('taxonomy');
+
+// Determine if we should use background image (for performance: avoid loading when not needed)
+$use_bg_image = false;
+$hero_image_full = '';
+if ($hero_settings['use_image']) {
+    if ($hero_settings['bg_mode'] === 'image_placeholder') {
+        $use_bg_image = true;
+        $hero_image_full = $has_taxonomy_image ? $image_url : $placeholder_image;
+    } elseif ($hero_settings['bg_mode'] === 'image_bgcolor' && $has_taxonomy_image) {
+        $use_bg_image = true;
+        $hero_image_full = $image_url;
+    }
+}
+
 $hero_image_large  = $hero_image_full;
 $hero_image_medium = $hero_image_full;
 $hero_image_thumb  = $hero_image_full;
@@ -114,6 +127,7 @@ if ($view_type === 'all_coursedates') {
 }
 ?>
 
+<?php if ($use_bg_image && !empty($hero_image_full)) : ?>
 <style>
     /* Hero taxonomy header background images */
     .taxonomy-hero-header .background-blur {
@@ -138,6 +152,7 @@ if ($view_type === 'all_coursedates') {
         }
     }
 </style>
+<?php endif; ?>
 
 <?php
 // Hook before the entire header section
@@ -145,7 +160,14 @@ do_action('ka_taxonomy_header_before', $term);
 ?>
 
 <article class="ka-outer-container taxonomy-container view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
-    <header class="ka-section ka-header taxonomy-hero-header<?php echo $has_taxonomy_image ? '' : ' no-hero-image'; ?>">
+    <header class="ka-section ka-header taxonomy-hero-header <?php echo esc_attr($hero_settings['header_classes']); ?><?php echo $use_bg_image ? '' : ' no-hero-image'; ?>"<?php
+        if (!empty($hero_settings['bg_color'])) {
+            echo ' data-hero-bg-color="' . esc_attr($hero_settings['bg_color']) . '"';
+        }
+        if (!empty($hero_settings['font_color'])) {
+            echo ' data-hero-font-color="' . esc_attr($hero_settings['font_color']) . '"';
+        }
+    ?>>
         <div class="ka-content-container">
             <div class="background-blur"></div>
             <div class="overlay"></div>
