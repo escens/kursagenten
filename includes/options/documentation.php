@@ -192,6 +192,13 @@ class KA_Documentation_Page {
                     </ul>
                 </div>
 
+                <div id="gutenberg-blokker" class="options-card">
+                    <h3>Gutenberg blokker</h3>
+                    <p>Taksonomiene <strong>Kurskategorier</strong>, <strong>Kurssteder</strong> og <strong>Instruktører</strong> er tilgjengelige som egne Gutenberg-blokker i blokkeditoren.</p>
+                    <p>Du kan bruke blokkene i stedet for kortkoder hvis du bygger sidene med Gutenberg. De samme valgene som beskrives under <a href="#lister">Kortkoder for lister og grid</a> er i stor grad tilgjengelige direkte i blokkinnstillingene.</p>
+                    <p><strong>Når bør du bruke kortkoder?</strong> Hvis du bygger sidene med Elementor eller andre page builders, vil kortkoder sannsynligvis være det du må bruke.</p>
+                </div>
+
                 <div id="kortkoder" class="options-card">
                     <h3>Kortkoder</h3>
                     <p><strong>Hva er kortkoder?</strong> Kortkoder er små koder du plasserer i innhold (sider/innlegg) for å vise dynamiske lister og komponenter fra pluginen.</p>

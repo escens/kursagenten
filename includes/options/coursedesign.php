@@ -76,7 +76,9 @@ class Designmaler {
                 <div class="options-card" id="section-systemsider" data-section="systemsider">
                     <h3>Wordpress sider</h3>
                     <p>Velg sider som tilegnes til ulike deler av Kursagenten. Du kan velge fra eksisterende sider, eller opprette nye sider.</p>
-                    <p>Hvis du oppretter sider for kurs, kurskategorier, kurssteder og/eller instruktører, vil sidene opprettes som vanlige WordPress-sider. Du kan fritt endre tittel og innhold. En <a href="/wp-admin/admin.php?page=ka_documentation#kortkoder">kortkode</a> legges inn automatisk.</p>
+                    <p>Hvis du oppretter sider for kurs, kurskategorier, kurssteder og/eller instruktører, vil sidene opprettes som vanlige WordPress-sider. Du kan fritt endre tittel og innhold. En <a href="/wp-admin/admin.php?page=ka_documentation#kortkoder">kortkode</a> legges inn automatisk.</br>
+                    <strong>Blokker:</strong> Taksonomiene Kurskategorier, Kurssteder og Instruktører er tilgjengelige som egne Gutenberg-blokker i blokkeditoren. Du kan velge å bruke blokkene i stedet for kortkoder hvis du bygger sidene med Gutenberg.</p>
+
                     <p>Sidene blir merket med "Kursagenten" i sideoversikten. Ved å klikke på <i class="ka-icon icon-code-simple-solid-full"></i> kopierer du kortkoden til utklippstavlen, og kan lime den inn der du ønsker å vise den på en eksisterende side.</p>
                     
                     <?php $this->render_system_pages_section(); ?>

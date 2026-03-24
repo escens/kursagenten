@@ -1,5 +1,6 @@
 ## 1.1.17 - 2026-20-03
 - Fix: Rettet feil med overføring av fjernede instruktører
+- Lagt til: Lister med kategorier, instruktører og kategorier er nå tilgjengelig som *Gutenberg blokker*, og du kan legge inn listene og umiddelbart se hvordan de blir.
 
 ## 1.1.16 - 2026-03-02
 - Fix: Feil i automenyer, konflikt med enkelte temaer
