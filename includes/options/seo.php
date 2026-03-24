@@ -187,6 +187,10 @@ class SEO {
         
         if ($has_changes) {
             flush_rewrite_rules();
+            // Clear menu cache so automeny URLs use the new slugs
+            if (function_exists('kursagenten_clear_all_menu_caches')) {
+                kursagenten_clear_all_menu_caches();
+            }
         }
     }
 }

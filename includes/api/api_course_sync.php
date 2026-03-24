@@ -613,14 +613,6 @@ function create_or_update_course_date($data, $post_id, $main_course_id, $locatio
                 $meta_input['ka_course_location_room'] = implode(', ', $room_names);
             }
         }
-        // Add course_days based on coursetime format and firstCourseDate
-        if (!empty($schedule['coursetime']) && !empty($schedule['firstCourseDate'])) {
-            $course_days = get_course_days_from_coursetime($schedule['coursetime'], $schedule['firstCourseDate']);
-            if (!empty($course_days)) {
-                $meta_input['ka_course_days'] = $course_days;
-            }
-        }
-        //****/
 
         // Create or update course date
         if ($coursedate_id) {
@@ -810,6 +802,21 @@ function format_date($date_string) {
     }
     $date = DateTime::createFromFormat('Y-m-d\TH:i:s', $date_string);
     return $date ? $date->format('d.m.Y') : $date_string;
+}
+
+/**
+ * Validate coursetime format (Kl HH:MM - HH:MM)
+ *
+ * @param string $coursetime The coursetime string to test
+ * @return bool True if format is valid
+ */
+if (!function_exists('is_valid_coursetime_format')) {
+    function is_valid_coursetime_format($coursetime) {
+        if (empty($coursetime)) {
+            return false;
+        }
+        return preg_match('/^Kl\s+\d{1,2}:\d{2}\s*-\s*\d{1,2}:\d{2}$/', trim($coursetime));
+    }
 }
 
 function format_coursetime($coursetime) {
@@ -1165,7 +1172,7 @@ function sync_main_course_data($main_course_id) {
     $instructors = array_unique($instructors);
     $related_course_dates = array_unique($related_course_dates);
 
-    // Sett taxonomier på hovedkurset
+    // Sett taxonomier på hovedkurset (tom array fjerner koblinger når alle underkurs har fjernet instruktører)
     if (!empty($course_locations)) {
         wp_set_object_terms($post_id, $course_locations, 'ka_course_location', false);
     }
@@ -1174,9 +1181,7 @@ function sync_main_course_data($main_course_id) {
         wp_set_object_terms($post_id, $course_categories, 'ka_coursecategory', false);
     }
 
-    if (!empty($instructors)) {
-        wp_set_object_terms($post_id, $instructors, 'ka_instructors', false);
-    }
+    wp_set_object_terms($post_id, $instructors, 'ka_instructors', false);
 
     // Oppdater relaterte kursdatoer på hovedkurset
     if (!empty($related_course_dates)) {
@@ -1185,9 +1190,9 @@ function sync_main_course_data($main_course_id) {
 }
 
 function update_instructor_taxonomies($post_id, $data_instructors) {
-    if (!empty($data_instructors) && is_array($data_instructors)) {
-        $instructors = [];
+    $instructors = [];
 
+    if (!empty($data_instructors) && is_array($data_instructors)) {
         foreach ($data_instructors as $instructor) {
             if (empty($instructor['fullname'])) {
                 continue;
@@ -1297,11 +1302,10 @@ function update_instructor_taxonomies($post_id, $data_instructors) {
                 }
             }
         }
-
-        if (!empty($instructors)) {
-            wp_set_object_terms($post_id, $instructors, 'ka_instructors', false);
-        }
     }
+
+    // Always sync instructor taxonomies - clears them when API returns no instructors
+    wp_set_object_terms($post_id, $instructors, 'ka_instructors', false);
 }
 
 function get_instructors_in_courselist($data, $location_id) {

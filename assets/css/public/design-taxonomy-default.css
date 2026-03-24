@@ -47,14 +47,10 @@
         font-size: var(--ka-font-xl);
     }
     #ka-main .ka-section.ka-footer {
-        padding: 3vh 2em;
+        padding: 3vh .5em;
     }
 }
 
-/* Footer Styles */
-#ka-main .ka-section.ka-footer {
-    padding: 6vh 2em;
-}
 
 /*  -- course location -- */
 .tax-course_location #ka .ka-taxonomy-header {

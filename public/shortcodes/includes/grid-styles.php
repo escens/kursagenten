@@ -97,6 +97,7 @@ class GridStyles {
             .kursagenten-grid.stablet.kort .k-text:has(picture) { padding: 0.5em .8em 1.3em .8em; }
             .kursagenten-grid.rad .k-text { flex-direction: column; align-items: flex-start; justify-content: center;}
             .kursagenten-grid.rad.kort .k-text { padding: 1em 1em 1em 0;}
+            .kursagenten-grid.rad.kort.k-no-image .k-text { padding: 1em;}
             .kursagenten-grid.rad .k-text a.k-title,
             .kursagenten-grid.rad .k-text .k-infowrapper{ width: 100%; display: flex; align-items: center; text-align: left; }
             .kursagenten-grid.rad.beskrivelse .k-text a.k-title,
@@ -260,6 +261,7 @@ class GridStyles {
             {$class_id}.stablet.kort .k-text:has(picture) { padding: 0.5em .8em 1.3em .8em; }
             {$class_id}.rad .k-text { flex-direction: column; align-items: flex-start; justify-content: center;}
             {$class_id}.rad.kort .k-text { padding: 1em 1em 1em 0;}
+            {$class_id}.rad.kort.k-no-image .k-text { padding: 1em;}
             {$class_id}.rad .k-text a.k-title,
             {$class_id}.rad .k-text .k-infowrapper{ width: 100%; display: flex; align-items: center; text-align: left; }
             /*{$class_id}.rad .k-text a.k-title,

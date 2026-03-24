@@ -1,0 +1,43 @@
+.k-taxonomy-grid.k-preset-liste-enkel .k-wrapper {
+	grid-template-columns: 1fr;
+}
+
+.k-taxonomy-grid.k-preset-liste-enkel.k-use-card .k-card {
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	background: transparent;
+}
+
+.k-taxonomy-grid.k-preset-liste-enkel .k-image-wrap {
+	display: none;
+}
+
+.k-taxonomy-grid.k-preset-liste-enkel .k-content {
+	padding: var(--k-card-padding-desktop, 2px);
+	gap: 2px;
+	min-width: 0;
+}
+
+.k-taxonomy-grid.k-preset-liste-enkel .k-title {
+	font-weight: 500;
+	line-height: 1.2;
+	margin: 0;
+	padding: 0;
+}
+
+.k-taxonomy-grid.k-preset-liste-enkel.k-no-card .k-card {
+	border: 0;
+	background: transparent;
+}
+
+@media (max-width: 1024px) {
+	.k-taxonomy-grid.k-preset-liste-enkel .k-content {
+		padding: var(--k-card-padding-tablet, 2px);
+	}
+}
+
+@media (max-width: 640px) {
+	.k-taxonomy-grid.k-preset-liste-enkel .k-content {
+		padding: var(--k-card-padding-mobile, 2px);
+	}
+}

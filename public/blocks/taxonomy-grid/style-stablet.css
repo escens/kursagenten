@@ -1,0 +1,148 @@
+.k-taxonomy-grid.k-preset-stablet-standard .k-card-link,
+.k-taxonomy-grid.k-preset-stablet-kort .k-card-link,
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-card-link,
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-card-link {
+	display: flex;
+	flex-direction: column;
+	align-items: var(--k-content-align-desktop, flex-start);
+	min-width: 0;
+}
+
+.k-taxonomy-grid.k-preset-stablet-standard .k-image-link,
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-link,
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-link {
+	width: min(100%, var(--k-image-size, 240px));
+	max-width: min(100%, var(--k-image-size, 240px));
+	margin-left: var(--k-card-padding-inline-desktop-left, 0px);
+	margin-right: var(--k-card-padding-inline-desktop-right, 0px);
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort .k-image-link {
+	width: 100%;
+	max-width: 100%;
+}
+
+.k-taxonomy-grid.k-preset-stablet-standard .k-image-link .k-image-wrap,
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-link .k-image-wrap,
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-link .k-image-wrap,
+.k-taxonomy-grid.k-preset-stablet-kort .k-image-link .k-image-wrap {
+	margin-left: 0;
+	margin-right: 0;
+}
+
+@media (max-width: 1024px) {
+	.k-taxonomy-grid.k-preset-stablet-standard .k-card-link,
+	.k-taxonomy-grid.k-preset-stablet-kort .k-card-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-card-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-card-link {
+		align-items: var(--k-content-align-tablet, flex-start);
+	}
+
+	.k-taxonomy-grid.k-preset-stablet-standard .k-image-wrap,
+	.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-wrap,
+	.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-wrap {
+		margin-left: var(--k-card-padding-inline-tablet-left, 0px);
+		margin-right: var(--k-card-padding-inline-tablet-right, 0px);
+	}
+
+	.k-taxonomy-grid.k-preset-stablet-standard .k-image-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-link {
+		margin-left: var(--k-card-padding-inline-tablet-left, 0px);
+		margin-right: var(--k-card-padding-inline-tablet-right, 0px);
+	}
+}
+
+@media (max-width: 640px) {
+	.k-taxonomy-grid.k-preset-stablet-standard .k-card-link,
+	.k-taxonomy-grid.k-preset-stablet-kort .k-card-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-card-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-card-link {
+		align-items: var(--k-content-align-mobile, flex-start);
+	}
+
+	.k-taxonomy-grid.k-preset-stablet-standard .k-image-wrap,
+	.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-wrap,
+	.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-wrap {
+		margin-left: var(--k-card-padding-inline-mobile-left, 0px);
+		margin-right: var(--k-card-padding-inline-mobile-right, 0px);
+	}
+
+	.k-taxonomy-grid.k-preset-stablet-standard .k-image-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-link,
+	.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-link {
+		margin-left: var(--k-card-padding-inline-mobile-left, 0px);
+		margin-right: var(--k-card-padding-inline-mobile-right, 0px);
+	}
+}
+
+.k-taxonomy-grid.k-preset-stablet-standard .k-image-wrap {
+	width: min(100%, var(--k-image-size, 240px));
+	max-width: min(100%, var(--k-image-size, 240px));
+	margin-left: var(--k-card-padding-inline-desktop-left, 0px);
+	margin-right: var(--k-card-padding-inline-desktop-right, 0px);
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort .k-image-wrap {
+	max-width: 100%;
+	width: 100%;
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-image-wrap,
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-wrap {
+	width: min(100%, var(--k-image-size, 120px));
+	max-width: min(100%, var(--k-image-size, 120px));
+	margin-left: var(--k-card-padding-inline-desktop-left, 0px);
+	margin-right: var(--k-card-padding-inline-desktop-right, 0px);
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort .k-image-wrap {
+	border-radius: var(--k-image-radius, 8px) var(--k-image-radius, 8px) 0 0;
+}
+
+.k-taxonomy-grid.k-preset-stablet-standard .k-content {
+	width: 100%;
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort .k-content {
+	width: 100%;
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-content,
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-content {
+	width: 100%;
+}
+
+.k-taxonomy-grid.k-preset-stablet-standard .k-title,
+.k-taxonomy-grid.k-preset-stablet-kort .k-title,
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-title,
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-title {
+	text-wrap: balance;
+}
+
+/* Style 1: image inside card with top breathing room. */
+.k-taxonomy-grid.k-preset-stablet-kort-innfelt .k-card-link {
+	padding-top: 24px;
+}
+
+/* Style 2: image overlaps top edge of card by ~50%. */
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-card {
+	overflow: visible;
+	margin-bottom: calc(var(--k-image-size, 120px) / 2.5);
+	position: relative;
+    bottom: calc(var(--k-image-size, 120px) / -2.5);
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-card-link {
+	padding-top: 0;
+}
+
+.k-taxonomy-grid.k-preset-stablet-kort-overlapp .k-image-wrap {
+	/*
+	 * Target around 40% overlap while keeping a safe upper cap
+	 * to reduce risk of collisions with the previous row.
+	 */
+	/*margin-top: max(-44px, calc(var(--k-image-size, 120px) / -2.5));*/
+	margin-top: calc(var(--k-image-size, 120px) / -2.5);
+	margin-bottom: 6px;
+}

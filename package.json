@@ -1,0 +1,16 @@
+{
+  "name": "kursagenten-plugin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Build and test tooling for Kursagenten plugin blocks",
+  "scripts": {
+    "build:blocks": "wp-scripts build \"src/blocks/taxonomy-grid/index.js\" --output-path=build --output-filename=taxonomy-grid.js",
+    "start:blocks": "wp-scripts start \"src/blocks/taxonomy-grid/index.js\" --output-path=build --output-filename=taxonomy-grid.js",
+    "build": "npm run build:blocks",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@wordpress/scripts": "^31.6.0"
+  }
+}

@@ -394,11 +394,8 @@ function kursagenten_build_course_instance_from_data($coursedate_data) {
         $instance['location'] = $location;
     }
     
-    // Add course schedule (time and days)
+    // Add course schedule (time)
     $schedule_parts = array();
-    if (!empty($coursedate_data['course_days'])) {
-        $schedule_parts[] = $coursedate_data['course_days'];
-    }
     if (!empty($coursedate_data['time'])) {
         $schedule_parts[] = $coursedate_data['time'];
     }

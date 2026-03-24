@@ -1,0 +1,319 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/taxonomy-grid",
+  "title": "Kursagenten Taxonomi",
+  "category": "kursagenten",
+  "icon": "screenoptions",
+  "description": "Vis kurskategorier, kurssteder eller instruktører med preset-stiler.",
+  "keywords": [
+    "kurs",
+    "kategori",
+    "instruktør",
+    "sted"
+  ],
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ]
+  },
+  "attributes": {
+    "sourceType": {
+      "type": "string",
+      "default": "category"
+    },
+    "stylePreset": {
+      "type": "string",
+      "default": "stablet-standard"
+    },
+    "columnsDesktop": {
+      "type": "number",
+      "default": 3
+    },
+    "columnsTablet": {
+      "type": "number",
+      "default": 2
+    },
+    "columnsMobile": {
+      "type": "number",
+      "default": 1
+    },
+    "showImage": {
+      "type": "boolean",
+      "default": true
+    },
+    "showDescription": {
+      "type": "boolean",
+      "default": false
+    },
+    "descriptionWordLimit": {
+      "type": "number",
+      "default": 22
+    },
+    "descriptionWordLimitExtended": {
+      "type": "number",
+      "default": 0
+    },
+    "useCardDesign": {
+      "type": "boolean",
+      "default": true
+    },
+    "shadowPreset": {
+      "type": "string",
+      "default": "none"
+    },
+    "imageSize": {
+      "type": "string",
+      "default": "240px"
+    },
+    "imageAspect": {
+      "type": "string",
+      "default": "4/3"
+    },
+    "imageRadius": {
+      "type": "string",
+      "default": "8px"
+    },
+    "imageRadiusTop": {
+      "type": "string",
+      "default": "8px"
+    },
+    "imageRadiusRight": {
+      "type": "string",
+      "default": "8px"
+    },
+    "imageRadiusBottom": {
+      "type": "string",
+      "default": "8px"
+    },
+    "imageRadiusLeft": {
+      "type": "string",
+      "default": "8px"
+    },
+    "imageBorderWidth": {
+      "type": "string",
+      "default": "0px"
+    },
+    "imageBorderWidthHover": {
+      "type": "string",
+      "default": "0px"
+    },
+    "imageBorderStyle": {
+      "type": "string",
+      "default": "solid"
+    },
+    "imageBorderStyleHover": {
+      "type": "string",
+      "default": "solid"
+    },
+    "imageBorderColor": {
+      "type": "string",
+      "default": ""
+    },
+    "imageBorderColorHover": {
+      "type": "string",
+      "default": ""
+    },
+    "imageBackgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "fontMin": {
+      "type": "number",
+      "default": 15
+    },
+    "fontMax": {
+      "type": "number",
+      "default": 20
+    },
+    "descriptionFontMin": {
+      "type": "number",
+      "default": 12
+    },
+    "descriptionFontMax": {
+      "type": "number",
+      "default": 16
+    },
+    "titleColor": {
+      "type": "string",
+      "default": ""
+    },
+    "descriptionColor": {
+      "type": "string",
+      "default": ""
+    },
+    "fontWeightTitle": {
+      "type": "string",
+      "default": "600"
+    },
+    "fontWeightDescription": {
+      "type": "string",
+      "default": "400"
+    },
+    "textColor": {
+      "type": "string",
+      "default": ""
+    },
+    "textAlignDesktop": {
+      "type": "string",
+      "default": "left"
+    },
+    "textAlignTablet": {
+      "type": "string",
+      "default": "left"
+    },
+    "textAlignMobile": {
+      "type": "string",
+      "default": "left"
+    },
+    "verticalAlignDesktop": {
+      "type": "string",
+      "default": "top"
+    },
+    "verticalAlignTablet": {
+      "type": "string",
+      "default": "top"
+    },
+    "verticalAlignMobile": {
+      "type": "string",
+      "default": "top"
+    },
+    "titleTag": {
+      "type": "string",
+      "default": "h3"
+    },
+    "cardBackgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "cardBackgroundColorHover": {
+      "type": "string",
+      "default": ""
+    },
+    "cardRadius": {
+      "type": "string",
+      "default": "12px"
+    },
+    "cardBorderWidth": {
+      "type": "string",
+      "default": "1px"
+    },
+    "cardBorderStyle": {
+      "type": "string",
+      "default": "solid"
+    },
+    "cardBorderColor": {
+      "type": "string",
+      "default": "#d0d7de"
+    },
+    "backgroundMode": {
+      "type": "string",
+      "default": "color"
+    },
+    "overlayStrength": {
+      "type": "number",
+      "default": 40
+    },
+    "wrapperPaddingDesktop": {
+      "type": "string",
+      "default": "0px"
+    },
+    "wrapperPaddingTablet": {
+      "type": "string",
+      "default": "0px"
+    },
+    "wrapperPaddingMobile": {
+      "type": "string",
+      "default": "0px"
+    },
+    "cardPaddingDesktop": {
+      "type": "string",
+      "default": "16px 40px 40px 40px"
+    },
+    "cardPaddingTablet": {
+      "type": "string",
+      "default": "16px 34px 40px 34px"
+    },
+    "cardPaddingMobile": {
+      "type": "string",
+      "default": "16px 34px 30px 34px"
+    },
+    "cardMarginDesktop": {
+      "type": "string",
+      "default": "0px"
+    },
+    "cardMarginTablet": {
+      "type": "string",
+      "default": "0px"
+    },
+    "cardMarginMobile": {
+      "type": "string",
+      "default": "0px"
+    },
+    "rowGapDesktop": {
+      "type": "string",
+      "default": "24px"
+    },
+    "rowGapTablet": {
+      "type": "string",
+      "default": "20px"
+    },
+    "rowGapMobile": {
+      "type": "string",
+      "default": "16px"
+    },
+    "filterMode": {
+      "type": "string",
+      "default": "standard"
+    },
+    "categoryImageSource": {
+      "type": "string",
+      "default": "main"
+    },
+    "region": {
+      "type": "string",
+      "default": ""
+    },
+    "locationInclude": {
+      "type": "array",
+      "default": []
+    },
+    "locationShowInfo": {
+      "type": "boolean",
+      "default": false
+    },
+    "instructorExclude": {
+      "type": "array",
+      "default": []
+    },
+    "categoryParentSlug": {
+      "type": "string",
+      "default": ""
+    },
+    "categoryParentSlugs": {
+      "type": "array",
+      "default": []
+    },
+    "categoryLocationFilter": {
+      "type": "string",
+      "default": ""
+    },
+    "instructorNameMode": {
+      "type": "string",
+      "default": "standard"
+    },
+    "instructorImageSource": {
+      "type": "string",
+      "default": "standard"
+    },
+    "showInstructorPhone": {
+      "type": "boolean",
+      "default": false
+    },
+    "showInstructorEmail": {
+      "type": "boolean",
+      "default": false
+    }
+  }
+}

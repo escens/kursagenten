@@ -6,11 +6,60 @@ require_once ABSPATH . 'wp-admin/includes/class-walker-nav-menu-edit.php';
 /**
  * Custom walker for auto menu items in admin
  */
+/** Menu types for automeny – used when WP overwrites object to 'custom' */
+const KURSAGENTEN_AUTO_MENU_TYPES = ['course_categories', 'course_categories_and_courses', 'course_locations', 'course_instructors'];
+
+/**
+ * Get taxonomy base URL from SEO options (e.g. /vare-kurs/ or /kurssted/).
+ * Used when main_url is empty for automeny parent items.
+ */
+function kursagenten_get_taxonomy_base_url(string $taxonomy): string {
+    $url_options = get_option('kag_seo_option_name', []);
+    $slug_map = [
+        'ka_coursecategory' => !empty($url_options['ka_url_rewrite_kurskategori']) ? $url_options['ka_url_rewrite_kurskategori'] : 'kurskategori',
+        'ka_course_location' => !empty($url_options['ka_url_rewrite_kurssted']) ? $url_options['ka_url_rewrite_kurssted'] : 'kurssted',
+        'ka_instructors' => !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer',
+    ];
+    $slug = $slug_map[$taxonomy] ?? $taxonomy;
+    return home_url('/' . $slug . '/');
+}
+
+/** Store menu_type from Add flow – WP overwrites args before wp_update_nav_menu_item runs */
+$GLOBALS['kursagenten_pending_menu_type'] = [];
+
+add_action('wp_add_nav_menu_item', function ($menu_id, $menu_item_db_id, $args) {
+    if (!isset($GLOBALS['kursagenten_pending_menu_type'])) {
+        $GLOBALS['kursagenten_pending_menu_type'] = [];
+    }
+    $menu_type = $args['menu-item-object-id'] ?? null;
+    $object = $args['menu-item-object'] ?? '';
+    if (($object === 'kursagenten_auto_menu' || (($object === 'custom') && in_array($menu_type, KURSAGENTEN_AUTO_MENU_TYPES, true))) && !empty($menu_type)) {
+        $GLOBALS['kursagenten_pending_menu_type'][$menu_item_db_id] = $menu_type;
+    }
+}, 10, 3);
+
+function kursagenten_is_auto_menu_item($item): bool {
+    if (!isset($item->object)) {
+        return false;
+    }
+    if ($item->object === 'kursagenten_auto_menu') {
+        return true;
+    }
+    if ($item->object === 'custom') {
+        $menu_type = get_post_meta($item->ID ?? 0, '_menu_item_menu_type', true);
+        return in_array($menu_type, KURSAGENTEN_AUTO_MENU_TYPES, true);
+    }
+    return false;
+}
+
 class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
     public function start_el(&$output, $data_object, $depth = 0, $args = null, $current_object_id = 0) {
-        if ($data_object->object === 'kursagenten_auto_menu') {
-            $item_id = esc_attr($data_object->ID);
-            $taxonomy = get_post_meta($item_id, '_menu_item_taxonomy', true);
+        if (!kursagenten_is_auto_menu_item($data_object)) {
+            parent::start_el($output, $data_object, $depth, $args, $current_object_id);
+            return;
+        }
+        $item_id = esc_attr($data_object->ID);
+        $taxonomy = get_post_meta($item_id, '_menu_item_taxonomy', true);
             $parent_term_id = get_post_meta($item_id, '_menu_item_parent_term', true);
             $main_url = get_post_meta($item_id, '_menu_item_main_url', true);
             
@@ -194,9 +243,6 @@ class Kursagenten_Walker_Nav_Menu_Edit extends Walker_Nav_Menu_Edit {
             
             // Erstatt den originale HTML-en med den oppdaterte versjonen
             $output = substr_replace($output, $item_html, $item_start, $item_end - $item_start);
-        } else {
-            parent::start_el($output, $data_object, $depth, $args, $current_object_id);
-        }
     }
 }
 
@@ -463,10 +509,14 @@ function kursagenten_auto_menus_metabox(): void {
                                    value="<?php echo esc_attr($key); ?>">
                             <?php echo esc_html($item['label']); ?>
                         </label>
+                        <?php
+                        // Use type="custom" so WP skips object lookup. Unknown types cause $_object=null,
+                        // which triggers OceanWP and other theme walkers to crash (e.g. "template" on null).
+                        ?>
                         <input type="hidden" 
                                class="menu-item-type" 
                                name="menu-item[<?php echo $item['id']; ?>][menu-item-type]" 
-                               value="kursagenten_auto_menu">
+                               value="custom">
                         <input type="hidden" 
                                class="menu-item-object" 
                                name="menu-item[<?php echo $item['id']; ?>][menu-item-object]" 
@@ -478,7 +528,7 @@ function kursagenten_auto_menus_metabox(): void {
                         <input type="hidden" 
                                class="menu-item-url" 
                                name="menu-item[<?php echo $item['id']; ?>][menu-item-url]" 
-                               value="">
+                               value="#">
                         <input type="hidden" 
                                name="menu-item[<?php echo $item['id']; ?>][menu-item-taxonomy]" 
                                value="<?php echo esc_attr($item['type']); ?>">
@@ -865,7 +915,7 @@ function kursagenten_inject_categories_and_courses_menu(
         }
 
         $current_menu_id = $base_id + $term_counter;
-        $term_link = get_term_link($term);
+        $term_link = get_term_link($term, $taxonomy);
         if (is_wp_error($term_link)) {
             $term_link = '#';
         }
@@ -976,7 +1026,7 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
     // og beholder parent/child‑relasjoner slik temaet forventer.
     $has_auto_menu = false;
     foreach ((array) $items as $maybe_auto_item) {
-        if (isset($maybe_auto_item->object) && $maybe_auto_item->object === 'kursagenten_auto_menu') {
+        if (kursagenten_is_auto_menu_item($maybe_auto_item)) {
             $has_auto_menu = true;
             break;
         }
@@ -1000,8 +1050,7 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
 
     $new_items = array();
 
-    // Build map of custom CSS classes from manually added taxonomy items (siblings of automeny).
-    // These items are excluded below but their custom classes must be merged into generated items.
+    // Build map of custom CSS classes from manually added taxonomy items (for merging into automeny-generated items).
     $manual_item_custom_classes = [];
     foreach ($items as $item) {
         if (in_array($item->object, ['ka_coursecategory', 'ka_instructors', 'ka_course_location'])) {
@@ -1016,17 +1065,16 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
             }
         }
     }
-    
-    // Behold alle originale items unntatt taxonomy (erstattes av automeny)
+
+    // Keep all items including manually added taxonomy terms (ka_coursecategory, ka_instructors, ka_course_location).
+    // Previously these were removed when an automeny existed; now both automeny expansion and manual taxonomy items are shown.
     foreach ($items as $item) {
-        if (!in_array($item->object, ['ka_coursecategory', 'ka_instructors', 'ka_course_location'])) {
-            $new_items[] = $item;
-        }
+        $new_items[] = $item;
     }
 
     // Prosesser auto-menyer
     foreach ($items as $original_item) {
-        if ($original_item->object === 'kursagenten_auto_menu') {
+        if (kursagenten_is_auto_menu_item($original_item)) {
             $taxonomy = get_post_meta($original_item->ID, '_menu_item_taxonomy', true);
             if (empty($taxonomy)) {
                 $menu_type = get_post_meta($original_item->ID, '_menu_item_menu_type', true);
@@ -1061,7 +1109,11 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
             $splice_position = 0;
             if ($inject_only) {
                 if ($item_position !== false) {
-                    array_splice($new_items, $item_position, 1);
+                    // Do NOT remove here for course_categories_and_courses – kursagenten_inject_categories_and_courses_menu
+                    // removes it. Double-removal would delete the wrong item (e.g. "Om oss" or "Kontakt oss").
+                    if ($menu_type !== 'course_categories_and_courses') {
+                        array_splice($new_items, $item_position, 1);
+                    }
                     // Insert at the automeny's original position to preserve menu order (e.g. Betaling before automeny)
                     $splice_position = $item_position;
                 } else {
@@ -1084,6 +1136,9 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                         $url = home_url($url);
                     }
                     $original_item->url = $url;
+                } elseif (empty($original_item->url) || $original_item->url === '#') {
+                    // Fallback: use taxonomy base URL from SEO options when main_url is empty
+                    $original_item->url = kursagenten_get_taxonomy_base_url($taxonomy);
                 }
                 // Sikre at tittelen er satt (kan mangle fra metabox)
                 if (empty($original_item->title)) {
@@ -1215,7 +1270,7 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
                     $menu_item->label = '';
                     $menu_item->post_title = $term->name;
                     $menu_item->type_label = $tax_obj && !is_wp_error($tax_obj) ? $tax_obj->labels->singular_name : $taxonomy;
-                    $term_link = get_term_link($term);
+                    $term_link = get_term_link($term, $taxonomy);
                     if (!is_wp_error($term_link)) {
                         $query_args = array();
                         if ($append_st !== '') {
@@ -1320,6 +1375,19 @@ function kursagenten_setup_auto_menu_items($items, $menu, $args) {
         }
     }
 
+    // Ensure manually added taxonomy items have correct URLs (e.g. after SEO slug change)
+    foreach ($new_items as $item) {
+        if (in_array($item->object, ['ka_coursecategory', 'ka_instructors', 'ka_course_location']) && !kursagenten_is_auto_menu_item($item)) {
+            $term = get_term((int) $item->object_id, $item->object);
+            if ($term && !is_wp_error($term)) {
+                $term_link = get_term_link($term, $item->object);
+                if (!is_wp_error($term_link)) {
+                    $item->url = $term_link;
+                }
+            }
+        }
+    }
+
     set_transient($cache_key, $new_items, 5 * MINUTE_IN_SECONDS);
     return $new_items;
 }
@@ -1337,31 +1405,37 @@ add_filter('nav_menu_css_class', function($classes, $item) {
 
 /**
  * Ensure menu item properties are set correctly when saving
+ * Note: For type=custom, WP core overwrites object-id and object in wp_update_nav_menu_item (nav-menu.php L579-581)
+ * before our hook runs. We must read the original from $_POST (Save) or from wp_add_nav_menu_item (Add).
  */
 function kursagenten_update_nav_menu_item($menu_id, $menu_item_db_id, $args) {
-    if (isset($args['menu-item-object']) && $args['menu-item-object'] === 'kursagenten_auto_menu') {
-        // Lagre menu type og taxonomy (object-id can come from args or our hidden field in menu-item array)
-        $menu_type = $args['menu-item-object-id'] ?? ($_POST['menu-item'][$menu_item_db_id]['menu-item-object-id'] ?? null);
-        if (!empty($menu_type)) {
-            update_post_meta($menu_item_db_id, '_menu_item_menu_type', $menu_type);
-            update_post_meta($menu_item_db_id, '_menu_item_object_id', $menu_type);
-            $taxonomy = '';
-            switch ($menu_type) {
-                case 'course_categories':
-                case 'course_categories_and_courses':
-                    $taxonomy = 'ka_coursecategory';
-                    break;
-                case 'course_locations':
-                    $taxonomy = 'ka_course_location';
-                    break;
-                case 'course_instructors':
-                    $taxonomy = 'ka_instructors';
-                    break;
-            }
-            
-            if (!empty($taxonomy)) {
-                update_post_meta($menu_item_db_id, '_menu_item_taxonomy', $taxonomy);
-            }
+    $pending_list = $GLOBALS['kursagenten_pending_menu_type'] ?? [];
+    $pending = $pending_list[$menu_item_db_id] ?? null;
+    $menu_type = $pending ?? $_POST['menu-item-object-id'][$menu_item_db_id] ?? $_POST['menu-item'][$menu_item_db_id]['menu-item-object-id'] ?? $args['menu-item-object-id'] ?? null;
+    $object = $_POST['menu-item-object'][$menu_item_db_id] ?? $_POST['menu-item'][$menu_item_db_id]['menu-item-object'] ?? $args['menu-item-object'] ?? '';
+    $is_auto = !empty($pending) || ($object === 'kursagenten_auto_menu') || (($object === 'custom') && in_array($menu_type, KURSAGENTEN_AUTO_MENU_TYPES, true));
+
+    if ($is_auto && !empty($menu_type)) {
+        unset($GLOBALS['kursagenten_pending_menu_type'][$menu_item_db_id]);
+        update_post_meta($menu_item_db_id, '_menu_item_object', 'kursagenten_auto_menu');
+        update_post_meta($menu_item_db_id, '_menu_item_object_id', $menu_type);
+        update_post_meta($menu_item_db_id, '_menu_item_menu_type', $menu_type);
+        update_post_meta($menu_item_db_id, '_menu_item_object_id', $menu_type);
+        $taxonomy = '';
+        switch ($menu_type) {
+            case 'course_categories':
+            case 'course_categories_and_courses':
+                $taxonomy = 'ka_coursecategory';
+                break;
+            case 'course_locations':
+                $taxonomy = 'ka_course_location';
+                break;
+            case 'course_instructors':
+                $taxonomy = 'ka_instructors';
+                break;
+        }
+        if (!empty($taxonomy)) {
+            update_post_meta($menu_item_db_id, '_menu_item_taxonomy', $taxonomy);
         }
 
         // Lagre hovedmenypunkt URL – både i vår meta og i standard _menu_item_url
@@ -1401,17 +1475,25 @@ add_action('wp_update_nav_menu', function($menu_id) {
 });
 
 /**
- * Clear all Kursagenten menu transients when a taxonomy term is updated.
- * Needed because hide_in_menu (and other term meta) affects menu output,
- * but changing it does not trigger wp_update_nav_menu.
+ * Clear all Kursagenten menu transients.
+ * Used when taxonomy terms or SEO URL slugs change.
  */
-function kursagenten_clear_menu_cache_on_term_edit(): void {
+function kursagenten_clear_all_menu_caches(): void {
     $menus = wp_get_nav_menus();
     if (is_array($menus)) {
         foreach ($menus as $menu) {
             delete_transient('kursagenten_menu_items_' . $menu->term_id);
         }
     }
+}
+
+/**
+ * Clear all Kursagenten menu transients when a taxonomy term is updated.
+ * Needed because hide_in_menu (and other term meta) affects menu output,
+ * but changing it does not trigger wp_update_nav_menu.
+ */
+function kursagenten_clear_menu_cache_on_term_edit(): void {
+    kursagenten_clear_all_menu_caches();
 }
 add_action('edited_ka_coursecategory', 'kursagenten_clear_menu_cache_on_term_edit');
 add_action('edited_ka_course_location', 'kursagenten_clear_menu_cache_on_term_edit');
@@ -1430,7 +1512,8 @@ function ensure_menu_item_taxonomy($menu_id) {
     }
     
     foreach ($menu_items as $item) {
-        if ($item->object === 'kursagenten_auto_menu') {
+        if (kursagenten_is_auto_menu_item($item)) {
+            update_post_meta($item->ID, '_menu_item_object', 'kursagenten_auto_menu');
             $stored_menu_type = get_post_meta($item->ID, '_menu_item_menu_type', true);
             $menu_type = $stored_menu_type ?: ($item->object_id ?? '');
             $current_taxonomy = get_post_meta($item->ID, '_menu_item_taxonomy', true);
@@ -1470,8 +1553,10 @@ function ensure_menu_item_taxonomy($menu_id) {
 add_action('wp_update_nav_menu', 'ensure_menu_item_taxonomy', 10, 1);
 
 function ensure_new_menu_item_taxonomy($menu_id, $menu_item_db_id, $args) {
-    if (isset($args['menu-item-object']) && $args['menu-item-object'] === 'kursagenten_auto_menu') {
-        $menu_type = isset($args['menu-item-object-id']) ? $args['menu-item-object-id'] : '';
+    $object = $args['menu-item-object'] ?? '';
+    $menu_type = $args['menu-item-object-id'] ?? '';
+    $is_auto = ($object === 'kursagenten_auto_menu') || (($object === 'custom') && in_array($menu_type, KURSAGENTEN_AUTO_MENU_TYPES, true));
+    if ($is_auto && !empty($menu_type)) {
         $taxonomy = '';
         
         switch ($menu_type) {

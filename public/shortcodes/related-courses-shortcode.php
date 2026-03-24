@@ -148,6 +148,7 @@ class RelatedCourses {
         $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
         $custom_class = !empty($a['klasse']) ? ' ' . esc_attr($a['klasse']) : '';
+        $no_image_class = (floatval($a['bildestr']) <= 0) ? ' k-no-image' : '';
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
@@ -155,7 +156,7 @@ class RelatedCourses {
             $bildeformen = '';
         }
 
-        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
+        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil} {$skygge} {$utdrag} {$bildeformen}{$custom_class}{$no_image_class}' id='{$id}'>";
         $output .= "<div class='k-wrapper wrapper'>";
 
         foreach ($posts as $related_post) {
@@ -197,9 +198,6 @@ class RelatedCourses {
 
     private function generate_course_html($post, array $thumbnail, array $a): string {
         $title = get_the_title($post->ID);
-        $thumbnail_url = esc_url($thumbnail['url']);
-        $thumbnail_width = esc_attr($thumbnail['width']);
-        $thumbnail_height = esc_attr($thumbnail['height']);
         
         // Behold transport-parametre (st og ev. sc) fra gjeldende URL
         $link_url = get_permalink($post->ID);
@@ -216,8 +214,14 @@ class RelatedCourses {
             }
         }
         
-        return "
-            <div class='k-box box term-{$post->ID}'>
+        // Check if images should be displayed (bildestr=0, 0px, 0em etc. means hide)
+        $show_image = (floatval($a['bildestr']) > 0);
+        $image_html = '';
+        if ($show_image) {
+            $thumbnail_url = esc_url($thumbnail['url']);
+            $thumbnail_width = esc_attr($thumbnail['width']);
+            $thumbnail_height = esc_attr($thumbnail['height']);
+            $image_html = "
                 <a class='k-image image k-box-inner box-inner' href='" . esc_url($link_url) . "' title='{$title}'>
                     <picture>
                         <img src='{$thumbnail_url}' 
@@ -227,7 +231,12 @@ class RelatedCourses {
                              class='wp-image-{$post->ID}' 
                              decoding='async'>
                     </picture>
-                </a>
+                </a>";
+        }
+        
+        return "
+            <div class='k-box box term-{$post->ID}'>
+                {$image_html}
                 <div class='k-text text k-box-inner box-inner'>
                     <a class='k-title title' href='" . esc_url($link_url) . "' title='{$title}'>
                         <{$a['overskrift']} class='k-tittel tittel'>{$title}</{$a['overskrift']}>

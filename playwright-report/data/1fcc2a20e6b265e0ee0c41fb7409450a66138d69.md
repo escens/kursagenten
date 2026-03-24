@@ -1,0 +1,164 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e9]:
+        - link "plugin.lanseres.no" [ref=e15] [cursor=pointer]:
+          - /url: https://plugin.lanseres.no/
+        - navigation "Primary Site Navigation" [ref=e20]:
+          - list [ref=e22]:
+            - listitem [ref=e23]:
+              - link "Instruktører Menu Toggle" [ref=e24] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/instruktorer/
+                - text: Instruktører
+                - application "Menu Toggle" [ref=e25]:
+                  - img [ref=e27]
+            - listitem [ref=e29]:
+              - link "Kurssteder Menu Toggle" [ref=e30] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurssteder/
+                - text: Kurssteder
+                - application "Menu Toggle" [ref=e31]:
+                  - img [ref=e33]
+            - listitem [ref=e35]:
+              - link "Kurskategorier Menu Toggle" [ref=e36] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategorier/
+                - text: Kurskategorier
+                - application "Menu Toggle" [ref=e37]:
+                  - img [ref=e39]
+            - listitem [ref=e41]:
+              - link "Kurs" [ref=e42] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurs/
+            - listitem [ref=e43]:
+              - link "Betaling" [ref=e44] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/betaling/
+            - listitem [ref=e45]:
+              - link "Finn ditt kurs Menu Toggle" [ref=e46] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategori/
+                - text: Finn ditt kurs
+                - application "Menu Toggle" [ref=e47]:
+                  - img [ref=e49]
+    - main [ref=e54]:
+      - article [ref=e55]:
+        - heading "Kurskategorier" [level=1] [ref=e57]
+        - generic [ref=e60]:
+          - generic [ref=e61]:
+            - link "Bilde av kurs i Anhuker" [ref=e62] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/anhuker/
+              - img "Bilde av kurs i Anhuker" [ref=e64]
+            - generic [ref=e65]:
+              - link "Anhuker" [ref=e66] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategori/anhuker/
+                - heading "Anhuker" [level=3] [ref=e67]
+              - paragraph [ref=e69]: Her er en kort beskrivelse
+          - generic [ref=e70]:
+            - link "Bilde av kurs i Dokumentert opplæring" [ref=e71] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/dokumentert-opplaering/
+              - img "Bilde av kurs i Dokumentert opplæring" [ref=e73]
+            - generic [ref=e74]:
+              - link "Dokumentert opplæring" [ref=e75] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategori/dokumentert-opplaering/
+                - heading "Dokumentert opplæring" [level=3] [ref=e76]
+              - paragraph [ref=e78]: Dokumentert opplæring er en opplæring som blir sendt over til Sentralregisteret, og som kan gi kompetansebevis du kan ha i lommeboken.
+          - generic [ref=e79]:
+            - link "Bilde av kurs i Fallsikring" [ref=e80] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/fallsikring/
+              - img "Bilde av kurs i Fallsikring" [ref=e82]
+            - link "Fallsikring" [ref=e84] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/fallsikring/
+              - heading "Fallsikring" [level=3] [ref=e85]
+          - generic [ref=e86]:
+            - link "Bilde av kurs i Farlig verktøy" [ref=e87] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/farlig-verktoy/
+              - img "Bilde av kurs i Farlig verktøy" [ref=e89]
+            - link "Farlig verktøy" [ref=e91] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/farlig-verktoy/
+              - heading "Farlig verktøy" [level=3] [ref=e92]
+          - generic [ref=e93]:
+            - link "Bilde av kurs i G1 mobilkran" [ref=e94] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g1-mobilkran/
+              - img "Bilde av kurs i G1 mobilkran" [ref=e96]
+            - generic [ref=e97]:
+              - link "G1 mobilkran" [ref=e98] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategori/g1-mobilkran/
+                - heading "G1 mobilkran" [level=3] [ref=e99]
+              - paragraph [ref=e101]: Her er en kort beskrivelse
+          - generic [ref=e102]:
+            - link "Bilde av kurs i G11 Løfteredskap" [ref=e103] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g11-lofteredskap/
+              - img "Bilde av kurs i G11 Løfteredskap" [ref=e105]
+            - link "G11 Løfteredskap" [ref=e107] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g11-lofteredskap/
+              - heading "G11 Løfteredskap" [level=3] [ref=e108]
+          - generic [ref=e109]:
+            - link "Bilde av kurs i G3 Portalkran" [ref=e110] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g3-portalkran/
+              - img "Bilde av kurs i G3 Portalkran" [ref=e112]
+            - link "G3 Portalkran" [ref=e114] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g3-portalkran/
+              - heading "G3 Portalkran" [level=3] [ref=e115]
+          - generic [ref=e116]:
+            - link "Bilde av kurs i G8 lastebilkran" [ref=e117] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g8-lastebilkran/
+              - img "Bilde av kurs i G8 lastebilkran" [ref=e119]
+            - link "G8 lastebilkran" [ref=e121] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g8-lastebilkran/
+              - heading "G8 lastebilkran" [level=3] [ref=e122]
+          - generic [ref=e123]:
+            - link "Bilde av kurs i Maskinfører" [ref=e124] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/maskinforer/
+              - img "Bilde av kurs i Maskinfører" [ref=e126]
+            - link "Maskinfører" [ref=e128] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/maskinforer/
+              - heading "Maskinfører" [level=3] [ref=e129]
+          - generic [ref=e130]:
+            - link "Bilde av kurs i Nettbasert" [ref=e131] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/nettbasert/
+              - img "Bilde av kurs i Nettbasert" [ref=e133]
+            - link "Nettbasert" [ref=e135] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/nettbasert/
+              - heading "Nettbasert" [level=3] [ref=e136]
+          - generic [ref=e137]:
+            - link "Bilde av kurs i Personløfter" [ref=e138] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/personlofter/
+              - img "Bilde av kurs i Personløfter" [ref=e140]
+            - link "Personløfter" [ref=e142] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/personlofter/
+              - heading "Personløfter" [level=3] [ref=e143]
+          - generic [ref=e144]:
+            - link "Bilde av kurs i Stor truck T6 - T8" [ref=e145] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/stor-truck-t6-t8/
+              - img "Bilde av kurs i Stor truck T6 - T8" [ref=e147]
+            - link "Stor truck T6 - T8" [ref=e149] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/stor-truck-t6-t8/
+              - heading "Stor truck T6 - T8" [level=3] [ref=e150]
+          - generic [ref=e151]:
+            - link "Bilde av kurs i Teleskoptruck" [ref=e152] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/teleskoptruck/
+              - img "Bilde av kurs i Teleskoptruck" [ref=e154]
+            - link "Teleskoptruck" [ref=e156] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/teleskoptruck/
+              - heading "Teleskoptruck" [level=3] [ref=e157]
+          - generic [ref=e158]:
+            - link "Bilde av kurs i Truck T1-T5" [ref=e159] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/truck-t1-t5/
+              - img "Bilde av kurs i Truck T1-T5" [ref=e161]
+            - link "Truck T1-T5" [ref=e163] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/truck-t1-t5/
+              - heading "Truck T1-T5" [level=3] [ref=e164]
+          - generic [ref=e165]:
+            - link "Bilde av kurs i Varme arbeider" [ref=e166] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/varme-arbeider/
+              - img "Bilde av kurs i Varme arbeider" [ref=e168]
+            - link "Varme arbeider" [ref=e170] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/varme-arbeider/
+              - heading "Varme arbeider" [level=3] [ref=e171]
+    - contentinfo [ref=e172]:
+      - paragraph [ref=e179]:
+        - text: Copyright © 2026 plugin.lanseres.no | Powered by
+        - link "Astra WordPress Theme" [ref=e180] [cursor=pointer]:
+          - /url: https://wpastra.com
+```

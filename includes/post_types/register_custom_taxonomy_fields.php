@@ -102,7 +102,7 @@ function add_coursecategory_image_field($term) {
 add_action('ka_coursecategory_edit_form_fields', 'add_coursecategory_image_field');
 
 function add_coursecategory_icon_field($term) {
-    add_taxonomy_image_field($term, 'ka_coursecategory', 'icon_coursecategory', 'Ikon', 'bilde av ikon', 'Bruk en .png bildefil. Du kan laste ned ikoner på feks. https://thenounproject.com/');
+    add_taxonomy_image_field($term, 'ka_coursecategory', 'icon_coursecategory', 'Profilbilde', 'profilbilde', 'Kan brukes i lister med kurskategorier om du ønsker et annet bilde enn hovedbilde. Profilbilde tilsvarer ikon-bilde i eldre oppsett. Bruk en .png eller .svg bildefil. Du kan laste ned ikoner på feks. https://thenounproject.com/');
 }
 add_action('ka_coursecategory_edit_form_fields', 'add_coursecategory_icon_field');
 
@@ -1515,7 +1515,7 @@ function kursagenten_make_fields_readonly($term) {
     </style>
     <?php
 }
-add_action('instructors_pre_edit_form', 'kursagenten_make_fields_readonly', 10);
+add_action('ka_instructors_pre_edit_form', 'kursagenten_make_fields_readonly', 10);
 
 // Legg til denne nye funksjonen
 function sync_instructor_data_from_ka($term_id, $sync_image = true) {

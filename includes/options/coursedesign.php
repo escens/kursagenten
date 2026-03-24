@@ -573,10 +573,10 @@ class Designmaler {
                                 <?php
                                 $current_design = get_option('kursagenten_single_design', 'default');
                                 $designs = [
-                                    'default' => 'Hero - stort bakgrunnsbilde',
-                                    'modern'  => 'Moderne',
-                                    'minimal' => 'Minimal',
-                                    'boxes'   => 'Bokser - standard',
+                                    'default' => 'Hero - toppseksjon med bilde',
+                                    //'modern'  => 'Moderne',
+                                    //'minimal' => 'Minimal',
+                                    'boxes'   => 'Bokser',
                                 ];
                                 foreach ($designs as $value => $label) {
                                     printf(
@@ -699,7 +699,7 @@ class Designmaler {
                                     'simple'  => 'Enkel - Kun tittel og kort beskrivelse',
                                     //'default-2' => 'Standard 2 - header bilde + innholdsbilde',
                                     'profile' => 'Profil - rundt bilde og tittel',
-                                    'hero'    => 'Hero - stort bakgrunnsbilde'
+                                    'hero'    => 'Hero - toppseksjon med bilde'
                                     //'modern' => 'Moderne (kommer senere)'
                                 ];
                                 foreach ($designs as $value => $label) {

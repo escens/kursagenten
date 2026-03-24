@@ -300,6 +300,7 @@ class CourseLocationGrid {
         $overskrift = $a['overskrift'];
         $bildeformat = $a['bildeformat'];
         $custom_class = !empty($a['klasse']) ? ' ' . esc_attr($a['klasse']) : '';
+        $no_image_class = (floatval($a['bildestr']) <= 0) ? ' k-no-image' : '';
 
         if ($bildeform == '50%') {
             $bildeformen = 'rund';
@@ -307,7 +308,7 @@ class CourseLocationGrid {
             $bildeformen = '';
         }
 
-        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil}{$skygge} {$utdrag} {$bildeformen}{$custom_class}' id='{$id}'>";
+        $output = "<div class='{$id} ka-grid-scope outer-wrapper {$layout} {$stil}{$skygge} {$utdrag} {$bildeformen}{$custom_class}{$no_image_class}' id='{$id}'>";
         $output .= "<div class='k-wrapper wrapper'>";
 
         foreach ($terms as $term) {
@@ -341,8 +342,8 @@ class CourseLocationGrid {
     }
 
     private function generate_location_html($term, string $thumbnail, string $description, array $a): string {
-        // Check if images should be displayed
-        $show_image = !empty($a['bildestr']) && $a['bildestr'] !== '0' && $a['bildestr'] !== 0;
+        // Check if images should be displayed (bildestr=0, 0px, 0em etc. means hide)
+        $show_image = (floatval($a['bildestr']) > 0);
         
         $image_html = '';
         if ($show_image) {

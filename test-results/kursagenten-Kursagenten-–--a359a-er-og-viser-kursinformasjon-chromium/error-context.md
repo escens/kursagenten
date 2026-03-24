@@ -1,0 +1,192 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e9]:
+        - link "plugin.lanseres.no" [ref=e15] [cursor=pointer]:
+          - /url: https://plugin.lanseres.no/
+        - navigation "Primary Site Navigation" [ref=e20]:
+          - list [ref=e22]:
+            - listitem [ref=e23]:
+              - link "Instruktører Menu Toggle" [ref=e24] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/instruktorer/
+                - text: Instruktører
+                - application "Menu Toggle" [ref=e25]:
+                  - img [ref=e27]
+            - listitem [ref=e29]:
+              - link "Kurssteder Menu Toggle" [ref=e30] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurssteder/
+                - text: Kurssteder
+                - application "Menu Toggle" [ref=e31]:
+                  - img [ref=e33]
+            - listitem [ref=e35]:
+              - link "Kurskategorier Menu Toggle" [ref=e36] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategorier/
+                - text: Kurskategorier
+                - application "Menu Toggle" [ref=e37]:
+                  - img [ref=e39]
+            - listitem [ref=e41]:
+              - link "Kurs" [ref=e42] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurs/
+            - listitem [ref=e43]:
+              - link "Betaling" [ref=e44] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/betaling/
+            - listitem [ref=e45]:
+              - link "Finn ditt kurs Menu Toggle" [ref=e46] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategori/
+                - text: Finn ditt kurs
+                - application "Menu Toggle" [ref=e47]:
+                  - img [ref=e49]
+    - main [ref=e54]:
+      - article [ref=e56]:
+        - generic [ref=e61]:
+          - heading "G1 Mobilkran - Mo i Rana" [level=1] [ref=e62]:
+            - text: G1 Mobilkran
+            - generic [ref=e63]: "- Mo i Rana"
+          - generic [ref=e64]:
+            - link "Alle kurs" [ref=e66] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurs/
+              - text: Alle kurs
+            - link "G1 mobilkran" [ref=e70] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurskategori/g1-mobilkran/
+          - button "Meld deg på" [ref=e72] [cursor=pointer]
+        - generic [ref=e75]:
+          - generic [ref=e77]:
+            - heading "Kurstider og steder" [level=2] [ref=e78]
+            - paragraph
+            - list [ref=e80]:
+              - listitem [ref=e81]:
+                - link "Alle" [ref=e82] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/
+              - listitem [ref=e83]:
+                - link "Alta" [ref=e84] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/alta/
+              - listitem [ref=e85]:
+                - link "Bodø" [ref=e86] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/bodo/
+              - listitem [ref=e87]:
+                - link "Finnsnes" [ref=e88] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/finnsnes/
+              - listitem [ref=e89]:
+                - link "Harstad" [ref=e90] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/harstad/
+              - listitem [ref=e91]:
+                - link "Mo i Rana" [ref=e92] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/mo-i-rana/
+              - listitem [ref=e93]:
+                - link "Narvik" [ref=e94] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/narvik/
+              - listitem [ref=e95]:
+                - link "Sortland" [ref=e96] [cursor=pointer]:
+                  - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/sortland/
+              - listitem:
+                - list:
+                  - listitem [ref=e97]:
+                    - link "Svolvær" [ref=e98] [cursor=pointer]:
+                      - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/svolvaer/
+                  - listitem [ref=e99]:
+                    - link "Tromsø" [ref=e100] [cursor=pointer]:
+                      - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/tromso/
+              - listitem [ref=e101]:
+                - link "Vis flere lokasjoner +" [ref=e102] [cursor=pointer]:
+                  - /url: "#"
+            - paragraph
+            - generic [ref=e104]:
+              - generic [ref=e105]:
+                - generic [ref=e106]:
+                  - generic [ref=e107]:
+                    - generic "Ledige plasser" [ref=e108] [cursor=pointer]
+                    - strong [ref=e110]: Mo i Rana
+                  - generic [ref=e111]:
+                    - generic [ref=e112]: 23.03.2026
+                    - generic [ref=e113]: Renta avd. Helgeland
+                    - generic [ref=e114]: kl 08:00 - 15:00
+                - generic [ref=e115] [cursor=pointer]:
+                  - generic [ref=e116]: Mer info
+                  - generic [ref=e117]: Meld deg på
+              - generic [ref=e118]:
+                - paragraph [ref=e120]:
+                  - text: "Starter: 23.03.2026"
+                  - text: "Slutter: 25.03.2026"
+                  - text: "Pris: 25000 kr"
+                  - text: "Sted: Mo i Rana"
+                  - text: "Varighet: 7 timer"
+                - generic [ref=e121]:
+                  - paragraph [ref=e122]:
+                    - strong [ref=e123]: Adresse
+                  - paragraph [ref=e124]:
+                    - text: Renta avd. Helgeland
+                    - text: Mellomvika 40
+                    - text: 8622 Mo i Rana
+                    - link "Vis i Google Maps" [ref=e125] [cursor=pointer]:
+                      - /url: https://www.google.com/maps/search/?api=1&query=Mellomvika 40,+8622+Mo i Rana
+          - generic [ref=e126]:
+            - heading "Neste kurs" [level=2] [ref=e127]
+            - generic [ref=e128]:
+              - generic [ref=e129]: "Starter: 23.03.2026"
+              - generic [ref=e131]: "Slutter: 25.03.2026"
+              - generic [ref=e133]: "Kurstider: kl 08:00 - 15:00"
+              - generic [ref=e135]: "Varighet: 7 timer"
+              - generic [ref=e137]: "Pris: 25000 kr"
+              - link "Meld deg på" [ref=e140] [cursor=pointer]:
+                - /url: "#"
+                - text: Meld deg på
+        - generic [ref=e145]:
+          - heading "Om kurset" [level=2] [ref=e146]
+          - paragraph [ref=e148]: Vi tilbyr G1 Mobilkran kurs. Modul 1 handler om grunnkunnskap. Modul 2.3 er en fagdel om løfteredskap. Modul 2.4 er en fagdel om sikker bruk av mobilkraner. Modul 3 er grunnleggende praksis. Modul 4 er praksis/mengdetrening. Dette kan gjøres med fadderordning i bedrift.
+          - paragraph
+          - paragraph [ref=e149]:
+            - generic [ref=e150]:
+              - text: Innhold i kurset
+              - text: Modul 1
+            - text: handler om grunnkunnskap for førere av kraner, trucker, masseforflytningsmaskiner og diverse annet arbeidsutstyr.
+          - paragraph [ref=e151]:
+            - text: "Modul 2.3 er en fagdel om løfteredskap. Her går vi gjennom:"
+            - text: • Løfteinnretninger
+            - text: • Krav til personell
+            - text: • HMS, lover og forskrifter
+            - text: • Definisjoner, ord og uttrykk
+            - text: • Anhuking, arbeidsvinkler og løftetabeller
+            - text: • Løfteredskaper
+            - text: • Integrerte løftepunkter
+            - text: • Signaler og tegn
+          - paragraph [ref=e152]:
+            - text: "Modul 2.4 er en fagdel om sikker bruk av mobilkraner. Her går vi gjennom:"
+            - text: • Krav til kranfører
+            - text: • Bruksområder for mobilkraner
+            - text: • Oppbygging. Konstruksjon og virkemåte
+            - text: • Hydraulikk/elektronikk, mekanikk
+            - text: • Stabilitet
+            - text: • Lastdiagram
+            - text: • Ståltau/blokker
+            - text: • Oppstilling og bruk av mobilkran/lastebilkran
+            - text: • Sertifisering/dokumentasjon
+          - paragraph [ref=e153]: Modul 3 er grunnleggende praksis på mobilkran der vi går gjennom daglig kontroll og vedlikehold, og hvordan mobilkrana skal brukes.
+          - paragraph [ref=e154]: Modul 4 er praksis/mengdetrening. Dette kan gjøres med fadderordning i bedrift.
+          - paragraph [ref=e155]:
+            - text: Forkunnskaper
+            - text: Ingen
+          - paragraph
+        - generic [ref=e158]:
+          - heading "Kurs i samme kategori" [level=3] [ref=e159]
+          - generic [ref=e162]:
+            - link "Bilde av kurs i G1 Mobilkran" [ref=e163] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/
+              - img "Bilde av kurs i G1 Mobilkran" [ref=e165]
+            - link "G1 Mobilkran" [ref=e167] [cursor=pointer]:
+              - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/
+              - heading "G1 Mobilkran" [level=4] [ref=e168]
+    - contentinfo [ref=e169]:
+      - paragraph [ref=e176]:
+        - text: Copyright © 2026 plugin.lanseres.no | Powered by
+        - link "Astra WordPress Theme" [ref=e177] [cursor=pointer]:
+          - /url: https://wpastra.com
+  - generic [ref=e178]:
+    - button "Close" [ref=e179] [cursor=pointer]: ×
+    - iframe [ref=e180]:
+      
+```

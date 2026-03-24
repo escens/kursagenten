@@ -164,7 +164,6 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $after_price = $selected_coursedate_data['after_price'] ?? '';
     $duration = $selected_coursedate_data['duration'] ?? '';
     $coursetime = $selected_coursedate_data['time'] ?? '';
-    $course_days = $selected_coursedate_data['course_days'] ?? '';
     $button_text = $selected_coursedate_data['button_text'] ?? '';
     $signup_url = $selected_coursedate_data['signup_url'] ?? '';
     $is_full = kursagenten_normalize_bool($selected_coursedate_data['is_full'] ?? false);
@@ -179,7 +178,6 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     $registration_deadline =    ka_format_date(get_post_meta($course_id, 'ka_course_registration_deadline', true));
     $duration =                 get_post_meta($course_id, 'ka_course_duration', true);
     $coursetime =               get_post_meta($course_id, 'ka_course_time', true);
-    $course_days =              get_post_meta($course_id, 'ka_course_days', true);
     $price =                    get_post_meta($course_id, 'ka_course_price', true);
     $after_price =              get_post_meta($course_id, 'ka_course_text_after_price', true);
     $location =                 get_post_meta($course_id, 'ka_course_location', true);
@@ -352,11 +350,10 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                 </div>
                 <!-- Meta area -->
                 <div class="meta-area iconlist horizontal">
-                    <?php if (!empty($coursetime) || !empty($course_days)) : ?>
+                    <?php if (!empty($coursetime)) : ?>
                         <div class="coursetime">
                             <i class="ka-icon icon-time"></i>
-                            <?php if (!empty($course_days)) : ?><?php echo esc_html($course_days); ?> <?php endif; ?>
-                            <?php if (!empty($coursetime)) : ?><?php echo esc_html($coursetime); ?><?php endif; ?>
+                            <?php echo esc_html($coursetime); ?>
                         </div>
                     <?php endif; ?>
                     <?php if (!empty($duration)) : ?>

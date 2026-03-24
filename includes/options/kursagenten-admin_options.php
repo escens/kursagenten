@@ -36,6 +36,8 @@ if (!empty($__kag_api_key_present)) {
 
 // Add the main admin menu
 function kursagenten_register_admin_menu() {
+    $menu_icon_url = KURSAG_PLUGIN_URL . 'public/blocks/shared/icon-black.svg';
+
     // Registrer hovedmenyen først
     add_menu_page(
         'Kursagenten',                         // Page title
@@ -43,7 +45,7 @@ function kursagenten_register_admin_menu() {
         'manage_options',                      // Capability
         'kursagenten',                         // Menu slug
         'kursagenten_admin_landing_page',      // Callback function
-        'dashicons-welcome-learn-more',        // Icon
+        $menu_icon_url,                        // Icon
         2                                      // Position
     );
 

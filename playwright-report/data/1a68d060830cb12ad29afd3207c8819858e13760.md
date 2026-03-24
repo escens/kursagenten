@@ -1,0 +1,548 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - link "Skip to content" [ref=e2] [cursor=pointer]:
+    - /url: "#content"
+  - generic [ref=e3]:
+    - banner [ref=e4]:
+      - generic [ref=e9]:
+        - link "plugin.lanseres.no" [ref=e15] [cursor=pointer]:
+          - /url: https://plugin.lanseres.no/
+        - navigation "Primary Site Navigation" [ref=e20]:
+          - list [ref=e22]:
+            - listitem [ref=e23]:
+              - link "Instruktører Menu Toggle" [ref=e24] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/instruktorer/
+                - text: Instruktører
+                - application "Menu Toggle" [ref=e25]:
+                  - img [ref=e27]
+            - listitem [ref=e29]:
+              - link "Kurssteder Menu Toggle" [ref=e30] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurssteder/
+                - text: Kurssteder
+                - application "Menu Toggle" [ref=e31]:
+                  - img [ref=e33]
+            - listitem [ref=e35]:
+              - link "Kurskategorier Menu Toggle" [ref=e36] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategorier/
+                - text: Kurskategorier
+                - application "Menu Toggle" [ref=e37]:
+                  - img [ref=e39]
+            - listitem [ref=e41]:
+              - link "Kurs" [ref=e42] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurs/
+            - listitem [ref=e43]:
+              - link "Betaling" [ref=e44] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/betaling/
+            - listitem [ref=e45]:
+              - link "Finn ditt kurs Menu Toggle" [ref=e46] [cursor=pointer]:
+                - /url: https://plugin.lanseres.no/kurskategori/
+                - text: Finn ditt kurs
+                - application "Menu Toggle" [ref=e47]:
+                  - img [ref=e49]
+    - main [ref=e54]:
+      - article [ref=e55]:
+        - heading "Kurs" [level=1] [ref=e57]
+        - generic [ref=e58]:
+          - text: https://plugin.lanseres.no/wp-content/plugins/kursagenten/assets/images/placeholder-generell.jpg
+          - main [ref=e60]:
+            - article [ref=e62]:
+              - generic [ref=e70]:
+                - generic [ref=e72]:
+                  - textbox "Søk etter kurs..." [ref=e74]
+                  - generic [ref=e75]:
+                    - heading "Kurssteder" [level=5] [ref=e76]
+                    - generic [ref=e77]:
+                      - generic [ref=e79] [cursor=pointer]:
+                        - checkbox "Alta" [ref=e80]
+                        - generic [ref=e81]: Alta
+                      - generic [ref=e83] [cursor=pointer]:
+                        - checkbox "Arendal" [ref=e84]
+                        - generic [ref=e85]: Arendal
+                      - generic [ref=e87] [cursor=pointer]:
+                        - checkbox "Bergen" [ref=e88]
+                        - generic [ref=e89]: Bergen
+                      - generic [ref=e91] [cursor=pointer]:
+                        - checkbox "Bodø" [ref=e92]
+                        - generic [ref=e93]: Bodø
+                      - generic [ref=e95] [cursor=pointer]:
+                        - checkbox "Drammen" [ref=e96]
+                        - generic [ref=e97]: Drammen
+                      - generic [ref=e99] [cursor=pointer]:
+                        - checkbox "Eidsvoll" [ref=e100]
+                        - generic [ref=e101]: Eidsvoll
+                      - generic [ref=e103] [cursor=pointer]:
+                        - checkbox "Elverum" [ref=e104]
+                        - generic [ref=e105]: Elverum
+                      - generic [ref=e107] [cursor=pointer]:
+                        - checkbox "Finnsnes" [ref=e108]
+                        - generic [ref=e109]: Finnsnes
+                      - generic [ref=e111] [cursor=pointer]:
+                        - checkbox "Gjøvik" [ref=e112]
+                        - generic [ref=e113]: Gjøvik
+                      - generic [ref=e115] [cursor=pointer]:
+                        - checkbox "Hamar" [ref=e116]
+                        - generic [ref=e117]: Hamar
+                      - generic [ref=e119] [cursor=pointer]:
+                        - checkbox "Harstad" [ref=e120]
+                        - generic [ref=e121]: Harstad
+                      - generic [ref=e123] [cursor=pointer]:
+                        - checkbox "Kongsberg" [ref=e124]
+                        - generic [ref=e125]: Kongsberg
+                      - generic [ref=e127] [cursor=pointer]:
+                        - checkbox "Mo i Rana" [ref=e128]
+                        - generic [ref=e129]: Mo i Rana
+                      - generic [ref=e131] [cursor=pointer]:
+                        - checkbox "Narvik" [ref=e132]
+                        - generic [ref=e133]: Narvik
+                      - generic [ref=e135] [cursor=pointer]:
+                        - checkbox "Nettbasert" [ref=e136]
+                        - generic [ref=e137]: Nettbasert
+                      - generic [ref=e139] [cursor=pointer]:
+                        - checkbox "Nordre Follo" [ref=e140]
+                        - generic [ref=e141]: Nordre Follo
+                      - generic [ref=e143] [cursor=pointer]:
+                        - checkbox "Os" [ref=e144]
+                        - generic [ref=e145]: Os
+                      - generic [ref=e147] [cursor=pointer]:
+                        - checkbox "Oslo" [ref=e148]
+                        - generic [ref=e149]: Oslo
+                      - generic [ref=e151] [cursor=pointer]:
+                        - checkbox "Porsgrunn" [ref=e152]
+                        - generic [ref=e153]: Porsgrunn
+                      - generic [ref=e155] [cursor=pointer]:
+                        - checkbox "Sandefjord" [ref=e156]
+                        - generic [ref=e157]: Sandefjord
+                      - generic [ref=e159] [cursor=pointer]:
+                        - checkbox "Sortland" [ref=e160]
+                        - generic [ref=e161]: Sortland
+                      - generic [ref=e163] [cursor=pointer]:
+                        - checkbox "Stavanger" [ref=e164]
+                        - generic [ref=e165]: Stavanger
+                      - generic [ref=e167] [cursor=pointer]:
+                        - checkbox "Stord" [ref=e168]
+                        - generic [ref=e169]: Stord
+                      - generic [ref=e171] [cursor=pointer]:
+                        - checkbox "Svolvær" [ref=e172]
+                        - generic [ref=e173]: Svolvær
+                      - generic [ref=e175] [cursor=pointer]:
+                        - checkbox "Tromsø" [ref=e176]
+                        - generic [ref=e177]: Tromsø
+                      - generic [ref=e179] [cursor=pointer]:
+                        - checkbox "Ullensaker" [ref=e180]
+                        - generic [ref=e181]: Ullensaker
+                    - generic [ref=e182] [cursor=pointer]: Vis mer
+                  - generic [ref=e184]:
+                    - heading "Kategorier" [level=5] [ref=e185]
+                    - generic [ref=e186]:
+                      - generic [ref=e188] [cursor=pointer]:
+                        - checkbox "Anhuker" [ref=e189]
+                        - generic [ref=e190]: Anhuker
+                      - generic [ref=e194] [cursor=pointer]:
+                        - checkbox "Dokumentert opplæring" [ref=e195]
+                        - generic [ref=e196]: Dokumentert opplæring
+                      - generic [ref=e200] [cursor=pointer]:
+                        - checkbox "Maskinfører" [ref=e201]
+                        - generic [ref=e202]: Maskinfører
+                      - generic [ref=e204] [cursor=pointer]:
+                        - checkbox "Nettbasert" [ref=e205]
+                        - generic [ref=e206]: Nettbasert
+                      - generic [ref=e208] [cursor=pointer]:
+                        - checkbox "Personløfter" [ref=e209]
+                        - generic [ref=e210]: Personløfter
+                      - generic [ref=e212] [cursor=pointer]:
+                        - checkbox "Stor truck T6 - T8" [ref=e213]
+                        - generic [ref=e214]: Stor truck T6 - T8
+                      - generic [ref=e216] [cursor=pointer]:
+                        - checkbox "Teleskoptruck" [ref=e217]
+                        - generic [ref=e218]: Teleskoptruck
+                      - generic [ref=e220] [cursor=pointer]:
+                        - checkbox "Truck T1-T5" [ref=e221]
+                        - generic [ref=e222]: Truck T1-T5
+                      - generic [ref=e224] [cursor=pointer]:
+                        - checkbox "Varme arbeider" [ref=e225]
+                        - generic [ref=e226]: Varme arbeider
+                  - generic [ref=e227]:
+                    - heading "Startmåned" [level=5] [ref=e228]
+                    - generic [ref=e229]:
+                      - generic [ref=e231] [cursor=pointer]:
+                        - checkbox "March" [ref=e232]
+                        - generic [ref=e233]: March
+                      - generic [ref=e235] [cursor=pointer]:
+                        - checkbox "April" [ref=e236]
+                        - generic [ref=e237]: April
+                      - generic [ref=e239] [cursor=pointer]:
+                        - checkbox "May" [ref=e240]
+                        - generic [ref=e241]: May
+                      - generic [ref=e243] [cursor=pointer]:
+                        - checkbox "June" [ref=e244]
+                        - generic [ref=e245]: June
+                      - generic [ref=e247] [cursor=pointer]:
+                        - checkbox "August" [ref=e248]
+                        - generic [ref=e249]: August
+                      - generic [ref=e251] [cursor=pointer]:
+                        - checkbox "September" [ref=e252]
+                        - generic [ref=e253]: September
+                      - generic [ref=e255] [cursor=pointer]:
+                        - checkbox "October" [ref=e256]
+                        - generic [ref=e257]: October
+                      - generic [ref=e259] [cursor=pointer]:
+                        - checkbox "November" [ref=e260]
+                        - generic [ref=e261]: November
+                      - generic [ref=e263] [cursor=pointer]:
+                        - checkbox "December" [ref=e264]
+                        - generic [ref=e265]: December
+                - generic [ref=e266]:
+                  - generic [ref=e267]:
+                    - generic [ref=e269]: 314 kurs - side 1 av 32
+                    - generic [ref=e270]:
+                      - generic [ref=e272] [cursor=pointer]: Vis antall kurs
+                      - generic [ref=e276] [cursor=pointer]: Sorter etter
+                  - generic [ref=e279]:
+                    - generic [ref=e281]:
+                      - 'link "Se kurs: G1 Mobilkran" [ref=e283] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/mo-i-rana/
+                        - generic [ref=e284]: "Se kurs: G1 Mobilkran"
+                      - generic [ref=e285]:
+                        - generic [ref=e286]:
+                          - heading "G1 Mobilkran Ledige plasser" [level=3] [ref=e288]:
+                            - link "G1 Mobilkran" [ref=e289] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/mo-i-rana/
+                            - text: Ledige plasser
+                          - generic [ref=e290]:
+                            - generic [ref=e291]: 23.03.2026
+                            - generic [ref=e293]:
+                              - generic [ref=e294]: Mo i Rana
+                              - generic [ref=e296]: (Renta avd. Helgeland)
+                          - generic [ref=e297]:
+                            - generic [ref=e298]: kl 08:00 - 15:00
+                            - generic [ref=e300]: 7 timer
+                            - generic [ref=e302]: 25000 kr
+                            - link "Trond Haldorsen" [ref=e306] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/instruktor/trond-haldorsen/
+                            - generic [ref=e307] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e308]:
+                              - strong [ref=e309]: "Kort beskrivelse:"
+                              - text: Vi tilbyr G1 Mobilkran kurs. Modul 1 handler om grunnkunnskap. Modul 2.3 er en fagdel om løfteredskap. Modul 2.4 er en fagdel om sikker bruk av mobilkraner. Modul 3 er grunnleggende praksis. Modul 4 er praksis/mengdetrening. Dette kan gjøres med fadderordning i bedrift.
+                            - paragraph [ref=e310]: Kurset varer fra 23.03.2026 til 25.03.2026
+                            - paragraph [ref=e311]:
+                              - link "Se kursdetaljer" [ref=e312] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/mo-i-rana/
+                        - generic [ref=e313] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e314]
+                          - link "Mer informasjon" [ref=e315]:
+                            - /url: https://plugin.lanseres.no/kurs/g1-mobilkran/mo-i-rana/
+                    - generic [ref=e317]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e319] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/alta/
+                        - generic [ref=e320]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e321]:
+                        - generic [ref=e322]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e324]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e325] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/alta/
+                            - text: Ledige plasser
+                          - generic [ref=e326]:
+                            - generic [ref=e327]: 25.03.2026
+                            - generic [ref=e329]:
+                              - generic [ref=e330]: Alta
+                              - generic [ref=e332]: (Renta avd. Finmark)
+                          - generic [ref=e333]:
+                            - generic [ref=e334]: kl 08:00 - 14:00
+                            - generic [ref=e336]: 6 time
+                            - generic [ref=e338]: 3200 kr
+                            - link "Martin Flatås" [ref=e342] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/instruktor/martin-flatas/
+                            - generic [ref=e343] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e344]:
+                              - strong [ref=e345]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e346]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e347]:
+                              - link "Se kursdetaljer" [ref=e348] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/alta/
+                        - generic [ref=e349] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e350]
+                          - link "Mer informasjon" [ref=e351]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/alta/
+                    - generic [ref=e353]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e355] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/bodo/
+                        - generic [ref=e356]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e357]:
+                        - generic [ref=e358]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e360]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e361] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/bodo/
+                            - text: Ledige plasser
+                          - generic [ref=e362]:
+                            - generic [ref=e363]: 25.03.2026
+                            - generic [ref=e365]:
+                              - generic [ref=e366]: Bodø
+                              - generic [ref=e368]: (Rent avd. Bodø)
+                          - generic [ref=e369]:
+                            - generic [ref=e370]: kl 08:00 - 14:00
+                            - generic [ref=e372]: 1 time
+                            - generic [ref=e374]: 3200 kr
+                            - generic [ref=e376] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e377]:
+                              - strong [ref=e378]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e379]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e380]:
+                              - link "Se kursdetaljer" [ref=e381] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/bodo/
+                        - generic [ref=e382] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e383]
+                          - link "Mer informasjon" [ref=e384]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/bodo/
+                    - generic [ref=e386]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e388] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/narvik/
+                        - generic [ref=e389]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e390]:
+                        - generic [ref=e391]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e393]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e394] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/narvik/
+                            - text: Ledige plasser
+                          - generic [ref=e395]:
+                            - generic [ref=e396]: 25.03.2026
+                            - generic [ref=e398]:
+                              - generic [ref=e399]: Narvik
+                              - generic [ref=e401]: (Renta avd. Narvik)
+                          - generic [ref=e402]:
+                            - generic [ref=e403]: kl 08:00 - 14:00
+                            - generic [ref=e405]: 1 time
+                            - generic [ref=e407]: 3200 kr
+                            - generic [ref=e409] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e410]:
+                              - strong [ref=e411]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e412]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e413]:
+                              - link "Se kursdetaljer" [ref=e414] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/narvik/
+                        - generic [ref=e415] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e416]
+                          - link "Mer informasjon" [ref=e417]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/narvik/
+                    - generic [ref=e419]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e421] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/sortland/
+                        - generic [ref=e422]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e423]:
+                        - generic [ref=e424]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e426]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e427] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/sortland/
+                            - text: Ledige plasser
+                          - generic [ref=e428]:
+                            - generic [ref=e429]: 25.03.2026
+                            - generic [ref=e431]:
+                              - generic [ref=e432]: Sortland
+                              - generic [ref=e434]: (Renta avd. Vesterålen)
+                          - generic [ref=e435]:
+                            - generic [ref=e436]: kl 08:00 - 14:00
+                            - generic [ref=e438]: 1 time
+                            - generic [ref=e440]: 3200 kr
+                            - generic [ref=e442] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e443]:
+                              - strong [ref=e444]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e445]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e446]:
+                              - link "Se kursdetaljer" [ref=e447] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/sortland/
+                        - generic [ref=e448] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e449]
+                          - link "Mer informasjon" [ref=e450]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/sortland/
+                    - generic [ref=e452]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e454] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/mo-i-rana/
+                        - generic [ref=e455]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e456]:
+                        - generic [ref=e457]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e459]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e460] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/mo-i-rana/
+                            - text: Ledige plasser
+                          - generic [ref=e461]:
+                            - generic [ref=e462]: 25.03.2026
+                            - generic [ref=e464]:
+                              - generic [ref=e465]: Mo i Rana
+                              - generic [ref=e467]: (Renta avd. Helgeland)
+                          - generic [ref=e468]:
+                            - generic [ref=e469]: kl 08:00 - 14:00
+                            - generic [ref=e471]: 1 time
+                            - generic [ref=e473]: 3200 kr
+                            - generic [ref=e475] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e476]:
+                              - strong [ref=e477]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e478]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e479]:
+                              - link "Se kursdetaljer" [ref=e480] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/mo-i-rana/
+                        - generic [ref=e481] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e482]
+                          - link "Mer informasjon" [ref=e483]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/mo-i-rana/
+                    - generic [ref=e485]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e487] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/svolvaer/
+                        - generic [ref=e488]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e489]:
+                        - generic [ref=e490]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e492]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e493] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/svolvaer/
+                            - text: Ledige plasser
+                          - generic [ref=e494]:
+                            - generic [ref=e495]: 25.03.2026
+                            - generic [ref=e497]:
+                              - generic [ref=e498]: Svolvær
+                              - generic [ref=e500]: (Renta avd. Lofoten)
+                          - generic [ref=e501]:
+                            - generic [ref=e502]: kl 08:00 - 14:00
+                            - generic [ref=e504]: 1 time
+                            - generic [ref=e506]: 3200 kr
+                            - generic [ref=e508] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e509]:
+                              - strong [ref=e510]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e511]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e512]:
+                              - link "Se kursdetaljer" [ref=e513] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/svolvaer/
+                        - generic [ref=e514] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e515]
+                          - link "Mer informasjon" [ref=e516]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/svolvaer/
+                    - generic [ref=e518]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e520] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/tromso/
+                        - generic [ref=e521]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e522]:
+                        - generic [ref=e523]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e525]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e526] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/tromso/
+                            - text: Ledige plasser
+                          - generic [ref=e527]:
+                            - generic [ref=e528]: 25.03.2026
+                            - generic [ref=e530]:
+                              - generic [ref=e531]: Tromsø
+                              - generic [ref=e533]: (Renta avd. Tromsø)
+                          - generic [ref=e534]:
+                            - generic [ref=e535]: kl 08:00 - 14:00
+                            - generic [ref=e537]: 1 time
+                            - generic [ref=e539]: 3200 kr
+                            - generic [ref=e541] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e542]:
+                              - strong [ref=e543]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e544]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e545]:
+                              - link "Se kursdetaljer" [ref=e546] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/tromso/
+                        - generic [ref=e547] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e548]
+                          - link "Mer informasjon" [ref=e549]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/tromso/
+                    - generic [ref=e551]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e553] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/finnsnes/
+                        - generic [ref=e554]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e555]:
+                        - generic [ref=e556]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e558]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e559] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/finnsnes/
+                            - text: Ledige plasser
+                          - generic [ref=e560]:
+                            - generic [ref=e561]: 25.03.2026
+                            - generic [ref=e563]:
+                              - generic [ref=e564]: Finnsnes
+                              - generic [ref=e566]: (Renta avd. Finnsnes)
+                          - generic [ref=e567]:
+                            - generic [ref=e568]: kl 08:00 - 14:00
+                            - generic [ref=e570]: 1 time
+                            - generic [ref=e572]: 3200 kr
+                            - generic [ref=e574] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e575]:
+                              - strong [ref=e576]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e577]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e578]:
+                              - link "Se kursdetaljer" [ref=e579] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/finnsnes/
+                        - generic [ref=e580] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e581]
+                          - link "Mer informasjon" [ref=e582]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/finnsnes/
+                    - generic [ref=e584]:
+                      - 'link "Se kurs: Utvidelse til teleskoptruck (C1-C2)" [ref=e586] [cursor=pointer]':
+                        - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/harstad/
+                        - generic [ref=e587]: "Se kurs: Utvidelse til teleskoptruck (C1-C2)"
+                      - generic [ref=e588]:
+                        - generic [ref=e589]:
+                          - heading "Utvidelse til teleskoptruck (C1-C2) Ledige plasser" [level=3] [ref=e591]:
+                            - link "Utvidelse til teleskoptruck (C1-C2)" [ref=e592] [cursor=pointer]:
+                              - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/harstad/
+                            - text: Ledige plasser
+                          - generic [ref=e593]:
+                            - generic [ref=e594]: 25.03.2026
+                            - generic [ref=e596]:
+                              - generic [ref=e597]: Harstad
+                              - generic [ref=e599]: (Renta avd. Harstad)
+                          - generic [ref=e600]:
+                            - generic [ref=e601]: kl 08:00 - 14:00
+                            - generic [ref=e603]: 1 time
+                            - generic [ref=e605]: 3200 kr
+                            - generic [ref=e607] [cursor=pointer]: +
+                          - generic:
+                            - paragraph [ref=e608]:
+                              - strong [ref=e609]: "Kort beskrivelse:"
+                              - text: "Vi tilbyr utvidelse til teleskoptruck (C1-C2). Teleskoptruck deles inn i to hovedklasser: C1 og C2. Teleskoptruck C1 er en truck hvor overdelen står fast på rammen. Teleskoptruck C2 er en truck som er montert på en svingkrans. Kjennetegnet til en teleskoptruck er at de har teleskopbom med rekkevidd"
+                            - paragraph [ref=e610]: Kurset varer fra 25.03.2026 til 25.03.2026
+                            - paragraph [ref=e611]:
+                              - link "Se kursdetaljer" [ref=e612] [cursor=pointer]:
+                                - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/harstad/
+                        - generic [ref=e613] [cursor=pointer]:
+                          - button "Meld deg på" [ref=e614]
+                          - link "Mer informasjon" [ref=e615]:
+                            - /url: https://plugin.lanseres.no/kurs/utvidelse-til-teleskoptruck-c1-c2/harstad/
+                  - generic [ref=e617]:
+                    - text: "1"
+                    - link "2" [ref=e618] [cursor=pointer]:
+                      - /url: https://plugin.lanseres.no/kurs/?side=2
+                    - link "3" [ref=e619] [cursor=pointer]:
+                      - /url: https://plugin.lanseres.no/kurs/?side=3
+                    - text: …
+                    - link "32" [ref=e620] [cursor=pointer]:
+                      - /url: https://plugin.lanseres.no/kurs/?side=32
+                    - link "Neste" [ref=e621] [cursor=pointer]:
+                      - /url: https://plugin.lanseres.no/kurs/?side=2
+                      - text: Neste
+    - contentinfo [ref=e623]:
+      - paragraph [ref=e630]:
+        - text: Copyright © 2026 plugin.lanseres.no | Powered by
+        - link "Astra WordPress Theme" [ref=e631] [cursor=pointer]:
+          - /url: https://wpastra.com
+  - generic [ref=e632]:
+    - button "Close" [ref=e633] [cursor=pointer]: ×
+    - iframe [ref=e634]:
+      
+```

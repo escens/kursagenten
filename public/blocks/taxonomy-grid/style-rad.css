@@ -1,0 +1,78 @@
+.k-taxonomy-grid.k-preset-rad-standard .k-card-link,
+.k-taxonomy-grid.k-preset-rad-kort .k-card-link,
+.k-taxonomy-grid.k-preset-rad-kompakt .k-card-link,
+.k-taxonomy-grid.k-preset-rad-detalj .k-card-link {
+	display: grid;
+	grid-template-columns: minmax(20px, var(--k-image-size, 220px)) minmax(0, 1fr);
+	align-items: stretch;
+}
+
+.k-taxonomy-grid.k-preset-rad-standard .k-image-wrap,
+.k-taxonomy-grid.k-preset-rad-kort .k-image-wrap,
+.k-taxonomy-grid.k-preset-rad-kompakt .k-image-wrap,
+.k-taxonomy-grid.k-preset-rad-detalj .k-image-wrap {
+	height: 100%;
+	width: 100%;
+	max-width: 100%;
+	aspect-ratio: var(--k-image-aspect, 4/3);
+	border-radius: var(--k-image-radius-top, 8px);
+}
+.k-taxonomy-grid.k-preset-rad-kort .k-image-wrap,
+.k-taxonomy-grid.k-use-card.k-preset-rad-standard .k-image-wrap,
+.k-taxonomy-grid.k-use-card.k-preset-rad-detalj .k-image-wrap{
+	border-top-left-radius: var(--k-image-radius-top, 8px);
+	border-bottom-left-radius: var(--k-image-radius-left, 8px);
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+}
+
+.k-taxonomy-grid.k-preset-rad-standard .k-content,
+.k-taxonomy-grid.k-preset-rad-kort .k-content,
+.k-taxonomy-grid.k-preset-rad-kompakt .k-content {
+	justify-content: var(--k-content-justify-desktop, center);
+	min-width: 0;
+}
+
+.k-taxonomy-grid.k-preset-rad-detalj .k-content {
+	gap: 10px;
+	min-width: 0;
+}
+
+@media (max-width: 1024px) {
+	.k-taxonomy-grid.k-preset-rad-standard .k-content,
+	.k-taxonomy-grid.k-preset-rad-kort .k-content,
+	.k-taxonomy-grid.k-preset-rad-kompakt .k-content {
+		justify-content: var(--k-content-justify-tablet, center);
+	}
+}
+
+@media (max-width: 640px) {
+	.k-taxonomy-grid.k-preset-rad-standard .k-card-link,
+	.k-taxonomy-grid.k-preset-rad-kort .k-card-link,
+	.k-taxonomy-grid.k-preset-rad-kompakt .k-card-link,
+	.k-taxonomy-grid.k-preset-rad-detalj .k-card-link {
+		grid-template-columns: 1fr;
+	}
+
+	.k-taxonomy-grid.k-preset-rad-standard .k-image-wrap,
+	.k-taxonomy-grid.k-preset-rad-kort .k-image-wrap,
+	.k-taxonomy-grid.k-preset-rad-kompakt .k-image-wrap,
+	.k-taxonomy-grid.k-preset-rad-detalj .k-image-wrap {
+		aspect-ratio: var(--k-image-aspect, 4/3);
+	}
+	
+	.k-taxonomy-grid.k-preset-rad-kort .k-image-wrap,
+	.k-taxonomy-grid.k-use-card.k-preset-rad-standard .k-image-wrap,
+	.k-taxonomy-grid.k-use-card.k-preset-rad-detalj .k-image-wrap{
+		border-top-left-radius: var(--k-image-radius-top, 8px);
+		border-bottom-left-radius: 0;
+		border-top-right-radius:  var(--k-image-radius-right, 8px);
+		border-bottom-right-radius: 0;
+	}
+
+	.k-taxonomy-grid.k-preset-rad-standard .k-content,
+	.k-taxonomy-grid.k-preset-rad-kort .k-content,
+	.k-taxonomy-grid.k-preset-rad-kompakt .k-content {
+		justify-content: var(--k-content-justify-mobile, center);
+	}
+}

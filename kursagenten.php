@@ -6,7 +6,7 @@
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
 
- * Version:           1.1.15
+ * Version:           1.1.16
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -17,13 +17,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.1.15');
+ define('KURSAG_VERSION', '1.1.16');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.1.15');
+    define('KURSAG_VERSION', '1.1.16');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -296,7 +296,6 @@ require_once KURSAG_PLUGIN_DIR . '/includes/api/api_course_sync.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/api/api_sync_on_demand.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/search/search_instructors.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/helpers.php';
-require_once KURSAG_PLUGIN_DIR . '/includes/helpers/course_days_helper.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
 require_once KURSAG_PLUGIN_DIR . '/includes/admin-bar-links.php';
 
@@ -576,6 +575,8 @@ require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/course-ajax-filter.
 require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/menu-taxonomy-shortcode.php';
 // Menus - must load in both admin (metabox) and frontend (menu filters)
 require_once KURSAG_PLUGIN_DIR . '/public/menus/menu-taxonomies.php';
+// Blocks - must load in both admin and frontend (editor + rendering)
+require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
 
 /* FRONT END */
 if (!is_admin()) {
@@ -598,8 +599,6 @@ if (!is_admin()) {
     // General Kursagenten shortcodes
     require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
 
-    // Blocks
-    //require_once KURSAG_PLUGIN_DIR . '/public/blocks/register-blocks.php';
 }
 
     

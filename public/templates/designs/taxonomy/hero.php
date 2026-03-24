@@ -255,7 +255,7 @@ do_action('ka_taxonomy_header_before', $term);
             if ($has_long_text) :
                 ?>
                 <div class="taxonomy-hero-description-wrapper">
-                    <div class="taxonomy-rich-description expand-content" data-size="80px">
+                    <div class="taxonomy-rich-description expand-content" data-size="180px">
                         <?php
                         // Bruk apply_filters for å tillate mer HTML-innhold
                         echo apply_filters('the_content', $rich_description);

@@ -231,10 +231,9 @@ $render_courselist = static function ($extra_class = '') use ($all_coursedates, 
                                         </span>
                                     <?php endif; ?>
                                     
-                                    <?php if (!empty($coursedate['time']) || !empty($coursedate['course_days'])) : ?>
+                                    <?php if (!empty($coursedate['time'])) : ?>
                                         <span class="courselist-details">
-                                            <?php if (!empty($coursedate['course_days'])) : ?><?php echo esc_html($coursedate['course_days']); ?> <?php endif; ?>
-                                            <?php if (!empty($coursedate['time'])) : ?><?php echo esc_html($coursedate['time']); ?><?php endif; ?>
+                                            <?php echo esc_html($coursedate['time']); ?>
                                         </span>
                                     <?php endif; ?>
                                 </div>
@@ -428,8 +427,8 @@ do_action('ka_singel_header_before');
                             <?php if (!empty($selected_coursedate_data['last_date'])) : ?>
                                 <div>Slutter: <?php echo esc_html($selected_coursedate_data['last_date']); ?></div>
                             <?php endif; ?>
-                            <?php if (!empty($selected_coursedate_data['time']) || !empty($selected_coursedate_data['course_days'])) : ?>
-                                <div>Kurstider: <?php echo esc_html($selected_coursedate_data['course_days']); ?> <?php echo esc_html($selected_coursedate_data['time']); ?></div>
+                            <?php if (!empty($selected_coursedate_data['time'])) : ?>
+                                <div>Kurstider: <?php echo esc_html($selected_coursedate_data['time']); ?></div>
                             <?php endif; ?>
                             <?php if (!empty($selected_coursedate_data['duration'])) : ?>
                                 <div>Varighet: <?php echo esc_html($selected_coursedate_data['duration']); ?></div>

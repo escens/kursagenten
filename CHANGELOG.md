@@ -1,6 +1,13 @@
+## 1.1.17 - 2026-20-03
+- Fix: Rettet feil med overføring av fjernede instruktører
+
+## 1.1.16 - 2026-03-02
+- Fix: Feil i automenyer, konflikt med enkelte temaer
+
 ## 1.1.15 - 2026-02-24
 - Fix: Forbedret css styling av egne klasser i kortkoder.
-- Lagt til: Mulighet for å vise/skjule link til flere kategorier, intstruktører eller kurssteder under kurslisten på taksonomisider. Skrudd på standard.
+- Lagt til: Mulighet for å vise/skjule seksjon med linkbokser til flere kategorier, intstruktører eller kurssteder under kurslisten på taksonomisider. Skrudd på standard.
+- Lagt til: Ny taksonomi-mal: *Hero*. Denne malen har et stort bakgrunnsbilde hentet fra taksonomien. Bilde må legges inn via Wordpress. Nye innstillinger for denne malen og Standard/Hero for enkeltkurs med mer kontroll over bilder, bakgrunn, og fontfarger for toppseksjonen.
 
 ## 1.1.14 - 2026-02-24
 - Fix: Skjult kursbilder i Mediebibliotek. De skal ikke kunne brukes på sider, da de kan slettes via Kursagenten og kan skape ødelagte linker.
