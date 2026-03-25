@@ -31,11 +31,17 @@ Dette scriptet automatiserer bygging av nye plugin-versjoner.
 ## Filer som ekskluderes fra ZIP
 
 - `*.ps1` - PowerShell-scripts
+- `documentation/` - Intern dokumentasjon
+- `src/` - Blokk kildekode (release bruker `build/`)
+- `package.json` og `package-lock.json` - Build-avhengigheter
 - `node_modules/` - Node modules
-- `.git/` - Git repository
-- `.vscode/` - VS Code settings
-- `*.log` - Log-filer
-- `slettes/` - Utviklermappe
+- `playwright-report/` og `test-results/` - Testartefakter
+- `.git/`, `.vscode/`, `.idea/` - Repo/IDE-filer
+- `public/blocks/blocks.md` - Intern blokkstatus
+- `public/blocks/taxonomy-grid/index.js` og `public/blocks/taxonomy-grid/edit.js` - Kildepekere
+- `public/blocks/taxonomy-grid/editor-style-selector.css` og `public/blocks/taxonomy-grid/preset-previews/` - Ikke brukt i runtime
+- `public/blocks/shared/icon-black.svg` og `public/blocks/shared/icon-pink.svg` - Ikke brukt i build/runtime
+- `*.log`, `*.tmp`, `*.bak`, `*.zip`, `slettes/` - Midlertidig/arkiv
 
 ## Etter bygging
 

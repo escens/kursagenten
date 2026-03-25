@@ -63,7 +63,13 @@ do_action('ka_taxonomy_header_before', $term);
 <article class="ka-outer-container taxonomy-container modern-design view-type-<?php echo esc_attr(str_replace('_', '', $view_type)); ?>">
     <header class="ka-section ka-taxonomy-header">
         <div class="ka-content-container">
-            <h1><?php echo esc_html($term->name); ?></h1>
+            <h1><?php
+                echo esc_html(
+                    ($taxonomy === 'ka_instructors' && function_exists('get_instructor_display_name'))
+                        ? get_instructor_display_name($term)
+                        : $term->name
+                );
+            ?></h1>
             <?php if (!empty($term->description)): ?>
                 <p><?php echo wp_kses_post($term->description); ?></p>
             <?php endif; ?>

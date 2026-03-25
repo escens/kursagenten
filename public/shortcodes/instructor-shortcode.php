@@ -204,16 +204,29 @@ class InstructorGrid {
         return $output;
     }
 
-    private function generate_instructor_html($term, string $thumbnail, string $description, array $a): string {
-        // Get display name based on 'vis' attribute
-        $display_name = match($a['vis']) {
-            'fornavn' => get_term_meta($term->term_id, 'instructor_firstname', true),
-            'etternavn' => get_term_meta($term->term_id, 'instructor_lastname', true),
-            default => $term->name
-        };
+    /**
+     * Resolve instructor label for cards: shortcode vis=fornavn|etternavn overrides; otherwise use global design setting.
+     *
+     * @param \WP_Term $term Instructor term.
+     * @param string   $vis  Shortcode vis attribute (standard|fornavn|etternavn).
+     */
+    private function resolve_instructor_card_name($term, string $vis): string {
+        if ($vis === 'fornavn') {
+            $fn = get_term_meta($term->term_id, 'instructor_firstname', true);
+            return !empty($fn) ? (string) $fn : $term->name;
+        }
+        if ($vis === 'etternavn') {
+            $ln = get_term_meta($term->term_id, 'instructor_lastname', true);
+            return !empty($ln) ? (string) $ln : $term->name;
+        }
+        if (function_exists('get_instructor_display_name')) {
+            return get_instructor_display_name($term);
+        }
+        return $term->name;
+    }
 
-        // If meta field is empty, fallback to term name
-        $display_name = !empty($display_name) ? $display_name : $term->name;
+    private function generate_instructor_html($term, string $thumbnail, string $description, array $a): string {
+        $display_name = $this->resolve_instructor_card_name($term, (string) $a['vis']);
         
         // Check if images should be displayed (bildestr=0, 0px, 0em etc. means hide)
         $show_image = (floatval($a['bildestr']) > 0);
@@ -234,25 +247,34 @@ class InstructorGrid {
                 }
             }
             
+            $term_url = function_exists('get_instructor_display_url')
+                ? get_instructor_display_url($term, 'ka_instructors')
+                : get_term_link($term);
+            $safe_title = esc_attr($display_name);
             $image_html = "
-                <a class='k-image image k-box-inner box-inner' href='" . get_term_link($term) . "' title='{$term->name}'>
+                <a class='k-image image k-box-inner box-inner' href='" . esc_url($term_url) . "' title='{$safe_title}'>
                     <picture>
                         <img src='{$thumbnail}' 
-                             width='" . esc_attr($width) . "' 
-                             height='" . esc_attr($height) . "' 
-                             alt='Bilde av {$term->name}' 
+                             width='" . esc_attr((string) $width) . "' 
+                             height='" . esc_attr((string) $height) . "' 
+                             alt='" . esc_attr(sprintf(/* translators: %s: instructor name */ 'Bilde av %s', $display_name)) . "' 
                              class='wp-image-{$term->term_id}' 
                              decoding='async'>
                     </picture>
                 </a>";
         }
         
+        $term_url = function_exists('get_instructor_display_url')
+            ? get_instructor_display_url($term, 'ka_instructors')
+            : get_term_link($term);
+        $safe_title = esc_attr($display_name);
+
         return "
             <div class='k-box box term-{$term->term_id}'>
                 {$image_html}
                 <div class='k-text text k-box-inner box-inner'>
-                    <a class='k-title title' href='" . get_term_link($term) . "' title='{$term->name}'>
-                        <{$a['overskrift']} class='k-tittel tittel'>" . ucfirst($display_name) . "</{$a['overskrift']}>
+                    <a class='k-title title' href='" . esc_url($term_url) . "' title='{$safe_title}'>
+                        <{$a['overskrift']} class='k-tittel tittel'>" . esc_html(ucfirst($display_name)) . "</{$a['overskrift']}>
                     </a>
                     <div class='k-description description info'>" . $description . "</div>
                 </div>

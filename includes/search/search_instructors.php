@@ -159,8 +159,9 @@ add_filter('the_content', function($content) {
                 }
             }
             
-            // Add title
-            $output .= '<h2 class="entry-title">' . $term->name . '</h2>';
+            // Add title (respect instructor name display setting)
+            $title = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
+            $output .= '<h2 class="entry-title">' . esc_html($title) . '</h2>';
             
             // Add description
             $output .= '<div class="excerpt-wrap entry-summary"><p>' . $term->description . '</p></div>';
@@ -253,8 +254,8 @@ add_filter('the_title', function($title, $post_id) {
             // Prioritize correct title display
             // Image logic is preserved in the code but commented out to ensure title displays correctly
             
-            // Return only the title for now, but with a filter so themes can customize display
-            $modified_title = apply_filters('kursagenten_instructor_title', $term->name, $term);
+            $base_title = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
+            $modified_title = apply_filters('kursagenten_instructor_title', $base_title, $term);
             // Commented out logging
             // error_log('Kursagenten: Returning title: "' . $modified_title . '"');
             return $modified_title;

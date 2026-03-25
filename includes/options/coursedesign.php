@@ -23,6 +23,7 @@ class Designmaler {
         
         // Legg til hooks for permalenk-håndtering
         add_action('init', array($this, 'register_instructor_rewrite_rules'), 10);
+        add_action('update_option_kursagenten_taxonomy_ka_instructors_name_display', array($this, 'update_instructor_permalinks'), 10, 2);
         add_action('update_option_kursagenten_taxonomy_instructors_name_display', array($this, 'update_instructor_permalinks'), 10, 2);
         add_filter('term_link', array($this, 'modify_instructor_term_link'), 10, 3);
         add_filter('request', array($this, 'handle_instructor_rewrite_request'));
@@ -295,7 +296,8 @@ class Designmaler {
                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Desktop:</label>
                                     <select name="kursagenten_archive_grid_columns_desktop">
                                         <?php
-                                        $current_desktop = get_option('kursagenten_archive_grid_columns_desktop', '3');
+                                        $archive_grid_defs = $this->get_grid_column_defaults_for_list_type($current_list === 'simple-cards' ? 'simple-cards' : 'grid');
+                                        $current_desktop = get_option('kursagenten_archive_grid_columns_desktop', $archive_grid_defs['desktop']);
                                         for ($i = 1; $i <= 6; $i++) {
                                             printf(
                                                 '<option value="%d" %s>%d</option>',
@@ -311,7 +313,7 @@ class Designmaler {
                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tablet:</label>
                                     <select name="kursagenten_archive_grid_columns_tablet">
                                         <?php
-                                        $current_tablet = get_option('kursagenten_archive_grid_columns_tablet', '2');
+                                        $current_tablet = get_option('kursagenten_archive_grid_columns_tablet', $archive_grid_defs['tablet']);
                                         for ($i = 1; $i <= 4; $i++) {
                                             printf(
                                                 '<option value="%d" %s>%d</option>',
@@ -327,7 +329,7 @@ class Designmaler {
                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mobil:</label>
                                     <select name="kursagenten_archive_grid_columns_mobile">
                                         <?php
-                                        $current_mobile = get_option('kursagenten_archive_grid_columns_mobile', '1');
+                                        $current_mobile = get_option('kursagenten_archive_grid_columns_mobile', $archive_grid_defs['mobile']);
                                         for ($i = 1; $i <= 2; $i++) {
                                             printf(
                                                 '<option value="%d" %s>%d</option>',
@@ -816,7 +818,8 @@ class Designmaler {
                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Desktop:</label>
                                     <select name="kursagenten_taxonomy_grid_columns_desktop">
                                         <?php
-                                        $current_desktop = get_option('kursagenten_taxonomy_grid_columns_desktop', '3');
+                                        $taxonomy_grid_defs = $this->get_grid_column_defaults_for_list_type($current_list === 'simple-cards' ? 'simple-cards' : 'grid');
+                                        $current_desktop = get_option('kursagenten_taxonomy_grid_columns_desktop', $taxonomy_grid_defs['desktop']);
                                         for ($i = 1; $i <= 6; $i++) {
                                             printf(
                                                 '<option value="%d" %s>%d</option>',
@@ -832,7 +835,7 @@ class Designmaler {
                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tablet:</label>
                                     <select name="kursagenten_taxonomy_grid_columns_tablet">
                                         <?php
-                                        $current_tablet = get_option('kursagenten_taxonomy_grid_columns_tablet', '2');
+                                        $current_tablet = get_option('kursagenten_taxonomy_grid_columns_tablet', $taxonomy_grid_defs['tablet']);
                                         for ($i = 1; $i <= 4; $i++) {
                                             printf(
                                                 '<option value="%d" %s>%d</option>',
@@ -848,7 +851,7 @@ class Designmaler {
                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mobil:</label>
                                     <select name="kursagenten_taxonomy_grid_columns_mobile">
                                         <?php
-                                        $current_mobile = get_option('kursagenten_taxonomy_grid_columns_mobile', '1');
+                                        $current_mobile = get_option('kursagenten_taxonomy_grid_columns_mobile', $taxonomy_grid_defs['mobile']);
                                         for ($i = 1; $i <= 2; $i++) {
                                             printf(
                                                 '<option value="%d" %s>%d</option>',
@@ -1025,10 +1028,18 @@ class Designmaler {
                                             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
                                                 <div>
                                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Desktop:</label>
+                                                    <?php
+                                                    $current_desktop = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_desktop", '');
+                                                    if ($current_desktop === '0' || $current_desktop === 0) {
+                                                        $current_desktop = '';
+                                                    }
+                                                    ?>
+                                                    <?php
+                                                    $tax_override_grid_defs = $this->get_grid_column_defaults_for_list_type($current_tax_list_type === 'simple-cards' ? 'simple-cards' : 'grid');
+                                                    ?>
                                                     <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_desktop">
-                                                        <option value="">Bruk standard</option>
+                                                        <option value="" <?php selected($current_desktop, '', false); ?>>Bruk standard (<?php echo esc_html($tax_override_grid_defs['desktop']); ?>)</option>
                                                         <?php
-                                                        $current_desktop = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_desktop", '');
                                                         for ($i = 1; $i <= 6; $i++) {
                                                             printf(
                                                                 '<option value="%d" %s>%d</option>',
@@ -1042,10 +1053,15 @@ class Designmaler {
                                                 </div>
                                                 <div>
                                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tablet:</label>
+                                                    <?php
+                                                    $current_tablet = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_tablet", '');
+                                                    if ($current_tablet === '0' || $current_tablet === 0) {
+                                                        $current_tablet = '';
+                                                    }
+                                                    ?>
                                                     <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_tablet">
-                                                        <option value="">Bruk standard</option>
+                                                        <option value="" <?php selected($current_tablet, '', false); ?>>Bruk standard (<?php echo esc_html($tax_override_grid_defs['tablet']); ?>)</option>
                                                         <?php
-                                                        $current_tablet = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_tablet", '');
                                                         for ($i = 1; $i <= 4; $i++) {
                                                             printf(
                                                                 '<option value="%d" %s>%d</option>',
@@ -1059,10 +1075,15 @@ class Designmaler {
                                                 </div>
                                                 <div>
                                                     <label style="display: block; margin-bottom: 5px; font-weight: 500;">Mobil:</label>
+                                                    <?php
+                                                    $current_mobile = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_mobile", '');
+                                                    if ($current_mobile === '0' || $current_mobile === 0) {
+                                                        $current_mobile = '';
+                                                    }
+                                                    ?>
                                                     <select name="kursagenten_taxonomy_<?php echo esc_attr($tax_name); ?>_grid_columns_mobile">
-                                                        <option value="">Bruk standard</option>
+                                                        <option value="" <?php selected($current_mobile, '', false); ?>>Bruk standard (<?php echo esc_html($tax_override_grid_defs['mobile']); ?>)</option>
                                                         <?php
-                                                        $current_mobile = get_option("kursagenten_taxonomy_{$tax_name}_grid_columns_mobile", '');
                                                         for ($i = 1; $i <= 2; $i++) {
                                                             printf(
                                                                 '<option value="%d" %s>%d</option>',
@@ -2231,6 +2252,42 @@ class Designmaler {
     }
 
     /**
+     * Shared default grid column counts used by both Grid and Simple Cards.
+     *
+     * @param string $layout Unused; kept for backward compatibility with existing calls.
+     * @return array{desktop:string,tablet:string,mobile:string}
+     */
+    private function get_grid_column_defaults_for_list_type(string $layout): array {
+        return [
+            'desktop' => '2',
+            'tablet'  => '2',
+            'mobile'  => '1',
+        ];
+    }
+
+    /**
+     * Read a grid column option and return a positive integer.
+     * Empty string in the database must not become 0 (which then clamped to 1 column).
+     *
+     * @param string $option_name Option name.
+     * @param string $default     Default when unset or invalid (e.g. '3').
+     * @param int    $min         Minimum allowed.
+     * @param int    $max         Maximum allowed.
+     * @return int
+     */
+    private function get_grid_column_option_int(string $option_name, string $default, int $min, int $max): int {
+        $raw = get_option($option_name, $default);
+        if ($raw === '' || $raw === false || $raw === null) {
+            $raw = $default;
+        }
+        $n = absint($raw);
+        if ($n < 1) {
+            $n = absint($default);
+        }
+        return max($min, min($max, $n));
+    }
+
+    /**
      * Add dynamic CSS for grid columns based on settings
      * 
      * @param string $css_output Reference to CSS output string
@@ -2252,9 +2309,10 @@ class Designmaler {
         if ($is_archive) {
             $list_type = get_option('kursagenten_archive_list_type', 'standard');
             if ($list_type === 'grid' || $list_type === 'simple-cards') {
-                $desktop_cols = absint(get_option('kursagenten_archive_grid_columns_desktop', '3'));
-                $tablet_cols = absint(get_option('kursagenten_archive_grid_columns_tablet', '2'));
-                $mobile_cols = absint(get_option('kursagenten_archive_grid_columns_mobile', '1'));
+                $defs = $this->get_grid_column_defaults_for_list_type($list_type === 'simple-cards' ? 'simple-cards' : 'grid');
+                $desktop_cols = $this->get_grid_column_option_int('kursagenten_archive_grid_columns_desktop', $defs['desktop'], 1, 6);
+                $tablet_cols = $this->get_grid_column_option_int('kursagenten_archive_grid_columns_tablet', $defs['tablet'], 1, 4);
+                $mobile_cols = $this->get_grid_column_option_int('kursagenten_archive_grid_columns_mobile', $defs['mobile'], 1, 2);
             }
         } elseif ($is_taxonomy) {
             // Check for taxonomy-specific override first
@@ -2268,34 +2326,40 @@ class Designmaler {
                     $tax_desktop = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_desktop", '');
                     $tax_tablet = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_tablet", '');
                     $tax_mobile = get_option("kursagenten_taxonomy_{$taxonomy}_grid_columns_mobile", '');
+
+                    $defs = $this->get_grid_column_defaults_for_list_type($taxonomy_list_type === 'simple-cards' ? 'simple-cards' : 'grid');
                     
                     // Use taxonomy-specific values if set, otherwise fallback to global taxonomy settings
-                    if ($tax_desktop !== '') {
-                        $desktop_cols = absint($tax_desktop);
+                    $n_desk = absint($tax_desktop);
+                    if ($tax_desktop !== '' && $tax_desktop !== false && $tax_desktop !== null && $n_desk > 0) {
+                        $desktop_cols = max(1, min(6, $n_desk));
                     } else {
-                        $desktop_cols = absint(get_option('kursagenten_taxonomy_grid_columns_desktop', '3'));
+                        $desktop_cols = $this->get_grid_column_option_int('kursagenten_taxonomy_grid_columns_desktop', $defs['desktop'], 1, 6);
+                    }
+
+                    $n_tab = absint($tax_tablet);
+                    if ($tax_tablet !== '' && $tax_tablet !== false && $tax_tablet !== null && $n_tab > 0) {
+                        $tablet_cols = max(1, min(4, $n_tab));
+                    } else {
+                        $tablet_cols = $this->get_grid_column_option_int('kursagenten_taxonomy_grid_columns_tablet', $defs['tablet'], 1, 4);
+                    }
+
+                    $n_mob = absint($tax_mobile);
+                    if ($tax_mobile !== '' && $tax_mobile !== false && $tax_mobile !== null && $n_mob > 0) {
+                        $mobile_cols = max(1, min(2, $n_mob));
+                    } else {
+                        $mobile_cols = $this->get_grid_column_option_int('kursagenten_taxonomy_grid_columns_mobile', $defs['mobile'], 1, 2);
                     }
                     
-                    if ($tax_tablet !== '') {
-                        $tablet_cols = absint($tax_tablet);
-                    } else {
-                        $tablet_cols = absint(get_option('kursagenten_taxonomy_grid_columns_tablet', '2'));
-                    }
-                    
-                    if ($tax_mobile !== '') {
-                        $mobile_cols = absint($tax_mobile);
-                    } else {
-                        $mobile_cols = absint(get_option('kursagenten_taxonomy_grid_columns_mobile', '1'));
-                    }
-                    
-                    $list_type = 'grid';
+                    $list_type = $taxonomy_list_type;
                 }
             } else {
                 $list_type = get_option('kursagenten_taxonomy_list_type', 'standard');
                 if ($list_type === 'grid' || $list_type === 'simple-cards') {
-                    $desktop_cols = absint(get_option('kursagenten_taxonomy_grid_columns_desktop', '3'));
-                    $tablet_cols = absint(get_option('kursagenten_taxonomy_grid_columns_tablet', '2'));
-                    $mobile_cols = absint(get_option('kursagenten_taxonomy_grid_columns_mobile', '1'));
+                    $defs = $this->get_grid_column_defaults_for_list_type($list_type === 'simple-cards' ? 'simple-cards' : 'grid');
+                    $desktop_cols = $this->get_grid_column_option_int('kursagenten_taxonomy_grid_columns_desktop', $defs['desktop'], 1, 6);
+                    $tablet_cols = $this->get_grid_column_option_int('kursagenten_taxonomy_grid_columns_tablet', $defs['tablet'], 1, 4);
+                    $mobile_cols = $this->get_grid_column_option_int('kursagenten_taxonomy_grid_columns_mobile', $defs['mobile'], 1, 2);
                 }
             }
         }
@@ -3135,6 +3199,19 @@ if (queryString) {
     }
 
     /**
+     * Hent navnevisning for instruktører med støtte for legacy option key.
+     *
+     * @return string
+     */
+    private function get_instructor_name_display_setting() {
+        $name_display = get_option('kursagenten_taxonomy_ka_instructors_name_display', '');
+        if ($name_display === '' || $name_display === false) {
+            $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        }
+        return is_string($name_display) ? $name_display : '';
+    }
+
+    /**
      * Registrer rewrite rules for instruktører
      */
     public function register_instructor_rewrite_rules() {
@@ -3142,7 +3219,7 @@ if (queryString) {
         $url_options = get_option('kag_seo_option_name');
         $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
         
-        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        $name_display = $this->get_instructor_name_display_setting();
         if ($name_display === 'firstname' || $name_display === 'lastname') {
             add_rewrite_rule(
                 $instructor_slug . '/([^/]+)/?$',
@@ -3165,7 +3242,7 @@ if (queryString) {
         $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
 
         // Hent navnevisningsinnstilling
-        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        $name_display = $this->get_instructor_name_display_setting();
         
         // Hvis ingen spesifikk navnevisning er valgt, bruk standard term_link
         if (empty($name_display) || $name_display === 'full') {
@@ -3208,21 +3285,25 @@ if (queryString) {
             $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
             
             // Finn instruktøren basert på fornavn eller etternavn
-            $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+            $name_display = $this->get_instructor_name_display_setting();
             if ($name_display === 'firstname' || $name_display === 'lastname') {
                 $meta_key = $name_display === 'firstname' ? 'instructor_firstname' : 'instructor_lastname';
                 
-                // Finn alle instruktører med dette navnet
+                // Finn instruktøren basert på slugifisert fornavn/etternavn.
+                // Vi kan ikke bruke meta_value direkte her fordi URL bruker sanitize_title().
                 $terms = get_terms(array(
                     'taxonomy' => 'ka_instructors',
-                    'meta_key' => $meta_key,
-                    'meta_value' => $requested_slug,
                     'hide_empty' => false
                 ));
 
-                if (!empty($terms)) {
-                    // Bruk den første matchende instruktøren
-                    $query_vars['ka_instructors'] = $terms[0]->slug;
+                if (!is_wp_error($terms) && !empty($terms)) {
+                    foreach ($terms as $candidate) {
+                        $candidate_name = get_term_meta($candidate->term_id, $meta_key, true);
+                        if (!empty($candidate_name) && sanitize_title($candidate_name) === $requested_slug) {
+                            $query_vars['ka_instructors'] = $candidate->slug;
+                            break;
+                        }
+                    }
                 }
             }
         }
@@ -3240,7 +3321,7 @@ if (queryString) {
             return '';
         }
 
-        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+        $name_display = $this->get_instructor_name_display_setting();
         if ($name_display === 'firstname') {
             $display_name = get_term_meta($term->term_id, 'instructor_firstname', true);
             return !empty($display_name) ? $display_name : $term->name;

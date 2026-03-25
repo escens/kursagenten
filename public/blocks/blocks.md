@@ -102,9 +102,7 @@ Per nå:
   - `Kort bakgrunn` viser `Mørk overlay (%)`
   - `Kort bakgrunnsfarge` viser fargekontroller for `Tekst`, `Bakgrunn` og `Bakgrunn hover`
 
-- `Kolonner` vises nederst i `Layout og stil` for alle presets
-  - unntak: `Liste enkel` og `Rad utvidet beskrivelse`
-  - for disse to vises `Antall kolonner` i `Justeringer`
+- `Kolonner` vises i både `Layout og stil` (Generelt) og som eget panel i `Justeringer`
 
 ## 6) Oppsummering av denne chatten
 
@@ -245,7 +243,7 @@ Kopier gjerne dette som start i neste chat:
 
 - **N+1**: bilde-fallback for kategorier henter kursbilde kun når hovedbilde (og ev. profilbilde (ikon-bilde) etter valg) mangler.
 - **Stil-last**: taxonomy-grid-stiler lastes via registrerte handles uten dobbel enqueue der det er sjekket med `wp_style_is`.
-- **Admin-meny**: toppnivå bruker `public/blocks/shared/icon-black.svg` (konfigurert i `kursagenten-admin_options.php`).
+- **Admin-meny**: toppnivå bruker dashicon `dashicons-welcome-learn-more` (konfigurert i `kursagenten-admin_options.php`).
 
 ---
 

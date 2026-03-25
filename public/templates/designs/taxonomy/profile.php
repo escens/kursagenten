@@ -120,11 +120,16 @@ do_action('ka_taxonomy_header_before', $term);
             <div class="taxonomy-header-profile__layout">
                 <?php if (!empty($image_url)): ?>
                     <div class="taxonomy-header-profile__image">
+                        <?php
+                        $header_media_title = ($taxonomy === 'ka_instructors' && function_exists('get_instructor_display_name'))
+                            ? get_instructor_display_name($term)
+                            : $term->name;
+                        ?>
                         <img src="<?php echo esc_url($image_url); ?>"
                              width="<?php echo esc_attr($image_dimensions['width']); ?>"
                              height="<?php echo esc_attr($image_dimensions['height']); ?>"
-                             alt="<?php echo esc_attr($term->name); ?>"
-                             title="<?php echo esc_attr($term->name); ?>">
+                             alt="<?php echo esc_attr($header_media_title); ?>"
+                             title="<?php echo esc_attr($header_media_title); ?>">
                     </div>
                 <?php endif; ?>
 
@@ -133,19 +138,8 @@ do_action('ka_taxonomy_header_before', $term);
                     <?php 
                     // Håndter navnevisning for instruktører
                     if ($taxonomy === 'ka_instructors') {
-                        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
-                        switch ($name_display) {
-                            case 'firstname':
-                                $display_name = get_term_meta($term_id, 'instructor_firstname', true);
-                                echo esc_html(!empty($display_name) ? $display_name : $term->name);
-                                break;
-                            case 'lastname':
-                                $display_name = get_term_meta($term_id, 'instructor_lastname', true);
-                                echo esc_html(!empty($display_name) ? $display_name : $term->name);
-                                break;
-                            default:
-                                echo esc_html($term->name);
-                        }
+                        $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
+                        echo esc_html($display_name);
                     } else {
                         echo esc_html($term->name);
                     }

@@ -6,7 +6,7 @@
  * Plugin URI:        https://deltagersystem.no/wp-plugin
  * Description:       Komplett løsning for visning av kurs fra Kursagenten med automatisk henting av nye og oppdaterte kurs.
 
- * Version:           1.1.16
+ * Version:           1.1.17
  * Author:            Kursagenten Team
  * Author URI:        https://kursagenten.no
  * Text Domain:       kursagenten
@@ -17,13 +17,13 @@
  */
 
  // Husk changelog
- define('KURSAG_VERSION', '1.1.16');
+ define('KURSAG_VERSION', '1.1.17');
 // Plugin versjon
 /*
 if (defined('WP_DEBUG') && WP_DEBUG) {
     define('KURSAG_VERSION', '1.0.1-dev-' . gmdate('YmdHis'));
 } else {
-    define('KURSAG_VERSION', '1.1.16');
+    define('KURSAG_VERSION', '1.1.17');
 }
 */
 // Plugin konstanter - bruk disse overalt for konsistent informasjon
@@ -160,20 +160,27 @@ function kursagenten_fix_all_taxonomy_queries() {
             
             // Spesiell høndtering for instruktører med navnevisning
             if ($taxonomy === 'ka_instructors') {
-                $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+                $name_display = get_option('kursagenten_taxonomy_ka_instructors_name_display', '');
+                if ($name_display === '' || $name_display === false) {
+                    $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+                }
                 if ($name_display === 'firstname' || $name_display === 'lastname') {
                     $meta_key = $name_display === 'firstname' ? 'instructor_firstname' : 'instructor_lastname';
                     
-                    // Finn instruktør basert pø fornavn/etternavn
+                    // Finn instruktør basert på slugifisert fornavn/etternavn.
                     $terms = get_terms(array(
                         'taxonomy' => 'ka_instructors',
-                        'meta_key' => $meta_key,
-                        'meta_value' => $term_slug,
                         'hide_empty' => false
                     ));
                     
-                    if (!empty($terms)) {
-                        $term = $terms[0];
+                    if (!is_wp_error($terms) && !empty($terms)) {
+                        foreach ($terms as $candidate) {
+                            $candidate_name = get_term_meta($candidate->term_id, $meta_key, true);
+                            if (!empty($candidate_name) && sanitize_title($candidate_name) === $term_slug) {
+                                $term = $candidate;
+                                break;
+                            }
+                        }
                     }
                 }
             }

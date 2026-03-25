@@ -161,7 +161,8 @@ $instructors = wp_get_post_terms(get_the_ID(), 'ka_instructors');
 if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(static function ($term) {
         $instructor_url = get_instructor_display_url($term, 'ka_instructors');
-        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($term->name) . '</a>';
+        $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
+        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
     }, $instructors);
 }
 

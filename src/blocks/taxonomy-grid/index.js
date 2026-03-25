@@ -16,6 +16,7 @@ import {
 	ColorIndicator,
 	Spinner,
 	Tooltip,
+	Modal,
 } from '@wordpress/components';
 import { useServerSideRender } from '@wordpress/server-side-render';
 import { RawHTML, useEffect, useState } from '@wordpress/element';
@@ -968,6 +969,7 @@ registerBlockType( metadata.name, {
 		const [ activeSettingsTab, setActiveSettingsTab ] = useState( 'general' );
 		const [ elementCardAutoOpen, setElementCardAutoOpen ] = useState( false );
 		const [ showInlineBorderSettings, setShowInlineBorderSettings ] = useState( false );
+		const [ showSourceInfoModal, setShowSourceInfoModal ] = useState( false );
 		const [ previewAttributes, setPreviewAttributes ] = useState( attributes );
 		const { content: serverRenderedContent, status: serverRenderStatus } = useServerSideRender( {
 			block: metadata.name,
@@ -1135,6 +1137,15 @@ registerBlockType( metadata.name, {
 		return (
 			<div { ...blockProps }>
 				<InspectorControls>
+					<div className="k-settings-help-text k-source-info-link-wrapper">
+						<button
+							type="button"
+							className="k-option-custom-link"
+							onClick={ () => setShowSourceInfoModal( true ) }
+						>
+							mer informasjon
+						</button>
+					</div>
 					<TabPanel
 						key={ activeSettingsTab }
 						className="k-settings-tabs"
@@ -1565,28 +1576,26 @@ registerBlockType( metadata.name, {
 											/>
 										</PanelBody>
 
-										{ !showLayoutColumnsControl && (
-											<PanelBody title="Antall kolonner" initialOpen={ false }>
-												<TabPanel className="k-responsive-tabs" tabs={ RESPONSIVE_TABS } onSelect={ syncEditorViewportToDevice }>
-													{ ( innerTab ) => {
-														const fields = getDeviceFields( innerTab.name );
-														const maxColumns = innerTab.name === 'desktop' ? 6 : innerTab.name === 'tablet' ? 4 : 2;
+										<PanelBody title="Kolonner" initialOpen={ false }>
+											<TabPanel className="k-responsive-tabs" tabs={ RESPONSIVE_TABS } onSelect={ syncEditorViewportToDevice }>
+												{ ( innerTab ) => {
+													const fields = getDeviceFields( innerTab.name );
+													const maxColumns = innerTab.name === 'desktop' ? 6 : innerTab.name === 'tablet' ? 4 : 2;
 
-														return (
-															<div className="k-responsive-tab-content">
-																<RangeControl
-																	label="Kolonner"
-																	value={ fields.columns }
-																	onChange={ ( value ) => setDeviceColumns( innerTab.name, value ) }
-																	min={ 1 }
-																	max={ maxColumns }
-																/>
-															</div>
-														);
-													} }
-												</TabPanel>
-											</PanelBody>
-										) }
+													return (
+														<div className="k-responsive-tab-content">
+															<RangeControl
+																label="Kolonner"
+																value={ fields.columns }
+																onChange={ ( value ) => setDeviceColumns( innerTab.name, value ) }
+																min={ 1 }
+																max={ maxColumns }
+															/>
+														</div>
+													);
+												} }
+											</TabPanel>
+										</PanelBody>
 
 										<PanelBody title="Spacing" initialOpen={ false }>
 											<TabPanel className="k-responsive-tabs" tabs={ RESPONSIVE_TABS } onSelect={ syncEditorViewportToDevice }>
@@ -1724,6 +1733,86 @@ registerBlockType( metadata.name, {
 							</>
 						) }
 					</TabPanel>
+					{ showSourceInfoModal && (
+						<Modal
+							title="Mer informasjon om dataflyt fra Kursagenten"
+							onRequestClose={ () => setShowSourceInfoModal( false ) }
+						>
+							<div className="k-source-info-modal-content">
+								<p>
+									Det meste av data skal styres fra Kursagenten. Det er enkelte deler vi ikke har
+									felter for, og for disse delene kan du berike kategori/sted/instruktør direkte
+									her på nettsiden via Admin → Kursagenten → Kurssteder/Instruktører/Kurssteder
+								</p>
+
+								<h2>Bilder</h2>
+								<p>
+									God skikk for opplasting av bilder er å ha en maks størrelse på 500kb. I
+									overføring fra Kursagenten er det en maksgrense for overføring på 1MB.
+								</p>
+								<p><strong>Plassholderbilde</strong><br />
+									Det er mulig å legge inn plassholderbilder under Admin → Kursagenten → Kursdesign.
+								</p>
+
+								<h2>Enkeltkurs</h2>
+								<p><strong>Tekst</strong><br />
+									Tekst blir hentet fra introtekst og kursbeskrivelse i Kursagenten. Det er
+									mulig å legge inn egen tekst i tillegg her på websiden. Naviger til kurset
+									som innlogget admin, og klikk deretter på «Legg til ekstra Wordpress innhold»
+									mellom introtekst og kursbeskrivelse.
+								</p>
+								<p><strong>Bilde</strong><br />
+									I Kursagenten kan det legges inn bilder på hvert enkelt kurs. Om ikke bilde
+									har blitt lastet opp, kan det brukes et plassholderbilde.
+								</p>
+
+								<h2>Kurskategorier</h2>
+								<p><strong>Tekst</strong><br />
+									Kategorinavnet blir hentet fra taggene i Kursagenten. Disse kan du strukturere
+									i ønsket hierarki her på nettsiden, i maks to nivåer. Hvis du ønsker å endre
+									kategorinavnet, bør du endre taggen i Kursagenten. Merk: en ny kurskategori blir
+									opprettet, men den gamle blir ikke slettet. Overfør eventuell tekst og bilder til den nye kategorien.
+								</p>
+								<p>
+									<strong>Kategoritekst</strong>: her har vi ingen felter i Kursagenten, og alt må legges
+									inn på nettsiden. Du har mulighet til å legge inn både Kort beskrivelse og Lang
+									beskrivelse. Dette dukker opp på de enkelte kurskategori-sidene på nettsiden.
+								</p>
+								<p><strong>Bilde</strong><br />
+									Du kan laste opp bilder for hver kategori. Det er også mulig å laste opp et
+									«profilbilde». Dette kan brukes i blokker/kortkoder, som et alternativ til hovedbildet.
+									Har det ikke blitt lastet opp et kategoribilde, vil den prøve å bruke et bilde fra et
+									tilknyttet kurs. Om dette ikke finnes, vil den bruke plassholderbilde.
+								</p>
+
+								<h2>Instruktører</h2>
+								<p><strong>Tekst</strong><br />
+									Navn, telefonnummer og epost blir overført fra Kursagenten. Dette kan overstyres
+									på nettsiden om ønskelig.
+								</p>
+								<p><strong>Bilde</strong><br />
+									Bilde hentes fra instruktørprofil i Kursagenten. Dette bildet kan overstyres her inne på
+									nettsiden. Det er også mulig å bruke et alternativt bilde om du ønsker en annen stil/annet
+									bilde enn det som er brukt i Kursagenten.
+								</p>
+
+								<h2>Kurssteder</h2>
+								<p><strong>Tekst</strong><br />
+									Stedsnavn hentes fra Kursagenten. Det er mulig å endre stedsnavnet. For at dette
+									skal bli korrekt i alle titler og url-er, bør dette gjøres under Admin → Kursagenten → Synkronisering.
+									Endre navn, og hent deretter alle kurs på nytt. Da vil alle forekomster av stedsnavn blir vist korrekt.
+								</p>
+								<p>
+									<strong>Stedstekst</strong>: her har vi ingen felter i Kursagenten, og alt må legges inn
+									på nettsiden. Du har mulighet til å legge inn både Kort beskrivelse og Lang beskrivelse.
+									Dette dukker opp på de enkelte kurssted-sidene på nettsiden.
+								</p>
+								<p><strong>Bilde</strong><br />
+									Om du velger å vise bilde, vil det først bli sett etter hovedbilde fra kurssted. Hvis det ikke blir funnet, brukes plassholderbilde.
+								</p>
+							</div>
+						</Modal>
+					) }
 				</InspectorControls>
 
 				<div className="k-ssr-preview">

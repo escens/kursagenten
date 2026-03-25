@@ -112,6 +112,46 @@ function get_instructor_image($term_id) {
 }
 
 /**
+ * Get name display setting for instructor taxonomy.
+ *
+ * Supports both current and legacy option keys.
+ *
+ * @return string
+ */
+function get_instructor_name_display_setting() {
+    $name_display = get_option('kursagenten_taxonomy_ka_instructors_name_display', '');
+    if ($name_display === '' || $name_display === false) {
+        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+    }
+    return is_string($name_display) ? $name_display : '';
+}
+
+/**
+ * Get display name for an instructor term.
+ *
+ * @param WP_Term $term The instructor term.
+ * @return string
+ */
+function get_instructor_display_name($term) {
+    if (!($term instanceof WP_Term)) {
+        return '';
+    }
+
+    $name_display = get_instructor_name_display_setting();
+    if ($name_display === 'firstname') {
+        $display_name = get_term_meta($term->term_id, 'instructor_firstname', true);
+        return !empty($display_name) ? $display_name : $term->name;
+    }
+
+    if ($name_display === 'lastname') {
+        $display_name = get_term_meta($term->term_id, 'instructor_lastname', true);
+        return !empty($display_name) ? $display_name : $term->name;
+    }
+
+    return $term->name;
+}
+
+/**
  * Get the display URL for an instructor term
  * 
  * @param WP_Term $term The instructor term object
@@ -132,7 +172,7 @@ function get_instructor_display_url($term, $taxonomy) {
     $instructor_slug = !empty($url_options['ka_url_rewrite_instruktor']) ? $url_options['ka_url_rewrite_instruktor'] : 'instruktorer';
     
     // Get name display setting
-    $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
+    $name_display = get_instructor_name_display_setting();
     if (empty($name_display) || $name_display === 'full') {
         return get_term_link($term);
     }

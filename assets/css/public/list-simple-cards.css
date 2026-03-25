@@ -1,16 +1,21 @@
 /* Simple Cards Container */
 #ka .ka-container .courselist-items {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 30px;
     margin: 10px 0 30px 0;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
 /* Simple Card Item */
 #ka .ka-container .courselist-items .courselist-item.simple-card-item {
     display: flex;
     width: 100%;
+    max-width: 100%;
     margin-bottom: 0;
+    min-width: 0;
 }
 
 /* Simple Card Link - makes entire card clickable */
@@ -146,8 +151,8 @@
 
 /* Responsive Adjustments */
 @media (max-width: 1024px) {
-    #ka .ka-container .courselist-items .courselist-items {
-        grid-template-columns: repeat(2, 1fr);
+    #ka .ka-container .courselist-items {
+        grid-template-columns: 1fr;
         gap: 20px;
     }
     
@@ -188,7 +193,7 @@
 }
 
 @media (max-width: 576px) {
-    #ka .ka-container .courselist-items .courselist-items {
+    #ka .ka-container .courselist-items {
         grid-template-columns: 1fr;
     }
     

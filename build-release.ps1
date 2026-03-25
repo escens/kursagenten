@@ -115,7 +115,13 @@ $ExcludePatterns = @(
     "*.ps1",           # PowerShell-scripts
     "BUILD_README.md", # Build dokumentasjon
     "ADMIN_INTEGRATION_PLAN.md", # Admin integration plan (internt dokument)
+    "documentation/",  # Intern dokumentasjon-mappe
+    "src/",            # Blokk kildekode (build output brukes i release)
+    "package.json",    # Node build config
+    "package-lock.json", # Node lockfil
     "node_modules",    # Node modules
+    "playwright-report", # E2E rapporter
+    "test-results",    # E2E testresultater
     ".git",            # Git
     ".gitignore",      # Git ignore
     ".gitattributes",  # Git attributes
@@ -127,7 +133,14 @@ $ExcludePatterns = @(
     ".DS_Store",       # Mac
     "Thumbs.db",       # Windows
     "desktop.ini",     # Windows
-    "slettes",         # Slettes-mappe
+    "slettes/",        # Slettes-mappe
+    "public/blocks/blocks.md", # Intern blokkdokumentasjon
+    "public/blocks/taxonomy-grid/index.js", # Kildepeker (ikke runtime)
+    "public/blocks/taxonomy-grid/edit.js", # Kildepeker (ikke runtime)
+    "public/blocks/taxonomy-grid/editor-style-selector.css", # Ubrukt i runtime
+    "public/blocks/taxonomy-grid/preset-previews/", # Kun editor-kildemateriell
+    "public/blocks/shared/icon-black.svg", # Ikke brukt i build/runtime
+    "public/blocks/shared/icon-pink.svg", # Ikke brukt i build/runtime
     "*.zip"            # Gamle ZIP-filer
 )
 
@@ -137,12 +150,48 @@ Write-Info "Kopierer filer..."
 # Funksjon for å sjekke om en sti skal ekskluderes
 function Should-Exclude {
     param($Path)
-    
+
+    $NormalizedPath = ($Path -replace '\\', '/').TrimStart('/')
+    $FileName = [System.IO.Path]::GetFileName($NormalizedPath)
+
     foreach ($Pattern in $ExcludePatterns) {
-        if ($Path -like "*$Pattern*") {
+        $NormalizedPattern = ($Pattern -replace '\\', '/')
+
+        # 1) Wildcards for file names (e.g. *.ps1, *.log, *.zip)
+        if ($NormalizedPattern.StartsWith('*')) {
+            if ($FileName -like $NormalizedPattern) {
+                return $true
+            }
+            continue
+        }
+
+        # 2) Directory prefixes (pattern ending with /)
+        if ($NormalizedPattern.EndsWith('/')) {
+            $DirPrefix = $NormalizedPattern.TrimEnd('/')
+            if ($NormalizedPath -eq $DirPrefix -or $NormalizedPath.StartsWith($NormalizedPattern)) {
+                return $true
+            }
+            continue
+        }
+
+        # 3) Relative file paths or directories with slash
+        if ($NormalizedPattern.Contains('/')) {
+            if ($NormalizedPath -eq $NormalizedPattern -or $NormalizedPath.StartsWith($NormalizedPattern + '/')) {
+                return $true
+            }
+            continue
+        }
+
+        # 4) Exact file/segment name match (no substring matching)
+        if ($FileName -eq $NormalizedPattern) {
+            return $true
+        }
+        $Segments = $NormalizedPath.Split('/')
+        if ($Segments -contains $NormalizedPattern) {
             return $true
         }
     }
+
     return $false
 }
 

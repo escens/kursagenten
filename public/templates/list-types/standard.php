@@ -243,22 +243,7 @@ $instructor_links = [];
 if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
         $instructor_url = get_instructor_display_url($term, 'ka_instructors');
-        // Bruk samme navnevisningslogikk som i default.php
-        $name_display = get_option('kursagenten_taxonomy_instructors_name_display', '');
-        $display_name = $term->name;
-        
-        if ($name_display === 'firstname') {
-            $firstname = get_term_meta($term->term_id, 'instructor_firstname', true);
-            if (!empty($firstname)) {
-                $display_name = $firstname;
-            }
-        } elseif ($name_display === 'lastname') {
-            $lastname = get_term_meta($term->term_id, 'instructor_lastname', true);
-            if (!empty($lastname)) {
-                $display_name = $lastname;
-            }
-        }
-        
+        $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
         return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
     }, $instructors);
 }
