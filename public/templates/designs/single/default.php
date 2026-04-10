@@ -204,7 +204,7 @@ do_action('ka_singel_header_before');
 
 <article class="ka-outer-container course-container">
     <?php if ($admin_view === 'true') : ?>
-    <div class="edit-course edit-link"><a href="<?php echo "https://www.kursagenten.no/User.aspx?page=regKurs&id=" . $course_id; ?>" target="_blank"><span class="ka-icon-button"><i class="ka-icon icon-edit"></i></span><span class="edit-text">Rediger kurs</span></a></div>
+    <div class="edit-course edit-link"><a href="<?php echo "https://kursadmin.kursagenten.no/LegacyIframe/Course/?courseId=" . $course_id; ?>" target="_blank"><span class="ka-icon-button"><i class="ka-icon icon-edit"></i></span><span class="edit-text">Rediger kurs</span></a></div>
     <?php endif; ?>
     <!-- HEADER -->
     <header class="ka-section ka-header <?php echo esc_attr($hero_settings['header_classes']); ?><?php echo !$use_bg_image ? ' no-hero-image' : ''; ?>"<?php

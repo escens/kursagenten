@@ -344,7 +344,7 @@ do_action('ka_singel_header_before');
 <article class="ka-outer-container course-container<?php echo has_post_thumbnail() ? ' has-course-image' : ''; ?>">
     <?php if ($admin_view === 'true') : ?>
         <div class="edit-course edit-link">
-            <a href="<?php echo esc_url('https://www.kursagenten.no/User.aspx?page=regKurs&id=' . $course_id); ?>" target="_blank">
+            <a href="<?php echo esc_url('https://kursadmin.kursagenten.no/LegacyIframe/Course/?courseId=' . $course_id); ?>" target="_blank">
                 <span class="ka-icon-button"><i class="ka-icon icon-edit"></i></span>
                 <span class="edit-text">Rediger kurs</span>
             </a>

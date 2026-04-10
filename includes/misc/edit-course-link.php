@@ -9,7 +9,7 @@ function edit_course(){
     //$kursid = get_post_meta( $post_id, $key = 'id', $single = true );
 	//return "hei på meg" . $kursid;
 		if ($kursid) {
-			return "<a href='https://www.kursagenten.no/User.aspx?page=regKurs&id=" . $kursid . "' class='edit_course' target='_blank'>Rediger kurset på Kursagenten</a>";
+			return "<a href='https://kursadmin.kursagenten.no/LegacyIframe/Course/?courseId=" . $kursid . "' class='edit_course' target='_blank'>Rediger kurset på Kursagenten</a>";
 		}
 		}else{
 			return "";
