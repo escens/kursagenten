@@ -33,12 +33,17 @@ $related_course_info = get_course_info_by_location($related_course_id, $main_cou
 if ($related_course_info) {
     $course_link = esc_url($related_course_info['permalink']);
     $featured_image_thumb = $related_course_info['thumbnail'];
+    $featured_image_list_mobile = ! empty($related_course_info['thumbnail-medium'])
+        ? $related_course_info['thumbnail-medium']
+        : $featured_image_thumb;
     $excerpt = $related_course_info['excerpt'];
 }
 
 if (!$course_link) {
     $course_link = false;
 }
+$featured_image_thumb = $featured_image_thumb ?? '';
+$featured_image_list_mobile = $featured_image_list_mobile ?? $featured_image_thumb;
 $course_count = $course_count ?? 0;
 $item_class = $course_count === 1 ? ' single-item' : '';
 
@@ -49,7 +54,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
         $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
+        return '<a href="' . esc_url($instructor_url) . '"><span class="notranslate" translate="no">' . esc_html($display_name) . '</span></a>';
     }, $instructors);
 }
 
@@ -57,7 +62,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
 <div class="courselist-item<?php echo $item_class; ?>">
     <div class="courselist-main with-image">
         <!--
-        <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+        <div class="image col" style="background-image: url('<?php echo esc_url($featured_image_thumb); ?>');">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
                 <picture>
                     <img src="" alt="<?php echo esc_attr($course_title); ?>" class="course-image" decoding="async">
@@ -66,7 +71,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
         </div>
         -->
         <!-- Image area -->
-        <div class="image col" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+        <div class="image col ka-course-list-bg" data-ka-bg-url="<?php echo esc_attr( esc_url( $featured_image_thumb ) ); ?>" data-ka-bg-url-mobile="<?php echo esc_attr( esc_url( $featured_image_list_mobile ) ); ?>" data-bg="<?php echo esc_attr( esc_url( $featured_image_thumb ) ); ?>" style="--ka-bg-wide: url('<?php echo esc_url( $featured_image_thumb ); ?>'); --ka-bg-narrow: url('<?php echo esc_url( $featured_image_list_mobile ); ?>'); background-image: var(--ka-bg-wide);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>">
             </a>
         </div>
@@ -84,7 +89,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                     <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($location)) : ?>
-                    <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                    <div class="location notranslate" translate="no"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                 <?php endif; ?>
             </div>
             <!-- Meta area -->
@@ -96,10 +101,10 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                     <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($location_freetext)) : ?>
-                    <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
+                    <div class="location_room notranslate" translate="no"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($location_room)) : ?>
-                    <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
+                    <div class="location_room notranslate" translate="no"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($coursetime)) : ?>
                     <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>

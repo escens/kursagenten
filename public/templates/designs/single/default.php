@@ -177,7 +177,7 @@ if (current_user_can('editor') || current_user_can('administrator')) {
         $instructor_links = array_map(function ($term) {
             $instructor_url = get_instructor_display_url($term, 'ka_instructors');
             $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-            return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
+            return '<a href="' . esc_url($instructor_url) . '"><span class="notranslate" translate="no">' . esc_html($display_name) . '</span></a>';
         }, $instructors);
     }
 
@@ -223,7 +223,7 @@ do_action('ka_singel_header_before');
                     <h1><?php the_title(); ?></h1>
                 <?php else : ?>
                     <h1><?php echo esc_html($main_course_title); ?>
-                    <span style="margin-top: .2em; display: block; font-size: var(--ka-font-lg); font-weight: 300;">- <?php echo esc_html($sub_course_location); ?></span>
+                    <span style="margin-top: .2em; display: block; font-size: var(--ka-font-lg); font-weight: 300;">- <span class="notranslate" translate="no"><?php echo esc_html($sub_course_location); ?></span></span>
                 </h1>
                     
                 <?php endif; ?>
@@ -296,7 +296,7 @@ do_action('ka_singel_header_before');
                                                 
                                                 <span class="course-available <?php echo $available_class; ?> accordion-icon" title="<?php echo $available_text; ?>"></span>
                                                 <span class="courselist-title <?php echo $available_class; ?>">
-                                                <strong class="<?php echo $available_class; ?>" title="<?php echo $available_text; ?>"><?php echo esc_html($coursedate['location']) ?></strong>
+                                                <strong class="<?php echo $available_class; ?> notranslate" translate="no" title="<?php echo $available_text; ?>"><span class="notranslate" translate="no"><?php echo esc_html($coursedate['location']) ?></span></strong>
                                                 
                                             </div>
                                             <div class="content-area">
@@ -306,8 +306,8 @@ do_action('ka_singel_header_before');
                                                     </span>
                                                 <?php endif; ?>
                                                 <?php if (!empty($coursedate['course_location_freetext'])) : ?>
-                                                    <span class="courselist-details">
-                                                        <?php echo esc_html($coursedate['course_location_freetext']) ?> 
+                                                    <span class="courselist-details notranslate" translate="no">
+                                                        <span class="notranslate" translate="no"><?php echo esc_html($coursedate['course_location_freetext']) ?></span>
                                                     </span>
                                                 <?php endif; ?>
                                                 <?php if (!empty($coursedate['time'])) : ?>
@@ -360,12 +360,12 @@ do_action('ka_singel_header_before');
                                                     
                                                     <?php if (!empty($coursedate['location'])): ?>
                                                         <span style="font-weight: bold;">Sted:</span>
-                                                        <span><?php echo esc_html($coursedate['location']) ?></span><br>
+                                                        <span class="notranslate" translate="no"><?php echo esc_html($coursedate['location']) ?></span><br>
                                                     <?php endif; ?>
 
                                                     <?php if (!empty($coursedate['course_location_room'])): ?>
                                                         <span style="font-weight: bold;">Kurslokale:</span>
-                                                        <span><?php echo esc_html($coursedate['course_location_room']) ?></span><br>
+                                                        <span class="notranslate" translate="no"><?php echo esc_html($coursedate['course_location_room']) ?></span><br>
                                                     <?php endif; ?>
                                                     
                                                     <?php if (!empty($coursedate['duration'])): ?>
@@ -397,9 +397,9 @@ do_action('ka_singel_header_before');
                                                 ?>
                                                 <?php if (!empty($coursedate['address_street']) && !$coursedate_is_online) : ?>
                                                 <p><strong>Adresse</strong></p>
-                                                <p> <?php echo esc_html($coursedate['course_location_freetext']) ?><br>
-                                                    <?php echo esc_html($coursedate['address_street']) ?><br>
-                                                    <?php echo esc_html($coursedate['postal_code']) ?> <?php echo esc_html($coursedate['city']) ?><br>
+                                                <p> <span class="notranslate" translate="no"><?php echo esc_html($coursedate['course_location_freetext']) ?></span><br>
+                                                    <span class="notranslate" translate="no"><?php echo esc_html($coursedate['address_street']) ?></span><br>
+                                                    <span class="notranslate" translate="no"><?php echo esc_html($coursedate['postal_code']) ?> <?php echo esc_html($coursedate['city']) ?></span><br>
                                                     <a style="display: block; padding-top: .4em;" href="https://www.google.com/maps/search/?api=1&query=<?php echo esc_attr($coursedate['address_street']) ?>,+<?php echo esc_attr($coursedate['postal_code']) ?>+<?php echo esc_attr($coursedate['city']) ?>" target="_blank">Vis i Google Maps</a>
                                                 </p>
                                                 <?php endif; ?>
@@ -441,7 +441,7 @@ do_action('ka_singel_header_before');
                             <div><i class="ka-icon icon-bag"></i>Pris: <?php echo esc_html($selected_coursedate_data['price']) ;?> <?php echo esc_html($price_posttext) ;?></div>
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data['course_location_room'])) : ?>
-                            <div><i class="ka-icon icon-bag"></i>Kurslokale: <?php echo esc_html($selected_coursedate_data['course_location_room']) ;?></div>
+                            <div><i class="ka-icon icon-bag"></i>Kurslokale: <span class="notranslate" translate="no"><?php echo esc_html($selected_coursedate_data['course_location_room']) ;?></span></div>
                         <?php endif; ?>
                         <?php if (!empty($selected_coursedate_data) && isset($selected_coursedate_data['signup_url'])) : ?>
                             <div>

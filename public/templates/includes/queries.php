@@ -1044,6 +1044,7 @@ function display_course_locations($post_id) {
         'url'   => $main_course_url,
         'name'  => 'Alle',
         'active' => ($is_parent_course === 'yes'),
+        'is_real_location' => false,
     ];
     foreach ($locations as $location) {
         if (!isset($child_location_links[$location['name']])) {
@@ -1053,6 +1054,7 @@ function display_course_locations($post_id) {
             'url'    => $child_location_links[$location['name']],
             'name'   => $location['name'],
             'active' => ($current_location === $location['name']),
+            'is_real_location' => true,
         ];
     }
 
@@ -1087,7 +1089,9 @@ function display_course_locations($post_id) {
     $output .= '<ul class="location-tabs">';
     foreach ($visible_items as $item) {
         $output .= '<li class="' . ($item['active'] ? 'active' : '') . '">';
-        $output .= '<a href="' . esc_url($item['url']) . '" class="button-filter">' . esc_html($item['name']) . '</a>';
+        $link_class = !empty($item['is_real_location']) ? 'button-filter notranslate' : 'button-filter';
+        $link_translate = !empty($item['is_real_location']) ? ' translate="no"' : '';
+        $output .= '<a href="' . esc_url($item['url']) . '" class="' . esc_attr($link_class) . '"' . $link_translate . '>' . esc_html($item['name']) . '</a>';
         $output .= '</li>';
     }
     if ($has_more && !empty($hidden_items)) {
@@ -1095,7 +1099,9 @@ function display_course_locations($post_id) {
         $output .= '<ul class="location-tabs-sublist">';
         foreach ($hidden_items as $item) {
             $output .= '<li class="' . ($item['active'] ? 'active' : '') . '">';
-            $output .= '<a href="' . esc_url($item['url']) . '" class="button-filter">' . esc_html($item['name']) . '</a>';
+            $link_class = !empty($item['is_real_location']) ? 'button-filter notranslate' : 'button-filter';
+            $link_translate = !empty($item['is_real_location']) ? ' translate="no"' : '';
+            $output .= '<a href="' . esc_url($item['url']) . '" class="' . esc_attr($link_class) . '"' . $link_translate . '>' . esc_html($item['name']) . '</a>';
             $output .= '</li>';
         }
         $output .= '</ul>';

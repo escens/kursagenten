@@ -348,6 +348,33 @@ function get_filtered_terms($taxonomy) {
             }
         }
 
+        // Fallback for vanlige sider med [kursliste]:
+        // Dersom primærlogikken ikke finner kategorier, bygg termlisten direkte
+        // fra synlige coursedates slik at filteret ikke forsvinner fra DOM.
+        if (empty($final_terms) && !is_tax('ka_coursecategory') && !empty($visible_coursedates)) {
+            $visible_term_ids = wp_get_object_terms($visible_coursedates, $taxonomy, ['fields' => 'ids']);
+            if (!is_wp_error($visible_term_ids) && !empty($visible_term_ids)) {
+                $visible_term_ids = array_values(array_unique(array_map('intval', $visible_term_ids)));
+                $fallback_terms = get_terms([
+                    'taxonomy' => $taxonomy,
+                    'hide_empty' => false,
+                    'include' => $visible_term_ids,
+                    'orderby' => 'menu_order',
+                    'order' => 'ASC',
+                ]);
+
+                if (!is_wp_error($fallback_terms) && !empty($fallback_terms)) {
+                    $fallback_final = [];
+                    foreach ($fallback_terms as $term) {
+                        $term->parent_class = ($term->parent > 0) ? 'has-parent' : '';
+                        $term->parent_id = (int) $term->parent;
+                        $fallback_final[] = $term;
+                    }
+                    return $fallback_final;
+                }
+            }
+        }
+
         return $final_terms;
     }
 

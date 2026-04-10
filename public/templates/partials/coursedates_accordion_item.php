@@ -65,7 +65,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
         $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
+        return '<a href="' . esc_url($instructor_url) . '"><span class="notranslate" translate="no">' . esc_html($display_name) . '</span></a>';
     }, $instructors);
 }
 ?>
@@ -81,7 +81,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                     <div class="startdate"><i class="ka-icon icon-calendar"></i><?php echo esc_html($first_course_date); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($location)) : ?>
-                    <div class="location"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                    <div class="location notranslate" translate="no"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($instructor_links)) : ?>
                     <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(', ', $instructor_links); ?></div>
@@ -95,10 +95,10 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
                     <div class="duration"><i class="ka-icon icon-timer-light"></i><?php echo esc_html($duration); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($location_freetext)) : ?>
-                    <div class="location_room"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
+                    <div class="location_room notranslate" translate="no"><i class="ka-icon icon-home"></i><?php echo esc_html($location_freetext); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($location_room)) : ?>
-                    <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
+                    <div class="location_room notranslate" translate="no"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
                 <?php endif; ?>
                 <?php if (!empty($coursetime)) : ?>
                     <div class="coursetime"><i class="ka-icon icon-time"></i><?php echo esc_html($coursetime); ?></div>

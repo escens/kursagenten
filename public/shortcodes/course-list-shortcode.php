@@ -258,6 +258,15 @@ function kursagenten_course_list_shortcode($atts) {
         true
     );
     wp_enqueue_script('kursagenten-expand-content', KURSAG_PLUGIN_URL . '/assets/js/public/course-expand-content.js', array(), KURSAG_VERSION);
+    if ( ! wp_script_is( 'kursagenten-course-list-bg-fix', 'enqueued' ) ) {
+        wp_enqueue_script(
+            'kursagenten-course-list-bg-fix',
+            KURSAG_PLUGIN_URL . '/assets/js/public/course-list-bg-fix.js',
+            array(),
+            KURSAG_VERSION,
+            true
+        );
+    }
 
     // Localize script with necessary data
     wp_localize_script(
@@ -306,8 +315,9 @@ function kursagenten_course_list_shortcode($atts) {
     // Function to check if a filter should be hidden due to shortcode parameters
     if (!function_exists('should_hide_filter')) {
         function should_hide_filter($filter_key, $active_shortcode_filters) {
-            // Spesiell håndtering for ka_coursecategory taksonomi-sider
-            if ($filter_key === 'categories' && is_tax('ka_coursecategory')) {
+            // Spesiell håndtering kun for faktiske ka_coursecategory-arkivsider.
+            // Vanlige sider med [kursliste] skal ikke påvirkes av denne regelen.
+            if ($filter_key === 'categories' && is_tax('ka_coursecategory') && !is_singular()) {
                 $current_term = get_queried_object();
                 if ($current_term) {
                     // Parent category: always show category filter
@@ -330,6 +340,9 @@ function kursagenten_course_list_shortcode($atts) {
         }
     }
 
+    // Debug output (admin only): helps identify why filters are hidden on specific pages.
+    $ka_debug_filters_enabled = current_user_can('manage_options');
+
     // Hent aktive filtre fra URL for å beregne counts
     $active_filters = [];
     $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
@@ -339,8 +352,13 @@ function kursagenten_course_list_shortcode($atts) {
         }
     }
 
-    // Spesiell håndtering for ka_coursecategory taksonomi-sider
-    $category_terms = function_exists('get_filtered_terms_for_context') ? get_filtered_terms_for_context('ka_coursecategory') : get_filtered_terms('ka_coursecategory');
+    // Bruk arkiv-kontekst kun på faktiske taksonomi-arkivsider.
+    // På vanlige sider med [kursliste] skal vi alltid bruke standard kategoriutvalg.
+    if (is_tax('ka_coursecategory') && !is_singular() && function_exists('get_filtered_terms_for_context')) {
+        $category_terms = get_filtered_terms_for_context('ka_coursecategory');
+    } else {
+        $category_terms = get_filtered_terms('ka_coursecategory');
+    }
 
     // Pre-prosessere kategorier for å identifisere foreldre (de som har barn)
     $parent_term_ids = [];
@@ -427,6 +445,38 @@ function kursagenten_course_list_shortcode($atts) {
     $custom_class = !empty($atts['klasse']) ? ' ' . esc_attr($atts['klasse']) : '';
     ?>
     <div id="ka" class="kursagenten-wrapper<?php echo $custom_class; ?>">
+    <?php if ($ka_debug_filters_enabled) : ?>
+        <?php
+        $queried_object = get_queried_object();
+        $queried_type = is_object($queried_object) ? get_class($queried_object) : gettype($queried_object);
+        $queried_name = '';
+        if (is_object($queried_object)) {
+            $queried_name = $queried_object->name ?? ($queried_object->post_name ?? '');
+        }
+        $categories_in_left = in_array('categories', $left_filters, true);
+        $categories_in_top = in_array('categories', $top_filters, true);
+        $categories_hidden_by_logic = should_hide_filter('categories', $active_shortcode_filters);
+        $categories_terms_count = isset($taxonomy_data['categories']['terms']) && is_array($taxonomy_data['categories']['terms'])
+            ? count($taxonomy_data['categories']['terms'])
+            : 0;
+        ?>
+        <!-- KA FILTER DEBUG:
+        page_id=<?php echo esc_html((string) get_the_ID()); ?>;
+        is_page=<?php echo is_page() ? '1' : '0'; ?>;
+        is_singular=<?php echo is_singular() ? '1' : '0'; ?>;
+        is_tax_ka_coursecategory=<?php echo is_tax('ka_coursecategory') ? '1' : '0'; ?>;
+        queried_object_type=<?php echo esc_html($queried_type); ?>;
+        queried_object_name=<?php echo esc_html((string) $queried_name); ?>;
+        shortcode_atts=<?php echo esc_html(wp_json_encode($atts)); ?>;
+        active_shortcode_filters=<?php echo esc_html(wp_json_encode($active_shortcode_filters)); ?>;
+        left_filters=<?php echo esc_html(wp_json_encode($left_filters)); ?>;
+        top_filters=<?php echo esc_html(wp_json_encode($top_filters)); ?>;
+        categories_in_left=<?php echo $categories_in_left ? '1' : '0'; ?>;
+        categories_in_top=<?php echo $categories_in_top ? '1' : '0'; ?>;
+        categories_hidden_by_logic=<?php echo $categories_hidden_by_logic ? '1' : '0'; ?>;
+        categories_terms_count=<?php echo esc_html((string) $categories_terms_count); ?>;
+        -->
+    <?php endif; ?>
     <main id="ka-m" class="kursagenten-main" role="main">
         <div class="ka-container">
             <!-- Mobile Filter Overlay -->
@@ -515,11 +565,16 @@ function kursagenten_course_list_shortcode($atts) {
                                                             }
                                                         }
                                                         ?>
+                                                        <?php $is_name_filter = in_array($taxonomy_data[$filter]['filter_key'], ['locations', 'instructors'], true); ?>
                                                         <button class="chip filter-chip"
                                                             data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                             data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
                                                             data-filter="<?php echo esc_attr($chip_value); ?>">
-                                                            <?php echo esc_html($chip_name); ?>
+                                                            <?php if ($is_name_filter) : ?>
+                                                                <span class="notranslate" translate="no"><?php echo esc_html($chip_name); ?></span>
+                                                            <?php else : ?>
+                                                                <?php echo esc_html($chip_name); ?>
+                                                            <?php endif; ?>
                                                         </button>
                                                     <?php endforeach; ?>
                                                 </div>
@@ -630,7 +685,12 @@ function kursagenten_course_list_shortcode($atts) {
                                                                                data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                                data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
                                                                                <?php echo $is_checked; ?>>
-                                                                        <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
+                                                                        <?php $is_name_filter = in_array($taxonomy_data[$filter]['filter_key'], ['locations', 'instructors'], true); ?>
+                                                                        <?php if ($is_name_filter) : ?>
+                                                                            <span class="checkbox-label notranslate" translate="no"><?php echo esc_html($term_name); ?></span>
+                                                                        <?php else : ?>
+                                                                            <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
+                                                                        <?php endif; ?>
                                                                     </label>
                                                                     <?php
                                                                 }
@@ -726,11 +786,16 @@ function kursagenten_course_list_shortcode($atts) {
                                                                     }
                                                                 }
                                                                 ?>
+                                                                <?php $is_name_filter = in_array($taxonomy_data[$filter]['filter_key'], ['locations', 'instructors'], true); ?>
                                                                 <button class="chip filter-chip"
                                                                     data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                     data-url-key="<?php echo esc_attr($taxonomy_data[$filter]['url_key']); ?>"
                                                                     data-filter="<?php echo esc_attr($chip_value); ?>">
-                                                                    <?php echo esc_html($chip_name); ?>
+                                                                    <?php if ($is_name_filter) : ?>
+                                                                        <span class="notranslate" translate="no"><?php echo esc_html($chip_name); ?></span>
+                                                                    <?php else : ?>
+                                                                        <?php echo esc_html($chip_name); ?>
+                                                                    <?php endif; ?>
                                                                 </button>
                                                             <?php endforeach; ?>
                                                         </div>
@@ -789,7 +854,12 @@ function kursagenten_course_list_shortcode($atts) {
                                                                         value="<?php echo esc_attr($term_value); ?>"
                                                                         data-filter-key="<?php echo esc_attr($taxonomy_data[$filter]['filter_key']); ?>"
                                                                         data-url-key="<?php echo esc_attr($url_key); ?>">
-                                                                    <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
+                                                                    <?php $is_name_filter = in_array($taxonomy_data[$filter]['filter_key'], ['locations', 'instructors'], true); ?>
+                                                                    <?php if ($is_name_filter) : ?>
+                                                                        <span class="checkbox-label notranslate" translate="no"><?php echo esc_html($term_name); ?></span>
+                                                                    <?php else : ?>
+                                                                        <span class="checkbox-label"><?php echo esc_html($term_name); ?></span>
+                                                                    <?php endif; ?>
                                                                 </label>
                                                                 </div>
                                                             <?php endforeach; ?>

@@ -770,6 +770,13 @@ if (!is_admin()) {
         wp_enqueue_script('kursagenten-ajax-filter', plugins_url('assets/js/public/course-ajax-filter.js', __FILE__), array('jquery', 'kursagenten-slidein-panel'), KURSAG_VERSION, true);
         wp_enqueue_script('kursagenten-expand-content', plugins_url('assets/js/public/course-expand-content.js', __FILE__), array('jquery'), KURSAG_VERSION, true);
         wp_enqueue_script('kursagenten-dates-modal', plugins_url('assets/js/public/course-modal.js', __FILE__), array('jquery'), KURSAG_VERSION, true);
+        wp_enqueue_script(
+            'kursagenten-course-list-bg-fix',
+            plugins_url('assets/js/public/course-list-bg-fix.js', __FILE__),
+            array(),
+            KURSAG_VERSION,
+            true
+        );
 
         wp_enqueue_script(
             'kursagenten-datepicker-moment',

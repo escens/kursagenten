@@ -8,6 +8,31 @@ if (!defined('ABSPATH')) {
 }
 
 /**
+ * Normalize post-like values used in filters.
+ *
+ * @param mixed $post Post object, virtual stdClass post, or post ID.
+ * @return object|null
+ */
+function kursagenten_normalize_filter_post($post) {
+    if (is_numeric($post)) {
+        $post = get_post((int) $post);
+    }
+
+    return is_object($post) ? $post : null;
+}
+
+/**
+ * Check whether a normalized post is an instructor virtual post.
+ *
+ * @param mixed $post Post-like value.
+ * @return bool
+ */
+function kursagenten_is_instructor_term_post($post): bool {
+    $normalized_post = kursagenten_normalize_filter_post($post);
+    return $normalized_post && isset($normalized_post->post_type) && $normalized_post->post_type === 'instructor_term';
+}
+
+/**
  * Modify search query to include instructor content
  */
 function kursagenten_modify_search_query($query) {
@@ -123,9 +148,10 @@ add_action('pre_get_posts', 'kursagenten_modify_search_query');
  */
 add_filter('the_content', function($content) {
     global $post;
-    if ($post->post_type === 'instructor_term') {
+    if (kursagenten_is_instructor_term_post($post)) {
         // Get term
-        $term = get_term($post->term_id, 'ka_instructors');
+        $term_id = isset($post->term_id) ? (int) $post->term_id : 0;
+        $term = $term_id > 0 ? get_term($term_id, 'ka_instructors') : null;
         if ($term) {
             $output = '';
             
@@ -161,7 +187,7 @@ add_filter('the_content', function($content) {
             
             // Add title (respect instructor name display setting)
             $title = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-            $output .= '<h2 class="entry-title">' . esc_html($title) . '</h2>';
+            $output .= '<h2 class="entry-title notranslate" translate="no">' . esc_html($title) . '</h2>';
             
             // Add description
             $output .= '<div class="excerpt-wrap entry-summary"><p>' . $term->description . '</p></div>';
@@ -174,8 +200,10 @@ add_filter('the_content', function($content) {
 
 // Remove old display code and replace with excerpt support
 add_filter('get_the_excerpt', function($excerpt, $post) {
-    if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'ka_instructors');
+    $post = kursagenten_normalize_filter_post($post);
+    if (kursagenten_is_instructor_term_post($post)) {
+        $term_id = isset($post->term_id) ? (int) $post->term_id : 0;
+        $term = $term_id > 0 ? get_term($term_id, 'ka_instructors') : null;
         if ($term) {
             return wp_strip_all_tags($term->description);
         }
@@ -185,8 +213,10 @@ add_filter('get_the_excerpt', function($excerpt, $post) {
 
 // Change link for instructors
 add_filter('the_permalink', function($permalink, $post) {
-    if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'ka_instructors');
+    $post = kursagenten_normalize_filter_post($post);
+    if (kursagenten_is_instructor_term_post($post)) {
+        $term_id = isset($post->term_id) ? (int) $post->term_id : 0;
+        $term = $term_id > 0 ? get_term($term_id, 'ka_instructors') : null;
         if ($term) {
             return get_instructor_display_url($term, 'ka_instructors');
         }
@@ -195,8 +225,10 @@ add_filter('the_permalink', function($permalink, $post) {
 }, 10, 2);
 
 add_filter('post_link', function($permalink, $post) {
-    if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'ka_instructors');
+    $post = kursagenten_normalize_filter_post($post);
+    if (kursagenten_is_instructor_term_post($post)) {
+        $term_id = isset($post->term_id) ? (int) $post->term_id : 0;
+        $term = $term_id > 0 ? get_term($term_id, 'ka_instructors') : null;
         if ($term) {
             return get_instructor_display_url($term, 'ka_instructors');
         }
@@ -205,8 +237,10 @@ add_filter('post_link', function($permalink, $post) {
 }, 10, 2);
 
 add_filter('post_type_link', function($permalink, $post) {
-    if ($post->post_type === 'instructor_term') {
-        $term = get_term($post->term_id, 'ka_instructors');
+    $post = kursagenten_normalize_filter_post($post);
+    if (kursagenten_is_instructor_term_post($post)) {
+        $term_id = isset($post->term_id) ? (int) $post->term_id : 0;
+        $term = $term_id > 0 ? get_term($term_id, 'ka_instructors') : null;
         if ($term) {
             return get_instructor_display_url($term, 'ka_instructors');
         }
@@ -219,11 +253,9 @@ add_filter('post_type_link', function($permalink, $post) {
 
 // Keep only the essential filters
 add_filter('has_post_thumbnail', function($has_thumbnail, $post) {
-    if (is_numeric($post)) {
-        $post = get_post($post);
-    }
+    $post = kursagenten_normalize_filter_post($post);
     
-    if ($post && $post->post_type === 'instructor_term') {
+    if (kursagenten_is_instructor_term_post($post)) {
         return isset($post->post_thumbnail_html);
     }
     return $has_thumbnail;
@@ -232,7 +264,7 @@ add_filter('has_post_thumbnail', function($has_thumbnail, $post) {
 // Main filter for displaying the image
 add_filter('the_post_thumbnail', function($html, $post_id, $post_thumbnail_id, $size) {
     global $post;
-    if ($post && $post->post_type === 'instructor_term' && isset($post->post_thumbnail_html)) {
+    if (kursagenten_is_instructor_term_post($post) && isset($post->post_thumbnail_html)) {
         return $post->post_thumbnail_html;
     }
     return $html;
@@ -243,11 +275,12 @@ add_filter('the_title', function($title, $post_id) {
     global $post;
     // Commented out logging
     // error_log('Kursagenten: the_title filter called for post_id: ' . $post_id . ', title: "' . $title . '"');
-    if ($post && $post->post_type === 'instructor_term') {
+    if (kursagenten_is_instructor_term_post($post)) {
         // Commented out logging
         // error_log('Kursagenten: Found instructor term post. Post ID: ' . $post->ID . ', post_title: "' . $post->post_title . '"');
         // Get term
-        $term = get_term($post->term_id, 'ka_instructors');
+        $term_id = isset($post->term_id) ? (int) $post->term_id : 0;
+        $term = $term_id > 0 ? get_term($term_id, 'ka_instructors') : null;
         if ($term) {
             // Commented out logging
             // error_log('Kursagenten: Retrieved term. Term ID: ' . $term->term_id . ', term name: "' . $term->name . '"');
@@ -331,7 +364,7 @@ add_filter('kursagenten_instructor_title', function($title, $term) {
 // Add has-post-thumbnail class for instructor terms with images
 add_filter('post_class', function($classes, $class, $post_id) {
     global $post;
-    if ($post && $post->post_type === 'instructor_term' && !empty($post->has_instructor_image)) {
+    if (kursagenten_is_instructor_term_post($post) && !empty($post->has_instructor_image)) {
         $classes[] = 'has-post-thumbnail';
     }
     return $classes;

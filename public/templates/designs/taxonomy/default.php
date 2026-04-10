@@ -114,7 +114,9 @@ do_action('ka_taxonomy_header_before', $term);
                 // Håndter navnevisning for instruktører
                 if ($taxonomy === 'ka_instructors') {
                     $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-                    echo esc_html($display_name);
+                    echo '<span class="notranslate" translate="no">' . esc_html($display_name) . '</span>';
+                } elseif ($taxonomy === 'ka_course_location') {
+                    echo '<span class="notranslate" translate="no">' . esc_html($term->name) . '</span>';
                 } else {
                     echo esc_html($term->name);
                 }
@@ -250,7 +252,7 @@ do_action('ka_taxonomy_header_before', $term);
                                     ?>
                                     <<?php echo $card_tag; ?> class="<?php echo $card_class; ?>" <?php echo $card_attrs; ?>>
                                         <div class="location-content">
-                                            <h4><?php echo esc_html($location['description']); ?></h4>
+                                            <h4 class="notranslate" translate="no"><?php echo esc_html($location['description']); ?></h4>
                                             <?php if (!empty($location['address'])): ?>
                                                 <div class="location-address">
                                                     <?php if (!empty($location['address']['street'])): ?>

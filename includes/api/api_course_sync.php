@@ -1409,10 +1409,27 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     
     $stored_image_name = get_post_meta($post_id, 'ka_course_image_name', true);
     
-    // Check if the image already exists and is the same to avoid re-downloading
+    // Check if the image already exists and is the same to avoid re-downloading.
+    // We still verify that the physical files exist to avoid stale attachment metadata
+    // causing broken thumbnail URLs in course lists.
     if ($existing_thumbnail_id && $stored_image_name === $filename) {
-        error_log("⏩ Bilde allerede opplastet for kurs ID $post_id (kursID: $location_id), hopper over nedlasting");
-        return false; // Image unchanged, no need to re-download
+        $attached_file = get_attached_file($existing_thumbnail_id);
+        $has_original_file = !empty($attached_file) && file_exists($attached_file);
+        $has_thumbnail_file = false;
+
+        $existing_metadata = wp_get_attachment_metadata($existing_thumbnail_id);
+        if (!empty($existing_metadata['sizes']['thumbnail']['file']) && !empty($attached_file)) {
+            $thumbnail_file = trailingslashit(dirname($attached_file)) . $existing_metadata['sizes']['thumbnail']['file'];
+            $has_thumbnail_file = file_exists($thumbnail_file);
+        }
+
+        // Keep old behavior when attachment files are healthy.
+        if ($has_original_file && ($has_thumbnail_file || empty($existing_metadata['sizes']['thumbnail']))) {
+            error_log("⏩ Bilde allerede opplastet for kurs ID $post_id (kursID: $location_id), hopper over nedlasting");
+            return false; // Image unchanged, no need to re-download
+        }
+
+        error_log("⚠️ Fant manglende bildefiler for eksisterende vedlegg på kurs ID $post_id (kursID: $location_id). Tvinger ny nedlasting.");
     }
 
     // Log when we need to download a new image
@@ -1420,7 +1437,9 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     $download_start = microtime(true);
 
     $upload_dir = wp_upload_dir();
-    $file_path = $upload_dir['path'] . '/' . $filename;
+    $sanitized_filename = sanitize_file_name($filename);
+    $unique_filename = wp_unique_filename($upload_dir['path'], $sanitized_filename);
+    $file_path = trailingslashit($upload_dir['path']) . $unique_filename;
 
     // Download the image from the URL using WordPress HTTP API (safer and respects WP config)
     $response = wp_remote_get($image_url, array(
@@ -1514,10 +1533,10 @@ function set_featured_image_from_url($data, $post_id, $main_course_id, $location
     }
 
     // Check the file type and ensure it's valid
-    $wp_filetype = wp_check_filetype($filename, null);
+    $wp_filetype = wp_check_filetype($unique_filename, null);
     if (!$wp_filetype['type']) {
         // Logg ukjent filtype
-        error_log("Unknown or invalid file type for image: $filename");
+        error_log("Unknown or invalid file type for image: $unique_filename");
         return false;
     }
 

@@ -393,7 +393,7 @@ class CourseLocationGrid {
                                 
                                 foreach ($specific_locations as $location) {
                                     $output .= "<li class='k-location-item location-item'>";
-                                    $output .= "" . esc_html($location['description']) . "";                         
+                                    $output .= "<span class='notranslate' translate='no'>" . esc_html($location['description']) . "</span>";                         
                                     $output .= "</li>";
                                 }
                                 

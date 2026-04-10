@@ -56,7 +56,7 @@ $locations = get_the_terms($course_id, 'ka_course_location');
                 <?php if (!empty($location)) : ?>
                     <div class="meta-item">
                         <i class="ka-icon icon-location"></i>
-                        <span><?php echo esc_html($location); ?></span>
+                        <span class="notranslate" translate="no"><?php echo esc_html($location); ?></span>
                     </div>
                 <?php endif; ?>
 
@@ -130,21 +130,21 @@ $locations = get_the_terms($course_id, 'ka_course_location');
                         <?php if (!empty($location)) : ?>
                             <div class="info-item">
                                 <div class="info-label">Sted:</div>
-                                <div class="info-value"><?php echo esc_html($location); ?></div>
+                                <div class="info-value notranslate" translate="no"><?php echo esc_html($location); ?></div>
                             </div>
                         <?php endif; ?>
 
                         <?php if (!empty($location_freetext)) : ?>
                             <div class="info-item">
                                 <div class="info-label">Lokasjon:</div>
-                                <div class="info-value"><?php echo esc_html($location_freetext); ?></div>
+                                <div class="info-value notranslate" translate="no"><?php echo esc_html($location_freetext); ?></div>
                             </div>
                         <?php endif; ?>
 
                         <?php if (!empty($location_room)) : ?>
                             <div class="info-item">
                                 <div class="info-label">Rom:</div>
-                                <div class="info-value"><?php echo esc_html($location_room); ?></div>
+                                <div class="info-value notranslate" translate="no"><?php echo esc_html($location_room); ?></div>
                             </div>
                         <?php endif; ?>
                     </div>

@@ -542,11 +542,12 @@ border-radius: 8px;
 /*************************************************************/
 #ka .expand-content {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
     transition: max-height 0.3s ease-out;
 }
 
 #ka .expand-content.collapsed {
+    overflow: hidden;
     mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
 }
@@ -1262,6 +1263,7 @@ font-size: var(--ka-filter-font-size);
   position: relative;
   margin: 0;
   font-weight: 400;
+  line-height: 1.6;
 }
 
 #ka .filter-list-item > input[type="checkbox"],

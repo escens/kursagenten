@@ -42,6 +42,10 @@
     border-radius: 10px 0 0 10px;
     position: relative;
 }
+/* Thumbnail in side column; --ka-bg-narrow (medium) used below max-width breakpoint */
+#ka .ka-container .courselist-main .image.ka-course-list-bg {
+    background-image: var(--ka-bg-wide);
+}
 #ka .ka-container .courselist-main .image .image-inner {
     position: absolute;
     top: 0;
@@ -165,6 +169,10 @@
         flex: 0 0 100%;
         height: 200px;
         border-radius: 10px 10px 0 0;
+    }
+
+    #ka .ka-container .courselist-main .image.ka-course-list-bg {
+        background-image: var(--ka-bg-narrow) !important;
     }
 
     #ka .ka-container .courselist-main .text-area-wrapper {

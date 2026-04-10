@@ -115,7 +115,10 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     
     $featured_image_thumb = $course_id ? get_the_post_thumbnail_url($course_id, 'thumbnail') : '';
     $featured_image_thumb = $featured_image_thumb ?: $placeholder_image;
-    
+    // Larger size for narrow layouts where the image spans full card width (see list-standard.css).
+    $featured_image_list_mobile = $course_id ? get_the_post_thumbnail_url($course_id, 'medium') : '';
+    $featured_image_list_mobile = $featured_image_list_mobile ?: $featured_image_thumb;
+
     // Sett opp link til kurset - finn lokasjonsundersiden basert på valgt kursdato
     $course_link = $course_id ? get_permalink($course_id) : '#'; // Fallback til hovedkurset
     
@@ -206,10 +209,14 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     if ($related_course_info) {
         $course_link = esc_url($related_course_info['permalink']);
         $featured_image_thumb = $related_course_info['thumbnail'] ?: $placeholder_image;
+        $featured_image_list_mobile = ! empty($related_course_info['thumbnail-medium'])
+            ? $related_course_info['thumbnail-medium']
+            : $featured_image_thumb;
         $excerpt = $related_course_info['excerpt'];
     } else {
         // Hvis ingen relatert kursinfo, bruk plassholderbilde og fallback-data
         $featured_image_thumb = $placeholder_image;
+        $featured_image_list_mobile = $placeholder_image;
         $course_link = false;
         $excerpt = '';
     }
@@ -244,7 +251,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
         $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
+        return '<a href="' . esc_url($instructor_url) . '"><span class="notranslate" translate="no">' . esc_html($display_name) . '</span></a>';
     }, $instructors);
 }
 
@@ -268,7 +275,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
     <div class="courselist-main<?php echo $with_image_class; ?>">
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
-        <div class="image column" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+        <div class="image column ka-course-list-bg" data-ka-bg-url="<?php echo esc_attr( esc_url( $featured_image_thumb ) ); ?>" data-ka-bg-url-mobile="<?php echo esc_attr( esc_url( $featured_image_list_mobile ) ); ?>" data-bg="<?php echo esc_attr( esc_url( $featured_image_thumb ) ); ?>" style="--ka-bg-wide: url('<?php echo esc_url( $featured_image_thumb ); ?>'); --ka-bg-narrow: url('<?php echo esc_url( $featured_image_list_mobile ); ?>'); background-image: var(--ka-bg-wide);">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>" aria-label="Se kurs: <?php echo esc_attr($course_title); ?>">
                 <span class="sr-only">Se kurs: <?php echo esc_html($course_title); ?></span>
             </a>
@@ -307,10 +314,10 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                         <?php endif; ?>
                         <?php if (!empty($location)) : ?>
                             <div class="location">
-                                <div class="location-text"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                                <div class="location-text notranslate" translate="no"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                                 <?php if (!empty($location_freetext)) : ?>
                                     <div class="location_freetext">
-                                        &nbsp;(<?php echo esc_html($location_freetext); ?>)
+                                        &nbsp;(<span class="notranslate" translate="no"><?php echo esc_html($location_freetext); ?></span>)
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -323,10 +330,10 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                     
                         <?php if (!empty($location)) : ?>
                             <div class="location">
-                                <div class="location-text"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
+                                <div class="location-text notranslate" translate="no"><i class="ka-icon icon-location"></i><?php echo esc_html($location); ?></div>
                                 <?php if (!empty($location_freetext)) : ?>
                                     <div class="location_freetext">
-                                        &nbsp;(<?php echo esc_html($location_freetext); ?>)
+                                        &nbsp;(<span class="notranslate" translate="no"><?php echo esc_html($location_freetext); ?></span>)
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -351,7 +358,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                         <div class="instructors"><i class="ka-icon icon-user"></i><?php echo implode(' ,&nbsp;', $instructor_links); ?></div>
                     <?php endif; ?>
                     <?php if (!empty($location_room)) : ?>
-                        <div class="location_room"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
+                        <div class="location_room notranslate" translate="no"><i class="ka-icon icon-grid"></i><?php echo esc_html($location_room); ?></div>
                     <?php endif; ?>
                     
                     <span class="accordion-icon clickopen ka-tooltip" data-title="Se detaljer">+</span>
@@ -679,7 +686,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                 if (!empty($locations_popup)) :
                     foreach ($locations_popup as $loc) : ?>
                         <div class="ka-location-group">
-                            <h5><?php echo esc_html($loc['name']); ?><?php if (!empty($loc['freetext'])) : ?> (<?php echo esc_html($loc['freetext']); ?>)<?php endif; ?></h5>
+                            <h5><span class="notranslate" translate="no"><?php echo esc_html($loc['name']); ?></span><?php if (!empty($loc['freetext'])) : ?> (<span class="notranslate" translate="no"><?php echo esc_html($loc['freetext']); ?></span>)<?php endif; ?></h5>
                             <ul class="ka-dates-list">
                                 <?php foreach ($loc['dates'] as $date_info) : ?>
                                     <li>

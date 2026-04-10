@@ -306,7 +306,10 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         }
         
         $indent = str_repeat($t, $depth);
-        $output .= "{$n}{$indent}<ul class=\"sub-menu\">{$n}";
+        $classes = ['sub-menu'];
+        $class_names = implode(' ', apply_filters('nav_menu_submenu_css_class', $classes, $args, $depth));
+        $class_names = $class_names ? ' class="' . esc_attr($class_names) . '"' : '';
+        $output .= "{$n}{$indent}<ul{$class_names}>{$n}";
     }
 
     public function start_el(&$output, $data_object, $depth = 0, $args = null, $current_object_id = 0) {
@@ -319,6 +322,11 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         }
         
         $indent = str_repeat($t, $depth);
+        $supported_objects = ['ka_course', 'ka_coursecategory', 'ka_instructors', 'ka_course_location'];
+        $object = isset($data_object->object) ? (string) $data_object->object : '';
+        $is_kursagenten_item = kursagenten_is_auto_menu_item($data_object)
+            || in_array($object, $supported_objects, true);
+        $use_ct_markup = kursagenten_should_use_ct_menu_markup();
         
         $classes = empty($data_object->classes) ? array() : (array) $data_object->classes;
         $classes[] = 'menu-item-' . $data_object->ID;
@@ -333,7 +341,7 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
             }
         }
         
-        if ($depth === 0) {
+        if ($depth === 0 && $is_kursagenten_item && $use_ct_markup) {
             $classes[] = 'menu-item-level-0';
         }
         
@@ -350,7 +358,7 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         $atts['target'] = !empty($data_object->target) ? $data_object->target : '';
         $atts['rel']    = !empty($data_object->xfn) ? $data_object->xfn : '';
         $atts['href']   = !empty($data_object->url) ? $data_object->url : '#';
-        $atts['class']  = 'ct-menu-link';
+        $atts['class']  = ($is_kursagenten_item && $use_ct_markup) ? 'ct-menu-link' : '';
         
         $atts = apply_filters('nav_menu_link_attributes', $atts, $data_object, $args, $depth);
         
@@ -371,7 +379,7 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         $item_output .= '</a>';
         
         // Legg til submeny-indikator hvis elementet har barn
-        if ($has_children) {
+        if ($has_children && $is_kursagenten_item && $use_ct_markup) {
             $item_output .= '<button class="ct-toggle-dropdown-desktop-ghost" aria-label="Utvid ' 
                         . esc_attr($title) . '" aria-haspopup="true" aria-expanded="false"></button>';
         }
@@ -393,6 +401,35 @@ class Kursagenten_Walker_Nav_Menu extends Walker_Nav_Menu {
         $indent = str_repeat($t, $depth);
         $output .= "$indent</ul>{$n}";
     }
+}
+
+/**
+ * Enable Blocksy CT markup only when Blocksy is active.
+ */
+function kursagenten_should_use_ct_menu_markup(): bool {
+    static $should_use = null;
+
+    if ($should_use !== null) {
+        return $should_use;
+    }
+
+    $theme = wp_get_theme();
+    $name = strtolower((string) $theme->get('Name'));
+    $template = strtolower((string) $theme->get_template());
+    $stylesheet = strtolower((string) $theme->get_stylesheet());
+    $parent_name = '';
+
+    $parent = $theme->parent();
+    if ($parent) {
+        $parent_name = strtolower((string) $parent->get('Name'));
+    }
+
+    $should_use = (strpos($name, 'blocksy') !== false)
+        || (strpos($template, 'blocksy') !== false)
+        || (strpos($stylesheet, 'blocksy') !== false)
+        || (strpos($parent_name, 'blocksy') !== false);
+
+    return $should_use;
 }
 
 /**
@@ -1582,25 +1619,81 @@ add_action('wp_update_nav_menu_item', 'ensure_new_menu_item_taxonomy', 10, 3);
 /**
  * Use custom walker only when Megamenu is NOT active - Megamenu has its own walker
  */
+function kursagenten_get_menu_object_from_nav_args(array $args) {
+    if (!empty($args['menu'])) {
+        $menu_obj = wp_get_nav_menu_object($args['menu']);
+        if ($menu_obj && !is_wp_error($menu_obj)) {
+            return $menu_obj;
+        }
+    }
+
+    if (!empty($args['menu_id'])) {
+        $menu_obj = wp_get_nav_menu_object((int) $args['menu_id']);
+        if ($menu_obj && !is_wp_error($menu_obj)) {
+            return $menu_obj;
+        }
+    }
+
+    if (!empty($args['theme_location'])) {
+        $locations = get_nav_menu_locations();
+        $menu_id = (int) ($locations[$args['theme_location']] ?? 0);
+        if ($menu_id > 0) {
+            $menu_obj = wp_get_nav_menu_object($menu_id);
+            if ($menu_obj && !is_wp_error($menu_obj)) {
+                return $menu_obj;
+            }
+        }
+    }
+
+    return null;
+}
+
+function kursagenten_menu_has_kursagenten_items(array $menu_items): bool {
+    $supported_objects = ['ka_course', 'ka_coursecategory', 'ka_instructors', 'ka_course_location'];
+
+    foreach ($menu_items as $menu_item) {
+        if (kursagenten_is_auto_menu_item($menu_item)) {
+            return true;
+        }
+
+        $object = isset($menu_item->object) ? (string) $menu_item->object : '';
+        if (in_array($object, $supported_objects, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function kursagenten_set_custom_walker($args) {
     if (kursagenten_is_megamenu_active()) {
         return $args;
     }
-    
-    $walker = new Kursagenten_Walker_Nav_Menu();
-    
-    if (isset($args['menu'])) {
-        $menu_obj = wp_get_nav_menu_object($args['menu']);
-        if (!$menu_obj || is_wp_error($menu_obj)) {
-            return $args;
-        }
-        $menu_items = wp_get_nav_menu_items($menu_obj->term_id);
-        if ($menu_items) {
-            $menu_items = kursagenten_setup_auto_menu_items($menu_items, $menu_obj, $args);
-            $walker->set_items($menu_items);
-        }
+
+    if (!is_array($args)) {
+        return $args;
     }
-    
+
+    // Respect walkers supplied by themes/builders (e.g. Elementor Nav Menu).
+    // Overriding those can inject unwanted markup/classes in non-Kursagenten items.
+    if (!empty($args['walker'])) {
+        return $args;
+    }
+
+    $menu_obj = kursagenten_get_menu_object_from_nav_args($args);
+    if (!$menu_obj) {
+        return $args;
+    }
+
+    $menu_items = wp_get_nav_menu_items($menu_obj->term_id);
+    if (empty($menu_items) || !kursagenten_menu_has_kursagenten_items($menu_items)) {
+        return $args;
+    }
+
+    $walker = new Kursagenten_Walker_Nav_Menu();
+    $menu_items = kursagenten_setup_auto_menu_items($menu_items, $menu_obj, $args);
+    $walker->set_items($menu_items);
+
     $args['walker'] = $walker;
     return $args;
 }

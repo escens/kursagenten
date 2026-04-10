@@ -112,9 +112,9 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
         ? $options['ka_plassholderbilde_kurs']
         : rtrim(KURSAG_PLUGIN_URL, '/') . '/assets/images/placeholder-kurs.jpg';
     
-    // Hent bilde
-    $featured_image_thumb = $course_id ? get_the_post_thumbnail_url($course_id, 'medium') : '';
-    $featured_image_thumb = $featured_image_thumb ?: $placeholder_image;
+    // Grid cards are image-forward: use WordPress `medium` on all viewports (not `thumbnail`).
+    $featured_image_card = $course_id ? get_the_post_thumbnail_url($course_id, 'medium') : '';
+    $featured_image_card = $featured_image_card ?: $placeholder_image;
     
     // Sett opp link til kurset - finn lokasjonsundersiden basert på valgt kursdato
     $course_link = $course_id ? get_permalink($course_id) : '#'; // Fallback til hovedkurset
@@ -205,12 +205,15 @@ if ($view_type === 'main_courses' && !$force_standard_view) {
     
     if ($related_course_info) {
         $course_link = esc_url($related_course_info['permalink']);
-        $featured_image_thumb = $related_course_info['thumbnail-medium'] ?: $placeholder_image;
+        $featured_image_card = $related_course_info['thumbnail-medium']
+            ?: ($related_course_info['thumbnail-full'] ?? '')
+            ?: ($related_course_info['thumbnail'] ?? '')
+            ?: $placeholder_image;
         $excerpt = $related_course_info['excerpt'];
     } else {
         // Hvis ingen relatert kursinfo, sett fallback-verdier
         $course_link = false;
-        $featured_image_thumb = $placeholder_image;
+        $featured_image_card = $placeholder_image;
         $excerpt = '';
     }
 }
@@ -244,7 +247,7 @@ if (!empty($instructors) && !is_wp_error($instructors)) {
     $instructor_links = array_map(function ($term) {
         $instructor_url = get_instructor_display_url($term, 'ka_instructors');
         $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-        return '<a href="' . esc_url($instructor_url) . '">' . esc_html($display_name) . '</a>';
+        return '<a href="' . esc_url($instructor_url) . '"><span class="notranslate" translate="no">' . esc_html($display_name) . '</span></a>';
     }, $instructors);
 }
 
@@ -268,7 +271,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
     <div class="courselist-card<?php echo $with_image_class; ?>">
         <?php if ($show_images === 'yes') : ?>
         <!-- Image area -->
-        <div class="card-image" style="background-image: url(<?php echo esc_url($featured_image_thumb); ?>);">
+        <div class="card-image" data-ka-bg-url="<?php echo esc_attr( esc_url( $featured_image_card ) ); ?>" data-bg="<?php echo esc_attr( esc_url( $featured_image_card ) ); ?>" style="background-image: url('<?php echo esc_url( $featured_image_card ); ?>');">
             <a class="image-inner" href="<?php echo esc_url($course_link); ?>" title="<?php echo esc_attr($course_title); ?>" aria-label="Se kurs: <?php echo esc_attr($course_title); ?>">
                 <span class="sr-only">Se kurs: <?php echo esc_html($course_title); ?></span>
             </a>
@@ -309,7 +312,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                 <!-- Location -->
                 <?php if (!empty($location)) : ?>
                 <div class="card-location">
-                    <strong><?php echo esc_html($location); ?></strong>
+                    <strong class="notranslate" translate="no"><?php echo esc_html($location); ?></strong>
                 </div>
                 <?php endif; ?>
                 
@@ -466,7 +469,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
                 if (!empty($locations_popup)) :
                     foreach ($locations_popup as $loc) : ?>
                         <div class="ka-location-group">
-                            <h5><?php echo esc_html($loc['name']); ?><?php if (!empty($loc['freetext'])) : ?> (<?php echo esc_html($loc['freetext']); ?>)<?php endif; ?></h5>
+                            <h5><span class="notranslate" translate="no"><?php echo esc_html($loc['name']); ?></span><?php if (!empty($loc['freetext'])) : ?> (<span class="notranslate" translate="no"><?php echo esc_html($loc['freetext']); ?></span>)<?php endif; ?></h5>
                             <ul class="ka-dates-list">
                                 <?php foreach ($loc['dates'] as $date_info) : ?>
                                     <li>

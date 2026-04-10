@@ -387,7 +387,7 @@ $view_type_class = ' view-type-' . str_replace('_', '', $view_type);
             if (!empty($locations_popup)) :
                 foreach ($locations_popup as $loc) : ?>
                     <div class="ka-location-group">
-                        <h5><?php echo esc_html($loc['name']); ?><?php if (!empty($loc['freetext'])) : ?> (<?php echo esc_html($loc['freetext']); ?>)<?php endif; ?></h5>
+                        <h5><span class="notranslate" translate="no"><?php echo esc_html($loc['name']); ?></span><?php if (!empty($loc['freetext'])) : ?> (<span class="notranslate" translate="no"><?php echo esc_html($loc['freetext']); ?></span>)<?php endif; ?></h5>
                         <ul class="ka-dates-list">
                             <?php foreach ($loc['dates'] as $date_info) : ?>
                                 <li>

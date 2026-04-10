@@ -116,7 +116,9 @@ $taxonomy_header_media_title = ($taxonomy === 'ka_instructors' && function_exist
                     // Håndter navnevisning for instruktører
                     if ($taxonomy === 'ka_instructors') {
                         $display_name = function_exists('get_instructor_display_name') ? get_instructor_display_name($term) : $term->name;
-                        echo esc_html($display_name);
+                        echo '<span class="notranslate" translate="no">' . esc_html($display_name) . '</span>';
+                    } elseif ($taxonomy === 'ka_course_location') {
+                        echo '<span class="notranslate" translate="no">' . esc_html($term->name) . '</span>';
                     } else {
                         echo esc_html($term->name);
                     }
