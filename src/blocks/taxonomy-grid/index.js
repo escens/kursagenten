@@ -202,6 +202,14 @@ const IMAGE_ASPECT_OPTIONS = [
 	{ label: 'Egendefinert', value: 'custom' },
 ];
 
+const IMAGE_RESOLUTION_OPTIONS = [
+	{ label: 'Automatisk (anbefalt)', value: 'auto' },
+	{ label: 'Thumbnail', value: 'thumbnail' },
+	{ label: 'Medium', value: 'medium' },
+	{ label: 'Large', value: 'large' },
+	{ label: 'Full størrelse', value: 'full' },
+];
+
 const SHADOW_OPTIONS = [
 	{ label: 'Ingen', value: 'none' },
 	{ label: 'Ingen, men bruk ramme', value: 'outline' },
@@ -1411,6 +1419,15 @@ registerBlockType( metadata.name, {
 											) }
 											{ attributes.showImage && showImageSizeQuickControls && (
 												<ImageSizePresetPicker attributes={ attributes } setAttributes={ setAttributes } />
+											) }
+											{ attributes.showImage && (
+												<SelectControl
+													label="Bildekvalitet"
+													help="Automatisk bruker responsivt srcset når mulig for skarpere bilder."
+													value={ attributes.imageResolution || 'auto' }
+													options={ IMAGE_RESOLUTION_OPTIONS }
+													onChange={ ( value ) => setAttributes( { imageResolution: value } ) }
+												/>
 											) }
 											{ attributes.showImage && showImageShapeControl && (
 												<ImageShapePresetPicker attributes={ attributes } setAttributes={ setAttributes } />

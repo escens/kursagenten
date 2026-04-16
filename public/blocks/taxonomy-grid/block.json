@@ -71,6 +71,10 @@
       "type": "string",
       "default": "4/3"
     },
+    "imageResolution": {
+      "type": "string",
+      "default": "auto"
+    },
     "imageRadius": {
       "type": "string",
       "default": "8px"

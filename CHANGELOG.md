@@ -1,5 +1,5 @@
 ## 1.1.18 - 2026-04-09
-- Fix: Lagt inn sperre på stedsnavn og egennavn så de ikke blir automatisk oversatt til andre språk
+- Fix: Lagt inn sperre på stedsnavn og egennavn så de ikke blir automatisk oversatt til andre språk.
 - Fix: Styrket bildevisningen så den ikke blir brutt av utvidelser for bildeoptimalisering og lazy load.
 
 ## 1.1.17 - 2026-03-20

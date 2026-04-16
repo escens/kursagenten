@@ -312,9 +312,22 @@ function kursagenten_get_placeholder_image_url(string $source_type): string {
 }
 
 /**
- * Get a course featured image for category fallback.
+ * Resolve requested image size from block setting.
  */
-function kursagenten_get_course_image_for_category(int $term_id): string {
+function kursagenten_get_requested_image_size(string $image_resolution): string {
+    $allowed_sizes = ['thumbnail', 'medium', 'large', 'full'];
+    if ($image_resolution === 'auto') {
+        return 'large';
+    }
+    return in_array($image_resolution, $allowed_sizes, true) ? $image_resolution : 'large';
+}
+
+/**
+ * Get a course featured image for category fallback.
+ *
+ * @return array{url:string,attachment_id:int}
+ */
+function kursagenten_get_course_image_for_category(int $term_id, string $image_resolution = 'auto'): array {
     $posts = get_posts([
         'post_type' => 'ka_course',
         'post_status' => 'publish',
@@ -334,11 +347,24 @@ function kursagenten_get_course_image_for_category(int $term_id): string {
     ]);
 
     if (empty($posts)) {
-        return '';
+        return ['url' => '', 'attachment_id' => 0];
     }
 
-    $thumbnail_url = get_the_post_thumbnail_url((int) $posts[0]->ID, 'thumbnail');
-    return $thumbnail_url ? esc_url($thumbnail_url) : '';
+    $thumbnail_id = (int) get_post_thumbnail_id((int) $posts[0]->ID);
+    if ($thumbnail_id <= 0) {
+        return ['url' => '', 'attachment_id' => 0];
+    }
+
+    $size = kursagenten_get_requested_image_size($image_resolution);
+    $thumbnail_url = wp_get_attachment_image_url($thumbnail_id, $size);
+    if (!is_string($thumbnail_url) || $thumbnail_url === '') {
+        $thumbnail_url = wp_get_attachment_url($thumbnail_id) ?: '';
+    }
+
+    return [
+        'url' => $thumbnail_url ? esc_url($thumbnail_url) : '',
+        'attachment_id' => $thumbnail_id,
+    ];
 }
 
 /**
@@ -514,11 +540,16 @@ function kursagenten_get_term_image_url(
     WP_Term $term,
     string $source_type,
     string $category_image_source = 'main',
-    string $instructor_image_source = 'standard'
+    string $instructor_image_source = 'standard',
+    string $image_resolution = 'auto',
+    int &$attachment_id = 0
 ): string {
+    $attachment_id = 0;
+
     if ($source_type === 'location') {
         $url = (string) get_term_meta($term->term_id, 'image_course_location', true);
         if ($url !== '') {
+            $attachment_id = attachment_url_to_postid($url);
             return esc_url($url);
         }
         return kursagenten_get_placeholder_image_url($source_type);
@@ -530,16 +561,20 @@ function kursagenten_get_term_image_url(
 
         if ($instructor_image_source === 'alternative') {
             if ($alternative_image !== '') {
+                $attachment_id = attachment_url_to_postid($alternative_image);
                 return esc_url($alternative_image);
             }
             if ($profile_image !== '') {
+                $attachment_id = attachment_url_to_postid($profile_image);
                 return esc_url($profile_image);
             }
         } else {
             if ($profile_image !== '') {
+                $attachment_id = attachment_url_to_postid($profile_image);
                 return esc_url($profile_image);
             }
             if ($alternative_image !== '') {
+                $attachment_id = attachment_url_to_postid($alternative_image);
                 return esc_url($alternative_image);
             }
         }
@@ -554,24 +589,76 @@ function kursagenten_get_term_image_url(
 
     if ($category_image_source === 'icon') {
         if ($icon_image !== '') {
+            $attachment_id = attachment_url_to_postid($icon_image);
             return esc_url($icon_image);
         }
         if ($main_image !== '') {
+            $attachment_id = attachment_url_to_postid($main_image);
             return esc_url($main_image);
         }
     } else {
         // "Hovedbilde" selected: ignore icon image completely unless main image is missing.
         if ($main_image !== '') {
+            $attachment_id = attachment_url_to_postid($main_image);
             return esc_url($main_image);
         }
     }
 
-    $course_image = kursagenten_get_course_image_for_category((int) $term->term_id);
-    if ($course_image !== '') {
-        return $course_image;
+    $course_image = kursagenten_get_course_image_for_category((int) $term->term_id, $image_resolution);
+    if ($course_image['url'] !== '') {
+        $attachment_id = (int) $course_image['attachment_id'];
+        return $course_image['url'];
     }
 
     return kursagenten_get_placeholder_image_url($source_type);
+}
+
+/**
+ * Build image markup with responsive sources when possible.
+ */
+function kursagenten_get_term_image_markup(
+    string $image_url,
+    string $alt_text,
+    string $image_resolution = 'auto',
+    int $attachment_id = 0
+): string {
+    if ($image_url === '') {
+        return '';
+    }
+
+    $allowed_sizes = ['auto', 'thumbnail', 'medium', 'large', 'full'];
+    if (!in_array($image_resolution, $allowed_sizes, true)) {
+        $image_resolution = 'auto';
+    }
+
+    $requested_size = kursagenten_get_requested_image_size($image_resolution);
+    if ($attachment_id <= 0) {
+        $attachment_id = attachment_url_to_postid($image_url);
+    }
+
+    if ($attachment_id > 0) {
+        $attr = [
+            'class' => 'k-image',
+            'alt' => $alt_text,
+            'loading' => 'lazy',
+            'decoding' => 'async',
+        ];
+
+        if ($image_resolution === 'auto') {
+            $attr['sizes'] = '(max-width: 600px) 92vw, (max-width: 1024px) 46vw, 32vw';
+        }
+
+        $html = wp_get_attachment_image($attachment_id, $requested_size, false, $attr);
+        if (is_string($html) && $html !== '') {
+            return $html;
+        }
+    }
+
+    return sprintf(
+        '<img class="k-image" src="%s" alt="%s" loading="lazy" decoding="async" />',
+        esc_url($image_url),
+        esc_attr($alt_text)
+    );
 }
 
 /**
@@ -779,11 +866,20 @@ function kursagenten_render_taxonomy_grid_block(array $attributes): string {
             continue;
         }
 
+        $image_attachment_id = 0;
         $image_url = kursagenten_get_term_image_url(
             $term,
             $source_type,
             (string) $settings['categoryImageSource'],
-            (string) ($settings['instructorImageSource'] ?? 'standard')
+            (string) ($settings['instructorImageSource'] ?? 'standard'),
+            (string) ($settings['imageResolution'] ?? 'auto'),
+            $image_attachment_id
+        );
+        $image_markup = kursagenten_get_term_image_markup(
+            $image_url,
+            $title,
+            (string) ($settings['imageResolution'] ?? 'auto'),
+            (int) ($image_attachment_id ?? 0)
         );
         $description_word_limit = max(0, (int) $settings['descriptionWordLimit']);
         $extended_description_word_limit = max(0, (int) $settings['descriptionWordLimitExtended']);
@@ -818,7 +914,7 @@ function kursagenten_render_taxonomy_grid_block(array $attributes): string {
 
             if (!empty($settings['showImage']) && $image_url !== '' && (string) $settings['backgroundMode'] !== 'taxonomyImage') {
                 $output .= '<a class="k-image-link" href="' . esc_url((string) $term_link) . '" aria-label="' . esc_attr($title) . '"' . $link_rel . '>';
-                $output .= '<span class="k-image-wrap"><img class="k-image" src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '" loading="lazy" decoding="async" /></span>';
+                $output .= '<span class="k-image-wrap">' . $image_markup . '</span>';
                 $output .= '</a>';
             }
 
@@ -878,10 +974,10 @@ function kursagenten_render_taxonomy_grid_block(array $attributes): string {
         if (!empty($settings['showImage']) && $image_url !== '' && (string) $settings['backgroundMode'] !== 'taxonomyImage') {
             if ($has_instructor_contact_links) {
                 $output .= '<a class="k-image-link" href="' . esc_url((string) $term_link) . '" aria-label="' . esc_attr($title) . '"' . $link_rel . '>';
-                $output .= '<span class="k-image-wrap"><img class="k-image" src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '" loading="lazy" decoding="async" /></span>';
+                $output .= '<span class="k-image-wrap">' . $image_markup . '</span>';
                 $output .= '</a>';
             } else {
-                $output .= '<span class="k-image-wrap"><img class="k-image" src="' . esc_url($image_url) . '" alt="' . esc_attr($title) . '" loading="lazy" decoding="async" /></span>';
+                $output .= '<span class="k-image-wrap">' . $image_markup . '</span>';
             }
         }
 

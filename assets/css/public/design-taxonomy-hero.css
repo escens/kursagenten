@@ -21,7 +21,6 @@
     height: 100%;
     background-size: cover;
     background-position: center;
-    filter: blur(1px);
     z-index: 1;
 }
 #ka .taxonomy-hero-header .overlay {

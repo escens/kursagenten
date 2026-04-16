@@ -28,6 +28,7 @@ final class Kursagenten_Block_Attribute_Mapper {
             'shadowPreset' => 'none',
             'imageSize' => '240px',
             'imageAspect' => '4/3',
+            'imageResolution' => 'auto',
             'imageRadius' => '8px',
             'imageRadiusTop' => '8px',
             'imageRadiusRight' => '8px',
@@ -217,6 +218,10 @@ final class Kursagenten_Block_Attribute_Mapper {
         $allowed_category_image_source = ['main', 'icon'];
         if (!in_array($mapped['categoryImageSource'], $allowed_category_image_source, true)) {
             $mapped['categoryImageSource'] = 'main';
+        }
+        $allowed_image_resolutions = ['auto', 'thumbnail', 'medium', 'large', 'full'];
+        if (!in_array($mapped['imageResolution'], $allowed_image_resolutions, true)) {
+            $mapped['imageResolution'] = 'auto';
         }
         $allowed_font_weights = ['100', '400', '600', '700', '800'];
         if (!in_array((string) $mapped['fontWeightTitle'], $allowed_font_weights, true)) {
