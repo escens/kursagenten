@@ -1,0 +1,26 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-next-course-info",
+  "title": "Enkeltkurs: Neste kurs",
+  "category": "kursagenten",
+  "icon": "info",
+  "description": "Vis informasjon om neste kursdato, med dynamisk overskrift.",
+  "supports": { "html": false },
+  "attributes": {
+    "showHeading": { "type": "boolean", "default": true },
+    "showIcons": { "type": "boolean", "default": true },
+    "showSignupLink": { "type": "boolean", "default": true },
+    "showPrice": { "type": "boolean", "default": true },
+    "showDuration": { "type": "boolean", "default": true },
+    "showLanguage": { "type": "boolean", "default": true },
+    "textColor": { "type": "string", "default": "" },
+    "headingColor": { "type": "string", "default": "" },
+    "linkColor": { "type": "string", "default": "" },
+    "iconColor": { "type": "string", "default": "" },
+    "fontFamily": { "type": "string", "default": "" },
+    "headingFontFamily": { "type": "string", "default": "" },
+    "fontSize": { "type": "string", "default": "" },
+    "headingSize": { "type": "string", "default": "" }
+  }
+}
+

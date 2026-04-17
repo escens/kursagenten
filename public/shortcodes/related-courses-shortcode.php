@@ -32,6 +32,7 @@ class RelatedCourses {
             'grid' => '3',
             'gridtablet' => '2',
             'gridmobil' => '1',
+            'limit' => '',
             'radavstand' => '1rem',
             'bildestr' => '100px',
             'bildeform' => 'avrundet',
@@ -55,7 +56,8 @@ class RelatedCourses {
         $a = $this->process_attributes($a);
         
         // Hent relaterte kurs
-        $related_posts = $this->get_related_courses();
+        $limit = (int) $a['limit'];
+        $related_posts = $this->get_related_courses($limit);
         
         if (empty($related_posts)) {
             return '<div class="no-courses">Det er for øyeblikket ingen relaterte kurs å vise.</div>';
@@ -93,7 +95,7 @@ class RelatedCourses {
         return $atts;
     }
 
-    private function get_related_courses(): array {
+    private function get_related_courses(int $limit = 0): array {
         global $post;
 
         // Sjekk om gjeldende innlegg har terms i 'kurskategori' taksonomien
@@ -106,8 +108,8 @@ class RelatedCourses {
         // Bruk første term (kan modifiseres for å håndtere flere terms)
         $current_term = $terms[0];
 
-        // Hent alle publiserte kurs i samme 'kurskategori'
-        return get_posts([
+        // Hent publiserte kurs i samme 'kurskategori'
+        $args = [
             'post_type' => 'ka_course',
             'post_status' => 'publish',
             'tax_query' => [[
@@ -115,16 +117,18 @@ class RelatedCourses {
                 'field' => 'term_id',
                 'terms' => $current_term->term_id,
             ]],
-            'posts_per_page' => -1,
-        'post__not_in' => [$post->ID],
-        'meta_query'     => [
-        [
-            'key'     => 'ka_is_parent_course',
-            'value'   => 'yes',
-            'compare' => '='
-        ]
-    ], // Ekskluder gjeldende innlegg
-        ]);
+            'posts_per_page' => $limit > 0 ? $limit : -1,
+            'post__not_in' => [$post->ID],
+            'meta_query' => [
+                [
+                    'key' => 'ka_is_parent_course',
+                    'value' => 'yes',
+                    'compare' => '=',
+                ],
+            ],
+        ];
+
+        return get_posts($args);
     }
 
     private function get_course_specific_styles(string $id): string {

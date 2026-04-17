@@ -1,0 +1,23 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-contact",
+  "title": "Enkeltkurs: Kontaktinformasjon",
+  "category": "kursagenten",
+  "icon": "phone",
+  "description": "Vis kontaktinformasjon for kurset. Kan skjules hvis tomt.",
+  "supports": { "html": false },
+  "attributes": {
+    "showTitle": { "type": "boolean", "default": true },
+    "showWrapper": { "type": "boolean", "default": true },
+    "hideIfEmpty": { "type": "boolean", "default": true },
+    "textColor": { "type": "string", "default": "" },
+    "headingColor": { "type": "string", "default": "" },
+    "linkColor": { "type": "string", "default": "" },
+    "iconColor": { "type": "string", "default": "" },
+    "fontFamily": { "type": "string", "default": "" },
+    "headingFontFamily": { "type": "string", "default": "" },
+    "fontSize": { "type": "string", "default": "" },
+    "headingSize": { "type": "string", "default": "" }
+  }
+}
+

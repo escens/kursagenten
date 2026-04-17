@@ -39,6 +39,24 @@ function kursagenten_template_loader($template) {
             }
         }
     }
+
+    // Optional compatibility mode for page builders/theme conditions.
+    // When enabled, WordPress keeps the current resolved template (single.php, taxonomy.php, archive.php, etc).
+    // Legacy option still supported for backward compatibility.
+    $legacy_design_mode = get_option('kursagenten_design_mode', 'plugin');
+    $single_design_mode = get_option('kursagenten_single_design_mode', $legacy_design_mode);
+    $taxonomy_design_mode = get_option('kursagenten_taxonomy_design_mode', $legacy_design_mode);
+    $use_theme_hierarchy = (bool) get_option('kursagenten_use_theme_template_hierarchy', 0);
+
+    if ($use_theme_hierarchy) {
+        return $template;
+    }
+    if (is_singular('ka_course') && $single_design_mode === 'custom') {
+        return $template;
+    }
+    if (is_tax(['ka_coursecategory', 'ka_course_location', 'ka_instructors']) && $taxonomy_design_mode === 'custom') {
+        return $template;
+    }
     
     // VIKTIG: Sjekk om temaet har egne templates først
     // Dette lar temaer bruke WordPress standard template hierarchy

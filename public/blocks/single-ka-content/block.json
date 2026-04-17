@@ -1,0 +1,20 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-ka-content",
+  "title": "Enkeltkurs: Kursbeskrivelse",
+  "category": "kursagenten",
+  "icon": "editor-paragraph",
+  "description": "Vis innhold fra Kursagenten (kursbeskrivelse).",
+  "supports": { "html": false },
+  "attributes": {
+    "textColor": { "type": "string", "default": "" },
+    "headingColor": { "type": "string", "default": "" },
+    "linkColor": { "type": "string", "default": "" },
+    "iconColor": { "type": "string", "default": "" },
+    "fontFamily": { "type": "string", "default": "" },
+    "headingFontFamily": { "type": "string", "default": "" },
+    "fontSize": { "type": "string", "default": "" },
+    "headingSize": { "type": "string", "default": "" }
+  }
+}
+

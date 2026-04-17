@@ -6,6 +6,8 @@
   "scripts": {
     "build:blocks": "wp-scripts build \"src/blocks/taxonomy-grid/index.js\" --output-path=build --output-filename=taxonomy-grid.js",
     "start:blocks": "wp-scripts start \"src/blocks/taxonomy-grid/index.js\" --output-path=build --output-filename=taxonomy-grid.js",
+    "build:single-elements": "wp-scripts build \"src/blocks/single-elements/index.js\" --output-path=build --output-filename=single-elements.js",
+    "start:single-elements": "wp-scripts start \"src/blocks/single-elements/index.js\" --output-path=build --output-filename=single-elements.js",
     "build": "npm run build:blocks",
     "test:e2e": "playwright test"
   },

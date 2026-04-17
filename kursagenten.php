@@ -595,7 +595,7 @@ if (!is_admin()) {
     require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/queries.php';
     require_once KURSAG_PLUGIN_DIR . '/public/templates/includes/template_taxonomy_functions.php';
 
-    // Shortcodes content blocks
+    // Shortcodes content blocks (frontend-spesifikke)
     require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/course-list-shortcode.php';
     require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/includes/grid-styles.php';
     require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/coursecategories-shortcode.php';
@@ -605,8 +605,10 @@ if (!is_admin()) {
 
     // General Kursagenten shortcodes
     require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
-
 }
+
+// Single element shortcodes: trengs både i editor (admin) og frontend.
+require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/single-elements-shortcodes.php';
 
     
     function kursagenten_enqueue_styles() {

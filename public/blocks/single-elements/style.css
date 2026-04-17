@@ -1,0 +1,54 @@
+.ka-single-block {
+	color: var(--ka-text-color, inherit);
+	font-family: var(--ka-font-family, inherit);
+	font-size: var(--ka-font-size, inherit);
+}
+
+.ka-single-block a {
+	color: var(--ka-link-color, inherit);
+}
+
+.ka-single-block .ka-icon,
+.ka-single-block [class*="icon-"] {
+	color: var(--ka-icon-color, currentColor);
+}
+
+.ka-single-block h1,
+.ka-single-block h2,
+.ka-single-block h3,
+.ka-single-block h4,
+.ka-single-block h5,
+.ka-single-block h6,
+.ka-single-block .ka-single-title {
+	color: var(--ka-heading-color, inherit);
+	font-family: var(--ka-heading-font-family, inherit);
+	font-size: var(--ka-heading-size, inherit);
+}
+
+.ka-single-title .ka-single-location {
+	color: var(--ka-location-color, inherit);
+	font-size: var(--ka-location-size, inherit);
+}
+
+.ka-single-signup-button.ka-btn-override .pameldingskjema,
+.ka-single-signup-button.ka-btn-override .pameldingskjema:visited,
+.ka-single-signup-button.ka-btn-override .pameldingskjema:hover,
+.ka-single-signup-button.ka-btn-override .pameldingskjema:focus {
+	background: var(--ka-button-bg, initial) !important;
+	color: var(--ka-button-color, initial) !important;
+	border-radius: var(--ka-button-radius, initial) !important;
+	padding: var(--ka-button-padding, initial) !important;
+}
+
+.ka-single-signup-button.ka-variant-link .pameldingskjema {
+	background: transparent !important;
+	border: 0 !important;
+	padding: 0 !important;
+	text-decoration: underline;
+}
+
+.ka-single-signup-button.ka-full-width .pameldingskjema {
+	width: 100%;
+	text-align: center;
+}
+

@@ -125,6 +125,7 @@ class KA_Documentation_Page {
                     <p>Hver kategori, hvert sted og hver instruktør får automatisk sin egen side. Disse genereres fra maler som velges i <a href="admin.php?page=design">Kursdesign</a>. Du kan berike disse sidene med ekstra innhold, bilder og tekst ved å redigere taksonomiene.</p>
                     
                     <p>Alle systemsider følger WordPress sin standard template-hierarki, så hvis temaet ditt har egne templates (f.eks. <code>single-ka_course.php</code> eller <code>taxonomy-ka_coursecategory.php</code>), vil disse brukes i stedet for pluginen sin standardmal.</p>
+                    <p><strong>Page builder (Kadence Elements, Elementor m.fl.):</strong> Hvis du vil styre single/archive/taksonomi med page builder-betingelser, gå til <a href="admin.php?page=design#section-enkeltkurs">Kursdesign → Enkeltkurs</a> og aktiver <em>Bruk WordPress sitt standard malhierarki</em>. Da lar pluginen tema/page builder velge mal uten å tvinge pluginens egne layout-filer.</p>
                 </div>
 
                 <div id="sider-som-ma-opprettes" class="options-card">

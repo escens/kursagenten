@@ -1,0 +1,25 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-title",
+  "title": "Enkeltkurs: Tittel",
+  "category": "kursagenten",
+  "icon": "welcome-learn-more",
+  "description": "Vis kurstittel med sted (automatisk).",
+  "supports": { "html": false },
+  "attributes": {
+    "headingTag": { "type": "string", "default": "h1" },
+    "showLocation": { "type": "string", "default": "auto" },
+    "layout": { "type": "string", "default": "stacked" },
+    "locationColor": { "type": "string", "default": "" },
+    "locationSize": { "type": "string", "default": "" },
+    "textColor": { "type": "string", "default": "" },
+    "headingColor": { "type": "string", "default": "" },
+    "linkColor": { "type": "string", "default": "" },
+    "iconColor": { "type": "string", "default": "" },
+    "fontFamily": { "type": "string", "default": "" },
+    "headingFontFamily": { "type": "string", "default": "" },
+    "fontSize": { "type": "string", "default": "" },
+    "headingSize": { "type": "string", "default": "" }
+  }
+}
+

@@ -1,0 +1,22 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-course-link",
+  "title": "Enkeltkurs: Lenke til kursoversikt",
+  "category": "kursagenten",
+  "icon": "admin-links",
+  "description": "Vis lenke til siden som er satt som kursside.",
+  "supports": { "html": false },
+  "attributes": {
+    "label": { "type": "string", "default": "" },
+    "showIcon": { "type": "boolean", "default": true },
+    "textColor": { "type": "string", "default": "" },
+    "headingColor": { "type": "string", "default": "" },
+    "linkColor": { "type": "string", "default": "" },
+    "iconColor": { "type": "string", "default": "" },
+    "fontFamily": { "type": "string", "default": "" },
+    "headingFontFamily": { "type": "string", "default": "" },
+    "fontSize": { "type": "string", "default": "" },
+    "headingSize": { "type": "string", "default": "" }
+  }
+}
+

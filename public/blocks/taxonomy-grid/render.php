@@ -379,6 +379,17 @@ function kursagenten_get_taxonomy_terms(array $settings): array {
         'hide_empty' => true,
         'orderby' => 'name',
         'order' => 'ASC',
+        'meta_query' => [
+            'relation' => 'OR',
+            [
+                'key' => 'hide_in_list',
+                'value' => 'Vis',
+            ],
+            [
+                'key' => 'hide_in_list',
+                'compare' => 'NOT EXISTS',
+            ],
+        ],
     ];
 
     if ($taxonomy === 'ka_course_location') {

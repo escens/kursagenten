@@ -1,0 +1,24 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-related-courses",
+  "title": "Enkeltkurs: Relaterte kurs",
+  "category": "kursagenten",
+  "icon": "networking",
+  "description": "Vis relaterte kurs (samme kategori).",
+  "supports": { "html": false },
+  "attributes": {
+    "layout": { "type": "string", "default": "list" },
+    "columns": { "type": "number", "default": 3 },
+    "limit": { "type": "number", "default": 6 },
+    "showImage": { "type": "boolean", "default": true },
+    "textColor": { "type": "string", "default": "" },
+    "headingColor": { "type": "string", "default": "" },
+    "linkColor": { "type": "string", "default": "" },
+    "iconColor": { "type": "string", "default": "" },
+    "fontFamily": { "type": "string", "default": "" },
+    "headingFontFamily": { "type": "string", "default": "" },
+    "fontSize": { "type": "string", "default": "" },
+    "headingSize": { "type": "string", "default": "" }
+  }
+}
+

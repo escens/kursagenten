@@ -9,107 +9,183 @@ if (!defined('ABSPATH')) {
  * Register Kursagenten Gutenberg blocks.
  */
 function kursagenten_register_blocks(): void {
+    $single_blocks = [
+        'single-title' => 'kursagenten_render_single_title_block',
+        'single-course-link' => 'kursagenten_render_single_course_link_block',
+        'single-signup-button' => 'kursagenten_render_single_signup_button_block',
+        'single-schedule-list' => 'kursagenten_render_single_schedule_list_block',
+        'single-next-course-info' => 'kursagenten_render_single_next_course_info_block',
+        'single-ka-content' => 'kursagenten_render_single_ka_content_block',
+        'single-contact' => 'kursagenten_render_single_contact_block',
+        'single-related-courses' => 'kursagenten_render_single_related_courses_block',
+    ];
+
+    // Taxonomy grid block (existing).
     $block_dir = KURSAG_PLUGIN_DIR . '/public/blocks/taxonomy-grid';
     $metadata_path = $block_dir . '/block.json';
     $render_path = $block_dir . '/render.php';
 
-    if (!file_exists($metadata_path) || !file_exists($render_path)) {
-        // Fail gracefully if block files are missing in this deployment.
-        return;
-    }
+    if (file_exists($metadata_path) && file_exists($render_path)) {
+        require_once $render_path;
 
-    require_once $render_path;
+        $asset_path = KURSAG_PLUGIN_DIR . '/build/taxonomy-grid.asset.php';
+        $editor_js_path = KURSAG_PLUGIN_DIR . '/build/taxonomy-grid.js';
+        $editor_css_path = KURSAG_PLUGIN_DIR . '/build/index.css';
 
-    $asset_path = KURSAG_PLUGIN_DIR . '/build/taxonomy-grid.asset.php';
-    $editor_js_path = KURSAG_PLUGIN_DIR . '/build/taxonomy-grid.js';
-    $editor_css_path = KURSAG_PLUGIN_DIR . '/build/index.css';
-
-    if (!file_exists($editor_js_path)) {
-        return;
-    }
-
-    $asset = [
-        'dependencies' => ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-server-side-render'],
-        'version' => filemtime($editor_js_path),
-    ];
-
-    if (file_exists($asset_path)) {
-        $loaded_asset = require $asset_path;
-        if (is_array($loaded_asset)) {
-            $asset = wp_parse_args($loaded_asset, $asset);
-        }
-    }
-
-    wp_register_script(
-        'kursagenten-taxonomy-grid-editor',
-        KURSAG_PLUGIN_URL . '/build/taxonomy-grid.js',
-        $asset['dependencies'],
-        (string) $asset['version'],
-        true
-    );
-
-    $taxonomy_grid_editor_data = [
-        'useRegions' => (bool) get_option('kursagenten_use_regions', false),
-        'regionOptions' => [],
-    ];
-    if ($taxonomy_grid_editor_data['useRegions']) {
-        require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
-        foreach (kursagenten_get_valid_regions() as $region_key) {
-            $taxonomy_grid_editor_data['regionOptions'][] = [
-                'label' => (string) kursagenten_get_region_display_name($region_key),
-                'value' => (string) $region_key,
+        if (file_exists($editor_js_path)) {
+            $asset = [
+                'dependencies' => ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-server-side-render'],
+                'version' => filemtime($editor_js_path),
             ];
+
+            if (file_exists($asset_path)) {
+                $loaded_asset = require $asset_path;
+                if (is_array($loaded_asset)) {
+                    $asset = wp_parse_args($loaded_asset, $asset);
+                }
+            }
+
+            wp_register_script(
+                'kursagenten-taxonomy-grid-editor',
+                KURSAG_PLUGIN_URL . '/build/taxonomy-grid.js',
+                $asset['dependencies'],
+                (string) $asset['version'],
+                true
+            );
+
+            $taxonomy_grid_editor_data = [
+                'useRegions' => (bool) get_option('kursagenten_use_regions', false),
+                'regionOptions' => [],
+            ];
+            if ($taxonomy_grid_editor_data['useRegions']) {
+                require_once KURSAG_PLUGIN_DIR . '/includes/helpers/location-regions.php';
+                foreach (kursagenten_get_valid_regions() as $region_key) {
+                    $taxonomy_grid_editor_data['regionOptions'][] = [
+                        'label' => (string) kursagenten_get_region_display_name($region_key),
+                        'value' => (string) $region_key,
+                    ];
+                }
+            }
+            wp_add_inline_script(
+                'kursagenten-taxonomy-grid-editor',
+                'window.kursagentenTaxonomyGridData = ' . wp_json_encode($taxonomy_grid_editor_data) . ';',
+                'before'
+            );
+
+            if (file_exists($editor_css_path)) {
+                wp_register_style(
+                    'kursagenten-taxonomy-grid-editor',
+                    KURSAG_PLUGIN_URL . '/build/index.css',
+                    [],
+                    (string) filemtime($editor_css_path)
+                );
+            }
+        }
+
+        $style_files = [
+            'kursagenten-taxonomy-grid-base' => '/public/blocks/taxonomy-grid/style-base.css',
+            'kursagenten-taxonomy-grid-stablet' => '/public/blocks/taxonomy-grid/style-stablet.css',
+            'kursagenten-taxonomy-grid-rad' => '/public/blocks/taxonomy-grid/style-rad.css',
+            'kursagenten-taxonomy-grid-liste' => '/public/blocks/taxonomy-grid/style-liste.css',
+            'kursagenten-taxonomy-grid-kort' => '/public/blocks/taxonomy-grid/style-kort.css',
+            'kursagenten-taxonomy-grid-kort-bg' => '/public/blocks/taxonomy-grid/style-kort-bg.css',
+        ];
+
+        foreach ($style_files as $handle => $relative_path) {
+            $absolute = KURSAG_PLUGIN_DIR . $relative_path;
+            if (!file_exists($absolute)) {
+                continue;
+            }
+            wp_register_style(
+                $handle,
+                KURSAG_PLUGIN_URL . $relative_path,
+                [],
+                (string) filemtime($absolute)
+            );
+        }
+
+        if (function_exists('kursagenten_render_taxonomy_grid_block')) {
+            register_block_type_from_metadata(
+                $block_dir,
+                [
+                    'editor_script' => wp_script_is('kursagenten-taxonomy-grid-editor', 'registered') ? 'kursagenten-taxonomy-grid-editor' : null,
+                    'editor_style' => wp_style_is('kursagenten-taxonomy-grid-editor', 'registered') ? 'kursagenten-taxonomy-grid-editor' : null,
+                    'render_callback' => 'kursagenten_render_taxonomy_grid_block',
+                ]
+            );
         }
     }
-    wp_add_inline_script(
-        'kursagenten-taxonomy-grid-editor',
-        'window.kursagentenTaxonomyGridData = ' . wp_json_encode($taxonomy_grid_editor_data) . ';',
-        'before'
-    );
 
-    if (file_exists($editor_css_path)) {
+    // Register single course building blocks.
+    $single_render_path = KURSAG_PLUGIN_DIR . '/public/blocks/single-elements/render.php';
+    if (file_exists($single_render_path)) {
+        require_once $single_render_path;
+    }
+
+    $single_asset_path = KURSAG_PLUGIN_DIR . '/build/single-elements.asset.php';
+    $single_editor_js_path = KURSAG_PLUGIN_DIR . '/build/single-elements.js';
+    $single_editor_css_path = KURSAG_PLUGIN_DIR . '/public/blocks/single-elements/editor.css';
+
+    if (file_exists($single_editor_js_path)) {
+        $single_asset = [
+            'dependencies' => ['wp-blocks', 'wp-element', 'wp-components', 'wp-block-editor', 'wp-server-side-render'],
+            'version' => filemtime($single_editor_js_path),
+        ];
+        if (file_exists($single_asset_path)) {
+            $loaded_asset = require $single_asset_path;
+            if (is_array($loaded_asset)) {
+                $single_asset = wp_parse_args($loaded_asset, $single_asset);
+            }
+        }
+
+        wp_register_script(
+            'kursagenten-single-elements-editor',
+            KURSAG_PLUGIN_URL . '/build/single-elements.js',
+            $single_asset['dependencies'],
+            (string) $single_asset['version'],
+            true
+        );
+
+        if (file_exists($single_editor_css_path)) {
+            wp_register_style(
+                'kursagenten-single-elements-editor',
+                KURSAG_PLUGIN_URL . '/public/blocks/single-elements/editor.css',
+                [],
+                (string) filemtime($single_editor_css_path)
+            );
+        }
+    }
+
+    $single_style_path = KURSAG_PLUGIN_DIR . '/public/blocks/single-elements/style.css';
+    if (file_exists($single_style_path)) {
         wp_register_style(
-            'kursagenten-taxonomy-grid-editor',
-            KURSAG_PLUGIN_URL . '/build/index.css',
+            'kursagenten-single-elements',
+            KURSAG_PLUGIN_URL . '/public/blocks/single-elements/style.css',
             [],
-            (string) filemtime($editor_css_path)
+            (string) filemtime($single_style_path)
         );
     }
 
-    $style_files = [
-        'kursagenten-taxonomy-grid-base' => '/public/blocks/taxonomy-grid/style-base.css',
-        'kursagenten-taxonomy-grid-stablet' => '/public/blocks/taxonomy-grid/style-stablet.css',
-        'kursagenten-taxonomy-grid-rad' => '/public/blocks/taxonomy-grid/style-rad.css',
-        'kursagenten-taxonomy-grid-liste' => '/public/blocks/taxonomy-grid/style-liste.css',
-        'kursagenten-taxonomy-grid-kort' => '/public/blocks/taxonomy-grid/style-kort.css',
-        'kursagenten-taxonomy-grid-kort-bg' => '/public/blocks/taxonomy-grid/style-kort-bg.css',
-    ];
-
-    foreach ($style_files as $handle => $relative_path) {
-        $absolute = KURSAG_PLUGIN_DIR . $relative_path;
-        if (!file_exists($absolute)) {
+    foreach ($single_blocks as $dir_name => $render_callback) {
+        $dir = KURSAG_PLUGIN_DIR . '/public/blocks/' . $dir_name;
+        $meta = $dir . '/block.json';
+        if (!file_exists($meta) || !is_string($render_callback) || !function_exists($render_callback)) {
             continue;
         }
-        wp_register_style(
-            $handle,
-            KURSAG_PLUGIN_URL . $relative_path,
-            [],
-            (string) filemtime($absolute)
-        );
+        $args = [
+            'render_callback' => $render_callback,
+        ];
+        if (wp_script_is('kursagenten-single-elements-editor', 'registered')) {
+            $args['editor_script'] = 'kursagenten-single-elements-editor';
+        }
+        if (wp_style_is('kursagenten-single-elements-editor', 'registered')) {
+            $args['editor_style'] = 'kursagenten-single-elements-editor';
+        }
+        if (wp_style_is('kursagenten-single-elements', 'registered')) {
+            $args['style'] = 'kursagenten-single-elements';
+        }
+        register_block_type_from_metadata($dir, $args);
     }
-
-    if (!function_exists('kursagenten_render_taxonomy_grid_block')) {
-        return;
-    }
-
-    register_block_type_from_metadata(
-        $block_dir,
-        [
-            'editor_script' => 'kursagenten-taxonomy-grid-editor',
-            'editor_style' => 'kursagenten-taxonomy-grid-editor',
-            'render_callback' => 'kursagenten_render_taxonomy_grid_block',
-        ]
-    );
 }
 add_action('init', 'kursagenten_register_blocks');
 

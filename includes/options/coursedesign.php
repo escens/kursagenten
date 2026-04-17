@@ -547,9 +547,37 @@ class Designmaler {
                 
                 <div class="options-card" data-section="enkeltkurs">
                     <h3>Enkeltkurs</h3>
-                    <p>Velg design på sider som viser kursdetaljer, både for alle lokasjoner og enkeltlokasjoner.</p>
+                    <?php $single_design_mode = get_option('kursagenten_single_design_mode', 'plugin'); ?>
+                    <details class="ka-design-mode-details">
+                        <summary>Avansert malvalg</summary>
+                        <div class="ka-design-mode-selector ka-single-design-mode-selector">
+                            <label class="option-label">Malmotor:</label>
+                            <div class="option-input">
+                                <label class="radio-label ka-inline-radio">
+                                    <input type="radio"
+                                           name="kursagenten_single_design_mode"
+                                           value="plugin"
+                                           <?php checked($single_design_mode, 'plugin'); ?>>
+                                    Bruk utvidelsens design
+                                </label>
+                                <label class="radio-label ka-inline-radio">
+                                    <input type="radio"
+                                           name="kursagenten_single_design_mode"
+                                           value="custom"
+                                           <?php checked($single_design_mode, 'custom'); ?>>
+                                    Bygg ditt eget design
+                                </label>
+                                <p class="description">Velg hvordan innholdet på enkeltkurssider bygges: utvidelsens ferdige oppsett eller eget oppsett i tema/page builder.</p>
+                            </div>
+                        </div>
+                    </details>
+                    <p class="ka-single-plugin-design-only">Velg design på sider som viser kursdetaljer, både for alle lokasjoner og enkeltlokasjoner.</p>
+                    <div class="ka-custom-design-info ka-single-custom-design-info" style="display: none;">
+                        <p><strong>Bygg ditt eget design</strong> er aktivt. Kursagenten bruker WordPress sitt malhierarki, slik at tema/page builder kan styre oppsett.</p>
+                        <p>Byggeblokker for enkeltkurs kommer i en senere oppdatering. Foreløpig kan du bygge innhold med tema/page builder og eksisterende hooks/kortkoder.</p>
+                    </div>
                     <!-- Layoutbredde -->
-                    <div class="option-row">
+                    <div class="option-row ka-single-plugin-design-only">
                         <label class="option-label">Bredde:</label>
                         <div class="option-input">
                             <label class="radio-label">
@@ -570,7 +598,7 @@ class Designmaler {
                     </div>
 
                     <!-- Design -->
-                    <div class="option-row">
+                    <div class="option-row ka-single-plugin-design-only">
                         <label class="option-label">Design:</label>
                         <div class="option-input">
                             <select name="kursagenten_single_design">
@@ -603,7 +631,7 @@ class Designmaler {
                     $single_hero_font_color = get_option('kursagenten_single_hero_header_font_color', '');
                     $single_hero_bg_color = get_option('kursagenten_single_hero_header_bg_color', '');
                     ?>
-                    <div class="option-row hero-header-settings-row hero-single-settings-row" id="hero-single-settings-row" style="<?php echo ($single_design === 'default') ? '' : 'display: none;'; ?>">
+                    <div class="option-row hero-header-settings-row hero-single-settings-row ka-single-plugin-design-only" id="hero-single-settings-row" style="<?php echo ($single_design === 'default') ? '' : 'display: none;'; ?>">
                         <label class="option-label">Bakgrunn i toppfelt:</label>
                         <div class="option-input">
                             <div class="taxonomy-override hero-header-settings-box">
@@ -662,15 +690,45 @@ class Designmaler {
                 <!-- Taxonomi -->
                 <div class="options-card" data-section="taksonomi" id="design-taksonomi">
                     <h3>Taksonomisider</h3>
-                    <p>Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</br>
+                    <?php $taxonomy_design_mode = get_option('kursagenten_taxonomy_design_mode', 'plugin'); ?>
+                    <details class="ka-design-mode-details">
+                        <summary>Avansert malvalg</summary>
+                        <div class="ka-design-mode-selector ka-taxonomy-design-mode-selector">
+                            <label class="option-label">Malmotor:</label>
+                            <div class="option-input">
+                                <label class="radio-label ka-inline-radio">
+                                    <input type="radio"
+                                           name="kursagenten_taxonomy_design_mode"
+                                           value="plugin"
+                                           <?php checked($taxonomy_design_mode, 'plugin'); ?>>
+                                    Bruk utvidelsens design
+                                </label>
+                                <label class="radio-label ka-inline-radio">
+                                    <input type="radio"
+                                           name="kursagenten_taxonomy_design_mode"
+                                           value="custom"
+                                           <?php checked($taxonomy_design_mode, 'custom'); ?>>
+                                    Bygg ditt eget design
+                                </label>
+                                <p class="description">Velg hvordan taksonomisider bygges: utvidelsens ferdige oppsett eller eget oppsett i tema/page builder.</p>
+                            </div>
+                        </div>
+                    </details>
+                    <p class="ka-taxonomy-plugin-design-only">Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</br>
                     <strong>Layout</strong> bestemmer oppsettet av elementer på siden (header, kolonner, hooks).</br>
                      <strong>Listedesign</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). </br>
                      <strong>Visningstype</strong> bestemmer om du vil vise hovedkurs eller alle kursdatoer.</p>
-                    <p>&nbsp;</p>
+                    <p class="ka-taxonomy-plugin-design-only">&nbsp;</p>
+                    <div class="ka-custom-design-info ka-taxonomy-custom-design-info" style="display: none;">
+                        <p><strong>Bygg ditt eget design</strong> er aktivt. Du kan fortsatt styre kursdata-visning under.</p>
+                        <p><strong>Byggeblokker kommer:</strong> vi planlegger moduler for blant annet kursliste med kurssteder/lenker og informasjon om kommende kurs.</p>
+                        <p><strong>Listedesign</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt).</p>
+                        <p><strong>Visningstype</strong> bestemmer om du vil vise hovedkurs eller alle kursdatoer.</p>
+                    </div>
                     
                     
                     <!-- Layoutbredde -->
-                    <div class="option-row">
+                    <div class="option-row ka-taxonomy-plugin-design-only">
                         <label class="option-label">Bredde:</label>
                         <div class="option-input">
                             <label class="radio-label">
@@ -692,7 +750,7 @@ class Designmaler {
                     </div>
 
                     <!-- Design -->
-                    <div class="option-row">
+                    <div class="option-row ka-taxonomy-plugin-design-only">
                         <label class="option-label">Layout:</label>
                         <div class="option-input">
                             <select name="kursagenten_taxonomy_design">
@@ -727,7 +785,7 @@ class Designmaler {
                     $taxonomy_hero_font_color = get_option('kursagenten_taxonomy_hero_header_font_color', '');
                     $taxonomy_hero_bg_color = get_option('kursagenten_taxonomy_hero_header_bg_color', '');
                     ?>
-                    <div class="option-row hero-header-settings-row hero-taxonomy-settings-row" id="hero-taxonomy-settings-row" style="<?php echo ($taxonomy_design === 'hero') ? '' : 'display: none;'; ?>">
+                    <div class="option-row hero-header-settings-row hero-taxonomy-settings-row ka-taxonomy-plugin-design-only" id="hero-taxonomy-settings-row" style="<?php echo ($taxonomy_design === 'hero') ? '' : 'display: none;'; ?>">
                         <label class="option-label">Bakgrunn i toppfelt:</label>
                         <div class="option-input">
                             <div class="taxonomy-override hero-header-settings-box">
@@ -893,7 +951,7 @@ class Designmaler {
                     </div>
 
                     <!-- Skjul spesifikke lokasjoner (for kurssteder) -->
-                    <div class="option-row taxonomy-specific-locations-setting" id="taxonomy_specific_locations_setting">
+                    <div class="option-row taxonomy-specific-locations-setting ka-taxonomy-plugin-design-only" id="taxonomy_specific_locations_setting">
                         <label class="option-label">Spesifikke lokasjoner:</label>
                         <div class="option-input">
                             <?php
@@ -929,7 +987,7 @@ class Designmaler {
                     </div>
 
                     <!-- Vis link-bokser til flere kategorier/steder/instruktører -->
-                    <div class="option-row">
+                    <div class="option-row ka-taxonomy-plugin-design-only">
                         <label class="option-label">Vis link-bokser:</label>
                         <div class="option-input">
                             <?php
@@ -942,7 +1000,7 @@ class Designmaler {
                     </div>
 
                     <!-- Spesifikke innstillinger per taksonomi -->
-                    <div class="taxonomy-specific-settings">
+                    <div class="taxonomy-specific-settings ka-taxonomy-plugin-design-only">
                         <h4>Overstyr innstillinger for spesifikke taksonomier</h4>
                         <?php
                         $taxonomies = [
@@ -1209,6 +1267,48 @@ class Designmaler {
                     }
                     .radio-label {
                         margin-right: 20px;
+                    }
+                    .ka-design-mode-selector {
+                        display: grid;
+                        grid-template-columns: 200px 1fr;
+                        gap: 20px;
+                        margin: 0 0 16px;
+                        padding: 2px 0 14px;
+                        border-bottom: 1px solid #ececec;
+                        align-items: center;
+                    }
+                    .ka-inline-radio {
+                        display: inline-flex;
+                        align-items: center;
+                        gap: 6px;
+                        margin-right: 24px;
+                    }
+                    .ka-custom-design-info {
+                        background: #f8f8f85e;
+                        border: 1px solid #00000014;
+                        border-radius: 8px;
+                        padding: 12px 14px;
+                        margin-bottom: 16px;
+                    }
+                    .ka-design-mode-selector .description {
+                        margin-top: 8px;
+                    }
+                    .ka-design-mode-details {
+                        margin: 0 0 14px;
+                        padding: 6px 10px;
+                        background: #fafafa;
+                        border: 1px solid #ececec;
+                        border-radius: 6px;
+                    }
+                    .ka-design-mode-details > summary {
+                        cursor: pointer;
+                        color: #666;
+                        font-size: 12px;
+                        font-weight: 600;
+                        margin: 2px 0;
+                    }
+                    .ka-design-mode-details[open] > summary {
+                        margin-bottom: 8px;
                     }
                     select {
                         min-width: 200px;
@@ -1527,6 +1627,33 @@ class Designmaler {
         register_setting('design_option_group', 'kursagenten_available_filters');
         register_setting('design_option_group', 'kursagenten_filter_default_height');
         register_setting('design_option_group', 'kursagenten_filter_no_collapse');
+        register_setting(
+            'design_option_group',
+            'kursagenten_single_design_mode',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'plugin'
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_taxonomy_design_mode',
+            array(
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_text_field',
+                'default' => 'plugin'
+            )
+        );
+        register_setting(
+            'design_option_group',
+            'kursagenten_use_theme_template_hierarchy',
+            array(
+                'type' => 'boolean',
+                'sanitize_callback' => array($this, 'sanitize_checkbox_boolean'),
+                'default' => false
+            )
+        );
 
         // Hero header background settings – Enkeltkurs (single default)
         register_setting('design_option_group', 'kursagenten_single_hero_header_bg_mode', array('type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => 'image_placeholder'));
@@ -2039,13 +2166,36 @@ class Designmaler {
                 toggleGridColumnsSettings();
                 toggleTaxonomySpecificGridColumns();
 
+                function updateSingleDesignModeVisibility() {
+                    var mode = $("input[name='kursagenten_single_design_mode']:checked").val() || 'plugin';
+                    var isPluginMode = (mode === 'plugin');
+                    $('.ka-single-plugin-design-only').toggle(isPluginMode);
+                    $('.ka-single-custom-design-info').toggle(!isPluginMode);
+                }
+                function updateTaxonomyDesignModeVisibility() {
+                    var mode = $("input[name='kursagenten_taxonomy_design_mode']:checked").val() || 'plugin';
+                    var isPluginMode = (mode === 'plugin');
+                    $('.ka-taxonomy-plugin-design-only').toggle(isPluginMode);
+                    $('.ka-taxonomy-custom-design-info').toggle(!isPluginMode);
+                }
+                $("input[name='kursagenten_single_design_mode'], input[name='kursagenten_taxonomy_design_mode']").on('change', function() {
+                    updateSingleDesignModeVisibility();
+                    updateTaxonomyDesignModeVisibility();
+                    toggleGridColumnsSettings();
+                    toggleTaxonomySpecificGridColumns();
+                    if (typeof updateHeroHeaderRowVisibility === "function") updateHeroHeaderRowVisibility();
+                });
+                updateSingleDesignModeVisibility();
+                updateTaxonomyDesignModeVisibility();
+
                 // Hero header settings: separate for Single and Taxonomy, show only when Hero is selected AND section is expanded
                 function updateHeroSingleRowVisibility() {
                     var singleDesign = $("select[name='kursagenten_single_design']").val();
                     var $row = $("#hero-single-settings-row");
                     var $card = $row.closest(".options-card");
                     var isCollapsed = ($card.length && $card.attr("data-collapsed") === "true");
-                    var show = (singleDesign === 'default' && !isCollapsed);
+                    var mode = $("input[name='kursagenten_single_design_mode']:checked").val() || 'plugin';
+                    var show = (mode === 'plugin' && singleDesign === 'default' && !isCollapsed);
                     $row.toggle(show);
                 }
                 function updateHeroTaxonomyRowVisibility() {
@@ -2053,7 +2203,8 @@ class Designmaler {
                     var $row = $("#hero-taxonomy-settings-row");
                     var $card = $row.closest(".options-card");
                     var isCollapsed = ($card.length && $card.attr("data-collapsed") === "true");
-                    var show = (taxonomyDesign === 'hero' && !isCollapsed);
+                    var mode = $("input[name='kursagenten_taxonomy_design_mode']:checked").val() || 'plugin';
+                    var show = (mode === 'plugin' && taxonomyDesign === 'hero' && !isCollapsed);
                     $row.toggle(show);
                 }
                 function updateHeroHeaderRowVisibility() {

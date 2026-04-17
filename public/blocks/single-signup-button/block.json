@@ -1,0 +1,20 @@
+{
+  "apiVersion": 3,
+  "name": "kursagenten/single-signup-button",
+  "title": "Enkeltkurs: Påmeldingsknapp",
+  "category": "kursagenten",
+  "icon": "yes-alt",
+  "description": "Vis påmeldingsknapp til førstkommende kursdato.",
+  "supports": { "html": false },
+  "attributes": {
+    "fallbackText": { "type": "string", "default": "" },
+    "styleVariant": { "type": "string", "default": "primary" },
+    "fullWidth": { "type": "boolean", "default": false },
+    "buttonStyleSource": { "type": "string", "default": "theme" },
+    "buttonBg": { "type": "string", "default": "" },
+    "buttonColor": { "type": "string", "default": "" },
+    "buttonRadius": { "type": "string", "default": "" },
+    "buttonPadding": { "type": "string", "default": "" }
+  }
+}
+
