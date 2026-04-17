@@ -549,23 +549,3 @@ do_action('ka_singel_after');
 
 
 
-<?php
-// Debug-utskrift
-/*
-add_action('wp_head', function() {
-    if (is_single() && get_post_type() === 'ka_course') {
-        //error_log('Debug Course Data:');
-        //error_log('Post ID: ' . get_the_ID());
-        //error_log('Course ID: ' . get_post_meta(get_the_ID(), 'location_id', true));
-        //error_log('Related ka_coursedate: ' . get_post_meta(get_the_ID(), 'course_related_coursedate', true));
-        
-        // Sjekk coursecategories
-        $coursecategories = wp_get_post_terms(get_the_ID(), 'ka_coursecategory');
-        error_log('Coursecategories: ' . print_r($coursecategories, true));
-        
-        // Sjekk selected_coursedate_data
-        $related_coursedate = get_post_meta(get_the_ID(), 'course_related_coursedate', true);
-        $selected_coursedate_data = get_selected_coursedate_data($related_coursedate);
-    }
-});
-*/

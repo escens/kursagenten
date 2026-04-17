@@ -187,21 +187,25 @@ do_action('ka_taxonomy_header_before', $term);
     <section class="ka-section ka-main-content">
         <div class="ka-content-container">
         
-            <div class="taxonomy-content-grid">
+            <?php
+            // Determine whether any profile grid hooks are actually registered.
+            $has_left_column_hooks = has_action('ka_taxonomy_left_column') !== false;
+            $has_right_top_hooks = has_action('ka_taxonomy_right_column_top') !== false;
+            $has_right_bottom_hooks = has_action('ka_taxonomy_right_column_bottom') !== false;
+            $has_grid_hooks = $has_left_column_hooks || $has_right_top_hooks || $has_right_bottom_hooks;
+
+            $grid_classes = 'taxonomy-content-grid taxonomy-content-grid--single-column';
+            if (!$has_grid_hooks) {
+                $grid_classes .= ' ka-no-content';
+            }
+            ?>
+
+            <div class="<?php echo esc_attr($grid_classes); ?>">
                 <div class="left-column">
                     <?php
-                    // Felles hook for venstre kolonne på taksonomi-sider
+                    // Render all optional content hooks in one single column.
                     do_action('ka_taxonomy_left_column', $term);
-                    ?>
-                </div>
-
-                <div class="right-column">
-                    <?php
-                    // Hook at the top of the right column
                     do_action('ka_taxonomy_right_column_top', $term);
-                    ?>
-                    <?php
-                    // Hook at the bottom of the right column
                     do_action('ka_taxonomy_right_column_bottom', $term);
                     ?>
                 </div>

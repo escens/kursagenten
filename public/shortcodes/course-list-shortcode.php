@@ -341,7 +341,6 @@ function kursagenten_course_list_shortcode($atts) {
     }
 
     // Debug output (admin only): helps identify why filters are hidden on specific pages.
-    $ka_debug_filters_enabled = current_user_can('manage_options');
 
     // Hent aktive filtre fra URL for å beregne counts
     $active_filters = [];
@@ -445,38 +444,6 @@ function kursagenten_course_list_shortcode($atts) {
     $custom_class = !empty($atts['klasse']) ? ' ' . esc_attr($atts['klasse']) : '';
     ?>
     <div id="ka" class="kursagenten-wrapper<?php echo $custom_class; ?>">
-    <?php if ($ka_debug_filters_enabled) : ?>
-        <?php
-        $queried_object = get_queried_object();
-        $queried_type = is_object($queried_object) ? get_class($queried_object) : gettype($queried_object);
-        $queried_name = '';
-        if (is_object($queried_object)) {
-            $queried_name = $queried_object->name ?? ($queried_object->post_name ?? '');
-        }
-        $categories_in_left = in_array('categories', $left_filters, true);
-        $categories_in_top = in_array('categories', $top_filters, true);
-        $categories_hidden_by_logic = should_hide_filter('categories', $active_shortcode_filters);
-        $categories_terms_count = isset($taxonomy_data['categories']['terms']) && is_array($taxonomy_data['categories']['terms'])
-            ? count($taxonomy_data['categories']['terms'])
-            : 0;
-        ?>
-        <!-- KA FILTER DEBUG:
-        page_id=<?php echo esc_html((string) get_the_ID()); ?>;
-        is_page=<?php echo is_page() ? '1' : '0'; ?>;
-        is_singular=<?php echo is_singular() ? '1' : '0'; ?>;
-        is_tax_ka_coursecategory=<?php echo is_tax('ka_coursecategory') ? '1' : '0'; ?>;
-        queried_object_type=<?php echo esc_html($queried_type); ?>;
-        queried_object_name=<?php echo esc_html((string) $queried_name); ?>;
-        shortcode_atts=<?php echo esc_html(wp_json_encode($atts)); ?>;
-        active_shortcode_filters=<?php echo esc_html(wp_json_encode($active_shortcode_filters)); ?>;
-        left_filters=<?php echo esc_html(wp_json_encode($left_filters)); ?>;
-        top_filters=<?php echo esc_html(wp_json_encode($top_filters)); ?>;
-        categories_in_left=<?php echo $categories_in_left ? '1' : '0'; ?>;
-        categories_in_top=<?php echo $categories_in_top ? '1' : '0'; ?>;
-        categories_hidden_by_logic=<?php echo $categories_hidden_by_logic ? '1' : '0'; ?>;
-        categories_terms_count=<?php echo esc_html((string) $categories_terms_count); ?>;
-        -->
-    <?php endif; ?>
     <main id="ka-m" class="kursagenten-main" role="main">
         <div class="ka-container">
             <!-- Mobile Filter Overlay -->
@@ -1096,11 +1063,6 @@ function kursagenten_course_list_shortcode($atts) {
             }
         });
 
-        // Debug logging
-        const DEBUG = false;
-        function log() { /* no-op */ }
-
-
         // Sjekk om elementene eksisterer før vi legger til event listeners
         const filterToggleBtn = $('.filter-toggle-button');
         const mobileOverlay = $('.mobile-filter-overlay');
@@ -1305,10 +1267,6 @@ function kursagenten_course_list_shortcode($atts) {
                 }
             });
             
-            if (DEBUG) {
-                // 
-            }
-            
             return activeFilters;
         }
 
@@ -1360,9 +1318,6 @@ function kursagenten_course_list_shortcode($atts) {
                 }
             });
             
-            if (DEBUG) {
-                // 
-            }
         }
         
         if (filterToggleBtn.length) {
@@ -1918,12 +1873,6 @@ function kursagenten_course_list_shortcode($atts) {
 
             // Fjern per_page fra aktive filtre før vi oppdaterer URL
             $('#active-filters .filter-tag[data-param="per_page"]').remove();
-            
-            // Debug logging
-            if (DEBUG) {
-                
-                
-            }
             
             // Bruk searchParams.toString() for å få riktig URL-encoding
             window.location.href = `${window.location.pathname}?${searchParams.toString()}`;
