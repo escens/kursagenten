@@ -157,63 +157,184 @@ function kursagenten_single_block_message(string $message): string {
 }
 
 /**
- * @param array<string,mixed> $attributes
+ * Detects whether the current request is a block-editor preview (REST or admin).
  */
-function kursagenten_render_single_title_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
+function kursagenten_single_is_preview_context(): bool {
+    if (defined('REST_REQUEST') && REST_REQUEST) {
+        return true;
     }
-
-    $post_id = (int) get_the_ID();
-    $main_title = (string) get_post_meta($post_id, 'main_course_title', true);
-    if ($main_title === '') {
-        $main_title = (string) get_the_title($post_id);
+    if (function_exists('wp_doing_ajax') && wp_doing_ajax()) {
+        return true;
     }
-    $location_title = (string) get_post_meta($post_id, 'sub_course_location', true);
-    $is_parent_course = (int) get_post_meta($post_id, 'ka_course_isParentCourse', true) === 1;
+    return is_admin();
+}
 
-    $show_location = (string) ($attributes['showLocation'] ?? 'auto');
-    $should_show_location = $show_location === 'yes' || ($show_location === 'auto' && !$is_parent_course && trim($location_title) !== '');
-
-    $tag = strtolower((string) ($attributes['headingTag'] ?? 'h1'));
-    if (!in_array($tag, ['h1', 'h2', 'h3'], true)) {
-        $tag = 'h1';
-    }
-
-    $layout = (string) ($attributes['layout'] ?? 'stacked');
-    if (!in_array($layout, ['stacked', 'inline'], true)) {
-        $layout = 'stacked';
-    }
-
-    $extra_vars = [
-        '--ka-location-color' => kursagenten_single_css_color_value((string) ($attributes['locationColor'] ?? ''), ''),
-        '--ka-location-size' => kursagenten_single_css_value((string) ($attributes['locationSize'] ?? ''), ''),
-    ];
-    $style = kursagenten_single_build_style_vars($attributes, $extra_vars);
-    $classes = 'ka-single-block ka-single-title ka-layout-' . sanitize_html_class($layout);
-
-    $html = '<' . $tag . ' class="' . esc_attr($classes) . '"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
-    $html .= esc_html($main_title);
-
-    if ($should_show_location) {
-        if ($layout === 'inline') {
-            $html .= ' <span class="ka-single-location">- <span class="notranslate">' . esc_html($location_title) . '</span></span>';
-        } else {
-            $html .= '<span class="ka-single-location" style="margin-top:.2em;display:block;font-size:0.75em;font-weight:500;">- <span class="notranslate">' . esc_html($location_title) . '</span></span>';
+/**
+ * Resolve a ka_course post ID for rendering. On a real single ka_course request
+ * this returns the current post. In preview (REST/admin) it falls back to the
+ * most recent published course so the editor can display real data.
+ */
+function kursagenten_single_resolve_context_post_id(): int {
+    if (is_singular('ka_course')) {
+        $id = (int) get_the_ID();
+        if ($id > 0) {
+            return $id;
         }
     }
 
-    $html .= '</' . $tag . '>';
-    return $html;
+    if (!kursagenten_single_is_preview_context()) {
+        return 0;
+    }
+
+    global $post;
+    if ($post instanceof WP_Post && $post->post_type === 'ka_course') {
+        return (int) $post->ID;
+    }
+
+    static $preview_post_id = null;
+    if ($preview_post_id !== null) {
+        return $preview_post_id;
+    }
+
+    $posts = get_posts([
+        'post_type' => 'ka_course',
+        'post_status' => 'publish',
+        'posts_per_page' => 1,
+        'fields' => 'ids',
+        'orderby' => 'modified',
+        'order' => 'DESC',
+        'no_found_rows' => true,
+        'update_post_meta_cache' => false,
+        'update_post_term_cache' => false,
+    ]);
+
+    $preview_post_id = !empty($posts) ? (int) $posts[0] : 0;
+    return $preview_post_id;
+}
+
+/**
+ * Returns the placeholder to display when no ka_course data is available.
+ */
+function kursagenten_single_preview_empty_message(): string {
+    if (kursagenten_single_is_preview_context()) {
+        return kursagenten_single_block_message('Forhåndsvisning: fant ingen publiserte enkeltkurs å bruke som eksempel.');
+    }
+    return '';
+}
+
+/**
+ * Enqueue the block stylesheet when blocks/shortcodes render.
+ *
+ * `kursagenten-single-elements` (public/blocks/single-elements/style.css) is
+ * registered with `kursagenten-single-base` (frontend-course-style.css) as a
+ * dependency in register-blocks.php, so enqueuing it automatically loads the
+ * :root design tokens (--ka-space-*, --ka-font-*, --ka-line-height-*, etc.).
+ *
+ * We intentionally do NOT load `design-single-*.css` because those rules are
+ * scoped to the legacy `#ka` container used only by the built-in single
+ * template markup, which the blocks do not reproduce.
+ */
+function kursagenten_single_ensure_frontend_styles(): void {
+    if (is_admin() && !(defined('REST_REQUEST') && REST_REQUEST)) {
+        return;
+    }
+
+    if (wp_style_is('kursagenten-single-elements', 'registered') && !wp_style_is('kursagenten-single-elements', 'enqueued')) {
+        wp_enqueue_style('kursagenten-single-elements');
+    }
+}
+
+/**
+ * Run a block renderer against a resolved ka_course post, setting up postdata
+ * correctly when rendering in a preview context.
+ */
+function kursagenten_single_with_course_context(callable $renderer): string {
+    kursagenten_single_ensure_frontend_styles();
+
+    $post_id = kursagenten_single_resolve_context_post_id();
+    if ($post_id <= 0) {
+        return kursagenten_single_preview_empty_message();
+    }
+
+    if (is_singular('ka_course') && (int) get_the_ID() === $post_id) {
+        return (string) $renderer($post_id);
+    }
+
+    global $post;
+    $original_post = $post;
+    $fake_post = get_post($post_id);
+    if (!$fake_post instanceof WP_Post) {
+        return kursagenten_single_preview_empty_message();
+    }
+
+    $post = $fake_post;
+    setup_postdata($post);
+    try {
+        $output = (string) $renderer($post_id);
+    } finally {
+        $post = $original_post;
+        if ($post instanceof WP_Post) {
+            setup_postdata($post);
+        } else {
+            wp_reset_postdata();
+        }
+    }
+    return $output;
+}
+
+/**
+ * @param array<string,mixed> $attributes
+ */
+function kursagenten_render_single_title_block(array $attributes): string {
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $main_title = (string) get_post_meta($post_id, 'main_course_title', true);
+        if ($main_title === '') {
+            $main_title = (string) get_the_title($post_id);
+        }
+        $location_title = (string) get_post_meta($post_id, 'sub_course_location', true);
+        $is_parent_course = (int) get_post_meta($post_id, 'ka_course_isParentCourse', true) === 1;
+
+        $show_location = (string) ($attributes['showLocation'] ?? 'auto');
+        $should_show_location = $show_location === 'yes' || ($show_location === 'auto' && !$is_parent_course && trim($location_title) !== '');
+
+        $tag = strtolower((string) ($attributes['headingTag'] ?? 'h1'));
+        if (!in_array($tag, ['h1', 'h2', 'h3'], true)) {
+            $tag = 'h1';
+        }
+
+        $layout = (string) ($attributes['layout'] ?? 'stacked');
+        if (!in_array($layout, ['stacked', 'inline'], true)) {
+            $layout = 'stacked';
+        }
+
+        $extra_vars = [
+            '--ka-location-color' => kursagenten_single_css_color_value((string) ($attributes['locationColor'] ?? ''), ''),
+            '--ka-location-size' => kursagenten_single_css_value((string) ($attributes['locationSize'] ?? ''), ''),
+        ];
+        $style = kursagenten_single_build_style_vars($attributes, $extra_vars);
+        $classes = 'ka-single-block ka-single-title ka-layout-' . sanitize_html_class($layout);
+
+        $html = '<' . $tag . ' class="' . esc_attr($classes) . '"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
+        $html .= esc_html($main_title);
+
+        if ($should_show_location) {
+            if ($layout === 'inline') {
+                $html .= ' <span class="ka-single-location">- <span class="notranslate">' . esc_html($location_title) . '</span></span>';
+            } else {
+                $html .= '<span class="ka-single-location" style="margin-top:.2em;display:block;font-size:0.75em;font-weight:500;">- <span class="notranslate">' . esc_html($location_title) . '</span></span>';
+            }
+        }
+
+        $html .= '</' . $tag . '>';
+        return $html;
+    });
 }
 
 /**
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_course_link_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    kursagenten_single_ensure_frontend_styles();
 
     $label = trim((string) ($attributes['label'] ?? ''));
     if ($label === '') {
@@ -226,7 +347,9 @@ function kursagenten_render_single_course_link_block(array $attributes): string 
     }
 
     if ($url === '') {
-        return '';
+        return kursagenten_single_is_preview_context()
+            ? kursagenten_single_block_message('Forhåndsvisning: ingen kursoversiktsside er konfigurert ennå.')
+            : '';
     }
 
     $show_icon = !empty($attributes['showIcon']);
@@ -246,348 +369,341 @@ function kursagenten_render_single_course_link_block(array $attributes): string 
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_signup_button_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $related = kursagenten_single_get_related_coursedate_ids($post_id);
+        $selected = get_selected_coursedate_data($related);
+        $signup_url = !empty($selected['signup_url']) ? (string) $selected['signup_url'] : '';
 
-    $post_id = (int) get_the_ID();
-    $related = kursagenten_single_get_related_coursedate_ids($post_id);
-    $selected = get_selected_coursedate_data($related);
-    $signup_url = !empty($selected['signup_url']) ? (string) $selected['signup_url'] : '';
+        if ($signup_url === '') {
+            return kursagenten_single_is_preview_context()
+                ? kursagenten_single_block_message('Forhåndsvisning: ingen påmeldingslenke for valgt kurs.')
+                : '';
+        }
 
-    if ($signup_url === '') {
-        return '';
-    }
+        $button_text = !empty($selected['button_text']) ? (string) $selected['button_text'] : '';
+        $fallback_text = trim((string) ($attributes['fallbackText'] ?? ''));
+        if ($button_text === '') {
+            $button_text = $fallback_text !== '' ? $fallback_text : 'Påmelding';
+        }
 
-    $button_text = !empty($selected['button_text']) ? (string) $selected['button_text'] : '';
-    $fallback_text = trim((string) ($attributes['fallbackText'] ?? ''));
-    if ($button_text === '') {
-        $button_text = $fallback_text !== '' ? $fallback_text : 'Påmelding';
-    }
+        $variant = (string) ($attributes['styleVariant'] ?? 'primary');
+        if (!in_array($variant, ['primary', 'secondary', 'link'], true)) {
+            $variant = 'primary';
+        }
 
-    $variant = (string) ($attributes['styleVariant'] ?? 'primary');
-    if (!in_array($variant, ['primary', 'secondary', 'link'], true)) {
-        $variant = 'primary';
-    }
+        $classes = [
+            'ka-single-block',
+            'ka-single-signup-button',
+            'ka-variant-' . sanitize_html_class($variant),
+        ];
+        if (!empty($attributes['fullWidth'])) {
+            $classes[] = 'ka-full-width';
+        }
+        $button_style_source = (string) ($attributes['buttonStyleSource'] ?? 'theme');
+        $use_override = $button_style_source === 'override';
+        if ($use_override) {
+            $classes[] = 'ka-btn-override';
+        }
 
-    $classes = [
-        'ka-single-block',
-        'ka-single-signup-button',
-        'ka-variant-' . sanitize_html_class($variant),
-    ];
-    if (!empty($attributes['fullWidth'])) {
-        $classes[] = 'ka-full-width';
-    }
-    $button_style_source = (string) ($attributes['buttonStyleSource'] ?? 'theme');
-    $use_override = $button_style_source === 'override';
-    if ($use_override) {
-        $classes[] = 'ka-btn-override';
-    }
+        $extra = [];
+        if ($use_override) {
+            $extra['--ka-button-bg'] = kursagenten_single_css_color_value((string) ($attributes['buttonBg'] ?? ''), '');
+            $extra['--ka-button-color'] = kursagenten_single_css_color_value((string) ($attributes['buttonColor'] ?? ''), '');
+            $extra['--ka-button-radius'] = kursagenten_single_css_value((string) ($attributes['buttonRadius'] ?? ''), '');
+            $extra['--ka-button-padding'] = kursagenten_single_css_value((string) ($attributes['buttonPadding'] ?? ''), '');
+        }
 
-    $extra = [];
-    if ($use_override) {
-        $extra['--ka-button-bg'] = kursagenten_single_css_color_value((string) ($attributes['buttonBg'] ?? ''), '');
-        $extra['--ka-button-color'] = kursagenten_single_css_color_value((string) ($attributes['buttonColor'] ?? ''), '');
-        $extra['--ka-button-radius'] = kursagenten_single_css_value((string) ($attributes['buttonRadius'] ?? ''), '');
-        $extra['--ka-button-padding'] = kursagenten_single_css_value((string) ($attributes['buttonPadding'] ?? ''), '');
-    }
+        $style = kursagenten_single_build_style_vars($attributes, $extra);
 
-    $style = kursagenten_single_build_style_vars($attributes, $extra);
-
-    $html = '<div class="' . esc_attr(implode(' ', $classes)) . '"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
-    $html .= '<a href="#" class="button pameldingskjema clickelement" data-url="' . esc_attr($signup_url) . '">' . esc_html($button_text) . '</a>';
-    $html .= '</div>';
-    return $html;
+        $html = '<div class="' . esc_attr(implode(' ', $classes)) . '"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
+        $html .= '<a href="#" class="button pameldingskjema clickelement" data-url="' . esc_attr($signup_url) . '">' . esc_html($button_text) . '</a>';
+        $html .= '</div>';
+        return $html;
+    });
 }
 
 /**
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_schedule_list_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $related = kursagenten_single_get_related_coursedate_ids($post_id);
+        $coursedates = get_all_sorted_coursedates($related);
 
-    $post_id = (int) get_the_ID();
-    $related = kursagenten_single_get_related_coursedate_ids($post_id);
-    $coursedates = get_all_sorted_coursedates($related);
+        if (empty($coursedates)) {
+            return kursagenten_single_is_preview_context()
+                ? kursagenten_single_block_message('Forhåndsvisning: ingen kurstider registrert for valgt kurs.')
+                : '';
+        }
 
-    if (empty($coursedates)) {
-        return '';
-    }
+        $heading_tag = strtolower((string) ($attributes['headingTag'] ?? 'h3'));
+        if (!in_array($heading_tag, ['h3', 'h4', 'none'], true)) {
+            $heading_tag = 'h3';
+        }
+        $show_location_links = !empty($attributes['showLocationLinks']);
 
-    $heading_tag = strtolower((string) ($attributes['headingTag'] ?? 'h3'));
-    if (!in_array($heading_tag, ['h3', 'h4', 'none'], true)) {
-        $heading_tag = 'h3';
-    }
-    $show_location_links = !empty($attributes['showLocationLinks']);
+        $style = kursagenten_single_build_style_vars($attributes);
+        $html = '<div class="ka-single-block ka-single-schedule-list"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
 
-    $style = kursagenten_single_build_style_vars($attributes);
-    $html = '<div class="ka-single-block ka-single-schedule-list"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
+        if ($heading_tag !== 'none') {
+            $html .= '<' . $heading_tag . ' class="ka-coursedate-heading">Kurstider og steder</' . $heading_tag . '>';
+        }
 
-    if ($heading_tag !== 'none') {
-        $html .= '<' . $heading_tag . ' class="ka-coursedate-heading">Kurstider og steder</' . $heading_tag . '>';
-    }
+        $html .= '<div class="ka-coursedate-list">';
+        foreach ($coursedates as $item) {
+            $is_full = !empty($item['course_isFull']);
+            $signup_url = (string) ($item['signup_url'] ?? '');
+            $title = (string) ($item['title'] ?? '');
+            $date_from = (string) ($item['first_date'] ?? '');
+            $date_to = (string) ($item['last_date'] ?? '');
+            $time = (string) ($item['time'] ?? '');
+            $location = (string) ($item['location'] ?? '');
+            $location_freetext = (string) ($item['course_location_freetext'] ?? '');
 
-    $html .= '<div class="ka-coursedate-list">';
-    foreach ($coursedates as $item) {
-        $is_full = !empty($item['course_isFull']);
-        $signup_url = (string) ($item['signup_url'] ?? '');
-        $title = (string) ($item['title'] ?? '');
-        $date_from = (string) ($item['first_date'] ?? '');
-        $date_to = (string) ($item['last_date'] ?? '');
-        $time = (string) ($item['time'] ?? '');
-        $location = (string) ($item['location'] ?? '');
-        $location_freetext = (string) ($item['course_location_freetext'] ?? '');
+            $html .= '<div class="ka-coursedate-item' . ($is_full ? ' is-full' : '') . '">';
+            $html .= '<div class="ka-coursedate-item-inner">';
+            $html .= '<div class="ka-coursedate-title">' . esc_html($title) . '</div>';
 
-        $html .= '<div class="ka-coursedate-item' . ($is_full ? ' is-full' : '') . '">';
-        $html .= '<div class="ka-coursedate-item-inner">';
-        $html .= '<div class="ka-coursedate-title">' . esc_html($title) . '</div>';
-
-        $html .= '<div class="ka-coursedate-meta">';
-        if ($date_from !== '') {
-            $html .= '<span class="ka-coursedate-date">' . esc_html($date_from);
-            if ($date_to !== '' && $date_to !== $date_from) {
-                $html .= ' - ' . esc_html($date_to);
+            $html .= '<div class="ka-coursedate-meta">';
+            if ($date_from !== '') {
+                $html .= '<span class="ka-coursedate-date">' . esc_html($date_from);
+                if ($date_to !== '' && $date_to !== $date_from) {
+                    $html .= ' - ' . esc_html($date_to);
+                }
+                $html .= '</span>';
             }
-            $html .= '</span>';
-        }
-        if ($time !== '') {
-            $html .= '<span class="ka-coursedate-time">' . esc_html($time) . '</span>';
-        }
-        $location_text = trim($location_freetext) !== '' ? $location_freetext : $location;
-        if ($location_text !== '') {
-            $html .= '<span class="ka-coursedate-location">';
-            if ($show_location_links) {
-                $html .= wp_kses_post(display_course_locations((int) ($item['id'] ?? 0)));
-            } else {
-                $html .= esc_html($location_text);
+            if ($time !== '') {
+                $html .= '<span class="ka-coursedate-time">' . esc_html($time) . '</span>';
             }
-            $html .= '</span>';
-        }
-        $html .= '</div>';
-
-        if ($signup_url !== '') {
-            $link_label = $is_full ? 'Fullt' : 'Påmelding';
-            $html .= '<div class="ka-coursedate-cta">';
-            $html .= '<a href="#" class="ka-coursedate-signup-link clickelement" data-url="' . esc_attr($signup_url) . '">' . esc_html($link_label) . '</a>';
+            $location_text = trim($location_freetext) !== '' ? $location_freetext : $location;
+            if ($location_text !== '') {
+                $html .= '<span class="ka-coursedate-location">';
+                if ($show_location_links) {
+                    $html .= wp_kses_post(display_course_locations((int) ($item['id'] ?? 0)));
+                } else {
+                    $html .= esc_html($location_text);
+                }
+                $html .= '</span>';
+            }
             $html .= '</div>';
-        }
 
+            if ($signup_url !== '') {
+                $link_label = $is_full ? 'Fullt' : 'Påmelding';
+                $html .= '<div class="ka-coursedate-cta">';
+                $html .= '<a href="#" class="ka-coursedate-signup-link clickelement" data-url="' . esc_attr($signup_url) . '">' . esc_html($link_label) . '</a>';
+                $html .= '</div>';
+            }
+
+            $html .= '</div></div>';
+        }
         $html .= '</div></div>';
-    }
-    $html .= '</div></div>';
-    return $html;
+        return $html;
+    });
 }
 
 /**
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_next_course_info_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $related = kursagenten_single_get_related_coursedate_ids($post_id);
+        $selected = get_selected_coursedate_data($related);
 
-    $post_id = (int) get_the_ID();
-    $related = kursagenten_single_get_related_coursedate_ids($post_id);
-    $selected = get_selected_coursedate_data($related);
-
-    if (empty($selected) || (!empty($selected['coursedatemissing']) && empty($selected['id']))) {
-        return '';
-    }
-
-    $show_heading = !isset($attributes['showHeading']) || !empty($attributes['showHeading']);
-    $show_icons = !empty($attributes['showIcons']);
-    $show_signup_link = !isset($attributes['showSignupLink']) || !empty($attributes['showSignupLink']);
-    $show_price = !empty($attributes['showPrice']);
-    $show_duration = !empty($attributes['showDuration']);
-    $show_language = !empty($attributes['showLanguage']);
-
-    $is_full = !empty($selected['is_full']);
-    $signup_url = (string) ($selected['signup_url'] ?? '');
-    $first_date = (string) ($selected['first_date'] ?? '');
-    $last_date = (string) ($selected['last_date'] ?? '');
-    $time = (string) ($selected['time'] ?? '');
-    $price = (string) ($selected['price'] ?? '');
-    $after_price = (string) ($selected['after_price'] ?? '');
-    $duration = (string) ($selected['duration'] ?? '');
-    $language = (string) ($selected['language'] ?? '');
-    $location = (string) ($selected['location'] ?? '');
-    $location_freetext = (string) ($selected['location_freetext'] ?? '');
-
-    $heading = $is_full ? 'Neste kurs (fullt)' : 'Neste kurs';
-    $style = kursagenten_single_build_style_vars($attributes);
-
-    $html = '<div class="ka-single-block ka-single-next-course-info"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
-    if ($show_heading) {
-        $html .= '<h3 class="ka-next-course-heading">' . esc_html($heading) . '</h3>';
-    }
-
-    $html .= '<ul class="ka-next-course-list">';
-    $date_text = $first_date !== '' ? $first_date : '';
-    if ($date_text !== '' && $last_date !== '' && $last_date !== $first_date) {
-        $date_text .= ' - ' . $last_date;
-    }
-    if ($date_text !== '') {
-        $html .= '<li class="ka-next-course-item ka-next-course-date">';
-        if ($show_icons) {
-            $html .= '<i class="ka-icon icon-calendar"></i> ';
+        if (empty($selected) || (!empty($selected['coursedatemissing']) && empty($selected['id']))) {
+            return kursagenten_single_is_preview_context()
+                ? kursagenten_single_block_message('Forhåndsvisning: ingen kommende kurs funnet.')
+                : '';
         }
-        $html .= esc_html($date_text) . '</li>';
-    }
-    if ($time !== '') {
-        $html .= '<li class="ka-next-course-item ka-next-course-time">';
-        if ($show_icons) {
-            $html .= '<i class="ka-icon icon-clock"></i> ';
-        }
-        $html .= esc_html($time) . '</li>';
-    }
 
-    $location_text = trim($location_freetext) !== '' ? $location_freetext : $location;
-    if ($location_text !== '') {
-        $html .= '<li class="ka-next-course-item ka-next-course-location">';
-        if ($show_icons) {
-            $html .= '<i class="ka-icon icon-location"></i> ';
-        }
-        $html .= esc_html($location_text) . '</li>';
-    }
+        $show_heading = !isset($attributes['showHeading']) || !empty($attributes['showHeading']);
+        $show_icons = !empty($attributes['showIcons']);
+        $show_signup_link = !isset($attributes['showSignupLink']) || !empty($attributes['showSignupLink']);
+        $show_price = !empty($attributes['showPrice']);
+        $show_duration = !empty($attributes['showDuration']);
+        $show_language = !empty($attributes['showLanguage']);
 
-    if ($show_duration && $duration !== '') {
-        $html .= '<li class="ka-next-course-item ka-next-course-duration">';
-        if ($show_icons) {
-            $html .= '<i class="ka-icon icon-hourglass"></i> ';
-        }
-        $html .= esc_html($duration) . '</li>';
-    }
+        $is_full = !empty($selected['is_full']);
+        $signup_url = (string) ($selected['signup_url'] ?? '');
+        $first_date = (string) ($selected['first_date'] ?? '');
+        $last_date = (string) ($selected['last_date'] ?? '');
+        $time = (string) ($selected['time'] ?? '');
+        $price = (string) ($selected['price'] ?? '');
+        $after_price = (string) ($selected['after_price'] ?? '');
+        $duration = (string) ($selected['duration'] ?? '');
+        $language = (string) ($selected['language'] ?? '');
+        $location = (string) ($selected['location'] ?? '');
+        $location_freetext = (string) ($selected['location_freetext'] ?? '');
 
-    if ($show_language && $language !== '') {
-        $html .= '<li class="ka-next-course-item ka-next-course-language">';
-        if ($show_icons) {
-            $html .= '<i class="ka-icon icon-chat"></i> ';
-        }
-        $html .= esc_html($language) . '</li>';
-    }
+        $heading = $is_full ? 'Neste kurs (fullt)' : 'Neste kurs';
+        $style = kursagenten_single_build_style_vars($attributes);
 
-    if ($show_price && $price !== '') {
-        $price_text = $price;
-        if ($after_price !== '') {
-            $price_text .= ' ' . $after_price;
+        $html = '<div class="ka-single-block ka-single-next-course-info"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
+        if ($show_heading) {
+            $html .= '<h3 class="ka-next-course-heading">' . esc_html($heading) . '</h3>';
         }
-        $html .= '<li class="ka-next-course-item ka-next-course-price">';
-        if ($show_icons) {
-            $html .= '<i class="ka-icon icon-tag"></i> ';
-        }
-        $html .= esc_html($price_text) . '</li>';
-    }
-    $html .= '</ul>';
 
-    if ($show_signup_link && $signup_url !== '') {
-        $label = $is_full ? 'Se neste dato' : 'Påmelding';
-        $html .= '<div class="ka-next-course-cta">';
-        $html .= '<a href="#" class="ka-next-course-signup-link clickelement" data-url="' . esc_attr($signup_url) . '">' . esc_html($label) . '</a>';
+        $html .= '<ul class="ka-next-course-list">';
+        $date_text = $first_date !== '' ? $first_date : '';
+        if ($date_text !== '' && $last_date !== '' && $last_date !== $first_date) {
+            $date_text .= ' - ' . $last_date;
+        }
+        if ($date_text !== '') {
+            $html .= '<li class="ka-next-course-item ka-next-course-date">';
+            if ($show_icons) {
+                $html .= '<i class="ka-icon icon-calendar"></i> ';
+            }
+            $html .= esc_html($date_text) . '</li>';
+        }
+        if ($time !== '') {
+            $html .= '<li class="ka-next-course-item ka-next-course-time">';
+            if ($show_icons) {
+                $html .= '<i class="ka-icon icon-clock"></i> ';
+            }
+            $html .= esc_html($time) . '</li>';
+        }
+
+        $location_text = trim($location_freetext) !== '' ? $location_freetext : $location;
+        if ($location_text !== '') {
+            $html .= '<li class="ka-next-course-item ka-next-course-location">';
+            if ($show_icons) {
+                $html .= '<i class="ka-icon icon-location"></i> ';
+            }
+            $html .= esc_html($location_text) . '</li>';
+        }
+
+        if ($show_duration && $duration !== '') {
+            $html .= '<li class="ka-next-course-item ka-next-course-duration">';
+            if ($show_icons) {
+                $html .= '<i class="ka-icon icon-hourglass"></i> ';
+            }
+            $html .= esc_html($duration) . '</li>';
+        }
+
+        if ($show_language && $language !== '') {
+            $html .= '<li class="ka-next-course-item ka-next-course-language">';
+            if ($show_icons) {
+                $html .= '<i class="ka-icon icon-chat"></i> ';
+            }
+            $html .= esc_html($language) . '</li>';
+        }
+
+        if ($show_price && $price !== '') {
+            $price_text = $price;
+            if ($after_price !== '') {
+                $price_text .= ' ' . $after_price;
+            }
+            $html .= '<li class="ka-next-course-item ka-next-course-price">';
+            if ($show_icons) {
+                $html .= '<i class="ka-icon icon-tag"></i> ';
+            }
+            $html .= esc_html($price_text) . '</li>';
+        }
+        $html .= '</ul>';
+
+        if ($show_signup_link && $signup_url !== '') {
+            $label = $is_full ? 'Se neste dato' : 'Påmelding';
+            $html .= '<div class="ka-next-course-cta">';
+            $html .= '<a href="#" class="ka-next-course-signup-link clickelement" data-url="' . esc_attr($signup_url) . '">' . esc_html($label) . '</a>';
+            $html .= '</div>';
+        }
+
         $html .= '</div>';
-    }
-
-    $html .= '</div>';
-    return $html;
+        return $html;
+    });
 }
 
 /**
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_ka_content_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $content = (string) get_post_meta($post_id, 'ka_course_content', true);
+        $content = trim($content);
+        if ($content === '') {
+            return kursagenten_single_is_preview_context()
+                ? kursagenten_single_block_message('Forhåndsvisning: kurset har ingen beskrivelse fra Kursagenten.')
+                : '';
+        }
 
-    $post_id = (int) get_the_ID();
-    $content = (string) get_post_meta($post_id, 'ka_course_content', true);
-    $content = trim($content);
-    if ($content === '') {
-        return '';
-    }
-
-    $style = kursagenten_single_build_style_vars($attributes);
-    return '<div class="ka-single-block ka-single-ka-content"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>' . wp_kses_post(wpautop($content)) . '</div>';
+        $style = kursagenten_single_build_style_vars($attributes);
+        return '<div class="ka-single-block ka-single-ka-content"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>' . wp_kses_post(wpautop($content)) . '</div>';
+    });
 }
 
 /**
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_contact_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $contact_name = trim((string) get_post_meta($post_id, 'ka_course_contact_name', true));
+        $contact_phone = trim((string) get_post_meta($post_id, 'ka_course_contact_phone', true));
+        $contact_email = sanitize_email((string) get_post_meta($post_id, 'ka_course_contact_email', true));
 
-    $post_id = (int) get_the_ID();
-    $contact_name = trim((string) get_post_meta($post_id, 'ka_course_contact_name', true));
-    $contact_phone = trim((string) get_post_meta($post_id, 'ka_course_contact_phone', true));
-    $contact_email = sanitize_email((string) get_post_meta($post_id, 'ka_course_contact_email', true));
+        $has_any = $contact_name !== '' || $contact_phone !== '' || $contact_email !== '';
+        $hide_if_empty = !isset($attributes['hideIfEmpty']) || !empty($attributes['hideIfEmpty']);
+        if (!$has_any && $hide_if_empty) {
+            return kursagenten_single_is_preview_context()
+                ? kursagenten_single_block_message('Forhåndsvisning: ingen kontaktinformasjon registrert for valgt kurs.')
+                : '';
+        }
 
-    $has_any = $contact_name !== '' || $contact_phone !== '' || $contact_email !== '';
-    $hide_if_empty = !isset($attributes['hideIfEmpty']) || !empty($attributes['hideIfEmpty']);
-    if (!$has_any && $hide_if_empty) {
-        return '';
-    }
+        $show_wrapper = !isset($attributes['showWrapper']) || !empty($attributes['showWrapper']);
+        $show_title = !isset($attributes['showTitle']) || !empty($attributes['showTitle']);
+        $style = kursagenten_single_build_style_vars($attributes);
 
-    $show_wrapper = !isset($attributes['showWrapper']) || !empty($attributes['showWrapper']);
-    $show_title = !isset($attributes['showTitle']) || !empty($attributes['showTitle']);
-    $style = kursagenten_single_build_style_vars($attributes);
+        $inner = '<div class="ka-contact-info">';
+        if ($show_title) {
+            $inner .= '<h3 class="ka-contact-heading">Kontakt</h3>';
+        }
+        $inner .= '<ul class="ka-contact-list">';
+        if ($contact_name !== '') {
+            $inner .= '<li class="ka-contact-item ka-contact-name">' . esc_html($contact_name) . '</li>';
+        }
+        if ($contact_phone !== '') {
+            $phone_href = preg_replace('/[^\d+]/', '', $contact_phone) ?: $contact_phone;
+            $inner .= '<li class="ka-contact-item ka-contact-phone"><a href="tel:' . esc_attr($phone_href) . '">' . esc_html($contact_phone) . '</a></li>';
+        }
+        if ($contact_email !== '') {
+            $inner .= '<li class="ka-contact-item ka-contact-email"><a href="mailto:' . esc_attr($contact_email) . '">' . esc_html($contact_email) . '</a></li>';
+        }
+        $inner .= '</ul></div>';
 
-    $inner = '<div class="ka-contact-info">';
-    if ($show_title) {
-        $inner .= '<h3 class="ka-contact-heading">Kontakt</h3>';
-    }
-    $inner .= '<ul class="ka-contact-list">';
-    if ($contact_name !== '') {
-        $inner .= '<li class="ka-contact-item ka-contact-name">' . esc_html($contact_name) . '</li>';
-    }
-    if ($contact_phone !== '') {
-        $phone_href = preg_replace('/[^\d+]/', '', $contact_phone) ?: $contact_phone;
-        $inner .= '<li class="ka-contact-item ka-contact-phone"><a href="tel:' . esc_attr($phone_href) . '">' . esc_html($contact_phone) . '</a></li>';
-    }
-    if ($contact_email !== '') {
-        $inner .= '<li class="ka-contact-item ka-contact-email"><a href="mailto:' . esc_attr($contact_email) . '">' . esc_html($contact_email) . '</a></li>';
-    }
-    $inner .= '</ul></div>';
+        if (!$show_wrapper) {
+            return '<div class="ka-single-block ka-single-contact"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>' . $inner . '</div>';
+        }
 
-    if (!$show_wrapper) {
-        return '<div class="ka-single-block ka-single-contact"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>' . $inner . '</div>';
-    }
-
-    return '<div class="ka-single-block ka-single-contact ka-contact-wrapper"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>' . $inner . '</div>';
+        return '<div class="ka-single-block ka-single-contact ka-contact-wrapper"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>' . $inner . '</div>';
+    });
 }
 
 /**
  * @param array<string,mixed> $attributes
  */
 function kursagenten_render_single_related_courses_block(array $attributes): string {
-    if (!is_singular('ka_course')) {
-        return kursagenten_single_block_message('Denne blokken fungerer kun på enkeltkurs.');
-    }
+    return kursagenten_single_with_course_context(static function (int $post_id) use ($attributes): string {
+        $layout = (string) ($attributes['layout'] ?? 'list');
+        if (!in_array($layout, ['list', 'grid', 'cards'], true)) {
+            $layout = 'list';
+        }
 
-    $layout = (string) ($attributes['layout'] ?? 'list');
-    if (!in_array($layout, ['list', 'grid', 'cards'], true)) {
-        $layout = 'list';
-    }
+        $columns = max(1, min(6, (int) ($attributes['columns'] ?? 3)));
+        $limit = max(1, min(30, (int) ($attributes['limit'] ?? 6)));
+        $show_image = !isset($attributes['showImage']) || !empty($attributes['showImage']);
 
-    $columns = max(1, min(6, (int) ($attributes['columns'] ?? 3)));
-    $limit = max(1, min(30, (int) ($attributes['limit'] ?? 6)));
-    $show_image = !isset($attributes['showImage']) || !empty($attributes['showImage']);
+        // Map to existing shortcode for consistent markup and CSS.
+        $shortcode_atts = [
+            'layout' => $layout === 'list' ? 'liste' : ($layout === 'grid' ? 'stablet' : 'kort'),
+            'grid' => (string) $columns,
+            'bildestr' => $show_image ? 'standard' : 'ingen',
+            'limit' => (string) $limit,
+        ];
 
-    // Map to existing shortcode for consistent markup and CSS.
-    $shortcode_atts = [
-        'layout' => $layout === 'list' ? 'liste' : ($layout === 'grid' ? 'stablet' : 'kort'),
-        'grid' => (string) $columns,
-        'bildestr' => $show_image ? 'standard' : 'ingen',
-        'limit' => (string) $limit,
-    ];
-
-    $style = kursagenten_single_build_style_vars($attributes);
-    $html = '<div class="ka-single-block ka-single-related-courses"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
-    $html .= do_shortcode('[kurs-i-samme-kategori ' . kursagenten_build_shortcode_attr_string($shortcode_atts) . ']');
-    $html .= '</div>';
-    return $html;
+        $style = kursagenten_single_build_style_vars($attributes);
+        $html = '<div class="ka-single-block ka-single-related-courses"' . ($style !== '' ? ' style="' . esc_attr($style) . '"' : '') . '>';
+        $html .= do_shortcode('[kurs-i-samme-kategori ' . kursagenten_build_shortcode_attr_string($shortcode_atts) . ']');
+        $html .= '</div>';
+        return $html;
+    });
 }
 
 /**

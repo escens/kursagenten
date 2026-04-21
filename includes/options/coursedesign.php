@@ -363,6 +363,39 @@ class Designmaler {
                         </div>
                     </div>
 
+                    <!-- Ledige kurs -->
+                    <div class="option-row">
+                        <label class="option-label" for="kursagenten_default_available_only">Ledige kurs:</label>
+                        <div class="option-input">
+                            <?php
+                            $default_available_only = get_option('kursagenten_default_available_only', 'no');
+                            // Determine whether the "availability" filter is enabled in top or left filters.
+                            $availability_in_top  = is_array($top_filters)  && in_array('availability', $top_filters,  true);
+                            $availability_in_left = is_array($left_filters) && in_array('availability', $left_filters, true);
+                            $availability_enabled = $availability_in_top || $availability_in_left;
+                            ?>
+                            <input type="hidden" name="kursagenten_default_available_only" value="no">
+                            <label class="radio-label">
+                                <input type="checkbox"
+                                       id="kursagenten_default_available_only"
+                                       name="kursagenten_default_available_only"
+                                       value="yes"
+                                       <?php checked($default_available_only, 'yes'); ?>>
+                                Vis kun ledige kurs som standard
+                            </label>
+                            <p class="description">
+                                Når dette er aktivert vil kurslisten som standard skjule fulle kurs og kurs «på forespørsel». Brukeren kan slå filteret av igjen på siden.
+                            </p>
+                            <div id="kursagenten-availability-warning"
+                                 class="notice notice-warning inline"
+                                 style="margin-top:8px;padding:8px 12px;<?php echo ($default_available_only === 'yes' && !$availability_enabled) ? '' : 'display:none;'; ?>">
+                                <p style="margin:0;">
+                                    <strong>Obs:</strong> For at brukerne skal kunne slå filteret av og på, må du dra <em>«Ledige kurs»</em> inn i «Filtre i venstre kolonne» eller «Filtre over kurslisten» under Filterinnstillinger.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Antall kurs per side -->
                     <div class="option-row">
                         <label class="option-label">Antall kurs per side:</label>
@@ -422,6 +455,10 @@ class Designmaler {
                         'months' => [
                             'label' => 'Startmåned',
                             'placeholder' => 'Velg måned'
+                        ],
+                        'availability' => [
+                            'label' => 'Ledige kurs',
+                            'placeholder' => 'Vis kun ledige'
                         ]
                     ];
                     $inactive_filters = ['time_of_day', 'price'];
@@ -444,7 +481,7 @@ class Designmaler {
                                 if (!in_array($key, $top_filters) && !in_array($key, $left_filters)) : ?>
                                     <li data-filter="<?php echo esc_attr($key); ?>" class="ui-sortable-handle <?php echo $disabled_class; ?>"> 
                                     <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($filter['label']); ?>
-                                        <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language', 'months'])) : ?>
+                                        <?php if (in_array($key, ['categories', 'locations', 'instructors', 'language', 'months', 'availability'])) : ?>
                                             <span class="filter-type-options">
                                                 <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="chips" <?php echo (isset($filter_types[$key]) && $filter_types[$key] === 'chips') ? 'checked' : ''; ?>> Knapper</label>
                                                 <label><input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($key); ?>]" value="list" <?php echo (!isset($filter_types[$key]) || $filter_types[$key] === 'list') ? 'checked' : ''; ?>> Liste</label>
@@ -464,7 +501,7 @@ class Designmaler {
                                     <?php if (!empty($filter)) : ?>
                                     <li data-filter="<?php echo esc_attr($filter); ?>">
                                     <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
+                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day', 'availability'])) : ?>
                                             <span class="filter-type-options">
                                                 <label>
                                                     <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
@@ -474,7 +511,7 @@ class Designmaler {
                                                     <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="list"
                                                         <?php echo (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') ? 'checked' : ''; ?>> Liste
                                                 </label>
-                                                <?php if (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list') : ?>
+                                                <?php if ($filter !== 'availability' && (!isset($filter_types[$filter]) || $filter_types[$filter] === 'list')) : ?>
                                                     <label class="checkbox-label-small filter-list-options size-limit-checkbox">
                                                         <?php 
                                                         $no_collapse_settings = get_option('kursagenten_filter_no_collapse', array());
@@ -503,7 +540,7 @@ class Designmaler {
                                     <?php if (!empty($filter)) : ?>
                                     <li data-filter="<?php echo esc_attr($filter); ?>">
                                     <i class="ka-icon icon-grip-dots"></i> <?php echo esc_html($available_filters[$filter]['label']); ?>
-                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day'])) : ?>
+                                        <?php if (in_array($filter, ['categories', 'locations', 'instructors', 'language', 'months', 'time_of_day', 'availability'])) : ?>
                                             <span class="filter-type-options">
                                                 <label>
                                                     <input type="radio" name="kursagenten_filter_types[<?php echo esc_attr($filter); ?>]" value="chips"
@@ -548,6 +585,8 @@ class Designmaler {
                 <div class="options-card" data-section="enkeltkurs">
                     <h3>Enkeltkurs</h3>
                     <?php $single_design_mode = get_option('kursagenten_single_design_mode', 'plugin'); ?>
+                    <?php // "Avansert malvalg" for Enkeltkurs – PAUSED (2026-04-16). Skjult i admin mens byggeblokkene er på hold. Fjern if(false) for å aktivere igjen. ?>
+                    <?php if (false) : ?>
                     <details class="ka-design-mode-details">
                         <summary>Avansert malvalg</summary>
                         <div class="ka-design-mode-selector ka-single-design-mode-selector">
@@ -571,6 +610,7 @@ class Designmaler {
                             </div>
                         </div>
                     </details>
+                    <?php endif; ?>
                     <p class="ka-single-plugin-design-only">Velg design på sider som viser kursdetaljer, både for alle lokasjoner og enkeltlokasjoner.</p>
                     <div class="ka-custom-design-info ka-single-custom-design-info" style="display: none;">
                         <p><strong>Bygg ditt eget design</strong> er aktivt. Kursagenten bruker WordPress sitt malhierarki, slik at tema/page builder kan styre oppsett.</p>
@@ -691,6 +731,8 @@ class Designmaler {
                 <div class="options-card" data-section="taksonomi" id="design-taksonomi">
                     <h3>Taksonomisider</h3>
                     <?php $taxonomy_design_mode = get_option('kursagenten_taxonomy_design_mode', 'plugin'); ?>
+                    <?php // "Avansert malvalg" for Taksonomisider – PAUSED (2026-04-16). Skjult i admin mens byggeblokkene er på hold. Fjern if(false) for å aktivere igjen. ?>
+                    <?php if (false) : ?>
                     <details class="ka-design-mode-details">
                         <summary>Avansert malvalg</summary>
                         <div class="ka-design-mode-selector ka-taxonomy-design-mode-selector">
@@ -714,6 +756,7 @@ class Designmaler {
                             </div>
                         </div>
                     </details>
+                    <?php endif; ?>
                     <p class="ka-taxonomy-plugin-design-only">Velg et felles design for kurskategorier, kurssteder og instruktører. Du kan også velge å ha egne design for hver enkelt taksonomi.</br>
                     <strong>Layout</strong> bestemmer oppsettet av elementer på siden (header, kolonner, hooks).</br>
                      <strong>Listedesign</strong> bestemmer hvordan kursene vises i listen (standard, rutenett, kompakt). </br>
@@ -1629,6 +1672,17 @@ class Designmaler {
         register_setting('design_option_group', 'kursagenten_filter_no_collapse');
         register_setting(
             'design_option_group',
+            'kursagenten_default_available_only',
+            [
+                'type'              => 'string',
+                'sanitize_callback' => function ($value) {
+                    return ($value === 'yes') ? 'yes' : 'no';
+                },
+                'default'           => 'no',
+            ]
+        );
+        register_setting(
+            'design_option_group',
             'kursagenten_single_design_mode',
             array(
                 'type' => 'string',
@@ -2053,10 +2107,12 @@ class Designmaler {
                         $("#top-filters-input").val(topFilters.join(","));
                         $("#left-filters-input").val(leftFilters.join(","));
 
+                        updateAvailabilityWarning();
+
                         // Beholder radioknappene etter flytting
                         $(".sortable-list li").each(function() {
                             let filter = $(this).attr("data-filter");
-                            if (["categories", "locations", "instructors", "language", "months", "time_of_day"].includes(filter)) {
+                            if (["categories", "locations", "instructors", "language", "months", "time_of_day", "availability"].includes(filter)) {
                                 if ($(this).find(".filter-type-options").length === 0) {
                                     let $container = $(this);
                                     let isLeftFilter = $container.closest("#left-filters").length > 0;
@@ -2080,6 +2136,27 @@ class Designmaler {
                         });
                     }
                 }).disableSelection();
+
+                // Show/hide warning when "default available only" is enabled but availability filter isn't placed.
+                function updateAvailabilityWarning() {
+                    var $checkbox = $('#kursagenten_default_available_only');
+                    if (!$checkbox.length) return;
+
+                    var topFilters = $('#top-filters-input').val() || '';
+                    var leftFilters = $('#left-filters-input').val() || '';
+                    var hasAvailability =
+                        topFilters.split(',').indexOf('availability') !== -1 ||
+                        leftFilters.split(',').indexOf('availability') !== -1;
+
+                    var enabled = $checkbox.is(':checked');
+                    if (enabled && !hasAvailability) {
+                        $('#kursagenten-availability-warning').show();
+                    } else {
+                        $('#kursagenten-availability-warning').hide();
+                    }
+                }
+
+                $('#kursagenten_default_available_only').on('change', updateAvailabilityWarning);
 
                 // Toggle grid columns settings based on list type selection
                 function toggleGridColumnsSettings() {

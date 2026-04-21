@@ -125,12 +125,17 @@ $taxonomy_data = [
 
 // Hent aktive filtre fra URL
 $active_filters = [];
-$filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'search'];
+$filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'search', 'ledig'];
 foreach ($filter_params as $param) {
     if (isset($_GET[$param])) {
         $active_filters[$param] = explode(',', $_GET[$param]);
     }
 }
+
+// Determine whether the "available courses only" toggle should be pre-checked in mobile view.
+$ka_is_available_active = function_exists('ka_should_apply_available_filter')
+    ? ka_should_apply_available_filter($_GET)
+    : false;
 
 // Hent active_shortcode_filters variabel hvis den ikke allerede er definert
 // Den kommer fra AJAX-handleren, men vi har en fallback for direktevisning
@@ -186,12 +191,17 @@ ob_start();
                 continue;
             }
             ?>
-            <div class="mobile-filter-section">
+            <?php
+            // Single-toggle availability filter doesn't need its own h5 heading in the mobile overlay.
+            $is_availability_filter = ($filter === 'availability');
+            $mobile_section_classes = 'mobile-filter-section' . ($is_availability_filter ? ' availability-filter-section' : '');
+            ?>
+            <div class="<?php echo esc_attr($mobile_section_classes); ?>">
                 <?php
                 $current_filter_info = $available_filters[$filter];
                 $filter_label = $current_filter_info['label'] ?? '';
-                
-                if (!empty($filter_label)) : ?>
+
+                if (!$is_availability_filter && !empty($filter_label)) : ?>
                     <h5><?php echo esc_html($filter_label); ?></h5>
                 <?php endif; ?>
 
@@ -201,6 +211,37 @@ ob_start();
                            placeholder="<?php echo esc_attr($current_filter_info['placeholder'] ?? 'Søk etter kurs...'); ?>"
                            value="<?php echo isset($_GET['search']) ? esc_attr($_GET['search']) : ''; ?>">
                     
+
+                <?php elseif ($filter === 'availability') : ?>
+                    <?php
+                    $mobile_availability_type    = $filter_types[$filter] ?? 'list';
+                    // Chip uses the longer label, checkbox uses the shorter active-voice label.
+                    $mobile_availability_chip_label     = 'Kurs med ledige plasser';
+                    $mobile_availability_checkbox_label = 'Vis kun ledige plasser';
+                    ?>
+                    <?php if ($mobile_availability_type === 'chips') : ?>
+                        <div class="filter-chip-wrapper availability-filter-wrapper">
+                            <button type="button"
+                                    class="chip filter-chip availability-chip<?php echo $ka_is_available_active ? ' active' : ''; ?>"
+                                    data-filter-key="availability"
+                                    data-url-key="ledig"
+                                    data-filter="1">
+                                <?php echo esc_html($mobile_availability_chip_label); ?>
+                            </button>
+                        </div>
+                    <?php else : ?>
+                        <div class="filter-list">
+                            <label class="filter-list-item checkbox filter-available availability-filter-item">
+                                <input type="checkbox"
+                                       class="filter-checkbox availability-checkbox"
+                                       value="1"
+                                       data-filter-key="availability"
+                                       data-url-key="ledig"
+                                       <?php checked($ka_is_available_active, true); ?>>
+                                <span class="checkbox-label"><?php echo esc_html($mobile_availability_checkbox_label); ?></span>
+                            </label>
+                        </div>
+                    <?php endif; ?>
 
                 <?php elseif ($filter === 'date') : ?>
                     <?php

@@ -32,6 +32,52 @@
 		console.warn("No filter settings found or invalid JSON.");
 	}
 
+	// Returns true when the site is configured to default-hide full/on-request courses.
+	function kaDefaultAvailableOnly() {
+		return !!(typeof kurskalender_data !== 'undefined' && kurskalender_data.default_available_only);
+	}
+
+	// Central helper to mirror the availability filter state across all UI variants
+	// (chip, checkbox, and the list-style dropdown toggle that wraps a checkbox).
+	function kaSyncAvailabilityUI(effectiveOn) {
+		const isOn = !!effectiveOn;
+		$('.filter-chip.availability-chip').toggleClass('active', isOn);
+		$('.filter-checkbox.availability-checkbox').prop('checked', isOn);
+
+		// Update the list-style dropdown toggle (top filter, type=list).
+		$('#filter-list-availability .filter-dropdown-toggle').each(function () {
+			const $toggle = $(this);
+			const placeholder = $toggle.data('placeholder') || 'Ledige plasser';
+			const activeLabel = 'Kurs med ledige plasser';
+			const text = isOn ? activeLabel : placeholder;
+			const html = '<span class="selected-text">' + text +
+				'</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>';
+			$toggle.html(html);
+			$toggle.toggleClass('has-active-filters', isOn);
+		});
+	}
+
+	// Single-toggle helper for the "Kurs med ledige plasser" chip/checkbox.
+	// Uses a three-state URL scheme for `ledig`:
+	//   absent -> follow site default
+	//   1      -> force on
+	//   0      -> force off (only needed when default is on and the user wants all courses)
+	function kaHandleAvailabilityToggle(turningOn) {
+		const defaultOn = kaDefaultAvailableOnly();
+		let ledigValue;
+		if (turningOn) {
+			// If default is on, we can simply drop the param; otherwise explicitly set 1.
+			ledigValue = defaultOn ? null : '1';
+		} else {
+			// If default is on, we must explicitly set 0 to override it; otherwise drop the param.
+			ledigValue = defaultOn ? '0' : null;
+		}
+		// Sync chip, checkbox and dropdown UIs so top/left/mobile stay consistent.
+		kaSyncAvailabilityUI(turningOn);
+		updateFiltersAndFetch({ ledig: ledigValue });
+		setTimeout(updateFilterCounts, 500);
+	}
+
 	// Dynamic handling of filter chips
 	$(document).on('click', '.filter-chip', function () {
 		// Prevent selection of unavailable options (greyed out)
@@ -39,6 +85,14 @@
 			return;
 		}
 		const filterKey = $(this).data('filter-key'); // Internal filter reference
+
+		// Single-toggle availability chip uses its own three-state logic.
+		if (filterKey === 'availability') {
+			const turningOn = !$(this).hasClass('active');
+			kaHandleAvailabilityToggle(turningOn);
+			return;
+		}
+
 		const urlKey = $(this).data('url-key') || filterKey; // Use data-url-key if available
 		const filterValue = $(this).data('filter');
 
@@ -57,6 +111,12 @@
 		const filterKey = $(this).data('filter-key');
 		const urlKey = $(this).data('url-key') || filterKey;
 		const $checkbox = $(this);
+
+		// Single-toggle availability checkbox uses three-state URL logic via helper.
+		if (filterKey === 'availability') {
+			kaHandleAvailabilityToggle($checkbox.is(':checked'));
+			return;
+		}
 		
 		// Spesiell UX-logikk for kategorier: når et barn krysses av, fjern kryss på tilhørende forelder.
 		// Når en forelder krysses av, fjern kryss på alle dens barn.
@@ -252,6 +312,14 @@
 
 		// Clear all active checkboxes
 		$('.filter-checkbox:checked').prop('checked', false);
+		// Remove active state from all filter chips (non-availability first).
+		$('.filter-chip.active').not('.availability-chip').removeClass('active');
+
+		// Availability filter should reset to its default (site setting), not force-off.
+		// Re-apply the effective state AFTER the blanket uncheck above so the chip/checkbox/dropdown
+		// reflect the correct initial UI state again.
+		const availabilityDefault = kaDefaultAvailableOnly();
+		kaSyncAvailabilityUI(availabilityDefault);
 
 		// Reset datofilteret
 		const dateInput = document.getElementById("date-range");
@@ -260,6 +328,7 @@
 		}
 
 		// Oppdater URL og fetch med bare sorteringsparametere
+		// Note: 'ledig' is intentionally omitted so the server falls back to the default setting.
 		const updatedFilters = {};
 		if (sort && order) {
 			updatedFilters.sort = sort;
@@ -565,8 +634,35 @@
 	function initializeFiltersFromURL() {
 		const filters = getCurrentFiltersFromURL();
 
+		// Sync availability filter UI with effective state derived from URL + default setting.
+		// The server already renders the initial state correctly, but we normalise here so
+		// popstate navigation and shortcode-added params keep the chip/checkbox in sync.
+		(function syncAvailabilityState() {
+			const $chips = $('.filter-chip.availability-chip');
+			const $checkboxes = $('.filter-checkbox.availability-checkbox');
+			const $dropdown = $('#filter-list-availability');
+			if (!$chips.length && !$checkboxes.length && !$dropdown.length) return;
+
+			const rawLedig = filters.ledig;
+			const ledigStr = Array.isArray(rawLedig) ? rawLedig[0] : rawLedig;
+			let effectiveOn;
+			if (ledigStr === '1' || ledigStr === 1 || ledigStr === true || ledigStr === 'true') {
+				effectiveOn = true;
+			} else if (ledigStr === '0' || ledigStr === 0 || ledigStr === false || ledigStr === 'false') {
+				effectiveOn = false;
+			} else {
+				effectiveOn = kaDefaultAvailableOnly();
+			}
+			kaSyncAvailabilityUI(effectiveOn);
+		})();
+
 		// Initialize each filter based on URL parameters
 		Object.keys(filters).forEach(function (filterKey) {
+			// Availability is handled above with its own three-state logic; skip the generic loop.
+			if (filterKey === 'ledig') {
+				return;
+			}
+
 			const values = Array.isArray(filters[filterKey]) ? filters[filterKey] : [filters[filterKey]];
 
 			// Handle chip-based filters
@@ -606,9 +702,32 @@
 		const $activeFiltersContainer = $('#active-filters');
 		$activeFiltersContainer.empty();
 
-		// Clone and remove transport / internal params
+		// Clone and remove transport / internal params.
+		// `ledig` is handled separately below so it only appears as an active-filter chip
+		// when the site-wide default is OFF (otherwise the chip cannot be meaningfully
+		// removed without toggling the default, and the reset behaviour takes care of it).
 		const cleaned = { ...filters };
-		['st', 'sc', 'ka_course_location', 'ka_coursecategory', 'internal_list_type'].forEach(k => { if (cleaned[k] !== undefined) delete cleaned[k]; });
+		['st', 'sc', 'ka_course_location', 'ka_coursecategory', 'internal_list_type', 'ledig'].forEach(k => { if (cleaned[k] !== undefined) delete cleaned[k]; });
+
+		// Render a dedicated chip for "Ledige plasser" when the filter is actively on
+		// and the default is OFF. Clicking the X turns the filter off (ledig=null).
+		const availabilityDefaultOn = kaDefaultAvailableOnly();
+		if (!availabilityDefaultOn) {
+			const rawLedig = filters && filters.ledig;
+			const ledigStr = Array.isArray(rawLedig) ? String(rawLedig[0] || '') : String(rawLedig || '');
+			const ledigLower = ledigStr.trim().toLowerCase();
+			const ledigOn = ledigLower !== '' && !['0', 'false', 'no', 'off'].includes(ledigLower);
+			if (ledigOn) {
+				const availabilityChip = $('<span class="active-filter-chip button-filter" data-filter-key="availability" data-url-key="ledig" data-filter-value="1">' +
+					'Kurs med ledige plasser ' +
+					'<span class="remove-filter ka-tooltip" data-title="Fjern filter">\u00D7</span>' +
+					'</span>');
+				availabilityChip.find('.remove-filter').on('click', function () {
+					kaHandleAvailabilityToggle(false);
+				});
+				$activeFiltersContainer.append(availabilityChip);
+			}
+		}
 
 		// Create chips for each active filter
 		Object.keys(cleaned).forEach(key => {

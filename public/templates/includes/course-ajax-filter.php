@@ -977,7 +977,8 @@ function get_filter_counts_handler() {
     try {
         // Hent aktive filtre fra POST
         $active_filters = [];
-        $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
+        // Include `ledig` so count queries can reflect the "available courses only" filter.
+        $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok', 'ledig'];
         foreach ($filter_params as $param) {
             if (isset($_POST[$param])) {
                 $active_filters[$param] = is_array($_POST[$param]) ? $_POST[$param] : explode(',', $_POST[$param]);

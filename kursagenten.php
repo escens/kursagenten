@@ -607,8 +607,13 @@ if (!is_admin()) {
     require_once KURSAG_PLUGIN_DIR . '/includes/misc/kursagenten-shortcodes.php';
 }
 
-// Single element shortcodes: trengs både i editor (admin) og frontend.
-require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/single-elements-shortcodes.php';
+// Single element shortcodes – PAUSED (2026-04-16).
+// The single-* shortcodes ([ka_single_title], [ka_single_signup_button], etc.)
+// and the accompanying Gutenberg blocks are on hold. File is kept in the
+// repository under public/shortcodes/single-elements-shortcodes.php, but not
+// included here so the shortcodes are not registered in the installed plugin.
+// To re-enable, uncomment the require_once below.
+// require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/single-elements-shortcodes.php';
 
     
     function kursagenten_enqueue_styles() {
@@ -803,7 +808,10 @@ require_once KURSAG_PLUGIN_DIR . '/public/shortcodes/single-elements-shortcodes.
             'kurskalender_data',
             array(
                 'ajax_url' => admin_url('admin-ajax.php'),
-                'filter_nonce' => wp_create_nonce('filter_nonce')
+                'filter_nonce' => wp_create_nonce('filter_nonce'),
+                // Expose default availability flag so the JS can reflect the correct state of the
+                // "Kurs med ledige plasser" chip/checkbox when the `ledig` URL param is absent.
+                'default_available_only' => (get_option('kursagenten_default_available_only', 'no') === 'yes')
             )
         );
 

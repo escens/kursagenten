@@ -277,7 +277,10 @@ function kursagenten_course_list_shortcode($atts) {
             'filter_nonce' => wp_create_nonce('filter_nonce'),
             'shortcode_params' => $shortcode_params,
             'has_shortcode_filters' => $has_shortcode_filters,
-            'active_shortcode_filters' => $active_shortcode_filters
+            'active_shortcode_filters' => $active_shortcode_filters,
+            // Expose default availability flag so the JS can reflect the correct state of the
+            // "Kurs med ledige plasser" chip/checkbox when the `ledig` URL param is absent.
+            'default_available_only' => (get_option('kursagenten_default_available_only', 'no') === 'yes')
         )
     );
 
@@ -344,7 +347,8 @@ function kursagenten_course_list_shortcode($atts) {
 
     // Hent aktive filtre fra URL for å beregne counts
     $active_filters = [];
-    $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
+    // Include `ledig` so count calculations match the list's availability filter.
+    $filter_params = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok', 'ledig'];
     foreach ($filter_params as $param) {
         if (isset($_GET[$param])) {
             $active_filters[$param] = explode(',', $_GET[$param]);
@@ -437,6 +441,18 @@ function kursagenten_course_list_shortcode($atts) {
         ];
     }
 
+    // Ensure the availability (Ledige plasser) filter has the metadata needed by the template.
+    if (isset($filter_display_info['availability'])) {
+        $filter_display_info['availability']['filter_key'] = 'availability';
+        $filter_display_info['availability']['url_key'] = 'ledig';
+    }
+
+    // Compute effective state for the "available courses only" toggle, used to pre-check
+    // both chip and checkbox variants on initial (non-AJAX) render.
+    $is_available_active = function_exists('ka_should_apply_available_filter')
+        ? ka_should_apply_available_filter($_GET)
+        : false;
+
     // Start output buffering
     ob_start();
     
@@ -482,6 +498,55 @@ function kursagenten_course_list_shortcode($atts) {
                                         <?php 
                                         if ($filter === 'search') : ?>
                                             <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
+                                        <?php elseif ($filter === 'availability') : ?>
+                                            <?php
+                                            // Single-toggle availability filter. Value is '1' when active.
+                                            $availability_type = $filter_types[$filter] ?? 'chips';
+                                            // Placeholder shown in the dropdown toggle when the filter is off.
+                                            $availability_placeholder = 'Ledige plasser';
+                                            // Label shown on the chip and inside the dropdown checkbox.
+                                            $availability_chip_label = 'Kurs med ledige plasser';
+                                            ?>
+                                            <?php if ($availability_type === 'list') : ?>
+                                                <div id="filter-list-availability" class="filter availability-filter-wrapper">
+                                                    <div class="filter-dropdown">
+                                                        <?php
+                                                        // When the filter is active, show the full label in the toggle,
+                                                        // otherwise show the short placeholder ("Ledige plasser").
+                                                        $display_text    = $is_available_active ? $availability_chip_label : $availability_placeholder;
+                                                        $has_active_cls  = $is_available_active ? 'has-active-filters' : '';
+                                                        ?>
+                                                        <div class="filter-dropdown-toggle <?php echo esc_attr($has_active_cls); ?>"
+                                                             data-filter="availability"
+                                                             data-label="<?php echo esc_attr($availability_placeholder); ?>"
+                                                             data-placeholder="<?php echo esc_attr($availability_placeholder); ?>">
+                                                            <span class="selected-text"><?php echo esc_html($display_text); ?></span>
+                                                            <span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>
+                                                        </div>
+                                                        <div class="filter-dropdown-content">
+                                                            <label class="filter-list-item checkbox filter-available availability-filter-item">
+                                                                <input type="checkbox"
+                                                                       class="filter-checkbox availability-checkbox"
+                                                                       value="1"
+                                                                       data-filter-key="availability"
+                                                                       data-url-key="ledig"
+                                                                       <?php checked($is_available_active, true); ?>>
+                                                                <span class="checkbox-label"><?php echo esc_html($availability_chip_label); ?></span>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php else : ?>
+                                                <div class="filter-chip-wrapper availability-filter-wrapper">
+                                                    <button type="button"
+                                                            class="chip filter-chip availability-chip<?php echo $is_available_active ? ' active' : ''; ?>"
+                                                            data-filter-key="availability"
+                                                            data-url-key="ledig"
+                                                            data-filter="1">
+                                                        <?php echo esc_html($availability_chip_label); ?>
+                                                    </button>
+                                                </div>
+                                            <?php endif; ?>
                                         <?php elseif ($filter === 'date') : ?>
                                             <?php
                                             $date = "";
@@ -696,14 +761,53 @@ function kursagenten_course_list_shortcode($atts) {
                                             }
                                             ?>
 
-                                            <div class="filter-item">
+                                            <?php
+                                            // The availability filter in the left column should not render the h5 heading;
+                                            // it's a single-toggle and looks better without a separate label.
+                                            $is_availability_filter = ($filter === 'availability');
+                                            $filter_item_classes    = 'filter-item' . ($is_availability_filter ? ' availability-filter-item-wrapper' : '');
+                                            ?>
+                                            <div class="<?php echo esc_attr($filter_item_classes); ?>">
                                                 <?php
                                                 $current_filter_info = $filter_display_info[$filter] ?? [];
                                                 $filter_label = $current_filter_info['label'] ?? '';
                                                 ?>
-                                                <h5><?php echo $filter_label; ?></h5>
+                                                <?php if (!$is_availability_filter) : ?>
+                                                    <h5><?php echo $filter_label; ?></h5>
+                                                <?php endif; ?>
                                                 <?php if ($filter === 'search') : ?>
                                                     <input type="text" id="search" name="search" class="filter-search <?php echo esc_attr($search_class); ?>" placeholder="Søk etter kurs...">
+                                                <?php elseif ($filter === 'availability') : ?>
+                                                    <?php
+                                                    $availability_type = $filter_types[$filter] ?? 'list';
+                                                    // Chip keeps the longer label; the checkbox uses the short active-voice label
+                                                    // the user prefers for the left column.
+                                                    $availability_chip_label     = 'Kurs med ledige plasser';
+                                                    $availability_checkbox_label = 'Vis kun ledige plasser';
+                                                    ?>
+                                                    <?php if ($availability_type === 'chips') : ?>
+                                                        <div class="filter-chip-wrapper availability-filter-wrapper">
+                                                            <button type="button"
+                                                                    class="chip filter-chip availability-chip<?php echo $is_available_active ? ' active' : ''; ?>"
+                                                                    data-filter-key="availability"
+                                                                    data-url-key="ledig"
+                                                                    data-filter="1">
+                                                                <?php echo esc_html($availability_chip_label); ?>
+                                                            </button>
+                                                        </div>
+                                                    <?php else : ?>
+                                                        <div class="filter-list">
+                                                            <label class="filter-list-item checkbox filter-available availability-filter-item">
+                                                                <input type="checkbox"
+                                                                       class="filter-checkbox availability-checkbox"
+                                                                       value="1"
+                                                                       data-filter-key="availability"
+                                                                       data-url-key="ledig"
+                                                                       <?php checked($is_available_active, true); ?>>
+                                                                <span class="checkbox-label"><?php echo esc_html($availability_checkbox_label); ?></span>
+                                                            </label>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 <?php elseif ($filter === 'date') : ?>
                                                     <?php
                                                     $date = "";
@@ -1242,6 +1346,11 @@ function kursagenten_course_list_shortcode($atts) {
          $('.mobile-filter-content .reset-filters-button').on('click', function() {
              log('Reset klikket');
              $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+             $('.mobile-filter-content .filter-chip.active').removeClass('active');
+             // Availability should reset to the site default, not hard-off.
+             const availabilityResetOn = !!(typeof kurskalender_data !== 'undefined' && kurskalender_data.default_available_only);
+             $('.mobile-filter-content .filter-chip.availability-chip').toggleClass('active', availabilityResetOn);
+             $('.mobile-filter-content .filter-checkbox.availability-checkbox').prop('checked', availabilityResetOn);
              if (mobileCaleranInstance) {
                  mobileCaleranInstance.clearInput();
              }
@@ -1257,7 +1366,7 @@ function kursagenten_course_list_shortcode($atts) {
             const activeFilters = {};
             
             // Liste over alle mulige filter-parametre
-            const filterParams = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok'];
+            const filterParams = ['k', 'sted', 'i', 'sprak', 'mnd', 'dato', 'sok', 'ledig'];
             
             filterParams.forEach(param => {
                 if (urlParams.has(param)) {
@@ -1284,11 +1393,34 @@ function kursagenten_course_list_shortcode($atts) {
                 $('.mobile-filter-content .caleran').val(activeFilters.dato);
             }
             
+            // Determine the effective availability state from the URL + default site setting.
+            // This is shared for both chip and checkbox restoration below.
+            const availabilityDefaultOn = !!(typeof kurskalender_data !== 'undefined' && kurskalender_data.default_available_only);
+            let availabilityEffectiveOn;
+            if (activeFilters.ledig && activeFilters.ledig.length) {
+                const raw = String(activeFilters.ledig[0]).toLowerCase();
+                if (raw === '1' || raw === 'true') {
+                    availabilityEffectiveOn = true;
+                } else if (raw === '0' || raw === 'false') {
+                    availabilityEffectiveOn = false;
+                } else {
+                    availabilityEffectiveOn = availabilityDefaultOn;
+                }
+            } else {
+                availabilityEffectiveOn = availabilityDefaultOn;
+            }
+
             // Gjenopprett chips
             $('.mobile-filter-content .filter-chip').each(function() {
                 const urlKey = $(this).data('url-key');
                 const filterValue = $(this).data('filter');
-                
+
+                // Availability chip uses the effective state (URL + default) rather than a plain match.
+                if ($(this).hasClass('availability-chip')) {
+                    $(this).toggleClass('active', availabilityEffectiveOn);
+                    return;
+                }
+
                 if (activeFilters[urlKey] && activeFilters[urlKey].includes(filterValue)) {
                     $(this).addClass('active');
                 }
@@ -1296,6 +1428,8 @@ function kursagenten_course_list_shortcode($atts) {
             
             // Gjenopprett checkboxes - først fjern alle, deretter sett riktige
             $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+            // Availability checkbox needs its effective state applied after the blanket uncheck above.
+            $('.mobile-filter-content .filter-checkbox.availability-checkbox').prop('checked', availabilityEffectiveOn);
             
             $('.mobile-filter-content .filter-checkbox').each(function() {
                 const urlKey = $(this).data('url-key');
@@ -1333,6 +1467,30 @@ function kursagenten_course_list_shortcode($atts) {
             });
         }
 
+        // Reads availability state from the mobile overlay (checkbox or chip) and merges
+        // it into the filters object using the three-state `ledig` convention.
+        function applyMobileAvailabilityState(filters) {
+            const defaultOn = !!(typeof kurskalender_data !== 'undefined' && kurskalender_data.default_available_only);
+            const $avChip = $('.mobile-filter-content .filter-chip.availability-chip');
+            const $avCheckbox = $('.mobile-filter-content .filter-checkbox.availability-checkbox');
+            let effectiveOn = null;
+            if ($avChip.length) {
+                effectiveOn = $avChip.hasClass('active');
+            } else if ($avCheckbox.length) {
+                effectiveOn = $avCheckbox.is(':checked');
+            } else {
+                // No mobile UI for availability - preserve existing URL state.
+                const urlLedig = new URLSearchParams(window.location.search).get('ledig');
+                if (urlLedig !== null) { filters['ledig'] = urlLedig; }
+                return;
+            }
+            if (effectiveOn) {
+                if (!defaultOn) { filters['ledig'] = '1'; }
+            } else {
+                if (defaultOn) { filters['ledig'] = '0'; }
+            }
+        }
+
         if (closeFilterBtn.length) {
             closeFilterBtn.on('click', function() {
                 // log('Lukk-knapp klikket');
@@ -1341,9 +1499,12 @@ function kursagenten_course_list_shortcode($atts) {
                 $('.mobile-filter-content .filter-checkbox:checked').each(function() {
                     const key = $(this).data('url-key');
                     const val = $(this).val();
+                    // Skip availability here; handled explicitly below via applyMobileAvailabilityState.
+                    if (key === 'ledig') { return; }
                     if (!filters[key]) { filters[key] = []; }
                     if (!filters[key].includes(val)) { filters[key].push(val); }
                 });
+                applyMobileAvailabilityState(filters);
                 const dateRange = $('.mobile-filter-content .caleran').val();
                 if (dateRange) { filters['dato'] = dateRange; }
                 const searchTerm = $('.mobile-filter-content .filter-search').val();
@@ -1580,9 +1741,12 @@ function kursagenten_course_list_shortcode($atts) {
                 $('.mobile-filter-content .filter-checkbox:checked').each(function() {
                     const key = $(this).data('url-key');
                     const val = $(this).val();
+                    // Availability handled explicitly below via applyMobileAvailabilityState.
+                    if (key === 'ledig') { return; }
                     if (!filters[key]) { filters[key] = []; }
                     if (!filters[key].includes(val)) { filters[key].push(val); }
                 });
+                applyMobileAvailabilityState(filters);
                 const dateRange = $('.mobile-filter-content .caleran').val();
                 if (dateRange) { filters['dato'] = dateRange; }
                 const searchTerm = $('.mobile-filter-content .filter-search').val();
@@ -1617,6 +1781,11 @@ function kursagenten_course_list_shortcode($atts) {
             $('.mobile-filter-content .reset-filters-button').on('click', function() {
                 // log('Reset klikket');
                 $('.mobile-filter-content .filter-checkbox').prop('checked', false);
+                $('.mobile-filter-content .filter-chip.active').removeClass('active');
+                // Availability should reset to the site default, not hard-off.
+                const availabilityResetOn = !!(typeof kurskalender_data !== 'undefined' && kurskalender_data.default_available_only);
+                $('.mobile-filter-content .filter-chip.availability-chip').toggleClass('active', availabilityResetOn);
+                $('.mobile-filter-content .filter-checkbox.availability-checkbox').prop('checked', availabilityResetOn);
                 $('.mobile-filter-content .caleran').val('').trigger('change');
                 $('.mobile-filter-content .filter-search').val('');
                 // Synkroniser URL umiddelbart
@@ -1672,6 +1841,8 @@ function kursagenten_course_list_shortcode($atts) {
             $('.mobile-filter-content .filter-checkbox:checked').each(function() {
                 const filterKey = $(this).data('url-key');
                 const filterValue = $(this).val();
+                // Availability handled explicitly below via applyMobileAvailabilityState.
+                if (filterKey === 'ledig') { return; }
                 if (!filters[filterKey]) {
                     filters[filterKey] = [];
                 }
@@ -1679,6 +1850,7 @@ function kursagenten_course_list_shortcode($atts) {
                     filters[filterKey].push(filterValue);
                 }
             });
+            applyMobileAvailabilityState(filters);
 
             // Håndter dato-filter
             const dateRange = $('.mobile-filter-content .caleran').val();

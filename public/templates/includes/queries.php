@@ -252,6 +252,81 @@ function ka_get_archive_category_from_url($url) {
 }
 
 /**
+ * Determine if the "available courses only" filter should be applied, given a request-like
+ * array of filter values.
+ *
+ * The filter is applied when the `ledig` parameter explicitly equals `1`, or when it is
+ * absent from the request AND the site-wide default is enabled.
+ *
+ * @param array $source Array of filter values (typically $_REQUEST or a custom filter array).
+ * @return bool
+ */
+function ka_should_apply_available_filter($source = null) {
+    if ($source === null) {
+        $source = $_REQUEST;
+    }
+    $default_on = (get_option('kursagenten_default_available_only', 'no') === 'yes');
+
+    if (!array_key_exists('ledig', $source)) {
+        return $default_on;
+    }
+
+    $raw = $source['ledig'];
+    if (is_array($raw)) {
+        $raw = reset($raw);
+    }
+    $raw = trim((string) $raw);
+
+    if ($raw === '') {
+        return $default_on;
+    }
+
+    // Explicit "0" or "false" overrides the default (user opted out).
+    if (in_array(strtolower($raw), ['0', 'false', 'no', 'off'], true)) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Build the meta_query clauses that limit results to coursedates with registration open
+ * and not marked as full. Matches the status rendered as "Ledige plasser" in the list views.
+ *
+ * @return array
+ */
+function ka_get_available_courses_meta_query() {
+    $truthy_values = ['1', 'true', 'yes', 'on'];
+
+    return [
+        'relation' => 'AND',
+        [
+            'key'     => 'ka_course_showRegistrationForm',
+            'value'   => $truthy_values,
+            'compare' => 'IN',
+        ],
+        [
+            'relation' => 'OR',
+            ['key' => 'ka_course_isFull', 'compare' => 'NOT EXISTS'],
+            [
+                'key'     => 'ka_course_isFull',
+                'value'   => $truthy_values,
+                'compare' => 'NOT IN',
+            ],
+        ],
+        [
+            'relation' => 'OR',
+            ['key' => 'ka_course_markedAsFull', 'compare' => 'NOT EXISTS'],
+            [
+                'key'     => 'ka_course_markedAsFull',
+                'value'   => $truthy_values,
+                'compare' => 'NOT IN',
+            ],
+        ],
+    ];
+}
+
+/**
  * Retrieve and sort all coursedates by date.
  * For use in archive-course.php, course calendar.
  *
@@ -380,7 +455,13 @@ function get_course_dates_query($per_page = 10, $current_page = 1) {
         
         $meta_query[] = $date_query;
     }
-    
+
+    // Only show coursedates with open registration and seats available, when either the
+    // URL/ajax parameter `ledig=1` is present or the site-wide default is enabled.
+    if (ka_should_apply_available_filter($_REQUEST)) {
+        $meta_query[] = ka_get_available_courses_meta_query();
+    }
+
     // Legg til søk hvis søkeord er angitt
     if (!empty($search)) {
         $meta_query[] = [
@@ -1739,8 +1820,12 @@ function get_course_dates_query_for_count($filters) {
         }
         $args['meta_query'][] = $language_query;
     }
-    
-    
+
+    // Apply "available courses only" filter so counts reflect the same scope as the main list.
+    if (ka_should_apply_available_filter($filters)) {
+        $args['meta_query'][] = ka_get_available_courses_meta_query();
+    }
+
     $query = new WP_Query($args);
     
     return $query->found_posts;

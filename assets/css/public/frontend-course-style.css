@@ -998,7 +998,12 @@ font-size: var(--ka-font-s);
 #ka .filter-item:has(#search) h4, #ka .filter-item:has(#search) h5{
   display: none;
 } 
-  
+
+/* Availability filter in the left column: no h5, extra breathing room on top. */
+#ka .left-filter-section .availability-filter-item-wrapper{
+  margin-top: 1em;
+}
+
 /* Filter: active filters */
 /**************************/
 #ka #active-filters-container.active{

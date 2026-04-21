@@ -9,6 +9,18 @@ if (!defined('ABSPATH')) {
  * Register Kursagenten Gutenberg blocks.
  */
 function kursagenten_register_blocks(): void {
+    /*
+     * Single course building blocks – PAUSED.
+     *
+     * Disabled on 2026-04-16: the single-* blocks and their shortcodes are
+     * intentionally not registered in the published plugin while the feature
+     * is on hold. All supporting code (render.php, block.json files, editor
+     * JS, stylesheets, shortcode file) remains in the repository so the
+     * feature can be re-enabled quickly by uncommenting this array and the
+     * registration block further down (search for "Single course building
+     * blocks – PAUSED" in this file).
+     */
+    /*
     $single_blocks = [
         'single-title' => 'kursagenten_render_single_title_block',
         'single-course-link' => 'kursagenten_render_single_course_link_block',
@@ -19,6 +31,7 @@ function kursagenten_register_blocks(): void {
         'single-contact' => 'kursagenten_render_single_contact_block',
         'single-related-courses' => 'kursagenten_render_single_related_courses_block',
     ];
+    */
 
     // Taxonomy grid block (existing).
     $block_dir = KURSAG_PLUGIN_DIR . '/public/blocks/taxonomy-grid';
@@ -116,10 +129,28 @@ function kursagenten_register_blocks(): void {
         }
     }
 
-    // Register single course building blocks.
+    // Single course building blocks – PAUSED.
+    // See note at top of kursagenten_register_blocks(). To re-enable the
+    // single-* blocks, uncomment the block below together with the
+    // $single_blocks array at the top of this function.
+    /*
     $single_render_path = KURSAG_PLUGIN_DIR . '/public/blocks/single-elements/render.php';
     if (file_exists($single_render_path)) {
         require_once $single_render_path;
+    }
+
+    // Register the base design-tokens stylesheet (`:root` variables from
+    // frontend-course-style.css) so it can be used as a dependency of the
+    // block stylesheets below. This guarantees the tokens are defined both
+    // on the frontend and in the Gutenberg/Kadence Elements editor.
+    $base_tokens_path = KURSAG_PLUGIN_DIR . '/assets/css/public/frontend-course-style.css';
+    if (file_exists($base_tokens_path) && !wp_style_is('kursagenten-single-base', 'registered')) {
+        wp_register_style(
+            'kursagenten-single-base',
+            KURSAG_PLUGIN_URL . '/assets/css/public/frontend-course-style.css',
+            [],
+            (string) filemtime($base_tokens_path)
+        );
     }
 
     $single_asset_path = KURSAG_PLUGIN_DIR . '/build/single-elements.asset.php';
@@ -147,10 +178,13 @@ function kursagenten_register_blocks(): void {
         );
 
         if (file_exists($single_editor_css_path)) {
+            $editor_style_deps = wp_style_is('kursagenten-single-base', 'registered')
+                ? ['kursagenten-single-base']
+                : [];
             wp_register_style(
                 'kursagenten-single-elements-editor',
                 KURSAG_PLUGIN_URL . '/public/blocks/single-elements/editor.css',
-                [],
+                $editor_style_deps,
                 (string) filemtime($single_editor_css_path)
             );
         }
@@ -158,10 +192,13 @@ function kursagenten_register_blocks(): void {
 
     $single_style_path = KURSAG_PLUGIN_DIR . '/public/blocks/single-elements/style.css';
     if (file_exists($single_style_path)) {
+        $single_style_deps = wp_style_is('kursagenten-single-base', 'registered')
+            ? ['kursagenten-single-base']
+            : [];
         wp_register_style(
             'kursagenten-single-elements',
             KURSAG_PLUGIN_URL . '/public/blocks/single-elements/style.css',
-            [],
+            $single_style_deps,
             (string) filemtime($single_style_path)
         );
     }
@@ -186,6 +223,7 @@ function kursagenten_register_blocks(): void {
         }
         register_block_type_from_metadata($dir, $args);
     }
+    */
 }
 add_action('init', 'kursagenten_register_blocks');
 
