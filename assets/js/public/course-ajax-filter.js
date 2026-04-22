@@ -38,18 +38,35 @@
 	}
 
 	// Central helper to mirror the availability filter state across all UI variants
-	// (chip, checkbox, and the list-style dropdown toggle that wraps a checkbox).
+	// (chip, "Vis kun ledige plasser" checkbox, optional "Vis alle kurs" radio-like checkbox,
+	// and the list-style dropdown toggle that wraps those checkboxes).
 	function kaSyncAvailabilityUI(effectiveOn) {
 		const isOn = !!effectiveOn;
 		$('.filter-chip.availability-chip').toggleClass('active', isOn);
+		// "Vis kun ledige plasser" checkbox: checked when the filter is effectively on.
 		$('.filter-checkbox.availability-checkbox').prop('checked', isOn);
+		// "Vis alle kurs" checkbox (only rendered when site default is "Vis kun ledige kurs").
+		// Acts as a radio sibling: checked exactly when the filter is effectively off.
+		$('.filter-checkbox.availability-checkbox-all').prop('checked', !isOn);
 
 		// Update the list-style dropdown toggle (top filter, type=list).
 		$('#filter-list-availability .filter-dropdown-toggle').each(function () {
 			const $toggle = $(this);
 			const placeholder = $toggle.data('placeholder') || 'Ledige plasser';
-			const activeLabel = 'Kurs med ledige plasser';
-			const text = isOn ? activeLabel : placeholder;
+			const onlyLabel   = 'Vis kun ledige plasser';
+			const allLabel    = 'Vis alle kurs';
+			// If the dropdown contains the "Vis alle kurs" sibling, we are in radio
+			// mode and always display the currently-checked option.
+			const hasAllOption = $toggle.closest('.filter-dropdown').find('.availability-checkbox-all').length > 0;
+
+			let text;
+			if (isOn) {
+				text = onlyLabel;
+			} else if (hasAllOption) {
+				text = allLabel;
+			} else {
+				text = placeholder;
+			}
 			const html = '<span class="selected-text">' + text +
 				'</span><span class="dropdown-icon"><i class="ka-icon icon-chevron-down"></i></span>';
 			$toggle.html(html);
@@ -112,8 +129,29 @@
 		const urlKey = $(this).data('url-key') || filterKey;
 		const $checkbox = $(this);
 
-		// Single-toggle availability checkbox uses three-state URL logic via helper.
+		// Availability checkboxes. When a "Vis alle kurs" sibling is present in the same
+		// list/dropdown we treat the pair as radio buttons styled as checkboxes:
+		// exactly one must stay checked, and each option unambiguously sets the filter state.
 		if (filterKey === 'availability') {
+			const isAllVariant = $checkbox.hasClass('availability-checkbox-all');
+			const $container = $checkbox.closest('.filter-dropdown-content, .filter-list');
+			const hasRadioSibling = $container.length > 0 &&
+				$container.find('.availability-checkbox-all').length > 0 &&
+				$container.find('.availability-checkbox').not('.availability-checkbox-all').length > 0;
+
+			if (hasRadioSibling) {
+				// Radio mode: unchecking the currently-active option is a no-op
+				// (the user must click the other option to switch).
+				if (!$checkbox.is(':checked')) {
+					$checkbox.prop('checked', true);
+					return;
+				}
+				// "Vis kun ledige plasser" → turn filter on; "Vis alle kurs" → turn it off.
+				kaHandleAvailabilityToggle(!isAllVariant);
+				return;
+			}
+
+			// Single-checkbox (non-radio) mode: behave as a simple toggle.
 			kaHandleAvailabilityToggle($checkbox.is(':checked'));
 			return;
 		}
@@ -719,7 +757,7 @@
 			const ledigOn = ledigLower !== '' && !['0', 'false', 'no', 'off'].includes(ledigLower);
 			if (ledigOn) {
 				const availabilityChip = $('<span class="active-filter-chip button-filter" data-filter-key="availability" data-url-key="ledig" data-filter-value="1">' +
-					'Kurs med ledige plasser ' +
+					'Vis kun ledige plasser ' +
 					'<span class="remove-filter ka-tooltip" data-title="Fjern filter">\u00D7</span>' +
 					'</span>');
 				availabilityChip.find('.remove-filter').on('click', function () {

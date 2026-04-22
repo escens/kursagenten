@@ -70,8 +70,17 @@ class Avansert {
                         <p class="description">Dette valget legger til:<br>
                         1) Clickjacking Protection (X-Frame-Options) i WordPress, styrker security headers.<br>
                         2) Deaktiverer tema- og plugin redigering<br>
-                        3) Fjerner WP versjonsnummer
+                        3) Fjerner WP versjonsnummer<br>
+                        4) Deaktiverer XML-RPC i WordPress
                         <br><br></p>
+                    </td>
+                </tr>
+                <tr valign="top">
+                    <td>
+                        <label for="ka_xmlrpc_htaccess">
+                        <?php $this->ka_xmlrpc_htaccess_callback(); ?>
+                        Blokker XML-RPC i .htaccess (Apache)</label>
+                        <p class="description">Legger automatisk inn og fjerner en blokkering av xmlrpc.php i .htaccess når valget skrus av/på. Krever Apache og skrivetilgang til .htaccess.<br><br></p>
                     </td>
                 </tr>
                 <tr valign="top">
@@ -113,6 +122,12 @@ class Avansert {
              <input type="checkbox" id="ka_security" name="kag_avansert_option_name[ka_security]" value="1" <?php checked($current_value, 1); ?> />     
         <?php
     }
+    public function ka_xmlrpc_htaccess_callback() {
+        $current_value = isset($this->kag_avansert_options['ka_xmlrpc_htaccess']) ? $this->kag_avansert_options['ka_xmlrpc_htaccess'] : 0;
+        ?>
+        <input type="checkbox" id="ka_xmlrpc_htaccess" name="kag_avansert_option_name[ka_xmlrpc_htaccess]" value="1" <?php checked($current_value, 1); ?> />
+        <?php
+    }
     public function ka_disable_gravatar_callback() {
         $current_value = isset($this->kag_avansert_options['ka_disable_gravatar']) ? $this->kag_avansert_options['ka_disable_gravatar'] : 0;
         ?>
@@ -132,6 +147,7 @@ class Avansert {
 
     public function kag_avansert_sanitize($input) {
         $sanitary_values = array();
+        $checkbox_keys = array('ka_security', 'ka_sitereviews', 'ka_jquery_support', 'ka_rename_posts', 'ka_disable_gravatar', 'ka_xmlrpc_htaccess');
 
         // Defensiv sjekk for å unngå fatale feil ved uventede typer
         if (!is_array($input)) {
@@ -141,16 +157,19 @@ class Avansert {
         }
 
         try {
+            // Normalize checkbox values so unchecked boxes are saved as 0.
+            foreach ($checkbox_keys as $checkbox_key) {
+                $sanitary_values[$checkbox_key] = !empty($input[$checkbox_key]) ? 1 : 0;
+            }
+
             foreach ($input as $key => $value) {
-                // Sjekk om nøkkelen er en av checkbox-feltene
-                if (in_array($key, array('ka_security', 'ka_sitereviews', 'ka_jquery_support', 'ka_rename_posts'), true)) {
-                    // Hvis feltet er en checkbox, sett verdien til 1 eller 0
-                    $sanitary_values[$key] = !empty($value) ? 1 : 0;
-                } else {
+                if (!in_array($key, $checkbox_keys, true)) {
                     // Standard sanitering for andre felter
                     $sanitary_values[$key] = sanitize_text_field($value);
                 }
             }
+
+            $this->sync_xmlrpc_htaccess_rule(!empty($sanitary_values['ka_xmlrpc_htaccess']));
         } catch (\Throwable $e) {
             error_log('Kursagenten: kag_avansert_sanitize error: ' . $e->getMessage());
             $existing = get_option('kag_avansert_option_name', array());
@@ -160,6 +179,70 @@ class Avansert {
         return $sanitary_values;
     }
 
+    /**
+     * Add or remove the XML-RPC block in .htaccess.
+     */
+    private function sync_xmlrpc_htaccess_rule($enabled) {
+        if (!defined('ABSPATH')) {
+            return;
+        }
+
+        $htaccess_file = ABSPATH . '.htaccess';
+        $marker = 'Kursagenten XMLRPC Block';
+
+        if ($enabled) {
+            if (!function_exists('insert_with_markers')) {
+                require_once ABSPATH . 'wp-admin/includes/misc.php';
+            }
+
+            $rules = array(
+                '<Files xmlrpc.php>',
+                '    <IfModule mod_authz_core.c>',
+                '        Require all denied',
+                '    </IfModule>',
+                '    <IfModule !mod_authz_core.c>',
+                '        Order deny,allow',
+                '        Deny from all',
+                '    </IfModule>',
+                '</Files>',
+            );
+
+            $success = insert_with_markers($htaccess_file, $marker, $rules);
+            if (!$success) {
+                $manual_block = implode(PHP_EOL, $rules);
+                $message = 'Kunne ikke skrive XML-RPC-regel til .htaccess automatisk. Sjekk filrettigheter. Filen ligger vanligvis i WordPress-roten (samme nivå som wp-config.php). Kopier inn dette manuelt:<br><pre style="margin-top:8px;white-space:pre-wrap;">' . esc_html($manual_block) . '</pre>';
+                add_settings_error('kag_avansert_option_name', 'ka_xmlrpc_htaccess_write_failed', $message);
+            }
+
+            return;
+        }
+
+        $this->remove_htaccess_marker_block($htaccess_file, $marker);
+    }
+
+    /**
+     * Remove a marker block from .htaccess.
+     */
+    private function remove_htaccess_marker_block($file_path, $marker) {
+        if (!file_exists($file_path) || !is_readable($file_path) || !is_writable($file_path)) {
+            return;
+        }
+
+        $content = file_get_contents($file_path);
+        if ($content === false) {
+            return;
+        }
+
+        $quoted_marker = preg_quote($marker, '/');
+        $pattern = "/\\R?# BEGIN {$quoted_marker}\\R.*?# END {$quoted_marker}\\R?/s";
+        $updated_content = preg_replace($pattern, PHP_EOL, $content);
+
+        if ($updated_content === null || $updated_content === $content) {
+            return;
+        }
+
+        file_put_contents($file_path, $updated_content);
+    }
 }
 
 ?>

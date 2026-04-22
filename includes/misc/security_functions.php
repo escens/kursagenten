@@ -22,3 +22,6 @@ if ( ! defined( 'DISALLOW_FILE_EDIT' ) ) {
 //Remove WordPress Version Number
 
 add_filter('the_generator', '__return_empty_string');
+
+// Disable XML-RPC endpoint in WordPress when extra security is enabled.
+add_filter('xmlrpc_enabled', '__return_false');

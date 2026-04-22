@@ -214,10 +214,12 @@ ob_start();
 
                 <?php elseif ($filter === 'availability') : ?>
                     <?php
-                    $mobile_availability_type    = $filter_types[$filter] ?? 'list';
-                    // Chip uses the longer label, checkbox uses the shorter active-voice label.
-                    $mobile_availability_chip_label     = 'Kurs med ledige plasser';
-                    $mobile_availability_checkbox_label = 'Vis kun ledige plasser';
+                    $mobile_availability_type        = $filter_types[$filter] ?? 'list';
+                    $mobile_availability_only_label  = 'Vis kun ledige plasser';
+                    $mobile_availability_all_label   = 'Vis alle kurs';
+                    $mobile_default_on_availability  = (get_option('kursagenten_default_available_only', 'no') === 'yes');
+                    $mobile_show_all_option          = $mobile_default_on_availability;
+                    $mobile_show_all_checked         = $mobile_show_all_option && !$ka_is_available_active;
                     ?>
                     <?php if ($mobile_availability_type === 'chips') : ?>
                         <div class="filter-chip-wrapper availability-filter-wrapper">
@@ -226,7 +228,7 @@ ob_start();
                                     data-filter-key="availability"
                                     data-url-key="ledig"
                                     data-filter="1">
-                                <?php echo esc_html($mobile_availability_chip_label); ?>
+                                <?php echo esc_html($mobile_availability_only_label); ?>
                             </button>
                         </div>
                     <?php else : ?>
@@ -238,8 +240,19 @@ ob_start();
                                        data-filter-key="availability"
                                        data-url-key="ledig"
                                        <?php checked($ka_is_available_active, true); ?>>
-                                <span class="checkbox-label"><?php echo esc_html($mobile_availability_checkbox_label); ?></span>
+                                <span class="checkbox-label"><?php echo esc_html($mobile_availability_only_label); ?></span>
                             </label>
+                            <?php if ($mobile_show_all_option) : ?>
+                                <label class="filter-list-item checkbox filter-available availability-filter-item">
+                                    <input type="checkbox"
+                                           class="filter-checkbox availability-checkbox-all"
+                                           value="0"
+                                           data-filter-key="availability"
+                                           data-url-key="ledig"
+                                           <?php checked($mobile_show_all_checked, true); ?>>
+                                    <span class="checkbox-label"><?php echo esc_html($mobile_availability_all_label); ?></span>
+                                </label>
+                            <?php endif; ?>
                         </div>
                     <?php endif; ?>
 

@@ -1,3 +1,9 @@
+## 1.1.19 - 2026-04-21
+- Fix: I Gutenberg-blokker er det nå mulig å velge bildekvalitet
+- Lagt til: *Vis kun ledige plasser* i kurslisten lagt til som nytt filter og ny innstilling i Kursagenten -> Kursdesign
+- Lagt til: Ekstra sikkerhet deaktiverer nå XML-RPC i WordPress.
+- Lagt til: Ny avansert innstilling for å blokkere XML-RPC i `.htaccess` (Apache) med automatisk inn/utskriving av regel.Hvis automatisk skriving til `.htaccess` feiler, vises ferdig kode som kan kopieres inn manuelt.
+
 ## 1.1.18 - 2026-04-09
 - Fix: Lagt inn sperre på stedsnavn og egennavn så de ikke blir automatisk oversatt til andre språk.
 - Fix: Styrket bildevisningen så den ikke blir brutt av utvidelser for bildeoptimalisering og lazy load.
